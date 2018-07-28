@@ -30,6 +30,8 @@ namespace MITOIA {
             if (this._buffer) {
                 this._gl.internalGL.deleteBuffer(this._buffer);
                 this._buffer = null;
+
+                this._gl = null;
             }
         }
 
@@ -70,6 +72,8 @@ namespace MITOIA {
             if (this._buffer) {
                 this._gl.internalGL.deleteBuffer(this._buffer);
                 this._buffer = null;
+
+                this._gl = null;
             }
         }
 
@@ -110,21 +114,21 @@ namespace MITOIA {
         }
     }
 
-    export enum GLShalderType {
+    export enum GLShaderType {
         VERTEX,
         FRAGMENT
     }
 
-    export class GLShander {
+    export class GLShader {
         private _gl: GL;
         private _shader: WebGLShader;
 
-        constructor(gl: GL, type: GLShalderType) {
+        constructor(gl: GL, type: GLShaderType) {
             this._gl = gl;
 
             let internalGL = this._gl.internalGL;
 
-            this._shader = internalGL.createShader(type === GLShalderType.VERTEX ? internalGL.VERTEX_SHADER : internalGL.FRAGMENT_SHADER);
+            this._shader = internalGL.createShader(type === GLShaderType.VERTEX ? internalGL.VERTEX_SHADER : internalGL.FRAGMENT_SHADER);
         }
 
         public get internalShader(): WebGLShader {
@@ -135,6 +139,8 @@ namespace MITOIA {
             if (this._shader) {
                 this._gl.internalGL.deleteShader(this._shader);
                 this._shader = null;
+
+                this._gl = null;
             }
         }
 
@@ -144,17 +150,72 @@ namespace MITOIA {
             gl.shaderSource(this._shader, source);
             gl.compileShader(this._shader);
 
-            let log: null | string = null;
+            let err: null | string = null;
             if (!gl.getShaderParameter(this._shader, gl.COMPILE_STATUS)) {
-                log = gl.getShaderInfoLog(this._shader);
+                err = gl.getShaderInfoLog(this._shader);
             }
 
-            return log;
+            return err;
         }
     }
 
     export class GLProgram {
-        
+        private _gl: GL;
+        private _program: WebGLProgram;
+
+        constructor(gl: GL) {
+            this._gl = gl;
+
+            this._program = this._gl.internalGL.createProgram();
+        }
+
+        public get internalProgram(): WebGLProgram {
+            return this._program;
+        }
+
+        public dispose(): void {
+            if (this._program) {
+                this._gl.internalGL.deleteProgram(this._program);
+                this._program = null;
+
+                this._gl = null;
+            }
+        }
+
+        public compileAndlink(vertexSource: string, fragmentSource: string): null | string {
+            let gl = this._gl.internalGL;
+
+            let vert = new GLShader(this._gl, GLShaderType.VERTEX);
+            vert.upload(vertexSource);
+            let frag = new GLShader(this._gl, GLShaderType.FRAGMENT);
+            frag.upload(fragmentSource);
+
+            let err = this.link(vert, frag);
+
+            vert.dispose();
+            frag.dispose();
+
+            return err;
+        }
+
+        public link(vertexShader: GLShader, fragmentShader: GLShader): null | string {
+            let gl = this._gl.internalGL;
+
+            gl.attachShader(this._program, vertexShader);
+            gl.attachShader(this._program, fragmentShader);
+
+            gl.linkProgram(this._program);
+
+            let linked = gl.getProgramParameter(this._program, gl.LINK_STATUS);
+
+            let err: null | string = null;
+            if (!linked) {
+                gl.validateProgram(this._program);
+                err = gl.getProgramInfoLog(this._program);
+            }
+
+            return err;
+        }
     }
 
     export class GL {
