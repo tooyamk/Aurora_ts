@@ -1,0 +1,19 @@
+﻿{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "noEmitOnError": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "sourceMap": true,
+    "module": "amd",
+    "target": "es6",
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "listFiles": true,
+    "listEmittedFiles": true,
+    "outFile": "./wwwroot/app.js"
+  },
+  "include": [ "scripts/src/**/*.ts" ],
+  "exclude": [],
+  "compileOnSave": true
+}
