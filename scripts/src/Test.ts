@@ -50,7 +50,7 @@ window.addEventListener("DOMContentLoaded", () => {
     list.pushBack(2);
     list.pushBack(3);
 
-    list.erase(list.findlast(2));
+    list.erase(list.lastFind(2));
 
     list.clear();
 
