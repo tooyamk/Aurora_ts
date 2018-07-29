@@ -52,6 +52,12 @@ namespace MITOIA {
                 gl.bindBuffer(gl.ARRAY_BUFFER, null);
             }
         }
+
+        public bind(): void {
+            let gl = this._gl.internalGL;
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
+        }
     }
 
     export class GLIndexBuffer {
@@ -157,6 +163,22 @@ namespace MITOIA {
 
             return err;
         }
+
+        public static compileShader(gl:GL, type: GLShaderType, source: string): WebGLShader {
+            let internalGL = gl.internalGL;
+
+            let shader = internalGL.createShader(type === GLShaderType.VERTEX ? internalGL.VERTEX_SHADER : internalGL.FRAGMENT_SHADER);
+            internalGL.shaderSource(shader, source);
+            internalGL.compileShader(shader);
+
+            if (!internalGL.getShaderParameter(shader, internalGL.COMPILE_STATUS)) {
+                console.log("compile shader error : \n" + source + "\n" + internalGL.getShaderInfoLog(shader));
+                internalGL.deleteShader(shader);
+                shader = null;
+            }
+
+            return shader;
+        }
     }
 
     export class GLProgram {
@@ -182,23 +204,25 @@ namespace MITOIA {
             }
         }
 
-        public compileAndlink(vertexSource: string, fragmentSource: string): null | string {
+        public compileAndLink(vertexSource: string, fragmentSource: string): null | string {
             let gl = this._gl.internalGL;
 
-            let vert = new GLShader(this._gl, GLShaderType.VERTEX);
-            vert.upload(vertexSource);
-            let frag = new GLShader(this._gl, GLShaderType.FRAGMENT);
-            frag.upload(fragmentSource);
+            let vert = GLShader.compileShader(this._gl, GLShaderType.VERTEX, vertexSource);
+            let frag = GLShader.compileShader(this._gl, GLShaderType.FRAGMENT, fragmentSource);
 
-            let err = this.link(vert, frag);
+            let err = this.linkByInternalShander(vert, frag);
 
-            vert.dispose();
-            frag.dispose();
+            gl.deleteShader(vert);
+            gl.deleteShader(frag);
 
             return err;
         }
 
         public link(vertexShader: GLShader, fragmentShader: GLShader): null | string {
+            return this.linkByInternalShander(vertexShader.internalShader, fragmentShader.internalShader);
+        }
+
+        public linkByInternalShander(vertexShader: WebGLShader, fragmentShader: WebGLShader): null | string {
             let gl = this._gl.internalGL;
 
             gl.attachShader(this._program, vertexShader);
@@ -215,6 +239,10 @@ namespace MITOIA {
             }
 
             return err;
+        }
+
+        public use(): void {
+            this._gl.internalGL.useProgram(this._program);
         }
     }
 

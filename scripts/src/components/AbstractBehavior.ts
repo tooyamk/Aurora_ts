@@ -1,5 +1,5 @@
 namespace MITOIA {
-    export abstract class AbstractBehavior {
+    export abstract class AbstractComponent {
         protected _owner: Node = null;
         protected _enabled: boolean = true;
 

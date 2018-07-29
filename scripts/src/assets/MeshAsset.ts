@@ -1,7 +1,7 @@
 namespace MITOIA {
     export class MeshAsset {
-        public vertices: number[] = null;
-        public indexes: number[] = null;
+        public vertexAsset: number[] = null;
+        public indexAsset: number[] = null;
 
         protected _vertexBuffer: GLVertexBuffer = null;
         protected _indexBuffer: GLIndexBuffer = null;
@@ -13,22 +13,22 @@ namespace MITOIA {
         public createGLData(gl: GL): void {
             this.dispose(false, true);
 
-            if (this.vertices) {
+            if (this.vertexAsset) {
                 this._vertexBuffer = new GLVertexBuffer(gl);
-                this._vertexBuffer.upload(this.vertices);
+                this._vertexBuffer.upload(this.vertexAsset);
             }
 
-            if (this.indexes) {
+            if (this.indexAsset) {
                 this._indexBuffer = new GLIndexBuffer(gl);
-                this._indexBuffer.upload(this.indexes);
+                this._indexBuffer.upload(this.indexAsset);
             }
 
         }
 
         public dispose(asset: boolean, gl: boolean): void {
             if (asset) {
-                this.vertices = null;
-                this.indexes = null;
+                this.vertexAsset = null;
+                this.indexAsset = null;
             }
 
             if (gl) {

@@ -17,7 +17,7 @@ namespace MITOIA {
         protected _numChildren: number = 0;
         protected _traversingStack: Node[] = null;
 
-        protected _behaviors: AbstractBehavior[] = null;
+        protected _components: AbstractComponent[] = null;
 
         protected _localRot: Quaternion = new Quaternion();
         protected _localScale: Vector3 = Vector3.One;
@@ -91,8 +91,8 @@ namespace MITOIA {
             }
         }
 
-        public foreachCheckBreak(callback: (node: Node) => boolean): void {
-            if (callback) {
+        public foreachCheckBreak(callback: (child: Node) => boolean): void {
+            if (callback && this._childHead) {
                 let node = this._childHead;
                 if (!this._traversingStack) this._traversingStack = [];
                 let n = this._traversingStack.length;
@@ -101,12 +101,12 @@ namespace MITOIA {
                     if (callback(node)) break;
                     node = this._traversingStack[n];
                 }
-                this._traversingStack.length = n - 1;
+                this._traversingStack.length = n;
             }
         }
 
-        public foreach(callback: (node: Node) => void): void {
-            if (callback) {
+        public foreach(callback: (child: Node) => void): void {
+            if (callback && this._childHead) {
                 let node = this._childHead;
                 if (!this._traversingStack) this._traversingStack = [];
                 let n = this._traversingStack.length;
@@ -115,7 +115,7 @@ namespace MITOIA {
                     callback(node);
                     node = this._traversingStack[n];
                 }
-                this._traversingStack.length = n - 1;
+                this._traversingStack.length = n;
             }
         }
 
@@ -143,7 +143,7 @@ namespace MITOIA {
             if (this._childHead === node) {
                 this._childHead = next;
 
-                if (next) next._parent = node._parent;
+                if (next) next._prev = node._prev;
             } else {
                 let prev = node._prev;
 
@@ -170,39 +170,40 @@ namespace MITOIA {
             }
         }
 
-        public addBehavior<T extends AbstractBehavior>(behavior: T): T {
-            if (behavior && behavior.owner !== this) {
-                if (!this._behaviors) this._behaviors = [];
-                if (behavior.owner) behavior.owner._removeBehavior(behavior);
-                this._behaviors.push(behavior);
-                behavior._setOwner(this);
+        public addComponent<T extends AbstractComponent>(component: T): T {
+            if (component && component.owner !== this) {
+                if (!this._components) this._components = [];
+                if (component.owner) component.owner._removeComponent(component);
+                this._components.push(component);
+                component._setOwner(this);
             }
 
-            return behavior;
+            return component;
         }
 
-        public removeBehavior(behavior: AbstractBehavior): void {
-            if (behavior && this._behaviors && behavior.owner === this) {
-                behavior._setOwner(null);
-                this._removeBehavior(behavior);
-            }
-        }
-
-        protected _removeBehavior(behavior: AbstractBehavior): void {
-            this._behaviors.splice(this._behaviors.indexOf(behavior), 1);
-        }
-
-        public remvoeAllBehaviors(): void {
-            if (this._behaviors) {
-                for (let beh of this._behaviors) beh._setOwner(null);
-                this._behaviors.length = 0;
+        public removeComponent(component: AbstractComponent): void {
+            if (component && this._components && component.owner === this) {
+                component._setOwner(null);
+                this._removeComponent(component);
             }
         }
 
-        public getBehaviorByType<T extends AbstractBehavior>(c: new (...args: any[]) => T): T {
-            if (this._behaviors) {
-                for (let beh of this._behaviors) {
-                    if (beh instanceof c) return <T>beh;
+        protected _removeComponent(component: AbstractComponent): void {
+            this._components.splice(this._components.indexOf(component), 1);
+        }
+
+        public remvoeAllComponents(): void {
+            if (this._components) {
+                for (let com of this._components) com._setOwner(null);
+                this._components.length = 0;
+            }
+        }
+
+        public getComponentByType<T extends AbstractComponent>(c: {prototype: T}): T {
+            if (this._components) {
+                let type = <any>c;
+                for (let com of this._components) {
+                    if (com instanceof type) return <T>com;
                 }
             }
 

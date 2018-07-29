@@ -5,7 +5,7 @@
             "name": "Launch Browser",
             "type": "chrome",
             "request": "launch",
-            "url": "http://localhost.2:8881/wwwroot/index.html",
+            "url": "http://127.0.0.1/Mitoia/index.html",
             "sourceMaps": true,
             "userDataDir": "${workspaceRoot}/.tempChromeProfileForDebug",
             "preLaunchTask": "build",
