@@ -35,18 +35,12 @@ namespace MITOIA {
                 }
             }
 
-            arr.sort((a: string, b: string) => {
-                if (a < b) {
-                    return -1;
-                } else if (a > b) {
-                    return 1;
-                } else {
-                    return 0;
-                }
+            MITOIA.Sort.Merge.sort(arr, (a: string, b: string) => {
+                return a < b;
             });
 
             let key: string = "";
-            for (let value of arr) key += value + ";";
+            for (let i = 0, n = arr.length; i < n; ++i) key += arr[i] + ";";
 
             return key;
         }

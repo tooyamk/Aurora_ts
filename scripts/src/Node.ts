@@ -194,15 +194,18 @@ namespace MITOIA {
 
         public remvoeAllComponents(): void {
             if (this._components) {
-                for (let com of this._components) com._setOwner(null);
+                for (let i = 0, n = this._components.length; i < n; ++i) this._components[i]._setOwner(null);
                 this._components.length = 0;
             }
         }
 
-        public getComponentByType<T extends AbstractComponent>(c: {prototype: T}): T {
+        public getComponentByType<T extends AbstractComponent>(c: {prototype: T}, checkEnabled: boolean = false): T {
             if (this._components) {
                 let type = <any>c;
-                for (let com of this._components) {
+
+                for (let i = 0, n = this._components.length; i < n; ++i) {
+                    let com = this._components[i];
+                    if (checkEnabled && !com.enabled) continue;
                     if (com instanceof type) return <T>com;
                 }
             }
@@ -241,6 +244,10 @@ namespace MITOIA {
             this._worldMatrixDirty = true;
 
             this._nofificationUpdate();
+        }
+
+        public getDepth(m: Matrix44): number {
+            return m.transform34Z(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32);
         }
 
         public getLocalPositon(rst: Vector3 = null): Vector3 {

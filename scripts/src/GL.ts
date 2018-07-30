@@ -12,9 +12,30 @@ namespace MITOIA {
         public clearStencil = true;
     }
 
+    export enum GLVertexBufferSize {
+        ONE = 1,
+        TWO = 2,
+        THREE = 3,
+        FOUR = 4
+    }
+
+    export enum GLVertexBufferType {
+        BYTE = 5120,
+        UNSIGNED_BYTE = 5121,
+        SHORT = 5122,
+        UNSIGNED_SHORT = 5123,
+        INT = 5124,
+        UNSIGNED_INT = 5125,
+        FLOAT = 5126
+    }
+
     export class GLVertexBuffer {
         private _gl: GL;
         private _buffer: WebGLBuffer;
+
+        private _size: GLVertexBufferSize;
+        private _type: GLVertexBufferType;
+        private _needNormalized: boolean;
 
         constructor(gl: GL) {
             this._gl = gl;
@@ -35,8 +56,12 @@ namespace MITOIA {
             }
         }
 
-        public upload(data: number[] | ArrayBuffer | ArrayBufferView, updatable: boolean = false): void {
+        public upload(data: number[] | ArrayBuffer | ArrayBufferView, size: GLVertexBufferSize = GLVertexBufferSize.FOUR, type: GLVertexBufferType = GLVertexBufferType.FLOAT, needNormalized: boolean = false, updatable: boolean = false): void {
             if (this._buffer) {
+                this._size = size;
+                this._type = type;
+                this._needNormalized = needNormalized;
+
                 let gl = this._gl.internalGL;
 
                 gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
@@ -54,9 +79,13 @@ namespace MITOIA {
         }
 
         public bind(): void {
-            let gl = this._gl.internalGL;
+            this._gl.bindVertexBuffer(this);
+        }
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, this._buffer);
+        public use(index: int): void {
+            this.bind();
+
+            this._gl.internalGL.vertexAttribPointer(index, this._size, this._type, this._needNormalized, 0, 0);
         }
     }
 
@@ -117,6 +146,10 @@ namespace MITOIA {
 
                 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
             }
+        }
+
+        public bind(): void {
+            this._gl.bindIndexBuffer(this);
         }
     }
 
@@ -197,6 +230,8 @@ namespace MITOIA {
 
         public dispose(): void {
             if (this._program) {
+                this._gl.nonuseProgram(this);
+
                 this._gl.internalGL.deleteProgram(this._program);
                 this._program = null;
 
@@ -242,20 +277,31 @@ namespace MITOIA {
         }
 
         public use(): void {
-            this._gl.internalGL.useProgram(this._program);
+            this._gl.useProgram(this);
         }
     }
 
     export class GL {
+        //public 
+
         private _gl: WebGLRenderingContext = null;
 
         private _version: string = "unknow";
+
+        private _maxVertexAttributes: uint = 0;
+        private _maxVaryingVectors: uint = 0;
+        private _maxVertexUniformVectors: uint = 0;
+        private _maxFragmentUniformVectors: uint = 0;
 
         private _supportUintIndexes: boolean = false;
 
         private _clearColor: Color4 = Color4.BLACK;
         private _depthValue: number = 1;
         private _stencilValue: uint = 0;
+
+        private _usedProgram: WebGLProgram = null;
+        private _boundVertexBuffer: WebGLBuffer = null;
+        private _boundIndexBuffer: WebGLBuffer = null;
 
         constructor(gl: WebGLRenderingContext) {
             this._gl = gl;
@@ -266,11 +312,32 @@ namespace MITOIA {
 
             this._version = this._gl.getParameter(this._gl.VERSION);
 
+            this._maxVertexAttributes = this._gl.getParameter(this._gl.MAX_VERTEX_ATTRIBS);
+            this._maxVaryingVectors = this._gl.getParameter(this._gl.MAX_VARYING_VECTORS);
+            this._maxVertexUniformVectors = this._gl.getParameter(this._gl.MAX_VERTEX_UNIFORM_VECTORS); 
+            this._maxFragmentUniformVectors = this._gl.getParameter(this._gl.MAX_FRAGMENT_UNIFORM_VECTORS);
+
             this._supportUintIndexes = false || this._gl.getExtension('OES_element_index_uint') !== null;
         }
 
         public get version(): string {
             return this._version;
+        }
+
+        public get maxVertexAttributes(): uint {
+            return this._maxVertexAttributes;
+        }
+
+        public get maxVaryingVectors(): uint {
+            return this._maxVaryingVectors;
+        }
+
+        public get maxVertexUniformVectors(): uint {
+            return this._maxVertexUniformVectors;
+        }
+
+        public get maxFragmentUniformVectors(): uint {
+            return this._maxFragmentUniformVectors;
         }
 
         public get supprotUintIndexes(): boolean {
@@ -307,6 +374,68 @@ namespace MITOIA {
             if (clearStencil) mask |= this._gl.STENCIL_BUFFER_BIT;
 
             if (mask !== 0) this._gl.clear(mask);
+        }
+
+        public useProgram(program: GLProgram): void {
+            if (this._usedProgram !== program.internalProgram) {
+                this._usedProgram = program.internalProgram;
+                this._gl.useProgram(this._usedProgram);
+            }
+        }
+
+        public nonuseProgram(program: GLProgram): void {
+            if (this._usedProgram === program.internalProgram) {
+                this._usedProgram = null;
+                this._gl.useProgram(null);
+            }
+        }
+
+        public bindVertexBuffer(buffer: GLVertexBuffer): void {
+            if (this._boundVertexBuffer !== buffer.internalBuffer) {
+                this._boundVertexBuffer = buffer.internalBuffer;
+                this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._boundVertexBuffer);
+            }
+        }
+
+        public unbindVertexBuffer(buffer: GLVertexBuffer): void {
+            if (this._boundVertexBuffer === buffer.internalBuffer) {
+                this._boundVertexBuffer = null;
+                this._gl.bindBuffer(this._gl.ARRAY_BUFFER, null);
+            }
+        }
+
+        public bindIndexBuffer(buffer: GLIndexBuffer): void {
+            if (this._boundIndexBuffer !== buffer.internalBuffer) {
+                this._boundIndexBuffer = buffer.internalBuffer;
+                this._gl.bindBuffer(this._gl.ARRAY_BUFFER, this._boundIndexBuffer);
+            }
+        }
+
+        public unbindIndexBuffer(buffer: GLIndexBuffer): void {
+            if (this._boundIndexBuffer === buffer.internalBuffer) {
+                this._boundIndexBuffer = null;
+                this._gl.bindBuffer(this._gl.ELEMENT_ARRAY_BUFFER, null);
+            }
+        }
+
+        public getAttributeLocations(program: GLProgram, names: string[], rst: number[] = null): number[] {
+            rst = rst || [];
+
+            if (program) {
+                let n = names.length;
+                for (let i = 0; i < n; ++i) {
+                    try {
+                        rst[i] = this._gl.getAttribLocation(program.internalProgram, names[i]);
+                    } catch (e) {
+                        rst[i] = -1;
+                    }
+                }
+                rst.length = n;
+            } else {
+                rst.length = 0;
+            }
+
+            return rst;
         }
     }
 }

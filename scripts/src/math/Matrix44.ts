@@ -556,6 +556,10 @@ namespace MITOIA {
             return rst ? rst.setFromXYZ(dstX, dstY, dstZ) : new Vector3(dstX, dstY, dstZ);
         }
 
+        public transform34Z(x: number = 0, y: number = 0, z: number = 0): number {
+            return x * this.m02 + y * this.m12 + z * this.m22 + this.m32;
+        }
+
         public transform34Vector3(vec3: Vector3, rst: Vector3 = null): Vector3 {
             return this.transform34XYZ(vec3.x, vec3.y, vec3.z, rst);
         }

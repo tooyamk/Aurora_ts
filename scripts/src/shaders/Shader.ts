@@ -43,6 +43,14 @@ namespace MITOIA {
             }
         }
 
+        public getAttributeLocations(names: string[], rst: number[] = null): number[] {
+            return this._engine.gl.getAttributeLocations(this._curProgram, names, rst);
+        }
+
+        public use(): void {
+            if (this._curProgram) this._curProgram.use();
+        }
+
         public dispose(): void {
             if (this._cachedNoDefineProgram) {
                 this._cachedNoDefineProgram.dispose();

@@ -9,7 +9,7 @@ namespace MITOIA {
         list: List<T>;
     }
 
-    export class ListNode<T> {
+    class ListNode<T> {
         public prev: ListNode<T> = null;
         public next: ListNode<T> = null;
 

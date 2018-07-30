@@ -1,3 +1,45 @@
+class AAA {
+    private _arr: number[] = [];
+    constructor() {
+        for (let i = 0; i < 99; ++i) {
+            this._arr[i] = 99 - i;
+        }
+    }
+
+    public test1(): void {
+        let tmp = this._arr;
+        for (let i = 0, n = tmp.length; i < n; ++i) {
+            let v = tmp[i];
+        }
+    }
+
+    public test2(): void {
+        for (let i of this._arr) {
+            let v = i;
+        }
+    }
+
+    public sort1(): void {
+        this._arr.sort((a: number, b: number) => {
+            if (a < b) {
+                return -1;
+            } else if (a > b) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+    }
+
+    public sort2(): void {
+        MITOIA.Sort.Merge.sort(this._arr, (a: number, b: number) => {
+            return a < b;
+        });
+
+        console.log(this._arr[0], this._arr[this._arr.length - 1]);
+    }
+}
+
 window.addEventListener("DOMContentLoaded", () => {
     document.oncontextmenu = () => {
         return false;
@@ -33,15 +75,16 @@ window.addEventListener("DOMContentLoaded", () => {
     "}";
 
     let meshAsset = new MITOIA.MeshAsset();
-    meshAsset.vertexAsset = [-1, -1, 0, -1, 1, 0, 1, -1, 0];
     meshAsset.indexAsset = [0, 1, 2];
     meshAsset.createGLData(engine.gl);
 
-    let mesh = n1.addComponent(new MITOIA.Mesh());
-    mesh.asset = meshAsset;
+    let vertexBuffer = new MITOIA.GLVertexBuffer(engine.gl);
+    vertexBuffer.upload([-1, -1, 0, -1, 1, 0, 1, -1, 0], MITOIA.GLVertexBufferSize.THREE, MITOIA.GLVertexBufferType.FLOAT, false, false);
 
     let renderer = n1.addComponent(new MITOIA.MeshRenderer());
-    renderer.material = new MITOIA.Material(new MITOIA.Shader(engine, vert, frag));
+    renderer.materials[0] = new MITOIA.Material(new MITOIA.Shader(engine, vert, frag));
+    renderer.attributes.add("position");
+    renderer.vertexBuffers["position"] = vertexBuffer;
 
     let aaazz = MITOIA.Vector3['prototype'];
 
@@ -58,9 +101,9 @@ window.addEventListener("DOMContentLoaded", () => {
     console.log(list.capacity);
 
 
-    //for (let itr = list.end; !itr.done; itr.prev()) {
-    //    console.log(itr.value);
-    //}
+    for (let itr = list.end; !itr.done; itr.prev()) {
+        console.log(itr.value);
+    }
 
     for (let itr of list.begin) {
         console.log("aaa : " + itr);
@@ -75,7 +118,15 @@ window.addEventListener("DOMContentLoaded", () => {
     map.set("d", 1);
     map.set("c", 1);
     map.set("b", 2);
-    
+
+    let arr = new AAA();
+
+    let t1 = MITOIA.Timer.time;
+
+    arr.sort2();
+
+    let t2 = MITOIA.Timer.time;
+    let t3 = t2 - t1;
 
     for (let itr of map) {
         console.log(itr);
