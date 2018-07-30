@@ -1,6 +1,6 @@
 namespace MITOIA {
     export class ShaderDefines {
-        private _defines: { [key: string] : null | int } = {};
+        private _defines: { [key: string] : null | string } = {};
 
         constructor() {
         }
@@ -9,11 +9,11 @@ namespace MITOIA {
             this._defines = {};
         }
 
-        public get _internalDefines(): { [key: string] : null | int } {
+        public get _internalDefines(): { [key: string] : null | string } {
             return this._defines;
         }
 
-        public setDefine(name: string, value: boolean | int): void {
+        public setDefine(name: string, value: boolean | string): void {
             if (value === true) {
                 this._defines[name] = null;
             } else if (value === false) {

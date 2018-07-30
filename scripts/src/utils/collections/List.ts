@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace MITOIA.Collections {
     export interface IListIterator<T> {
         [Symbol.iterator](): IListIterator<T>;
         prev(): IListIterator<T>;
