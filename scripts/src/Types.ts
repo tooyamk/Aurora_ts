@@ -1,6 +1,6 @@
 namespace MITOIA {
-    export type sbyte = number;
     export type byte = number;
+    export type ubyte = number;
     export type short = number;
     export type ushort = number;
     export type int = number;

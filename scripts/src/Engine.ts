@@ -4,6 +4,8 @@ namespace MITOIA {
     }
 
     export class Engine {
+        public static readonly VERSION: string = "0.0.1 alpha";
+
         private _canvas: HTMLCanvasElement = null;
         private _gl: GL = null;
         private _glVersion: number = -1;
@@ -52,7 +54,7 @@ namespace MITOIA {
             }
 
             if (gl) this._gl = new GL(gl);
-        }      
+        }
 
         public get gl(): GL {
             return this._gl;
@@ -60,6 +62,17 @@ namespace MITOIA {
 
         public get glVersion(): number {
             return this._glVersion;
+        }
+
+        public autoStretchCanvas(devicePixelRatio: number = null): void {
+            if (devicePixelRatio === null || devicePixelRatio === undefined) devicePixelRatio = window.devicePixelRatio;
+
+            let canvas = this._canvas;
+            if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+                this._gl.internalGL.viewport(0, 0, canvas.width, canvas.height);
+            }
         }
     }
 }

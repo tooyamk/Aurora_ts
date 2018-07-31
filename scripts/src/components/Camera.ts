@@ -9,7 +9,7 @@ namespace MITOIA {
 
         public cullingMask: uint = 0xFFFFFFFF;
 
-        constructor(a: number) {
+        constructor() {
             super();
 
             this._projectionMatrix = new Matrix44();

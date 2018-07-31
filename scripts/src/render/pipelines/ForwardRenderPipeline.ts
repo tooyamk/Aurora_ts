@@ -62,7 +62,7 @@ namespace MITOIA {
 
         private _collectNode(node: Node): void {
             let renderer = node.getComponentByType(Renderer, true);
-            if (renderer) {
+            if (renderer && renderer.isReady()) {
                 let materials = renderer.materials;
                 if (materials) {
                     for (let i = 0, n = materials.length; i < n; ++i) {

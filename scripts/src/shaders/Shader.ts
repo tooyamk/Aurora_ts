@@ -8,11 +8,21 @@ namespace MITOIA {
         protected _cachedPrograms: { [key: string]: GLProgram} = {};
 
         protected _curProgram: GLProgram = null;
+        protected _attributes: GLProgramAttributeInfo[] = null;
+        protected _uniforms: GLProgramUniformInfo[] = null;
 
         constructor (engine: Engine, vertexSource: string, fragmentSource: string) {
             this._engine = engine;
             this._vertexSource = vertexSource;
             this._fragmentSource = fragmentSource;
+        }
+
+        public get attributes(): GLProgramAttributeInfo[] {
+            return this._attributes;
+        }
+
+        public get uniforms(): GLProgramUniformInfo[] {
+            return this._uniforms;
         }
 
         public switch(defines: ShaderDefines): void {
@@ -41,10 +51,13 @@ namespace MITOIA {
                     this._cachedNoDefineProgram = this._curProgram;
                 }
             }
+
+            this._attributes = this._curProgram.attributes;
+            this._uniforms = this._curProgram.uniforms;
         }
 
         public getAttributeLocations(names: string[], rst: number[] = null): number[] {
-            return this._engine.gl.getAttributeLocations(this._curProgram, names, rst);
+            return this._engine.gl.getAttribLocations(this._curProgram, names, rst);
         }
 
         public use(): void {

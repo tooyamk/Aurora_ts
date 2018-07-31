@@ -2,7 +2,13 @@
 
 namespace MITOIA {
     export class MeshRenderer extends Renderer {
+        public assetStore: AssetStore = null;
         public attributes: ShaderAttributes = new ShaderAttributes();
+        public indexName: string = "index";
+
+        public isReady(): boolean {
+            return this.assetStore && this.indexName && this.indexName.length > 0;
+        }
 
         public use(material: Material): void {
             material.use();
@@ -16,12 +22,15 @@ namespace MITOIA {
                     if (pos >= 0) {
                         let name = names[i];
                         
-                        let buffer = this.vertexBuffers[name];
+                        let buffer = this.assetStore.getVertexBuffer(name);
                         if (buffer) buffer.use(pos);
                     }
                 }
+            }
 
-                let a = 1;
+            let buffer = this.assetStore.getIndexBuffer(this.indexName);
+            if (buffer) {
+                buffer.draw(GLDrawMode.TRIANGLES);
             }
         }
     }

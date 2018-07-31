@@ -45,14 +45,16 @@ window.addEventListener("DOMContentLoaded", () => {
         return false;
     }
 
-    let engine = new MITOIA.Engine(<HTMLCanvasElement>document.getElementById("renderCanvas"));
+    let canvas = <HTMLCanvasElement>document.getElementById("renderCanvas");
+    let engine = new MITOIA.Engine(canvas);
+
+    console.log(engine.glVersion);
     
     let n0 = new MITOIA.Node();
     let n1 = new MITOIA.Node();
     n1.setParent(n0);
 
-    let cam = n1.addComponent(new MITOIA.Camera(1));
-    cam.clearData.color.r = 1;
+    let cam = n1.addComponent(new MITOIA.Camera());
     cam.setProjectionMatrix(MITOIA.Matrix44.createOrthoLHMatrix(100, 100, 10, 100));
 
     n0.setLocalPosition(100, 200, 300);
@@ -65,81 +67,114 @@ window.addEventListener("DOMContentLoaded", () => {
 
     let be = n1.getComponentByType(MITOIA.TestBehavior);
     
-    let vert = "attribute vec3 position;\n" +
-    "void main(void){\n" +
-    "gl_Position = vec4(position.x, position.y, position.z, 1);\n" +
-    "}";
+    let vert = `
+        attribute vec3 position;
+        attribute vec2 uv;
+        uniform float color1;
+        varying vec3 tmp;
+        void main(void){
+            tmp = position;
+            gl_Position = vec4(position.x, position.y, position.z, 1);
+        }`;
 
-    let frag = "void main(void){\n" +
-    "gl_FragColor = vec4(1, 1, 1, 1);\n" +
-    "}";
-
-    let meshAsset = new MITOIA.MeshAsset();
-    meshAsset.indexAsset = [0, 1, 2];
-    meshAsset.createGLData(engine.gl);
+    let frag = `
+        precision highp float;
+        uniform vec3 color;
+        uniform float arr[20];
+        uniform sampler2D tex;
+        varying vec3 tmp;
+        void main(void){
+            texture2D(tex, vec2(arr[0], 0.0));
+            gl_FragColor = vec4(color.x, color.y, color.z, 1);
+        }`;
 
     let vertexBuffer = new MITOIA.GLVertexBuffer(engine.gl);
-    vertexBuffer.upload([-1, -1, 0, -1, 1, 0, 1, -1, 0], MITOIA.GLVertexBufferSize.THREE, MITOIA.GLVertexBufferType.FLOAT, false, false);
+    vertexBuffer.upload([-0.5, -0.5, 0.1, -0.5, 0.5, 0.1, 0.5, -0.5, 0.1], MITOIA.GLVertexBufferSize.THREE, MITOIA.GLVertexDataType.FLOAT, false, MITOIA.GLUsageType.STATIC_DRAW);
+
+    let indexBuffer = new MITOIA.GLIndexBuffer(engine.gl);
+    indexBuffer.upload([0, 1, 2], MITOIA.GLUsageType.STATIC_DRAW);
+
+    let assetStore = new MITOIA.AssetStore();
+    assetStore.vertexBuffers.push(vertexBuffer);
+    assetStore.vertexBufferMapping.set("position", 0);
+    assetStore.indexBuffers.push(indexBuffer);
+    assetStore.indexBufferMapping.set("index", 0);
 
     let renderer = n1.addComponent(new MITOIA.MeshRenderer());
+    renderer.assetStore = assetStore;
     renderer.materials[0] = new MITOIA.Material(new MITOIA.Shader(engine, vert, frag));
     renderer.attributes.add("position");
-    renderer.vertexBuffers["position"] = vertexBuffer;
+    //renderer.vertexBuffers["position"] = vertexBuffer;
 
-    let aaazz = MITOIA.Vector3['prototype'];
+    engine.gl.internalGL.viewport(0, 0, canvas.width, canvas.height);
 
-    let list = new MITOIA.List<number>();
-    list.pushBack(1);
-    list.pushBack(2);
-    list.pushBack(3);
-
-    list.erase(list.lastFind(2));
-
-    list.clear();
-
-    console.log(list.size);
-    console.log(list.capacity);
-
-
-    for (let itr = list.end; !itr.done; itr.prev()) {
-        console.log(itr.value);
-    }
-
-    for (let itr of list.begin) {
-        console.log("aaa : " + itr);
-    }
-
-    let map: Map<string, number> = new Map();
-    map.set("a", 3);
-    map.set("h", 1);
-    map.set("g", 1);
-    map.set("f", 1);
-    map.set("e", 1);
-    map.set("d", 1);
-    map.set("c", 1);
-    map.set("b", 2);
-
-    let arr = new AAA();
-
-    let t1 = MITOIA.Timer.time;
-
-    arr.sort2();
-
-    let t2 = MITOIA.Timer.time;
-    let t3 = t2 - t1;
-
-    for (let itr of map) {
-        console.log(itr);
-    }
-
-    let def: {[key:string]:number} = {};
-    let aaaaa = def["a"] === null;
-
-    setTimeout(() => {
+    new MITOIA.Looper(16).run(() => {
+        engine.autoStretchCanvas();
         rp.render(engine, cam, n0);
-    }, 100);
-
-    let str: string = null;
+    });
 
     let a = 1;
+
+    /*
+    
+
+    var vertShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertShader, vert);
+    gl.compileShader(vertShader);
+
+    var fragShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragShader, frag);
+    gl.compileShader(fragShader);
+
+    var program = gl.createProgram();
+    gl.attachShader(program, vertShader);
+    gl.attachShader(program, fragShader);
+
+    gl.linkProgram(program);
+    gl.useProgram(program);
+
+    var vertexPosAttr = gl.getAttribLocation(program, 'position');
+    gl.enableVertexAttribArray(vertexPosAttr);
+
+    //var colorPosAttr = gl.getAttribLocation(program, 'aVertexColor');
+    //gl.enableVertexAttribArray(colorPosAttr);
+
+    var vertices = [
+        1.0, 1.0, 0.0,
+        -1.0, 1.0, 0.0,
+        1.0, -1.0, 0.0,
+        -1.0, -1.0, 0.0
+    ];
+
+    var vertices1 = [
+        -0.5, -0.5, 0.1,
+        -0.5, 0.5, 0.1,
+        0.5, -0.5, 0.1
+    ];
+    
+
+    var squareVerticesBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices1), gl.STATIC_DRAW);
+    gl.vertexAttribPointer(vertexPosAttr, 3, gl.FLOAT, false, 0, 0);
+
+    //var squareVerticesColorBuffer = gl.createBuffer();
+    //gl.bindBuffer(gl.ARRAY_BUFFER, squareVerticesColorBuffer);
+    //gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW);
+    //gl.vertexAttribPointer(colorPosAttr, 4, gl.FLOAT, false, 0, 0);
+
+    //var matrix = new MatrixHelper();
+    //matrix.trans([0.0, 0.0, -5.0]);
+    //matrix.make(40, 640 / 480, 0.1, 100.0);
+    //matrix.set(gl, program);
+
+    var indexesBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexesBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint8Array([0, 1, 2]), gl.STATIC_DRAW);
+
+    gl.drawElements(gl.TRIANGLES, 3, gl.UNSIGNED_BYTE, 0);
+    let err = gl.getError();
+
+    let done = true;
+    */
 });
