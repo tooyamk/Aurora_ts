@@ -19,6 +19,8 @@ namespace MITOIA {
         private _renderingQueueLength: uint = 0;
         private _renderingQueueCapacity: uint = 0;
 
+        private _globalDefines: ShaderDefines = new ShaderDefines();
+
         constructor() {
             super();
 
@@ -139,7 +141,7 @@ namespace MITOIA {
         private _renderByQueue(): void {
             for (let i = 0; i < this._renderingQueueLength; ++i) {
                 let rn = this._renderingQueue[i];
-                rn.renderer.use(rn.material);
+                rn.renderer.draw(this._globalDefines, rn.material);
             }
         }
     }

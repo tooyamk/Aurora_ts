@@ -84,8 +84,8 @@ window.addEventListener("DOMContentLoaded", () => {
         uniform sampler2D tex;
         varying vec3 tmp;
         void main(void){
-            texture2D(tex, vec2(arr[0], 0.0));
-            gl_FragColor = vec4(color.x, color.y, color.z, 1);
+            vec4 c = texture2D(tex, vec2(arr[0], 0.0));
+            gl_FragColor = vec4(tmp.x, tmp.y, c.x, 1);
         }`;
 
     let vertexBuffer = new MITOIA.GLVertexBuffer(engine.gl);
@@ -95,22 +95,25 @@ window.addEventListener("DOMContentLoaded", () => {
     indexBuffer.upload([0, 1, 2], MITOIA.GLUsageType.STATIC_DRAW);
 
     let assetStore = new MITOIA.AssetStore();
-    assetStore.vertexBuffers.push(vertexBuffer);
-    assetStore.vertexBufferMapping.set("position", 0);
-    assetStore.indexBuffers.push(indexBuffer);
-    assetStore.indexBufferMapping.set("index", 0);
+    assetStore.vertexBuffers.set("position", vertexBuffer);
+    assetStore.indexBuffers.set("index", indexBuffer);
+
 
     let renderer = n1.addComponent(new MITOIA.MeshRenderer());
     renderer.assetStore = assetStore;
     renderer.materials[0] = new MITOIA.Material(new MITOIA.Shader(engine, vert, frag));
-    renderer.attributes.add("position");
     //renderer.vertexBuffers["position"] = vertexBuffer;
 
     engine.gl.internalGL.viewport(0, 0, canvas.width, canvas.height);
 
-    new MITOIA.Looper(16).run(() => {
+    let fps = new MITOIA.FPSDetector();
+
+    new MITOIA.Looper(14).run(() => {
         engine.autoStretchCanvas();
         rp.render(engine, cam, n0);
+
+        fps.record();
+        console.log(fps.fps);
     });
 
     let a = 1;

@@ -10,10 +10,12 @@ namespace MITOIA {
             this.shader = shader;
         }
 
-        public use(): void {
+        public use(globalDefines: ShaderDefines): GLProgram {
             if (this.shader) {
-                this.shader.switch(this.defines);
-                this.shader.use();
+                this.shader.switch(globalDefines, this.defines);
+                return this.shader.use();
+            } else {
+                return null;
             }
         }
     }

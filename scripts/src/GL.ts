@@ -653,40 +653,6 @@ namespace MITOIA {
             }
         }
 
-        public getAttribLocations(program: GLProgram, names: string[], rst: number[] = null): number[] {
-            rst = rst || [];
-
-            if (program) {
-                let n = names.length;
-                let p = program.internalProgram;
-                for (let i = 0; i < n; ++i) {
-                    rst[i] = this._gl.getAttribLocation(p, names[i]);
-                }
-                rst.length = n;
-            } else {
-                rst.length = 0;
-            }
-
-            return rst;
-        }
-
-        public getUniformLocations(program: GLProgram, names: string[], rst: WebGLUniformLocation[] = null): WebGLUniformLocation[] {
-            rst = rst || [];
-
-            if (program) {
-                let n = names.length;
-                let p = program.internalProgram;
-                for (let i = 0; i < n; ++i) {
-                    rst[i] = this._gl.getUniformLocation(p, names[i]);
-                }
-                rst.length = n;
-            } else {
-                rst.length = 0;
-            }
-
-            return rst;
-        }
-
         public vertexAttribPointerEx(buffer: GLVertexBuffer, indx: number, size: number, type: number, normalized: boolean, stride: number, offset: number): void {
             let info = this._usedVertexAttribs[indx];
             if (!info) {

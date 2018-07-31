@@ -3,34 +3,24 @@
 namespace MITOIA {
     export class MeshRenderer extends Renderer {
         public assetStore: AssetStore = null;
-        public attributes: ShaderAttributes = new ShaderAttributes();
-        public indexName: string = "index";
 
         public isReady(): boolean {
-            return this.assetStore && this.indexName && this.indexName.length > 0;
+            return this.assetStore != null;
         }
 
-        public use(material: Material): void {
-            material.use();
+        public draw(globalDefines: ShaderDefines, material: Material): void {
+            let p = material.use(globalDefines);
 
-            if (this.attributes) {
-                this.attributes.getLocations(material.shader);
-
-                let names = this.attributes.names;
-                for (let i = 0, n = names.length; i < n; ++i) {
-                    let pos = this.attributes.locations[i];
-                    if (pos >= 0) {
-                        let name = names[i];
-                        
-                        let buffer = this.assetStore.getVertexBuffer(name);
-                        if (buffer) buffer.use(pos);
-                    }
+            if (p) {
+                let atts = p.attributes;
+                for (let i = 0, n = atts.length; i < n; ++i) {
+                    let att = atts[i];
+                    let buffer = this.assetStore.getVertexBuffer(att);
+                    if (buffer) buffer.use(att.location);
                 }
-            }
 
-            let buffer = this.assetStore.getIndexBuffer(this.indexName);
-            if (buffer) {
-                buffer.draw(GLDrawMode.TRIANGLES);
+                let buffer = this.assetStore.getIndexBuffer();
+                if (buffer) buffer.draw(GLDrawMode.TRIANGLES);
             }
         }
     }

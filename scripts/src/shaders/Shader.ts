@@ -25,22 +25,12 @@ namespace MITOIA {
             return this._uniforms;
         }
 
-        public switch(defines: ShaderDefines): void {
-            let key = defines ? defines.toKey() : null;
+        public switch(globalDefines: ShaderDefines, localDefines: ShaderDefines): void {
+            let key = (globalDefines ? globalDefines.getKey() : "") + (localDefines ? localDefines.getKey() : "");
 
             this._curProgram = this._getProgramFromCache(key);
             if (!this._curProgram) {
-                let appendDefs = "";
-
-                let defMap = defines._internalDefines;
-                for (let name in defMap) {
-                    let value = defMap[name];
-                    if (value === null) {
-                        appendDefs += "#define " + value + "\n";
-                    } else {
-                        appendDefs += "#define " + value + " " + value + "\n";
-                    }
-                }
+                let appendDefs = (globalDefines ? globalDefines.getDefineString() : "") + (localDefines ? localDefines.getDefineString() : "");
 
                 this._curProgram = new GLProgram(this._engine.gl);
                 this._curProgram.compileAndLink(appendDefs + this._vertexSource, appendDefs + this._fragmentSource);
@@ -56,12 +46,9 @@ namespace MITOIA {
             this._uniforms = this._curProgram.uniforms;
         }
 
-        public getAttributeLocations(names: string[], rst: number[] = null): number[] {
-            return this._engine.gl.getAttribLocations(this._curProgram, names, rst);
-        }
-
-        public use(): void {
+        public use(): GLProgram {
             if (this._curProgram) this._curProgram.use();
+            return this._curProgram;
         }
 
         public dispose(): void {

@@ -1,19 +1,16 @@
 namespace MITOIA {
     export class AssetStore {
-        public vertexBuffers: GLVertexBuffer[] = [];
-        public vertexBufferMapping: Map<string, int> = new Map();
+        public vertexBuffers: Map<string, GLVertexBuffer> = new Map();
+        public indexBuffers: Map<string, GLIndexBuffer> = new Map();
 
-        public indexBuffers: GLIndexBuffer[] = [];
-        public indexBufferMapping: Map<string, int> = new Map();
+        public assetMapping: IAssetMapping = null;
 
-        public getVertexBuffer(name: string): GLVertexBuffer {
-            let idx = this.vertexBufferMapping.get(name);
-            return idx >= 0 ? this.vertexBuffers[idx] : null;
+        public getVertexBuffer(info: GLProgramAttributeInfo): GLVertexBuffer {
+            return (this.assetMapping ? this.assetMapping : DefaultAssetMapping.Instance).getVertexBuffer(info, this);
         }
 
-        public getIndexBuffer(name: string): GLIndexBuffer {
-            let idx = this.indexBufferMapping.get(name);
-            return idx >= 0 ? this.indexBuffers[idx] : null;
+        public getIndexBuffer(): GLIndexBuffer {
+            return (this.assetMapping ? this.assetMapping : DefaultAssetMapping.Instance).getIndexBuffer(this);
         }
     }
 }

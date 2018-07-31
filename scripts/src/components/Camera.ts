@@ -2,18 +2,12 @@ namespace MITOIA {
     export class Camera extends AbstractComponent {
         public readonly clearData: GLClearData = new GLClearData();
 
-        protected _projectionMatrix: Matrix44;
+        protected _projectionMatrix: Matrix44 = new Matrix44();
         protected _zNear: number;
         protected _zFar: number;
         protected _aspectRatio: number;
 
         public cullingMask: uint = 0xFFFFFFFF;
-
-        constructor() {
-            super();
-
-            this._projectionMatrix = new Matrix44();
-        }
 
         public get aspectRatio(): number {
             return this._aspectRatio;
