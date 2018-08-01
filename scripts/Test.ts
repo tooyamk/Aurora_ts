@@ -68,24 +68,24 @@ window.addEventListener("DOMContentLoaded", () => {
     let be = n1.getComponentByType(MITOIA.TestBehavior);
     
     let vert = `
-        attribute vec3 position;
+        attribute vec3 a_position;
         attribute vec2 uv;
         uniform float color1;
-        varying vec3 tmp;
+        //varying vec3 tmp;
         void main(void){
-            tmp = position;
-            gl_Position = vec4(position.x, position.y, position.z, 1);
+            //tmp = a_position;
+            gl_Position = vec4(a_position.x, a_position.y, a_position.z, 1);
         }`;
 
     let frag = `
         precision highp float;
-        uniform vec3 color;
+        uniform vec4 u_color;
         uniform float arr[20];
         uniform sampler2D tex;
-        varying vec3 tmp;
+        //varying vec3 tmp;
         void main(void){
-            vec4 c = texture2D(tex, vec2(arr[0], 0.0));
-            gl_FragColor = vec4(tmp.x, tmp.y, c.x, 1);
+            //vec4 c = texture2D(tex, vec2(arr[0], 0.0));
+            gl_FragColor = vec4(u_color.x, u_color.y, u_color.z, u_color.w);
         }`;
 
     let vertexBuffer = new MITOIA.GLVertexBuffer(engine.gl);
@@ -95,26 +95,29 @@ window.addEventListener("DOMContentLoaded", () => {
     indexBuffer.upload([0, 1, 2], MITOIA.GLUsageType.STATIC_DRAW);
 
     let assetStore = new MITOIA.AssetStore();
-    assetStore.vertexBuffers.set("position", vertexBuffer);
-    assetStore.indexBuffers.set("index", indexBuffer);
-
+    assetStore.a_position = vertexBuffer;
+    assetStore.indexBuffer = indexBuffer;
 
     let renderer = n1.addComponent(new MITOIA.MeshRenderer());
     renderer.assetStore = assetStore;
-    renderer.materials[0] = new MITOIA.Material(new MITOIA.Shader(engine, vert, frag));
+
+    let mat = new MITOIA.Material(new MITOIA.Shader(engine.gl, vert, frag));
+    mat.uniforms.setFloat4("u_color", 1, 1, 0, 0);
+    mat.alphaBlend = true;
+    renderer.materials[0] = mat;
     //renderer.vertexBuffers["position"] = vertexBuffer;
 
     engine.gl.internalGL.viewport(0, 0, canvas.width, canvas.height);
 
     let fps = new MITOIA.FPSDetector();
 
-    new MITOIA.Looper(14).run(() => {
+    new MITOIA.Looper(16).run(() => {
         engine.autoStretchCanvas();
         rp.render(engine, cam, n0);
 
         fps.record();
-        console.log(fps.fps);
-    });
+        //console.log(fps.fps);
+    }, true);
 
     let a = 1;
 

@@ -21,6 +21,17 @@
             "problemMatcher": [
                 "$tsc-watch"
             ]
-        }
+        },
+        {
+            "label": "rebuild-lib",
+            "type": "typescript",
+            "tsconfig": "tsconfig-build-lib.json",
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "group": {
+                "kind": "build"
+            }
+        },
     ]
 }

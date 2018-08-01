@@ -17,9 +17,10 @@ namespace MITOIA {
 
         public run(callback: () => void, immediate: boolean = false): void {
             this._callback = callback;
-            if (this._callback) {
-                if (immediate) this._callback();
-                if (this._callback) setTimeout(() => { this._tick(); }, this._delay);
+            if (immediate) {
+                this._doCallback();
+            } else {
+                if (this._callback) setTimeout(() => { this._doCallback(); }, this._delay);
             }
         }
 
@@ -27,10 +28,15 @@ namespace MITOIA {
             this._callback = null;
         }
 
-        private _tick(): void {
+        private _doCallback(): void {
             if (this._callback) {
+                let t = Timer.utc;
                 this._callback();
-                setTimeout(() => { this._tick(); }, this._delay);
+                if (this._callback) {
+                    t = this._delay - Timer.utc + t;
+                    if (t < 0) t = 0;
+                    if (this._callback) setTimeout(() => { this._doCallback(); }, t);
+                }
             }
         }
     }

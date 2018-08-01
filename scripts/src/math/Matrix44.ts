@@ -201,6 +201,42 @@ namespace MITOIA {
             this.m33 = 1;
         }
 
+        public transpose(rst: Matrix44): Matrix44 {
+            rst = rst || this;
+
+            let n01: number = this.m01;
+            let n02: number = this.m02;
+            let n03: number = this.m03;
+            let n10: number = this.m10;
+            let n11: number = this.m11;
+            let n12: number = this.m12;
+            let n13: number = this.m13;
+            let n20: number = this.m20;
+            let n21: number = this.m21;
+            let n22: number = this.m22;
+            let n23: number = this.m23;
+            let n30: number = this.m30;
+            let n31: number = this.m31;
+            let n32: number = this.m32;
+
+            rst.m01 = n10;
+            rst.m02 = n20;
+            rst.m03 = n30;
+            rst.m10 = n01;
+            rst.m11 = n11;
+            rst.m12 = n21;
+            rst.m13 = n31;
+            rst.m20 = n02;
+            rst.m21 = n12;
+            rst.m22 = n22;
+            rst.m23 = n32;
+            rst.m30 = n03;
+            rst.m31 = n13;
+            rst.m32 = n23;
+
+            return rst;
+        }
+
         public decomposition(rstRot: Matrix44, rstScale: Vector3 = null): void {
             rstRot = rstRot || new Matrix44();
 

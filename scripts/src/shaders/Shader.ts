@@ -1,6 +1,6 @@
 namespace MITOIA {
     export class Shader {
-        protected _engine: Engine;
+        protected _gl: GL;
         protected _vertexSource: string;
         protected _fragmentSource: string;
 
@@ -11,10 +11,14 @@ namespace MITOIA {
         protected _attributes: GLProgramAttributeInfo[] = null;
         protected _uniforms: GLProgramUniformInfo[] = null;
 
-        constructor (engine: Engine, vertexSource: string, fragmentSource: string) {
-            this._engine = engine;
+        constructor(gl: GL, vertexSource: string, fragmentSource: string) {
+            this._gl = gl;
             this._vertexSource = vertexSource;
             this._fragmentSource = fragmentSource;
+        }
+
+        public get gl(): GL {
+            return this._gl;
         }
 
         public get attributes(): GLProgramAttributeInfo[] {
@@ -32,7 +36,7 @@ namespace MITOIA {
             if (!this._curProgram) {
                 let appendDefs = (globalDefines ? globalDefines.getDefineString() : "") + (localDefines ? localDefines.getDefineString() : "");
 
-                this._curProgram = new GLProgram(this._engine.gl);
+                this._curProgram = new GLProgram(this._gl);
                 this._curProgram.compileAndLink(appendDefs + this._vertexSource, appendDefs + this._fragmentSource);
 
                 if (key && key.length > 0) {

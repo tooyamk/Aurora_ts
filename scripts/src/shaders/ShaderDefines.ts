@@ -20,11 +20,11 @@ namespace MITOIA {
             }
         }
 
-        public get _internalDefines(): { [key: string] : null | string } {
-            return this._defines;
+        public hasDefine(name: string): boolean {
+            return this._defines[name] !== undefined;
         }
 
-        public getDefine(name: string,): null | boolean | string {
+        public getDefine(name: string): null | boolean | string {
             let v = this._defines[name];
             if (v === undefined) {
                 return null;
