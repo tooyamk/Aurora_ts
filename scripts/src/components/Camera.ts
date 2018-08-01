@@ -54,7 +54,7 @@ namespace MITOIA {
             return rst;
         }
 
-        /*
+        /**
 		 * foucs (0, 0) = (left, top)
 		 */
         public getRay(screenWidth: number, screenHeight: number, focusX: number, focusY: number, rst: Ray = null): Ray {

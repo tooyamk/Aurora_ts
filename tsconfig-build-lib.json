@@ -7,7 +7,7 @@
     "sourceMap": true,
     "module": "amd",
     "target": "es6",
-    "removeComments": true,
+    "removeComments": false,
     "preserveConstEnums": true,
     "listFiles": true,
     "listEmittedFiles": true,

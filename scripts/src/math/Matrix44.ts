@@ -52,7 +52,7 @@ namespace MITOIA {
             return rst;
         }
 
-        /*
+        /**
 		 * aspectRatio = width / height
 		 */
         public static createPerspectiveFieldOfViewLHMatrix(fieldOfViewY: number, aspectRatio: number, zNear: number, zFar: number, rst: Matrix44 = null): Matrix44 {
@@ -530,7 +530,7 @@ namespace MITOIA {
             rst.m33 = m33;
         }
 
-        //local scale
+        /** local scale. */
         public prependScale34XYZ(x: number = 1, y: number = 1, z: number = 1): void {
             this.m00 *= x;
             this.m01 *= x;
@@ -570,7 +570,7 @@ namespace MITOIA {
             this.prependScale44XYZ(scale.x, scale.y, scale.z);
         }
 
-        //local translate
+        /** local translate. */
         public prependTranslate34XYZ(x: number = 0, y: number = 0, z: number = 0): void {
             this.m30 += x * this.m00 + y * this.m10 + z * this.m20;
             this.m31 += x * this.m01 + y * this.m11 + z * this.m21;

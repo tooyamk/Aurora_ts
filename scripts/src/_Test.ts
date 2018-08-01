@@ -112,6 +112,14 @@ window.addEventListener("DOMContentLoaded", () => {
     renderer.materials[0] = mat;
     //renderer.vertexBuffers["position"] = vertexBuffer;
 
+    let tex = new MITOIA.GLTexture2D(engine.gl);
+
+    let img = new Image();
+    img.src = "http://127.0.0.1/Mitoia/res/tex1.png";
+    img.onload = () => {
+        tex.upload(0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, img);
+    }
+
     let fps = new MITOIA.FPSDetector();
 
     new MITOIA.Looper(16).run(() => {
@@ -124,7 +132,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     let a = 1;
 
-    /*
+    /**
     
 
     var vertShader = gl.createShader(gl.VERTEX_SHADER);

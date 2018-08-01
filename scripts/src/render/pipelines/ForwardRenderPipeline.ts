@@ -89,19 +89,6 @@ namespace MITOIA {
                         }
                     }
                 }
-                //let material = renderer.material;
-                //if (material && material.shader) {
-                //    material.shader.switch(material.defines);
-               // }
-                
-                //let program = renderer.material;
-
-                //this.shader.use();
-
-                //let pos = this._gl.getAttribLocation(program, "position");
-                //mesh.asset.vertexBuffer.bind();
-                //this._gl.vertexAttribPointer(pos, size, type, normalized, stride, offset);
-                let a = 1;
             }
 
             node.foreach(child => {
