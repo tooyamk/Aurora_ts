@@ -11,9 +11,10 @@
     "preserveConstEnums": true,
     "listFiles": true,
     "listEmittedFiles": true,
+    "declaration": true,
     "outFile": "./build/mitoia.core.js"
   },
-  "include": [ "scripts/src/**/*.ts" ],
-  "exclude": [],
+  "include": [ "./scripts/src/**/*.ts" ],
+  "exclude": [ "./scripts/src/**/_*.ts" ],
   "compileOnSave": true
 }

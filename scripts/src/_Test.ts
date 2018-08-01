@@ -1,3 +1,8 @@
+class ZXC {
+    constructor() {
+    }
+}
+
 class AAA {
     private _arr: number[] = [];
     constructor() {
@@ -64,8 +69,6 @@ window.addEventListener("DOMContentLoaded", () => {
     let rp = new MITOIA.ForwardRenderPipeline();
 
     let b = cam instanceof MITOIA.ForwardRenderPipeline;
-
-    let be = n1.getComponentByType(MITOIA.TestBehavior);
     
     let vert = `
         attribute vec3 a_position;
@@ -102,12 +105,12 @@ window.addEventListener("DOMContentLoaded", () => {
     renderer.assetStore = assetStore;
 
     let mat = new MITOIA.Material(new MITOIA.Shader(engine.gl, vert, frag));
-    mat.uniforms.setFloat4("u_color", 1, 1, 0, 0);
-    mat.alphaBlend = true;
+    mat.uniforms.setFloat4("u_color", 1, 1, 0, 0.2);
+    mat.enabledBlend = true;
+    mat.blendFunc = new MITOIA.GLBlendFunc();
+    mat.blendFunc.set(MITOIA.GLBlendFactorSrcType.SRC_ALPHA, MITOIA.GLBlendFactorDestType.ONE_MINUS_SRC_ALPHA);
     renderer.materials[0] = mat;
     //renderer.vertexBuffers["position"] = vertexBuffer;
-
-    engine.gl.internalGL.viewport(0, 0, canvas.width, canvas.height);
 
     let fps = new MITOIA.FPSDetector();
 

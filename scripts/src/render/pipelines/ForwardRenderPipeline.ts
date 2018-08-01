@@ -114,7 +114,7 @@ namespace MITOIA {
             let alphaBlendStart: number = null;
             for (let i = 0; i < this._renderingQueueLength; ++i) {
                 let rn = this._renderingQueue[i];
-                if (rn.material.alphaBlend) {
+                if (rn.material.enabledBlend) {
                     if (alphaBlendStart === null) {
                         alphaBlendStart = i;
                         renderingPriority = rn.material.renderingPriority;
