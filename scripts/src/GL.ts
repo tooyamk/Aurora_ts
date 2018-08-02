@@ -278,7 +278,7 @@ namespace MITOIA {
         }
     }
 
-    export class GLProgramAttributeInfo {
+    export class GLProgramAttribInfo {
         public readonly name: string;
         public readonly size: number;
         public readonly type: GLAttributeType;
@@ -294,23 +294,43 @@ namespace MITOIA {
 
     export class GLProgramUniformInfo {
         public readonly name: string;
+        public readonly isArray: boolean;
         public readonly size: number;
         public readonly type: GLUniformType;
         public readonly location: WebGLUniformLocation;
+        public readonly isSampler: boolean;
 
         constructor(info: WebGLActiveInfo, location: WebGLUniformLocation) {
             this.name = info.name;
             this.size = info.size;
             this.type = info.type;
             this.location = location;
+
+            let len = this.name.length;
+            if (len > 3 && this.name.substr(len - 3) === "[0]") {
+                this.name = this.name.substr(0, len - 3);
+                this.isArray = true;
+            } else {
+                this.isArray = false;
+            }
+
+            this.isSampler = this.type === GLUniformType.SAMPLER_2D || this.type === GLUniformType.SAMPLER_CUBE;
         }
+    }
+
+    export enum GLProgramStatus {
+        EMPTY,
+        SUCESS,
+        COMPILE_FAILED
     }
 
     export class GLProgram {
         private _gl: GL;
         private _program: WebGLProgram;
-        private _attributes: GLProgramAttributeInfo[] = null;
+        private _attributes: GLProgramAttribInfo[] = null;
         private _uniforms: GLProgramUniformInfo[] = null;
+        private _numSamplers: uint = 0;
+        private _status: GLProgramStatus = GLProgramStatus.EMPTY;
 
         constructor(gl: GL) {
             this._gl = gl;
@@ -318,7 +338,11 @@ namespace MITOIA {
             this._program = this._gl.internalGL.createProgram();
         }
 
-        public get attributes(): GLProgramAttributeInfo[] {
+        public get status(): GLProgramStatus {
+            return this._status;
+        }
+
+        public get attributes(): GLProgramAttribInfo[] {
             return this._attributes;
         }
 
@@ -328,6 +352,20 @@ namespace MITOIA {
 
         public get internalProgram(): WebGLProgram {
             return this._program;
+        }
+
+        public get numSamplers(): uint {
+            return this._numSamplers;
+        }
+
+        public hasUniform(name: string): boolean {
+            if (this._uniforms) {
+                for (let i = 0, n = this._uniforms.length; i < n; ++i) {
+                    if (this._uniforms[i].name === name) return true;
+                }
+            }
+
+            return false;
         }
 
         public dispose(): void {
@@ -374,19 +412,25 @@ namespace MITOIA {
                 this._attributes = [];
                 for (let i = 0; i < count; ++i) {
                     let info = gl.getActiveAttrib(this._program, i);
-                    this._attributes[i] = new GLProgramAttributeInfo(info, gl.getAttribLocation(this._program, info.name));
+                    this._attributes[i] = new GLProgramAttribInfo(info, gl.getAttribLocation(this._program, info.name));
                 }
 
                 count = gl.getProgramParameter(this._program, GL.ACTIVE_UNIFORMS);
                 this._uniforms = [];
                 for (let i = 0; i < count; ++i) {
                     let info = gl.getActiveUniform(this._program, i);
-                    this._uniforms[i] = new GLProgramUniformInfo(info, gl.getUniformLocation(this._program, info.name));
+                    let pu = new GLProgramUniformInfo(info, gl.getUniformLocation(this._program, info.name));
+                    this._uniforms[i] = pu;
+                    if (pu.isSampler) ++this._numSamplers;
                 }
+
+                this._status = GLProgramStatus.SUCESS;
             } else {
                 gl.validateProgram(this._program);
                 err = gl.getProgramInfoLog(this._program);
                 console.log("link program error : " + err);
+
+                this._status = GLProgramStatus.COMPILE_FAILED;
             }
 
             return err;
@@ -398,17 +442,25 @@ namespace MITOIA {
     }
 
     export abstract class AbstractGLTexture {
+        private static _idGenerator = 0;
+
+        protected _id: number;
         protected _gl: GL;
         protected _tex: WebGLTexture;
-        protected _textureType: GLTextureType;
+        protected _textureType: GLTexType;
 
-        constructor(gl: GL, type: GLTextureType) {
+        constructor(gl: GL, type: GLTexType) {
+            this._id = ++AbstractGLTexture._idGenerator;
             this._gl = gl;
             this._textureType = type;
             this._tex = this._gl.internalGL.createTexture();
         }
 
-        public get textureType(): GLTextureType {
+        public get id(): number {
+            return this._id;
+        }
+
+        public get textureType(): GLTexType {
             return this._textureType;
         }
 
@@ -458,21 +510,32 @@ namespace MITOIA {
             this._gl.internalGL.generateMipmap(this._textureType);
         }
 
-        public bind(): void {
-            this._gl.bindTexture(this);
+        public bind(force: boolean = false): void {
+            this._gl.bindTexture(this, force);
+        }
+
+        public use(index: uint, location: WebGLUniformLocation): boolean {
+            if (this._gl.activeTexture(this, index)) {
+                this._gl.internalGL.uniform1i(location, index);
+                return true;
+            }
+            return false;
         }
     }
 
     export class GLTexture2D extends AbstractGLTexture {
         constructor(gl: GL) {
-            super(gl, GLTextureType.TEXTURE_2D);
+            super(gl, GLTexType.TEXTURE_2D);
         }
 
         public upload(level: int, internalformat: GLTexInternalFormat, format: GLTexFormat, type: GLTexDataType, data: ImageBitmap | ImageData | HTMLVideoElement | HTMLImageElement | HTMLCanvasElement): void {
             if (this._tex) {
                 this.bind();
 
-                this._gl.internalGL.texImage2D(this._textureType, level, internalformat, format, type, data);
+                let gl = this._gl.internalGL;
+                gl.texImage2D(this._textureType, level, internalformat, format, type, data);
+                //gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MAG_FILTER, GLTexFilterValue.LINEAR);
+                gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MIN_FILTER, GLTexFilterValue.LINEAR);
             }
         }
 
@@ -487,7 +550,7 @@ namespace MITOIA {
 
     export class GLTextureCube extends AbstractGLTexture {
         constructor(gl: GL) {
-            super(gl, GLTextureType.TEXTURE_CUBE_MAP);
+            super(gl, GLTexType.TEXTURE_CUBE_MAP);
         }
     }
 
@@ -579,7 +642,7 @@ namespace MITOIA {
         }
     }
 
-    class UsedVertexAttrib {
+    class UsedVertexAttribInfo {
         public bufferID: number = null;
         public uploadCount: number = null;
         public size: number = null;
@@ -589,6 +652,9 @@ namespace MITOIA {
         public offset: number = null;
     }
 
+    class ActivedTextureInfo {
+        public texID: number = null;
+    }
 
     /**
      * See https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Constants
@@ -1750,6 +1816,8 @@ namespace MITOIA {
         private _maxVaryingVectors: uint = 0;
         private _maxVertexUniformVectors: uint = 0;
         private _maxFragmentUniformVectors: uint = 0;
+        private _maxTextureSize: uint = 0;
+        private _maxTexutreImageUnits: uint = 0;
 
         private _supportUintIndexes: boolean = false;
 
@@ -1776,7 +1844,8 @@ namespace MITOIA {
         private _boundFrameBuffer: WebGLFramebuffer = null;
         private _boundRenderBuffer: WebGLRenderbuffer = null;
 
-        private _usedVertexAttribs: { [key: number]: UsedVertexAttrib } = {};
+        private _usedVertexAttribs: UsedVertexAttribInfo[] = [];
+        private _activedTextures: ActivedTextureInfo[] = [];
 
         constructor(gl: WebGLRenderingContext) {
             this._gl = gl;
@@ -1791,6 +1860,8 @@ namespace MITOIA {
             this._maxVaryingVectors = this._gl.getParameter(GL.MAX_VARYING_VECTORS);
             this._maxVertexUniformVectors = this._gl.getParameter(GL.MAX_VERTEX_UNIFORM_VECTORS);
             this._maxFragmentUniformVectors = this._gl.getParameter(GL.MAX_FRAGMENT_UNIFORM_VECTORS);
+            this._maxTexutreImageUnits = this._gl.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS);
+            this._maxTextureSize = this._gl.getParameter(GL.MAX_TEXTURE_SIZE);
 
             this._supportUintIndexes = false || this._gl.getExtension('OES_element_index_uint') !== null;
 
@@ -1807,6 +1878,12 @@ namespace MITOIA {
             this._boundTexture2D = this._gl.getParameter(GL.TEXTURE_BINDING_2D);
             this._boundFrameBuffer = this._gl.getParameter(GL.FRAMEBUFFER_BINDING);
             this._boundRenderBuffer = this._gl.getParameter(GL.RENDERBUFFER_BINDING);
+
+            this._usedVertexAttribs.length = this._maxFragmentUniformVectors;
+            for (let i = 0; i < this._maxFragmentUniformVectors; ++i) this._usedVertexAttribs[i] = new UsedVertexAttribInfo();
+
+            this._activedTextures.length = this._maxTexutreImageUnits;
+            for (let i = 0; i < this._maxTexutreImageUnits; ++i) this._activedTextures[i] = new ActivedTextureInfo();
         }
 
         public get version(): string {
@@ -1827,6 +1904,14 @@ namespace MITOIA {
 
         public get maxFragmentUniformVectors(): uint {
             return this._maxFragmentUniformVectors;
+        }
+
+        public get maxTexutreImageUnits(): uint {
+            return this._maxTexutreImageUnits;
+        }
+
+        public get maxTextureSize(): uint {
+            return this._maxTextureSize;
         }
 
         public get supprotUintIndexes(): boolean {
@@ -1924,7 +2009,7 @@ namespace MITOIA {
                     this._gl.bindBuffer(type, this._boundVertexBuffer);
                     return true;
                 }
-            } else if (type == GLBufferType.ELEMENT_ARRAY_BUFFER) {
+            } else if (type === GLBufferType.ELEMENT_ARRAY_BUFFER) {
                 if (this._boundIndexBuffer !== buffer.internalBuffer) {
                     this._boundIndexBuffer = buffer.internalBuffer;
                     this._gl.bindBuffer(type, this._boundIndexBuffer);
@@ -1942,7 +2027,7 @@ namespace MITOIA {
                     this._boundVertexBuffer = null;
                     this._gl.bindBuffer(type, null);
                 }
-            } else if (type == GLBufferType.ELEMENT_ARRAY_BUFFER) {
+            } else if (type === GLBufferType.ELEMENT_ARRAY_BUFFER) {
                 if (this._boundIndexBuffer === buffer.internalBuffer) {
                     this._boundIndexBuffer = null;
                     this._gl.bindBuffer(type, null);
@@ -1950,18 +2035,18 @@ namespace MITOIA {
             }
         }
 
-        public bindTexture(tex: AbstractGLTexture): boolean {
+        public bindTexture(tex: AbstractGLTexture, force: boolean = false): boolean {
             let type = tex.textureType;
-            if (type === GLTextureType.TEXTURE_2D) {
-                if (this._boundTexture2D !== tex.internalTexture) {
+            if (type === GLTexType.TEXTURE_2D) {
+                if (force || this._boundTexture2D !== tex.internalTexture) {
                     this._boundTexture2D = tex.internalTexture;
-                    this._gl.bindBuffer(type, this._boundTexture2D);
+                    this._gl.bindTexture(type, this._boundTexture2D);
                     return true;
                 }
-            } else if (type == GLTextureType.TEXTURE_CUBE_MAP) {
-                if (this._boundTextureCube !== tex.internalTexture) {
+            } else if (type === GLTexType.TEXTURE_CUBE_MAP) {
+                if (force || this._boundTextureCube !== tex.internalTexture) {
                     this._boundTextureCube = tex.internalTexture;
-                    this._gl.bindBuffer(type, this._boundTextureCube);
+                    this._gl.bindTexture(type, this._boundTextureCube);
                     return true;
                 }
             }
@@ -1971,12 +2056,12 @@ namespace MITOIA {
 
         public unbindTexture(tex: AbstractGLTexture): void {
             let type = tex.textureType;
-            if (type === GLTextureType.TEXTURE_2D) {
+            if (type === GLTexType.TEXTURE_2D) {
                 if (this._boundTexture2D === tex.internalTexture) {
                     this._boundTexture2D = null;
                     this._gl.bindBuffer(type, null);
                 }
-            } else if (type == GLTextureType.TEXTURE_CUBE_MAP) {
+            } else if (type === GLTexType.TEXTURE_CUBE_MAP) {
                 if (this._boundTextureCube === tex.internalTexture) {
                     this._boundTextureCube = null;
                     this._gl.bindBuffer(type, null);
@@ -2012,26 +2097,41 @@ namespace MITOIA {
             }
         }
 
-        public vertexAttribPointerEx(buffer: GLVertexBuffer, indx: number, size: number, type: number, normalized: boolean, stride: number, offset: number): void {
-            let info = this._usedVertexAttribs[indx];
-            if (!info) {
-                info = new UsedVertexAttrib();
-                this._usedVertexAttribs[indx] = info;
+        public vertexAttribPointerEx(buffer: GLVertexBuffer, index: uint, size: number, type: number, normalized: boolean, stride: number, offset: number): void {
+            if (index < this._maxVertexAttributes) {
+                let info = this._usedVertexAttribs[index];
+
+                if (info.bufferID !== buffer.id || info.uploadCount !== buffer.uploadCount || info.size !== size || info.type !== type || info.normalized !== normalized || info.stride !== stride || info.offset !== offset) {
+                    info.bufferID = buffer.id;
+                    info.uploadCount = buffer.uploadCount;
+                    info.size = size;
+                    info.type = type;
+                    info.normalized = normalized;
+                    info.stride = stride;
+                    info.offset = offset;
+
+                    this._gl.enableVertexAttribArray(index);
+                    buffer.bind();
+                    this._gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
+                }
+            }
+        }
+
+        public activeTexture(tex: AbstractGLTexture, index: uint): boolean {
+            if (index < this._maxTexutreImageUnits) {
+                let info = this._activedTextures[index];
+
+                if (info.texID !== tex.id) {
+                    info.texID = tex.id;
+
+                    this._gl.activeTexture(GL.TEXTURE0 + index);
+                    tex.bind(true);
+                }
+
+                return true;
             }
 
-            if (info.bufferID !== buffer.id || info.uploadCount !== buffer.uploadCount || info.size !== size || info.type !== type || info.normalized !== normalized || info.stride !== stride || info.offset !== offset) {
-                info.bufferID = buffer.id;
-                info.uploadCount = buffer.uploadCount;
-                info.size = size;
-                info.type = type;
-                info.normalized = normalized;
-                info.stride = stride;
-                info.offset = offset;
-
-                this._gl.enableVertexAttribArray(indx);
-                buffer.bind();
-                this._gl.vertexAttribPointer(indx, size, type, normalized, stride, offset);
-            }
+            return false;
         }
     }
 
@@ -2087,6 +2187,7 @@ namespace MITOIA {
         FLOAT_VEC2 = GL.FLOAT_VEC2,
         FLOAT_VEC3 = GL.FLOAT_VEC3,
         FLOAT_VEC4 = GL.FLOAT_VEC4,
+        INT = GL.INT,
         INT_VEC2 = GL.INT_VEC2,
         INT_VEC3 = GL.INT_VEC3,
         INT_VEC4 = GL.INT_VEC4,
@@ -2135,7 +2236,7 @@ namespace MITOIA {
         ELEMENT_ARRAY_BUFFER = GL.ELEMENT_ARRAY_BUFFER
     }
 
-    export enum GLTextureType {
+    export enum GLTexType {
         TEXTURE_2D = GL.TEXTURE_2D,
         TEXTURE_CUBE_MAP = GL.TEXTURE_CUBE_MAP
     }
@@ -2202,7 +2303,9 @@ namespace MITOIA {
 
         /**
          * Format: RGBA
+         * 
          * Type: UNSIGNED_BYTE, UNSIGNED_SHORT_4_4_4_4, UNSIGNED_SHORT_5_5_5_1
+         * 
          * Red, green, blue and alpha components are read from the color buffer.
          */
         RGBA = GL.RGBA, 

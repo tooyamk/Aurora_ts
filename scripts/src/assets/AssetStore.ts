@@ -1,20 +1,20 @@
 namespace MITOIA {
     export class AssetStore {
-        public a_position: GLVertexBuffer = null;
-        public a_normal: GLVertexBuffer = null;
-        public a_texCoord0: GLVertexBuffer = null;
-        public a_color0: GLVertexBuffer = null;
-        public a_index: GLVertexBuffer = null;
+        public a_Position: GLVertexBuffer = null;
+        public a_Normal: GLVertexBuffer = null;
+        public a_TexCoord0: GLVertexBuffer = null;
+        public a_Color0: GLVertexBuffer = null;
+        public a_Index: GLVertexBuffer = null;
 
         public indexBuffer: GLIndexBuffer = null;
 
         public customVertexBuffer: Map<string, GLVertexBuffer> = null;
         public customIndexBuffers: Map<string, GLIndexBuffer> = null;
 
-        public customGetVertexBufferFn: (info: GLProgramAttributeInfo) => GLVertexBuffer = null;
+        public customGetVertexBufferFn: (info: GLProgramAttribInfo) => GLVertexBuffer = null;
         public customGetIndexBufferFn: () => GLIndexBuffer = null;
 
-        public getVertexBuffer(info: GLProgramAttributeInfo): GLVertexBuffer {
+        public getVertexBuffer(info: GLProgramAttribInfo): GLVertexBuffer {
             let buffer: GLVertexBuffer = (<any>this)[info.name];
             if (!buffer || !(buffer instanceof GLVertexBuffer)) {
                 if (this.customVertexBuffer) buffer = this.customVertexBuffer.get(info.name);

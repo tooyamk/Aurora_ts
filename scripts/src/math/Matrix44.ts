@@ -53,7 +53,8 @@ namespace MITOIA {
         }
 
         /**
-		 * aspectRatio = width / height
+         * @param fieldOfViewY 0 to Math.PI.
+		 * @param aspectRatio = width / height.
 		 */
         public static createPerspectiveFieldOfViewLHMatrix(fieldOfViewY: number, aspectRatio: number, zNear: number, zFar: number, rst: Matrix44 = null): Matrix44 {
             let yScale: number = 1 / Math.tan(fieldOfViewY * 0.5);
@@ -208,27 +209,30 @@ namespace MITOIA {
             let n02: number = this.m02;
             let n03: number = this.m03;
             let n10: number = this.m10;
-            let n11: number = this.m11;
             let n12: number = this.m12;
             let n13: number = this.m13;
             let n20: number = this.m20;
             let n21: number = this.m21;
-            let n22: number = this.m22;
             let n23: number = this.m23;
             let n30: number = this.m30;
             let n31: number = this.m31;
             let n32: number = this.m32;
 
+            if (rst !== this) {
+                rst.m00 = this.m00;
+                rst.m11 = this.m11;
+                rst.m22 = this.m22;
+                rst.m33 = this.m33;
+            }
+
             rst.m01 = n10;
             rst.m02 = n20;
             rst.m03 = n30;
             rst.m10 = n01;
-            rst.m11 = n11;
             rst.m12 = n21;
             rst.m13 = n31;
             rst.m20 = n02;
             rst.m21 = n12;
-            rst.m22 = n22;
             rst.m23 = n32;
             rst.m30 = n03;
             rst.m31 = n13;
@@ -598,6 +602,126 @@ namespace MITOIA {
 
         public transform34Vector3(vec3: Vector3, rst: Vector3 = null): Vector3 {
             return this.transform34XYZ(vec3.x, vec3.y, vec3.z, rst);
+        }
+
+        public toArray33(transpose:boolean = false, rst: number[] = null): number[] {
+            rst = rst || [];
+
+            rst.length = 9;
+
+            rst[0] = this.m00;
+            rst[4] = this.m11;
+            rst[8] = this.m22;
+
+            if (transpose) {
+                rst[1] = this.m10;
+                rst[2] = this.m20;
+
+                rst[3] = this.m01;
+                rst[5] = this.m21;
+
+                rst[6] = this.m02;
+                rst[7] = this.m12;
+            } else {
+                rst[1] = this.m01;
+                rst[2] = this.m02;
+
+                rst[3] = this.m10;
+                rst[5] = this.m12;
+
+                rst[6] = this.m20;
+                rst[7] = this.m21;
+            }
+
+            return rst;
+        }
+
+        public toArray34(transpose: boolean = false, rst: number[] = null): number[] {
+            rst = rst || [];
+
+            rst.length = 12;
+
+            rst[0] = this.m00;
+
+            if (transpose) {
+                rst[1] = this.m10;
+                rst[2] = this.m20;
+                rst[3] = this.m30;
+
+                rst[4] = this.m01;
+                rst[5] = this.m11;
+                rst[6] = this.m21;
+                rst[7] = this.m31;
+
+                rst[8] = this.m02;
+                rst[9] = this.m12;
+                rst[10] = this.m22;
+                rst[11] = this.m32;
+            } else {
+                rst[1] = this.m01;
+                rst[2] = this.m02;
+
+                rst[3] = this.m10;
+                rst[4] = this.m11;
+                rst[5] = this.m12;
+
+                rst[6] = this.m20;
+                rst[7] = this.m21;
+                rst[8] = this.m22;
+
+                rst[9] = this.m30;
+                rst[10] = this.m31;
+                rst[11] = this.m32;
+            }
+
+            return rst;
+        }
+
+        public toArray44(transpose: boolean = false, rst: number[] = null): number[] {
+            rst = rst || [];
+
+            rst.length = 16;
+
+            rst[0] = this.m00;
+            rst[5] = this.m11;
+            rst[10] = this.m22;
+            rst[15] = this.m33;
+
+            if (transpose) {
+                rst[1] = this.m10;
+                rst[2] = this.m20;
+                rst[3] = this.m30;
+
+                rst[4] = this.m01;
+                rst[6] = this.m21;
+                rst[7] = this.m31;
+
+                rst[8] = this.m02;
+                rst[9] = this.m12;
+                rst[11] = this.m32;
+
+                rst[12] = this.m03;
+                rst[13] = this.m13;
+                rst[14] = this.m23;
+            } else {
+                rst[1] = this.m01;
+                rst[2] = this.m02;
+                rst[3] = this.m03;
+
+                rst[4] = this.m10;
+                rst[6] = this.m12;
+                rst[7] = this.m13;
+
+                rst[8] = this.m20;
+                rst[9] = this.m21;
+                rst[11] = this.m23;
+
+                rst[12] = this.m30;
+                rst[13] = this.m31;
+                rst[14] = this.m32;
+            }
+
+            return rst;
         }
     }
 }

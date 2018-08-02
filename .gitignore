@@ -39,6 +39,7 @@ TestResult.xml
 [Rr]eleasePS/
 dlldata.c
 wwwroot/app.js
+wwwroot/res/
 
 *.js.map
 *_i.c

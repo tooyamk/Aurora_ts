@@ -12,14 +12,12 @@ namespace MITOIA {
         public alphaBlendSort: boolean = true;
 
         private _gl: WebGLRenderingContext;
-        private _worldToView: Matrix44 = new Matrix44();
-        private _worldToProj: Matrix44 = new Matrix44();
 
         private _renderingQueue: RenderNode[] = [];
         private _renderingQueueLength: uint = 0;
         private _renderingQueueCapacity: uint = 0;
 
-        private _globalDefines: ShaderDefines = new ShaderDefines();
+        private _renderingNode: RenderNode = null;
 
         constructor() {
             super();
@@ -34,10 +32,7 @@ namespace MITOIA {
             let gl = engine.gl;
             this._gl = gl.internalGL;
 
-            camera.owner.getWorldMatrix(this._worldToView);
-            this._worldToView.invert();
-
-            this._worldToView.append44(camera.getProjectionMatrix(this._worldToProj), this._worldToProj);
+            super.render(engine, camera, node);
             
             gl.clearWithClearData(camera.clearData);
 
@@ -84,8 +79,8 @@ namespace MITOIA {
                             queueNode.node = node;
                             queueNode.renderer = renderer;
                             node.getWorldMatrix(queueNode.localToWorld);
-                            queueNode.localToWorld.append34(this._worldToView, queueNode.localToView);
-                            queueNode.localToWorld.append44(this._worldToProj, queueNode.localToProj);
+                            queueNode.localToWorld.append34(this._worldToViewMatrix, queueNode.localToView);
+                            queueNode.localToWorld.append44(this._worldToProjMatrix, queueNode.localToProj);
                         }
                     }
                 }
@@ -128,8 +123,19 @@ namespace MITOIA {
         private _renderByQueue(): void {
             for (let i = 0; i < this._renderingQueueLength; ++i) {
                 let rn = this._renderingQueue[i];
-                rn.renderer.draw(this._globalDefines, rn.material);
+                this._renderingNode = rn;
+                rn.renderer.draw(this, rn.material);
             }
+
+            this._renderingNode = null;
+        }
+
+        public onShaderPreUse(): void {
+            let shader = this._renderingNode.material.shader;
+
+            if (shader.hasUniform(Shader.u_mL2P)) this._shaderUniform.setNumberArray(Shader.u_mL2P, this._renderingNode.localToProj.toArray44());
+            if (shader.hasUniform(Shader.u_mL2V)) this._shaderUniform.setNumberArray(Shader.u_mL2V, this._renderingNode.localToView.toArray44());
+            if (shader.hasUniform(Shader.u_mL2W)) this._shaderUniform.setNumberArray(Shader.u_mL2W, this._renderingNode.localToWorld.toArray44());
         }
     }
 }

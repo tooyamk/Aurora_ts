@@ -31,6 +31,86 @@ namespace MITOIA {
             return this.setFromXYZW(quat.x, quat.y, quat.z, quat.w);
         }
 
+        /**
+         * 
+         * @param rst values are radian.
+         */
+        public getEuler(rst: Vector3 = null): Vector3 {
+            rst = rst || new Vector3();
+
+            rst.x = Math.atan2(2 * (this.w * this.x + this.y * this.z), (1 - 2 * (this.x * this.x + this.y * this.y)));
+            rst.y = Math.asin(2 * (this.w * this.y - this.z * this.x));
+            rst.z = Math.atan2(2 * (this.w * this.z + this.x * this.y), (1 - 2 * (this.y * this.y + this.z * this.z)));
+
+            return rst;
+        }
+
+        public static createFromEulerX(radian: number, rst: Quaternion = null): Quaternion {
+            rst = rst || new Quaternion();
+
+            radian *= 0.5;
+
+            rst.x = Math.sin(radian);
+            rst.y = 0;
+            rst.z = 0;
+            rst.w = Math.cos(radian);
+
+            return rst;
+        }
+
+        public static createFromEulerY(radian: number, rst: Quaternion = null): Quaternion {
+            rst = rst || new Quaternion();
+
+            radian *= 0.5;
+
+            rst.x = 0;
+            rst.y = Math.sin(radian);
+            rst.z = 0;
+            rst.w = Math.cos(radian);
+
+            return rst;
+        }
+
+        public static createFromEulerZ(radian: number, rst: Quaternion = null): Quaternion {
+            rst = rst || new Quaternion();
+
+            radian *= 0.5;
+
+            rst.x = 0;
+            rst.y = 0;
+            rst.z = Math.sin(radian);
+            rst.w = Math.cos(radian);
+
+            return rst;
+        }
+
+        public static createFromEulerXYZ(x: number = 0, y: number = 0, z: number = 0, rst: Quaternion = null): Quaternion {
+            rst = rst || new Quaternion();
+
+            x *= 0.5;
+            y *= 0.5;
+            z *= 0.5;
+
+            let sinX: number = Math.sin(x);
+            let cosX: number = Math.cos(x);
+            let sinY: number = Math.sin(y);
+            let cosY: number = Math.cos(y);
+            let sinZ: number = Math.sin(z);
+            let cosZ: number = Math.cos(z);
+
+            let scXY: number = sinX * cosY;
+            let csXY: number = cosX * sinY;
+            let ccXY: number = cosX * cosY;
+            let ssXY: number = sinX * sinY;
+
+            rst.x = scXY * cosZ - csXY * sinZ;
+            rst.y = csXY * cosZ + scXY * sinZ;
+            rst.z = ccXY * sinZ - ssXY * cosZ;
+            rst.w = ccXY * cosZ + ssXY * sinZ;
+
+            return rst;
+        }
+
         public clone(): Quaternion {
             return new Quaternion(this.x, this.y, this.z, this.w);
         }
@@ -67,8 +147,8 @@ namespace MITOIA {
             return rst;
         }
 
-        public rotateVector3(vec3: Vector3): Vector3 {
-            return this.rotateXYZ(vec3.x, vec3.y, vec3.z, vec3);
+        public rotateVector3(vec3: Vector3, rst: Vector3 = null): Vector3 {
+            return this.rotateXYZ(vec3.x, vec3.y, vec3.z, rst);
         }
 
         public toMatrix(rst: Matrix44 = null): Matrix44 {

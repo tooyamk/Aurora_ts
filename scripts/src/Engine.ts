@@ -64,7 +64,15 @@ namespace MITOIA {
             return this._glVersion;
         }
 
-        public autoStretchCanvas(devicePixelRatio: number = null): void {
+        public get canvasWidth(): number {
+            return this._canvas.width;
+        }
+
+        public get canvasHeight(): number {
+            return this._canvas.height;
+        }
+
+        public autoStretchCanvas(devicePixelRatio: number = null): boolean {
             if (devicePixelRatio === null || devicePixelRatio === undefined) devicePixelRatio = window.devicePixelRatio;
 
             let canvas = this._canvas;
@@ -72,7 +80,11 @@ namespace MITOIA {
                 canvas.width = canvas.clientWidth;
                 canvas.height = canvas.clientHeight;
                 this._gl.internalGL.viewport(0, 0, canvas.width, canvas.height);
+
+                return true;
             }
+
+            return false;
         }
     }
 }

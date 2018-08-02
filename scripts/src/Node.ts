@@ -254,7 +254,7 @@ namespace MITOIA {
             return rst ? rst.setFromXYZ(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32) : new Vector3(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32);
         }
 
-        public setLocalPosition(x: number, y: number, z: number, notificationUpdate: boolean = true): void {
+        public setLocalPosition(x: number = 0, y: number = 0, z: number = 0, notificationUpdate: boolean = true): void {
             this._localMatrix.m30 = x;
             this._localMatrix.m31 = y;
             this._localMatrix.m32 = z;
@@ -266,7 +266,7 @@ namespace MITOIA {
         }
 
         public appendLocalTranslate(x: number = 0, y: number = 0, z: number = 0, notificationUpdate: boolean = true): void {
-            let vec3 = this._localRot.rotateVector3(Node._tmpVec3);
+            let vec3 = this._localRot.rotateXYZ(x, y, z, Node._tmpVec3);
 
             this._localMatrix.m30 += vec3.x;
             this._localMatrix.m31 += vec3.y;

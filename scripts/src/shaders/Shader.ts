@@ -1,5 +1,13 @@
 namespace MITOIA {
     export class Shader {
+        public static readonly u_mW2V: string = "u_mW2V";
+        public static readonly u_mW2P: string = "u_mW2P";
+        public static readonly u_mV2P: string = "u_mV2P";
+        
+        public static readonly u_mL2V: string = "u_mL2V";
+        public static readonly u_mL2W: string = "u_mL2W";
+        public static readonly u_mL2P: string = "u_mL2P";
+
         protected _gl: GL;
         protected _vertexSource: string;
         protected _fragmentSource: string;
@@ -8,7 +16,7 @@ namespace MITOIA {
         protected _cachedPrograms: { [key: string]: GLProgram} = {};
 
         protected _curProgram: GLProgram = null;
-        protected _attributes: GLProgramAttributeInfo[] = null;
+        protected _attributes: GLProgramAttribInfo[] = null;
         protected _uniforms: GLProgramUniformInfo[] = null;
 
         constructor(gl: GL, vertexSource: string, fragmentSource: string) {
@@ -21,7 +29,7 @@ namespace MITOIA {
             return this._gl;
         }
 
-        public get attributes(): GLProgramAttributeInfo[] {
+        public get attributes(): GLProgramAttribInfo[] {
             return this._attributes;
         }
 
@@ -29,7 +37,15 @@ namespace MITOIA {
             return this._uniforms;
         }
 
-        public switch(globalDefines: ShaderDefines, localDefines: ShaderDefines): void {
+        public hasUniform(name: string): boolean {
+            if (this._curProgram) {
+                return this._curProgram.hasUniform(name);
+            }
+
+            return false;
+        }
+
+        public ready(globalDefines: ShaderDefines, localDefines: ShaderDefines): boolean {
             let key = (globalDefines ? globalDefines.getKey() : "") + (localDefines ? localDefines.getKey() : "");
 
             this._curProgram = this._getProgramFromCache(key);
@@ -48,10 +64,192 @@ namespace MITOIA {
 
             this._attributes = this._curProgram.attributes;
             this._uniforms = this._curProgram.uniforms;
+
+            return this._curProgram.status === GLProgramStatus.SUCESS;
         }
 
-        public use(): GLProgram {
+        public use(globalUniforms: ShaderUniforms, localUniforms: ShaderUniforms): GLProgram {
             if (this._curProgram) this._curProgram.use();
+
+            if (this._curProgram) {
+                this._curProgram.use();
+
+                if (this._curProgram.uniforms) {
+                    let uniforms = this._curProgram.uniforms;
+                    let gl = this._gl.internalGL;
+                    let samplerIndex = 0;
+                    for (let i = 0, n = uniforms.length; i < n; ++i) {
+                        let info = uniforms[i];
+                        let v = localUniforms ? localUniforms._uniforms[info.name] : null;
+                        if (!v) v = globalUniforms ? globalUniforms._uniforms[info.name] : null;
+                        if (v) {
+                            switch (info.type) {
+                                case GLUniformType.FLOAT:
+                                    {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform1fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform1f(info.location, v.array[0]);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                case GLUniformType.FLOAT_VEC2:
+                                    {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform2fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform2f(info.location, v.array[0], v.array[1]);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                case GLUniformType.FLOAT_VEC3:
+                                    {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform3fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform3f(info.location, v.array[0], v.array[1], v.array[2]);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                case GLUniformType.FLOAT_VEC4:
+                                    {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform4fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform4f(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                case GLUniformType.INT:
+                                    {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform1iv(info.location, v.array);
+                                            } else {
+                                                gl.uniform1i(info.location, v.array[0]);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                case GLUniformType.INT_VEC2:
+                                    {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform2iv(info.location, v.array);
+                                            } else {
+                                                gl.uniform2i(info.location, v.array[0], v.array[1]);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                case GLUniformType.INT_VEC3:
+                                    {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform3iv(info.location, v.array);
+                                            } else {
+                                                gl.uniform3i(info.location, v.array[0], v.array[1], v.array[2]);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                case GLUniformType.INT_VEC4:
+                                    {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform4iv(info.location, v.array);
+                                            } else {
+                                                gl.uniform4i(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                case GLUniformType.BOOL:
+                                    {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform1fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform1f(info.location, v.array[0]);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                case GLUniformType.BOOL_VEC2:
+                                    {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform2fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform2f(info.location, v.array[0], v.array[1]);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                case GLUniformType.BOOL_VEC3:
+                                    {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform3fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform3f(info.location, v.array[0], v.array[1], v.array[2]);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                case GLUniformType.BOOL_VEC4:
+                                    {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform4fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform4f(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                case GLUniformType.FLOAT_MAT2:
+                                    if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix2fv(info.location, false, v.array);
+                                    break;
+                                case GLUniformType.FLOAT_MAT3:
+                                    if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix3fv(info.location, false, v.array);
+                                    break;
+                                case GLUniformType.FLOAT_MAT4:
+                                    if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix4fv(info.location, false, v.array);
+                                    break;
+                                case GLUniformType.SAMPLER_2D:
+                                    if (v.sampler2D.use(samplerIndex, info.location))++samplerIndex;
+                                    break;
+                                case GLUniformType.SAMPLER_CUBE:
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+
             return this._curProgram;
         }
 

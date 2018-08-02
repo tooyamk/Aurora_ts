@@ -4,6 +4,8 @@ namespace MITOIA {
         private _time: number = 0;
         private _fps: number = 0;
         private _count: number = 0;
+
+        private _dis: HTMLDivElement = null;
         
         constructor(delay: number = 1000) {
             this._delay = delay;
@@ -36,6 +38,31 @@ namespace MITOIA {
                 this._fps = 1000.0 * this._count / d;
                 this._count = 0;
                 this._time = t;
+
+                if (this._dis && this._dis.parentNode) this._dis.innerText = this._fps.toString();
+            }
+        }
+
+        public show(): void {
+            this._createDisplay();
+            if (!this._dis.parentNode) {
+                this._dis.innerText = "";
+                document.body.appendChild(this._dis);
+            }
+        }
+
+        public hide(): void {
+            if (this._dis && this._dis.parentNode) this._dis.parentNode.removeChild(this._dis);
+        }
+
+        private _createDisplay(): void {
+            if (!this._dis) {
+                this._dis = document.createElement("div");
+                this._dis.style.position = "absolute";
+                this._dis.style.left = "0px";
+                this._dis.style.top = "0px";
+                this._dis.style.backgroundColor = "#ffffcc";
+                this._dis.innerText = "";
             }
         }
     }

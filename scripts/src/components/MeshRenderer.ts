@@ -8,10 +8,12 @@ namespace MITOIA {
             return this.assetStore != null;
         }
 
-        public draw(globalDefines: ShaderDefines, material: Material): void {
-            let p = material.use(globalDefines);
+        public draw(renderPipeline: AbstractRenderPipeline, material: Material): void {
+            if (material.ready(renderPipeline.shaderDefines)) {
+                renderPipeline.onShaderPreUse();
 
-            if (p) {
+                let p = material.use(renderPipeline.shaderUniform);
+
                 let atts = p.attributes;
                 for (let i = 0, n = atts.length; i < n; ++i) {
                     let att = atts[i];

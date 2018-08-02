@@ -6,7 +6,7 @@ namespace MITOIA {
             return false;
         }
 
-        public draw(globalDefines: ShaderDefines, material: Material): void {
+        public draw(renderPipeline: AbstractRenderPipeline, material: Material): void {
             //todo
         }
     }

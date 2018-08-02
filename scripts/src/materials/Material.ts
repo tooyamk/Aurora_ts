@@ -15,22 +15,24 @@ namespace MITOIA {
             this.shader = shader;
         }
 
-        public use(globalDefines: ShaderDefines): GLProgram {
+        public ready(globalDefines: ShaderDefines): boolean {
             if (this.shader) {
-                this.shader.switch(globalDefines, this.defines);
-                this.uniforms.use(this.shader);
-
-                let gl = this.shader.gl;
-                gl.enableBlend(this.enabledBlend);
-                if (this.enabledBlend) {
-                    if (this.blendEquation) gl.setBlendEquation(this.blendEquation);
-                    if (this.blendFunc) gl.setBlendFunc(this.blendFunc);
-                }
-    
-                return this.shader.use();
-            } else {
-                return null;
+                this.shader.ready(globalDefines, this.defines);
+                return true;
             }
+
+            return false;
+        }
+
+        public use(globalUniforms: ShaderUniforms): GLProgram {
+            let gl = this.shader.gl;
+            gl.enableBlend(this.enabledBlend);
+            if (this.enabledBlend) {
+                if (this.blendEquation) gl.setBlendEquation(this.blendEquation);
+                if (this.blendFunc) gl.setBlendFunc(this.blendFunc);
+            }
+
+            return this.shader.use(globalUniforms, this.uniforms);
         }
     }
 }
