@@ -476,7 +476,7 @@ namespace MITOIA {
             if (this._localMatrixDirty) {
                 this._localMatrixDirty = false;
 
-                this._localRot.toMatrix(this._localMatrix);
+                this._localRot.toMatrix33(this._localMatrix);
                 this._localMatrix.prependScale34Vector3(this._localScale);
             }
         }

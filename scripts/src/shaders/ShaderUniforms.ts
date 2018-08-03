@@ -1,5 +1,5 @@
 namespace MITOIA {
-    export enum ShaderUniformType {
+    export const enum ShaderUniformType {
         NUMBER,
         SAMPLER_2D,
         SAMPLER_CUBE

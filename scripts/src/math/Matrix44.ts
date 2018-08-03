@@ -1,4 +1,17 @@
 namespace MITOIA {
+    /**
+	 * m00 m01 m02 m03  axisX                                                                                       
+	 * m10 m11 m12 m13  axisY                                                                                                                                                    
+	 * m20 m21 m22 m23  axisZ                                                                                       
+	 * m30 m31 m32 m33
+     * 
+	 * x' = x * m00 + y * m10 + z * m20 + w * m30                                                           
+	 * y' = x * m01 + y * m11 + z * m21 + w * m31                                                                       
+	 * z' = x * m02 + y * m12 + z * m22 + w * m32                                                                       
+	 * w' = x * m03 + y * m13 + z * m23 + w * m33
+     * 
+     * @see https://docs.microsoft.com/en-us/previous-versions/windows/desktop/bb281696(v%3dvs.85)
+	 */
     export class Matrix44 {
         public m00: number;
         public m01: number;
@@ -44,24 +57,28 @@ namespace MITOIA {
 
         public static createOrthoLHMatrix(width: number, height: number, zNear: number, zFar: number, rst: Matrix44 = null): Matrix44 {
             rst = rst || new Matrix44();
-            rst.set44(2 / width, 0, 0, 0,
+            rst.set44(
+                2 / width, 0, 0, 0,
                 0, 2 / height, 0, 0,
                 0, 0, 1 / (zFar - zNear), 0,
-                0, 0, zNear / (zNear - zFar));
+                0, 0, zNear / (zNear - zFar), 1);
 
             return rst;
         }
 
         /**
-         * @param fieldOfViewY 0 to Math.PI.
-		 * @param aspectRatio = width / height.
+         * Builds a left-handed perspective projection matrix based on a field of view.
+         * 
+         * @param fieldOfViewY radian,Field of view in the y direction, in radians..
+		 * @param aspectRatio width / height.
 		 */
-        public static createPerspectiveFieldOfViewLHMatrix(fieldOfViewY: number, aspectRatio: number, zNear: number, zFar: number, rst: Matrix44 = null): Matrix44 {
+        public static createPerspectiveFovLHMatrix(fieldOfViewY: number, aspectRatio: number, zNear: number, zFar: number, rst: Matrix44 = null): Matrix44 {
             let yScale: number = 1 / Math.tan(fieldOfViewY * 0.5);
             let xScale: number = yScale / aspectRatio;
 
             rst = rst || new Matrix44();
-            rst.set44(xScale, 0, 0, 0,
+            rst.set44(
+                xScale, 0, 0, 0,
                 0, yScale, 0, 0,
                 0, 0, zFar / (zFar - zNear), 1,
                 0, 0, zNear * zFar / (zNear - zFar), 0);
@@ -71,9 +88,26 @@ namespace MITOIA {
 
         public static createPerspectiveLHMatrix(width: number, height: number, zNear: number, zFar: number, rst: Matrix44 = null): Matrix44 {
             rst = rst || new Matrix44();
-            rst.set44(2 * zNear / width, 0, 0, 0,
-                0, 2 * zNear / height, 0, 0,
+            let zNear2 = zNear * 2;
+            rst.set44(
+                zNear2 / width, 0, 0, 0,
+                0, zNear2 / height, 0, 0,
                 0, 0, zFar / (zFar - zNear), 1,
+                0, 0, zNear * zFar / (zNear - zFar), 0);
+
+            return rst;
+        }
+
+        /**
+         * Builds a customized, left-handed perspective projection matrix.
+         */
+        public static createPerspectiveOffCenterLH(left: number, right: number, bottom: number, top: number, zNear: number, zFar: number, rst: Matrix44 = null): Matrix44 {
+            rst = rst || new Matrix44();
+            let zNear2 = zNear * 2;
+            rst.set44(
+                zNear2 / (right - left), 0, 0, 0,
+                0, zNear2 / (top - bottom), 0, 0,
+                (left + right) / (left - right), (top + bottom) / (bottom - top), zFar / (zFar - zNear), 1,
                 0, 0, zNear * zFar / (zNear - zFar), 0);
 
             return rst;
@@ -491,7 +525,7 @@ namespace MITOIA {
             rst.m32 = m32;
         }
 
-        public append44(m: Matrix44, rst: Matrix44 = null): void {
+        public append44(m: Matrix44, rst: Matrix44 = null): Matrix44 {
             let m00: number = this.m00 * m.m00 + this.m01 * m.m10 + this.m02 * m.m20 + this.m03 * m.m30;
             let m01: number = this.m00 * m.m01 + this.m01 * m.m11 + this.m02 * m.m21 + this.m03 * m.m31;
             let m02: number = this.m00 * m.m02 + this.m01 * m.m12 + this.m02 * m.m22 + this.m03 * m.m32;
@@ -532,6 +566,8 @@ namespace MITOIA {
             rst.m31 = m31;
             rst.m32 = m32;
             rst.m33 = m33;
+
+            return rst;
         }
 
         /** local scale. */
@@ -602,6 +638,58 @@ namespace MITOIA {
 
         public transform34Vector3(vec3: Vector3, rst: Vector3 = null): Vector3 {
             return this.transform34XYZ(vec3.x, vec3.y, vec3.z, rst);
+        }
+
+        public transform44XYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
+            var w: number = x * this.m03 + y * this.m13 + z * this.m23 + this.m33;
+
+            let dstX: number = (x * this.m00 + y * this.m10 + z * this.m20 + this.m30) / w;
+            let dstY: number = (x * this.m01 + y * this.m11 + z * this.m21 + this.m31) / w;
+            let dstZ: number = (x * this.m02 + y * this.m12 + z * this.m22 + this.m32) / w;
+
+            return rst ? rst.setFromXYZ(dstX, dstY, dstZ) : new Vector3(dstX, dstY, dstZ);
+        }
+
+        public transform44Vector3(vec3: Vector3, rst: Vector3 = null): Vector3 {
+            return this.transform44XYZ(vec3.x, vec3.y, vec3.z, rst);
+        }
+
+        public transform44XYZW(x: number = 0, y: number = 0, z: number = 0, w: number, rst: Vector4 = null): Vector4 {
+            let dstX: number = x * this.m00 + y * this.m10 + z * this.m20 + w * this.m30;
+            let dstY: number = x * this.m01 + y * this.m11 + z * this.m21 + w * this.m31;
+            let dstZ: number = x * this.m02 + y * this.m12 + z * this.m22 + w * this.m32;
+            let dstW: number = x * this.m03 + y * this.m13 + z * this.m23 + w * this.m33;
+
+            return rst ? rst.setFromXYZW(dstX, dstY, dstZ, dstW) : new Vector4(dstX, dstY, dstZ, dstW);
+        }
+
+        public transform44Vector4(vec4: Vector4, rst: Vector4 = null): Vector4 {
+            return this.transform44XYZW(vec4.x, vec4.y, vec4.z, vec4.w, rst);
+        }
+
+        /**
+		 * transform axisY and axisZ
+		 */
+        public transformLRH(): void {
+            let tmp: number = this.m10;
+            this.m10 = this.m20;
+            this.m20 = tmp;
+
+            tmp = this.m01;
+            this.m01 = this.m02;
+            this.m02 = tmp;
+
+            tmp = this.m11;
+            this.m11 = this.m22;
+            this.m22 = tmp;
+
+            tmp = this.m21;
+            this.m21 = this.m12;
+            this.m12 = tmp;
+
+            tmp = this.m31;
+            this.m31 = this.m32;
+            this.m32 = tmp;
         }
 
         public toArray33(transpose:boolean = false, rst: number[] = null): number[] {

@@ -151,7 +151,7 @@ namespace MITOIA {
             return this.rotateXYZ(vec3.x, vec3.y, vec3.z, rst);
         }
 
-        public toMatrix(rst: Matrix44 = null): Matrix44 {
+        public toMatrix33(rst: Matrix44 = null): Matrix44 {
             let x2: number = this.x * 2.0;
             let y2: number = this.y * 2.0;
             let z2: number = this.z * 2.0;
@@ -169,25 +169,32 @@ namespace MITOIA {
                 rst.m00 = 1 - yy - zz;
                 rst.m01 = xy + wz;
                 rst.m02 = xz - wy;
-                rst.m03 = 0;
 
                 rst.m10 = xy - wz;
                 rst.m11 = 1 - xx - zz;
                 rst.m12 = yz + wx;
-                rst.m13 = 0;
 
                 rst.m20 = xz + wy;
                 rst.m21 = yz - wx;
                 rst.m22 = 1 - xx - yy;
-                rst.m23 = 0;
-
-                rst.m30 = 0;
-                rst.m31 = 0;
-                rst.m32 = 0;
-                rst.m33 = 1;
             } else {
                 rst = new Matrix44(1 - yy - zz, xy + wz, xz - wy, 0, xy - wz, 1 - xx - zz, yz + wx, 0, xz + wy, yz - wx, 1 - xx - yy, 0);
             }
+
+            return rst;
+        }
+
+        public toMatrix44(rst: Matrix44 = null): Matrix44 {
+            rst = this.toMatrix33(rst);
+
+            rst.m03 = 0;
+            rst.m13 = 0;
+            rst.m23 = 0;
+
+            rst.m30 = 0;
+            rst.m31 = 0;
+            rst.m32 = 0;
+            rst.m33 = 1;
 
             return rst;
         }

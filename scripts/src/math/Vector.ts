@@ -57,8 +57,45 @@ namespace MITOIA {
             return new Vector3(1, 1, 1);
         }
 
+        public static get Up(): Vector3 {
+            return new Vector3(0, 1, 0);
+        }
+
+        public static get Down(): Vector3 {
+            return new Vector3(0, -1, 0);
+        }
+
+        public static get Left(): Vector3 {
+            return new Vector3(-1, 0, 0);
+        }
+
+        public static get Right(): Vector3 {
+            return new Vector3(1, 0, 0);
+        }
+
+        public static get Front(): Vector3 {
+            return new Vector3(0, 0, 1);
+        }
+
+        public static get Back(): Vector3 {
+            return new Vector3(0, 0, -1);
+        }
+
         public clone(): Vector3 {
             return new Vector3(this.x, this.y, this.z);
+        }
+
+        public toVector4(w:number = 1, rst: Vector4 = null): Vector4 {
+            if (rst) {
+                rst.x = this.x;
+                rst.y = this.y;
+                rst.z = this.z;
+                rst.w = w;
+            } else {
+                rst = new Vector4(this.x, this.y, this.z, w);
+            }
+
+            return rst;
         }
 
         public setFromXYZ(x: number = 0, y: number = 0, z: number = 0): Vector3 {

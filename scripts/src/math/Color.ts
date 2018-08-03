@@ -10,6 +10,10 @@ namespace MITOIA {
             this.b = b;
         }
 
+        public static get WHITE(): Color3 {
+            return new Color3(1, 1, 1);
+        }
+
         public static get BLACK(): Color3 {
             return new Color3(0, 0, 0);
         }
@@ -26,6 +30,10 @@ namespace MITOIA {
             this.g = g;
             this.b = b;
             this.a = a;
+        }
+
+        public static get WHITE(): Color4 {
+            return new Color4(1, 1, 1, 1);
         }
 
         public static get BLACK(): Color4 {

@@ -27,17 +27,21 @@ namespace MITOIA {
             return this._worldToViewMatrix;
         }
 
-        public render(engine: Engine, camera: Camera, node: Node): void {
-            camera.owner.getWorldMatrix(this._worldToViewMatrix);
-            this._worldToViewMatrix.invert();
+        public render(gl: GL, camera: Camera, node: Node): void {
+            if (camera.owner) {
+                camera.owner.getWorldMatrix(this._worldToViewMatrix);
+                this._worldToViewMatrix.invert();
+            } else {
+                this._worldToViewMatrix.identity();
+            }
 
             camera.getProjectionMatrix(this._viewToProjMatrix);
 
             this._worldToViewMatrix.append44(this._viewToProjMatrix, this._worldToProjMatrix);
 
-            this._shaderUniform.setNumberArray(Shader.u_mV2P, this._viewToProjMatrix.toArray44());
-            this._shaderUniform.setNumberArray(Shader.u_mW2P, this._worldToProjMatrix.toArray44());
-            this._shaderUniform.setNumberArray(Shader.u_mW2V, this._worldToViewMatrix.toArray44());
+            this._shaderUniform.setNumberArray(Shader.u_MatV2P, this._viewToProjMatrix.toArray44());
+            this._shaderUniform.setNumberArray(Shader.u_MatW2P, this._worldToProjMatrix.toArray44());
+            this._shaderUniform.setNumberArray(Shader.u_MatW2V, this._worldToViewMatrix.toArray44());
         }
 
         public onShaderPreUse(): void {

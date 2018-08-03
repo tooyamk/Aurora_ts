@@ -68,6 +68,7 @@ wwwroot/res/
 *.scc
 *.VC.opendb
 *.VC.db
+*.min.js
 
 # Chutzpah Test files
 _Chutzpah*

@@ -28,11 +28,10 @@ namespace MITOIA {
             }
         }
 
-        public render(engine: Engine, camera: Camera, node: Node): void {
-            let gl = engine.gl;
+        public render(gl: GL, camera: Camera, node: Node): void {
             this._gl = gl.internalGL;
 
-            super.render(engine, camera, node);
+            super.render(gl, camera, node);
             
             gl.clearWithClearData(camera.clearData);
 
@@ -133,9 +132,9 @@ namespace MITOIA {
         public onShaderPreUse(): void {
             let shader = this._renderingNode.material.shader;
 
-            if (shader.hasUniform(Shader.u_mL2P)) this._shaderUniform.setNumberArray(Shader.u_mL2P, this._renderingNode.localToProj.toArray44());
-            if (shader.hasUniform(Shader.u_mL2V)) this._shaderUniform.setNumberArray(Shader.u_mL2V, this._renderingNode.localToView.toArray44());
-            if (shader.hasUniform(Shader.u_mL2W)) this._shaderUniform.setNumberArray(Shader.u_mL2W, this._renderingNode.localToWorld.toArray44());
+            if (shader.hasUniform(Shader.u_MatL2P)) this._shaderUniform.setNumberArray(Shader.u_MatL2P, this._renderingNode.localToProj.toArray44());
+            if (shader.hasUniform(Shader.u_MatL2V)) this._shaderUniform.setNumberArray(Shader.u_MatL2V, this._renderingNode.localToView.toArray44());
+            if (shader.hasUniform(Shader.u_MatL2W)) this._shaderUniform.setNumberArray(Shader.u_MatL2W, this._renderingNode.localToWorld.toArray44());
         }
     }
 }

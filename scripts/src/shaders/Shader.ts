@@ -1,12 +1,12 @@
 namespace MITOIA {
     export class Shader {
-        public static readonly u_mW2V: string = "u_mW2V";
-        public static readonly u_mW2P: string = "u_mW2P";
-        public static readonly u_mV2P: string = "u_mV2P";
+        public static readonly u_MatW2V: string = "u_MatW2V";
+        public static readonly u_MatW2P: string = "u_MatW2P";
+        public static readonly u_MatV2P: string = "u_MatV2P";
         
-        public static readonly u_mL2V: string = "u_mL2V";
-        public static readonly u_mL2W: string = "u_mL2W";
-        public static readonly u_mL2P: string = "u_mL2P";
+        public static readonly u_MatL2V: string = "u_MatL2V";
+        public static readonly u_MatL2W: string = "u_MatL2W";
+        public static readonly u_MatL2P: string = "u_MatL2P";
 
         protected _gl: GL;
         protected _vertexSource: string;

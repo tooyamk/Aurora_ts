@@ -12,7 +12,7 @@ namespace MITOIA {
         public clearStencil = true;
     }
 
-    export enum GLVertexBufferSize {
+    export const enum GLVertexBufferSize {
         ONE = 1,
         TWO = 2,
         THREE = 3,
@@ -318,7 +318,7 @@ namespace MITOIA {
         }
     }
 
-    export enum GLProgramStatus {
+    export const enum GLProgramStatus {
         EMPTY,
         SUCESS,
         COMPILE_FAILED
@@ -607,19 +607,19 @@ namespace MITOIA {
     }
 
     export class GLBlendFunc {
-        public srcRGB: GLBlendFactorSrcType;
-        public srcAlpha: GLBlendFactorSrcType;
-        public dstRGB: GLBlendFactorDestType;
-        public dstAlpha: GLBlendFactorDestType;
+        public srcRGB: GLBlendFactorValue;
+        public srcAlpha: GLBlendFactorValue;
+        public dstRGB: GLBlendFactorValue;
+        public dstAlpha: GLBlendFactorValue;
 
-        public set(sfactor: GLBlendFactorSrcType, dfactor: GLBlendFactorDestType): void {
+        public set(sfactor: GLBlendFactorValue, dfactor: GLBlendFactorValue): void {
             this.srcRGB = sfactor;
             this.srcAlpha = sfactor;
             this.dstRGB = dfactor;
             this.dstAlpha = dfactor;
         }
 
-        public setSeparate(sRGB: GLBlendFactorSrcType, dRGB: GLBlendFactorDestType, sA: GLBlendFactorSrcType, dA: GLBlendFactorDestType): void {
+        public setSeparate(sRGB: GLBlendFactorValue, dRGB: GLBlendFactorValue, sA: GLBlendFactorValue, dA: GLBlendFactorValue): void {
             this.srcRGB = sRGB;
             this.srcAlpha = sA;
             this.dstRGB = dRGB;
@@ -656,14 +656,18 @@ namespace MITOIA {
         public texID: number = null;
     }
 
+    export interface GLOptions {
+        version?: number;
+    }
+
     /**
-     * See https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Constants
+     * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Constants
      */
     export class GL {
         /** 
          * Clearing buffers 
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/clear
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/clear
          * 
          * Constants passed to WebGLRenderingContext.clear() to clear buffer masks.
          */
@@ -677,8 +681,8 @@ namespace MITOIA {
         /** 
          * Rendering primitives 
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawElements
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawArrays
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawElements
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/drawArrays
          * 
          * Constants passed to WebGLRenderingContext.drawElements() or WebGLRenderingContext.drawArrays() 
          * to specify what kind of primitive to render.
@@ -701,8 +705,8 @@ namespace MITOIA {
         /**
          * Blending modes
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFunc
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendFuncSeparate
          * 
          * Constants passed to WebGLRenderingContext.blendFunc() or WebGLRenderingContext.blendFuncSeparate() 
          * to specify the blending mode (for both, RBG and alpha, or separately).
@@ -741,8 +745,8 @@ namespace MITOIA {
         /**
          * Blending equations
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendEquation
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendEquationSeparate
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendEquation
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/blendEquationSeparate
          * 
          * Constants passed to WebGLRenderingContext.blendEquation() or 
          * WebGLRenderingContext.blendEquationSeparate() to control how the blending is 
@@ -758,7 +762,7 @@ namespace MITOIA {
         /**
          * Getting GL parameter information
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter
          * 
          * Constants passed to WebGLRenderingContext.getParameter() to specify what information to return.
          */
@@ -856,10 +860,10 @@ namespace MITOIA {
         /**
          * Buffers
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferSubData
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindBuffer
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getBufferParameter
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferSubData
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindBuffer
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getBufferParameter
          * 
          * Constants passed to WebGLRenderingContext.bufferData(), WebGLRenderingContext.bufferSubData(), 
          * WebGLRenderingContext.bindBuffer(), or WebGLRenderingContext.getBufferParameter().
@@ -882,7 +886,7 @@ namespace MITOIA {
         /**
          * Vertex attributes
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getVertexAttrib
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getVertexAttrib
          * 
          * Constants passed to WebGLRenderingContext.getVertexAttrib().
          */
@@ -899,7 +903,7 @@ namespace MITOIA {
         /** 
          * Culling 
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/cullFace
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/cullFace
          * 
          * Constants passed to WebGLRenderingContext.cullFace().
          */
@@ -915,8 +919,8 @@ namespace MITOIA {
         /**
          * Enabling and disabling
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/enable
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/disable
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/enable
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/disable
          * 
          * Constants passed to WebGLRenderingContext.enable() or WebGLRenderingContext.disable().
          */
@@ -940,7 +944,7 @@ namespace MITOIA {
         /** 
          * Errors
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getError
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getError
          * 
          * Constants returned from WebGLRenderingContext.getError().
          */
@@ -954,7 +958,7 @@ namespace MITOIA {
         /**
          * Front face directions
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/frontFace
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/frontFace
          * 
          * Constants passed to WebGLRenderingContext.frontFace().
          */
@@ -966,7 +970,7 @@ namespace MITOIA {
         /**
          * Hints
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/hint
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/hint
          * 
          * Constants passed to WebGLRenderingContext.hint()
          */
@@ -978,7 +982,7 @@ namespace MITOIA {
         public static readonly NICESTT = 0x1102; 
         /**
          * Hint for the quality of filtering when generating mipmap images with WebGLRenderingContext.generateMipmap(). 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/generateMipmap 
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/generateMipmap 
          */
         public static readonly GENERATE_MIPMAP_HINT = 0x8192;
 
@@ -1014,8 +1018,8 @@ namespace MITOIA {
         /**
          * Shaders
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/createShader
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getShaderParameter
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/createShader
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getShaderParameter
          * 
          * Constants passed to WebGLRenderingContext.createShader() or WebGLRenderingContext.getShaderParameter()
          */
@@ -1053,8 +1057,8 @@ namespace MITOIA {
         /**
          * Depth or stencil tests
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilFunc
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/depthFunc
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilFunc
          * 
          * Constants passed to WebGLRenderingContext.depthFunc() or WebGLRenderingContext.stencilFunc().
          */
@@ -1078,7 +1082,7 @@ namespace MITOIA {
         /**
          * Stencil actions
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilOp
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilOp
          * 
          * Constants passed to WebGLRenderingContext.stencilOp().
          */
@@ -1093,9 +1097,9 @@ namespace MITOIA {
         /**
          * Textures
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindTexture
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindTexture
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
          * 
          * Constants passed to WebGLRenderingContext.texParameteri(), WebGLRenderingContext.texParameterf(), 
          * WebGLRenderingContext.bindTexture(), WebGLRenderingContext.texImage2D(), and others.
@@ -1230,7 +1234,7 @@ namespace MITOIA {
         /**
          * Pixel storage modes
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/pixelStorei
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/pixelStorei
          * 
          * Constants passed to WebGLRenderingContext.pixelStorei().
          */
@@ -1243,7 +1247,7 @@ namespace MITOIA {
         /**
          * Getting GL parameter information
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/getParameter
          * 
          * Constants passed to WebGLRenderingContext.getParameter() to specify what information to return.
          */
@@ -1278,9 +1282,9 @@ namespace MITOIA {
         /**
          * Textures
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindTexture
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texParameter
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bindTexture
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
          * 
          * Constants passed to WebGLRenderingContext.texParameteri(), WebGLRenderingContext.texParameterf(),
          * WebGLRenderingContext.bindTexture(), WebGLRenderingContext.texImage2D(), and others.
@@ -1576,7 +1580,7 @@ namespace MITOIA {
         /**
          * ANGLE_instanced_arrays
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/ANGLE_instanced_arrays
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/ANGLE_instanced_arrays
          */
         /** Describes the frequency divisor used for instanced rendering. */
         public static readonly VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE = 0x88FE;
@@ -1584,7 +1588,7 @@ namespace MITOIA {
         /**
          * WEBGL_debug_renderer_info
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_debug_renderer_info
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_debug_renderer_info
          */
         /** Passed to getParameter to get the vendor string of the graphics driver. */
         public static readonly UNMASKED_VENDOR_WEBGL = 0x9245;
@@ -1594,7 +1598,7 @@ namespace MITOIA {
         /**
          * EXT_texture_filter_anisotropic
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/EXT_texture_filter_anisotropic
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/EXT_texture_filter_anisotropic
          */
         /** Returns the maximum available anisotropy. */
         public static readonly MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF;
@@ -1604,7 +1608,7 @@ namespace MITOIA {
         /**
          * WEBGL_compressed_texture_s3tc
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_compressed_texture_s3tc
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_compressed_texture_s3tc
          */
         /** A DXT1-compressed image in an RGB image format. */
         public static readonly COMPRESSED_RGB_S3TC_DXT1_EXT = 0x83F0;
@@ -1618,7 +1622,7 @@ namespace MITOIA {
         /**
          * WEBGL_compressed_texture_etc
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_compressed_texture_etc
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_compressed_texture_etc
          */
         /** One-channel (red) unsigned format compression. */
         public static readonly COMPRESSED_R11_EAC = 0x9270;
@@ -1644,7 +1648,7 @@ namespace MITOIA {
         /**
          * WEBGL_compressed_texture_pvrtc
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_compressed_texture_pvrtc
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_compressed_texture_pvrtc
          */
         /** RGB compression in 4-bit mode. One block for each 4×4 pixels. */
         public static readonly COMPRESSED_RGB_PVRTC_4BPPV1_IMG = 0x8C00;
@@ -1658,7 +1662,7 @@ namespace MITOIA {
         /**
          * WEBGL_compressed_texture_etc1
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_compressed_texture_etc1
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_compressed_texture_etc1
          */
         /** Compresses 24-bit RGB data with no alpha channel. */
         public static readonly COMPRESSED_RGB_ETC1_WEBGL = 0x8D64;
@@ -1666,7 +1670,7 @@ namespace MITOIA {
         /**
          * WEBGL_compressed_texture_atc
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_compressed_texture_atc
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_compressed_texture_atc
          */
         /** Compresses RGB textures with no alpha channel. */
         public static readonly COMPRESSED_RGB_ATC_WEBGL = 0x8C92;
@@ -1678,7 +1682,7 @@ namespace MITOIA {
         /**
          * WEBGL_depth_texture
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_depth_texture
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_depth_texture
          */
         /** Unsigned integer type for 24-bit depth texture data. */
         public static readonly UNSIGNED_INT_24_8_WEBGL = 0x84FA;
@@ -1686,7 +1690,7 @@ namespace MITOIA {
         /**
          * OES_texture_half_float
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/OES_texture_half_float
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/OES_texture_half_float
          */
         /** Half floating-point type (16-bit). */
         public static readonly HALF_FLOAT_OES = 0x8D61;
@@ -1694,7 +1698,7 @@ namespace MITOIA {
         /**
          * WEBGL_color_buffer_float
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_color_buffer_float
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_color_buffer_float
          */
         /** RGBA 32-bit floating-point color-renderable format. */
         public static readonly RGBA32F_EXT = 0x8814;
@@ -1706,7 +1710,7 @@ namespace MITOIA {
         /**
          * EXT_blend_minmax
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/EXT_blend_minmax
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/EXT_blend_minmax
          */
         /** Produces the minimum color components of the source and destination colors. */
         public static readonly MIN_EXT = 0x8007;
@@ -1716,7 +1720,7 @@ namespace MITOIA {
         /**
          * EXT_sRGB
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/EXT_sRGB
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/EXT_sRGB
          */
         /** Unsized sRGB format that leaves the precision up to the driver. */
         public static readonly SRGB_EXT = 0x8C40;
@@ -1730,7 +1734,7 @@ namespace MITOIA {
         /**
          * OES_standard_derivatives
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/OES_standard_derivatives
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/OES_standard_derivatives
          */
         /** Indicates the accuracy of the derivative calculation for the GLSL built-in functions: dFdx, dFdy, and fwidth. */
         public static readonly FRAGMENT_SHADER_DERIVATIVE_HINT_OES = 0x8B8B;
@@ -1738,7 +1742,7 @@ namespace MITOIA {
         /**
          * WEBGL_draw_buffers
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_draw_buffers
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_draw_buffers
          */
         /** ramebuffer color attachment point. */
         public static readonly COLOR_ATTACHMENT0_WEBGL = 0x8CE0;
@@ -1782,7 +1786,7 @@ namespace MITOIA {
         /**
          * OES_vertex_array_object
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/OES_vertex_array_object
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/OES_vertex_array_object
          */
         /** The bound vertex array object (VAO). */
         public static readonly VERTEX_ARRAY_BINDING_OES = 0x85B5;
@@ -1790,7 +1794,7 @@ namespace MITOIA {
         /**
          * EXT_disjoint_timer_query
          * 
-         * See https://developer.mozilla.org/en-US/docs/Web/API/EXT_disjoint_timer_query
+         * @see https://developer.mozilla.org/en-US/docs/Web/API/EXT_disjoint_timer_query
          */
         /** The number of bits used to hold the query result for the given target. */
         public static readonly QUERY_COUNTER_BITS_EXT = 0x8864;
@@ -1808,9 +1812,13 @@ namespace MITOIA {
         public static readonly GPU_DISJOINT_EXT = 0x8FBB;
 
 
+        private _canvas: HTMLCanvasElement = null;
         private _gl: WebGLRenderingContext = null;
 
-        private _version: string = "unknow";
+        private _version: number;
+        private _versionFullInfo: string = "";
+        private _vendor: string = "";
+        private _renderer: string = "";
 
         private _maxVertexAttributes: uint = 0;
         private _maxVaryingVectors: uint = 0;
@@ -1834,10 +1842,18 @@ namespace MITOIA {
         private _blendEquationRGB: GLBlendEquationType;
         private _blendEquationAlpha: GLBlendEquationType;
 
-        private _blendSrcRGB: GLBlendFactorSrcType;
-        private _blendSrcAlpha: GLBlendFactorSrcType;
-        private _blendDstRGB: GLBlendFactorDestType;
-        private _blendDstAlpha: GLBlendFactorDestType;
+        private _blendSrcRGB: GLBlendFactorValue;
+        private _blendSrcAlpha: GLBlendFactorValue;
+        private _blendDstRGB: GLBlendFactorValue;
+        private _blendDstAlpha: GLBlendFactorValue;
+
+        private _blendColor: Color4 = Color4.BLACK;
+
+        private _enabledCullFace: boolean;
+        private _cullFace: GLCullFace;
+
+        private _enabledDepthTest: boolean;
+        private _depthTest: GLDepthTest;
 
         private _boundTexture2D: WebGLTexture = null;
         private _boundTextureCube: WebGLTexture = null;
@@ -1847,14 +1863,12 @@ namespace MITOIA {
         private _usedVertexAttribs: UsedVertexAttribInfo[] = [];
         private _activedTextures: ActivedTextureInfo[] = [];
 
-        constructor(gl: WebGLRenderingContext) {
-            this._gl = gl;
+        constructor(canvasOrContext: HTMLCanvasElement | WebGLRenderingContext, options: GLOptions = null) {
+            this._acquireGL(canvasOrContext, options);
 
-            this._gl.clearColor(this._clearColor.r, this._clearColor.g, this._clearColor.b, this._clearColor.a);
-            this._gl.clearDepth(this._depthValue);
-            this._gl.clearStencil(this._stencilValue);
-
-            this._version = this._gl.getParameter(GL.VERSION);
+            this._versionFullInfo = this._gl.getParameter(GL.VERSION);
+            this._vendor = this._gl.getParameter(GL.VENDOR);
+            this._renderer = this._gl.getParameter(GL.RENDERER);
 
             this._maxVertexAttributes = this._gl.getParameter(GL.MAX_VERTEX_ATTRIBS);
             this._maxVaryingVectors = this._gl.getParameter(GL.MAX_VARYING_VECTORS);
@@ -1865,6 +1879,73 @@ namespace MITOIA {
 
             this._supportUintIndexes = false || this._gl.getExtension('OES_element_index_uint') !== null;
 
+            this._initClear();
+            this._initBlend();
+            this._initDepthTest();
+            this._initCullFace();
+            this._initVertexAttribs();
+            this._initActivedTextures();
+
+            this._boundTexture2D = this._gl.getParameter(GL.TEXTURE_BINDING_2D);
+            this._boundFrameBuffer = this._gl.getParameter(GL.FRAMEBUFFER_BINDING);
+            this._boundRenderBuffer = this._gl.getParameter(GL.RENDERBUFFER_BINDING);
+        }
+
+        private _acquireGL(canvasOrContext: HTMLCanvasElement | WebGLRenderingContext, options: GLOptions): void {
+            let canvas: HTMLCanvasElement = null;
+            options = options || {};
+
+            let gl: WebGLRenderingContext = null;
+
+            if ((<HTMLCanvasElement>canvasOrContext).getContext) {
+                canvas = <HTMLCanvasElement>canvasOrContext;
+
+                let ver: number = 2;
+
+                if (typeof options.version === "number") {
+                    ver = options.version >= 2 ? 2 : 1;
+                }
+
+                if (ver === 2) {
+                    try {
+                        gl = <any>(canvas.getContext("webgl2", options) || canvas.getContext("experimental-webgl2", options));
+                        if (gl) this._version = 2.0;
+                    } catch (e) {
+                    }
+                }
+
+                if (!gl) {
+                    try {
+                        gl = <WebGLRenderingContext>(canvas.getContext("webgl", options) || canvas.getContext("experimental-webgl", options));
+                        if (gl) this._version = 1.0;
+                    } catch (e) {
+                        throw new Error("WebGL not supported");
+                    }
+                }
+
+                if (!gl) throw new Error("WebGL not supported");
+            } else {
+                gl = <WebGLRenderingContext>canvasOrContext;
+                if (gl) {
+                    if (gl.renderbufferStorageMultisample) {
+                        this._version = 2.0;
+                    }
+                } else {
+                    throw new Error("WebGL not supported");
+                }
+            }
+
+            this._canvas = canvas;
+            this._gl = gl;
+        }
+
+        private _initClear(): void {
+            this._gl.clearColor(this._clearColor.r, this._clearColor.g, this._clearColor.b, this._clearColor.a);
+            this._gl.clearDepth(this._depthValue);
+            this._gl.clearStencil(this._stencilValue);
+        }
+
+        private _initBlend(): void {
             this._enabledBlend = this._gl.isEnabled(GL.BLEND);
 
             this._blendEquationRGB = this._gl.getParameter(GL.BLEND_EQUATION_RGB);
@@ -1875,19 +1956,48 @@ namespace MITOIA {
             this._blendDstRGB = this._gl.getParameter(GL.BLEND_DST_RGB);
             this._blendDstAlpha = this._gl.getParameter(GL.BLEND_DST_ALPHA);
 
-            this._boundTexture2D = this._gl.getParameter(GL.TEXTURE_BINDING_2D);
-            this._boundFrameBuffer = this._gl.getParameter(GL.FRAMEBUFFER_BINDING);
-            this._boundRenderBuffer = this._gl.getParameter(GL.RENDERBUFFER_BINDING);
+            let blendColor = this._gl.getParameter(GL.BLEND_COLOR);
+            this._blendColor.setFromRGBA(blendColor[0], blendColor[1], blendColor[2], blendColor[3]);
+        }
 
+        private _initDepthTest():void {
+            this._enabledDepthTest = this._gl.isEnabled(GL.DEPTH_TEST);
+            this._depthTest = this._gl.getParameter(GL.DEPTH_FUNC);
+        }
+
+        private _initCullFace(): void {
+            this._enabledCullFace = this._gl.isEnabled(GL.CULL_FACE);
+            this._cullFace = this._gl.getParameter(GL.CULL_FACE_MODE);
+        }
+
+        private _initVertexAttribs(): void {
             this._usedVertexAttribs.length = this._maxFragmentUniformVectors;
             for (let i = 0; i < this._maxFragmentUniformVectors; ++i) this._usedVertexAttribs[i] = new UsedVertexAttribInfo();
+        }
 
+        private _initActivedTextures(): void {
             this._activedTextures.length = this._maxTexutreImageUnits;
             for (let i = 0; i < this._maxTexutreImageUnits; ++i) this._activedTextures[i] = new ActivedTextureInfo();
         }
 
-        public get version(): string {
+        public get canvas(): HTMLCanvasElement {
+            return this._canvas;
+        }
+
+        public get version(): number {
             return this._version;
+        }
+
+        public get versionFullInfo(): string {
+            return this._versionFullInfo;
+        }
+
+        public get vendor(): string {
+            return this._vendor;
+        }
+
+        public get renderer(): string {
+            return this._renderer;
         }
 
         public get maxVertexAttributes(): uint {
@@ -1922,6 +2032,10 @@ namespace MITOIA {
             return this._gl;
         }
 
+        public setViewport(x: number, y: number, width: number, height: number): void {
+            this._gl.viewport(x, y, width, height);
+        }
+
         public clearWithClearData(data: GLClearData): void {
             this.clear(data.color, data.clearColor, data.depth, data.clearDepth, data.stencil, data.clearStencil);
         }
@@ -1950,11 +2064,6 @@ namespace MITOIA {
             if (mask !== 0) this._gl.clear(mask);
         }
 
-        /**
-          s = cur input color
-          Orgb = srgb * Srgb + drgb * Drgb
-          Oa = sa * Sa + da * Da
-         */
         public enableBlend(b: boolean): void {
             if (this._enabledBlend !== b) {
                 this._enabledBlend = b;
@@ -1967,6 +2076,10 @@ namespace MITOIA {
             }
         }
 
+        /**
+         * color(RGB) = (sourceColor * srcRGB) + (destinationColor * dstRGB)                                                    
+         * color(A) = (sourceAlpha * srcAlpha) + (destinationAlpha * dstAlpha)
+         */
         public setBlendFunc(func: GLBlendFunc): void {
             if (this._blendSrcRGB !== func.srcRGB || this._blendSrcAlpha !== func.srcAlpha || this._blendDstRGB !== func.dstRGB || this._blendDstAlpha !== func.dstAlpha) {
                 this._blendSrcRGB = func.srcRGB;
@@ -1978,12 +2091,64 @@ namespace MITOIA {
             }
         }
 
+        public setBlendColor(color: Color4): void {
+            if (!this._blendColor.isEqual(color)) {
+                this._blendColor.setFromColor4(color);
+
+                this._gl.blendColor(this._blendColor.r, this._blendColor.g, this._blendColor.b, this._blendColor.a);
+            }
+        }
+
         public setBlendEquation(mode: GLBlendEquation): void {
             if (this._blendEquationRGB !== mode.rgb || this._blendEquationAlpha !== mode.alpha) {
                 this._blendEquationRGB = mode.rgb;
                 this._blendEquationAlpha = mode.alpha;
 
                 this._gl.blendEquationSeparate(this._blendEquationRGB, this._blendEquationAlpha);
+            }
+        }
+
+        public setFrontFace(mode: GLFrontFace): void {
+            this._gl.frontFace(mode);
+        }
+
+        public setCullFace(mode: GLCullFace): void {
+            if (mode === GLCullFace.NONE) {
+                if (this._enabledBlend) {
+                    this._enabledBlend = false;
+                    this._gl.disable(GL.CULL_FACE);
+                }
+            } else {
+                if (!this._enabledCullFace) {
+                    this._enabledCullFace = true;
+                    this._gl.enable(GL.CULL_FACE);
+                }
+
+                if (this._cullFace !== mode) {
+                    this._cullFace = mode;
+
+                    this._gl.cullFace(mode);
+                }
+            }
+        }
+
+        public setDepthTest(mode: GLDepthTest): void {
+            if (mode === GLDepthTest.NONE) {
+                if (this._enabledDepthTest) {
+                    this._enabledDepthTest = false;
+                    this._gl.disable(GL.DEPTH_TEST);
+                }
+            } else {
+                if (!this._enabledDepthTest) {
+                    this._enabledDepthTest = true;
+                    this._gl.enable(GL.DEPTH_TEST);
+                }
+
+                if (this._depthTest !== mode) {
+                    this._depthTest = mode;
+
+                    this._gl.depthFunc(mode);
+                }
             }
         }
 
@@ -2208,27 +2373,22 @@ namespace MITOIA {
         FUNC_REVERSE_SUBTRACT = GL.FUNC_REVERSE_SUBTRACT
     }
 
-    export enum GLBlendFactorDestType {
+    export enum GLBlendFactorValue {
         ZERO = GL.ZERO,
         ONE = GL.ONE,
         SRC_COLOR = GL.SRC_COLOR,
         ONE_MINUS_SRC_COLOR = GL.ONE_MINUS_SRC_COLOR,
-        SRC_ALPHA = GL.SRC_ALPHA,
-        ONE_MINUS_SRC_ALPHA = GL.ONE_MINUS_SRC_ALPHA,
-        DST_ALPHA = GL.DST_ALPHA,
-        ONE_MINUS_DST_ALPHA = GL.ONE_MINUS_DST_ALPHA
-    }
-
-    export enum GLBlendFactorSrcType {
-        ZERO = GL.ZERO,
-        ONE = GL.ONE,
         DST_COLOR = DST_COLOR,
         ONE_MINUS_DST_COLOR = ONE_MINUS_DST_COLOR,
-        SRC_ALPHA_SATURATE = SRC_ALPHA_SATURATE,
         SRC_ALPHA = GL.SRC_ALPHA,
         ONE_MINUS_SRC_ALPHA = GL.ONE_MINUS_SRC_ALPHA,
         DST_ALPHA = GL.DST_ALPHA,
-        ONE_MINUS_DST_ALPHA = GL.ONE_MINUS_DST_ALPHA
+        ONE_MINUS_DST_ALPHA = GL.ONE_MINUS_DST_ALPHA,
+        CONSTANT_COLOR = GL.CONSTANT_COLOR,
+        ONE_MINUS_CONSTANT_COLOR = GL.ONE_MINUS_CONSTANT_COLOR,
+        CONSTANT_ALPHA = GL.CONSTANT_ALPHA,
+        ONE_MINUS_CONSTANT_ALPHA = GL.ONE_MINUS_CONSTANT_ALPHA,
+        SRC_ALPHA_SATURATE = SRC_ALPHA_SATURATE
     }
 
     export enum GLBufferType {
@@ -2529,5 +2689,29 @@ namespace MITOIA {
         UNSIGNED_INT_24_8 = GL.UNSIGNED_INT_24_8,
         /** pixels must be null. */
         FLOAT_32_UNSIGNED_INT_24_8_REV = GL.FLOAT_32_UNSIGNED_INT_24_8_REV
+    }
+
+    export enum GLFrontFace {
+        CW = GL.CW,
+        CCW = GL.CCW
+    }
+
+    export enum GLCullFace {
+        NONE = GL.NONE,
+        FRONT = GL.FRONT,
+        BACK = GL.BACK,
+        FRONT_AND_BACK = GL.FRONT_AND_BACK
+    }
+
+    export enum GLDepthTest {
+        NONE = GL.NONE,
+        NEVER = GL.NEVER,
+        LESS = GL.LESS,
+        EQUAL = GL.EQUAL,
+        LEQUAL = GL.LEQUAL,
+        GREATER = GL.GREATER,
+        NOTEQUAL = GL.NOTEQUAL,
+        GEQUAL = GL.GEQUAL,
+        ALWAYS = GL.ALWAYS
     }
 }
