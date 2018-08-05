@@ -1,6 +1,6 @@
 namespace MITOIA {
     export class Camera extends AbstractComponent {
-        public readonly clearData: GLClearData = new GLClearData();
+        public readonly clear: GLClear = new GLClear();
 
         protected _projectionMatrix: Matrix44 = new Matrix44();
         protected _zNear: number;

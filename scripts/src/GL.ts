@@ -3,13 +3,63 @@ interface WebGLRenderingContext {
 }
 
 namespace MITOIA {
-    export class GLClearData {
+    export class GLClear {
         public readonly color: Color4 = Color4.BLACK;
         public depth = 1.0;
         public stencil = 0;
-        public clearColor = true;
-        public clearDepth = true;
-        public clearStencil = true;
+
+        private _clearColor = true;
+        private _clearDepth = true;
+        private _clearStencil = true;
+        private _clearMask: uint;
+
+        constructor() {
+            this._clearMask = GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT | GL.STENCIL_BUFFER_BIT;
+        }
+
+        public get clearMask(): uint {
+            return this._clearMask;
+        }
+        
+        public get clearColor(): boolean {
+            return this._clearColor;
+        }
+
+        public set clearColor(b: boolean) {
+            if (this._clearColor !== b) {
+                this._clearColor = b;
+
+                if (b) {
+                    this._clearMask |= GL.COLOR_BUFFER_BIT;
+                } else {
+                    this._clearMask &= ~GL.COLOR_BUFFER_BIT;
+                }
+            }
+        }
+
+        public set clearDepth(b: boolean) {
+            if (this._clearDepth !== b) {
+                this._clearDepth = b;
+
+                if (b) {
+                    this._clearMask |= GL.DEPTH_BUFFER_BIT;
+                } else {
+                    this._clearMask &= ~GL.DEPTH_BUFFER_BIT;
+                }
+            }
+        }
+
+        public set clearStencil(b: boolean) {
+            if (this._clearStencil !== b) {
+                this._clearStencil = b;
+
+                if (b) {
+                    this._clearMask |= GL.STENCIL_BUFFER_BIT;
+                } else {
+                    this._clearMask &= ~GL.STENCIL_BUFFER_BIT;
+                }
+            }
+        }
     }
 
     export const enum GLVertexBufferSize {
@@ -28,7 +78,7 @@ namespace MITOIA {
         constructor(gl: GL, type: GLBufferType) {
             this._gl = gl;
             this._bufferType = type;
-            this._buffer = this._gl.internalGL.createBuffer();
+            this._buffer = this._gl.context.createBuffer();
         }
 
         public get bufferType(): GLBufferType {
@@ -46,7 +96,7 @@ namespace MITOIA {
         public dispose(): void {
             if (this._buffer) {
                 this._gl.unbindBuffer(this);
-                this._gl.internalGL.deleteBuffer(this._buffer);
+                this._gl.context.deleteBuffer(this._buffer);
                 this._buffer = null;
 
                 this._gl = null;
@@ -108,7 +158,7 @@ namespace MITOIA {
             return this._uploadCount;
         }
 
-        public upload(data: number[] | ArrayBuffer | ArrayBufferView, size: GLVertexBufferSize = GLVertexBufferSize.FOUR, type: GLVertexDataType = GLVertexDataType.FLOAT, normalized: boolean = false, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
+        public upload(data: number[] | Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer | ArrayBufferView, size: GLVertexBufferSize = GLVertexBufferSize.FOUR, type: GLVertexDataType = GLVertexDataType.FLOAT, normalized: boolean = false, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
             if (this._buffer) {
                 ++this._uploadCount;
                 this._size = size;
@@ -116,7 +166,7 @@ namespace MITOIA {
                 this._normalized = normalized;
                 this._usage = usage;
 
-                let gl = this._gl.internalGL;
+                let gl = this._gl.context;
 
                 this.bind();
 
@@ -126,6 +176,21 @@ namespace MITOIA {
                     gl.bufferData(GL.ARRAY_BUFFER, new Float32Array(data), usage);
                 } else {
                     gl.bufferData(GL.ARRAY_BUFFER, <ArrayBuffer>data, usage);
+                }
+            }
+        }
+
+        public uploadSub(data: number[] | Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer | ArrayBufferView, offset: int): void {
+            if (this._buffer) {
+                ++this._uploadCount;
+                let gl = this._gl.context;
+
+                this.bind();
+
+                if (data instanceof Array) {
+                    gl.bufferSubData(GL.ARRAY_BUFFER, offset, new Float32Array(data));
+                } else {
+                    gl.bufferSubData(GL.ARRAY_BUFFER, offset, <ArrayBuffer>data);
                 }
             }
         }
@@ -155,7 +220,7 @@ namespace MITOIA {
             if (this._buffer) {
                 this._usage = usage;
 
-                let gl = this._gl.internalGL;
+                let gl = this._gl.context;
 
                 this.bind();
 
@@ -206,12 +271,38 @@ namespace MITOIA {
             }
         }
 
+        public uploadSub(data: number[] | Uint32Array | Uint16Array | Uint8Array, offset: int = 0): void {
+            if (this._buffer) {
+                let gl = this._gl.context;
+
+                this.bind();
+
+                if (data instanceof Array) {
+                    let arrayBuffer;
+                    if (this._dataType == GLIndexDataType.UNSIGNED_BYTE) {
+                        arrayBuffer = new Uint8Array(data);
+                    } else if (this._dataLength == GLIndexDataType.UNSIGNED_SHORT) {
+                        arrayBuffer = new Uint16Array(data);
+                    } else {
+                        arrayBuffer = new Uint32Array(data);
+                    }
+                    gl.bufferSubData(GL.ARRAY_BUFFER, offset, arrayBuffer);
+                } else {
+                    gl.bufferSubData(GL.ARRAY_BUFFER, offset, data);
+                }
+            }
+        }
+
         public draw(mode: GLDrawMode = null, count: uint = null, offset: uint = 0): void {
             this.bind();
 
             if (mode === null) mode = GL.TRIANGLES;
             if (count === null) count = this._dataLength;
-            this._gl.internalGL.drawElements(mode, count, this._dataType, offset);
+            this._gl.context.drawElements(mode, count, this._dataType, offset);
+            let err = this._gl.context.getError();
+            if (err !== GL.NO_ERROR) {
+                console.log("gl has error : " + err);
+            }
         }
     }
 
@@ -224,7 +315,7 @@ namespace MITOIA {
             this._gl = gl;
             this._type = type;
 
-            let internalGL = this._gl.internalGL;
+            let internalGL = this._gl.context;
 
             this._shader = internalGL.createShader(type);
         }
@@ -235,7 +326,7 @@ namespace MITOIA {
 
         public dispose(): void {
             if (this._shader) {
-                this._gl.internalGL.deleteShader(this._shader);
+                this._gl.context.deleteShader(this._shader);
                 this._shader = null;
 
                 this._gl = null;
@@ -243,7 +334,7 @@ namespace MITOIA {
         }
 
         public upload(source: string): null | string {
-            let gl = this._gl.internalGL;
+            let gl = this._gl.context;
 
             gl.shaderSource(this._shader, source);
             gl.compileShader(this._shader);
@@ -258,7 +349,7 @@ namespace MITOIA {
         }
 
         public static compileShader(gl: GL, type: GLShaderType, source: string): WebGLShader {
-            let internalGL = gl.internalGL;
+            let internalGL = gl.context;
 
             let shader = internalGL.createShader(type);
             internalGL.shaderSource(shader, source);
@@ -320,7 +411,7 @@ namespace MITOIA {
 
     export const enum GLProgramStatus {
         EMPTY,
-        SUCESS,
+        SUCCESSED,
         COMPILE_FAILED
     }
 
@@ -335,7 +426,7 @@ namespace MITOIA {
         constructor(gl: GL) {
             this._gl = gl;
 
-            this._program = this._gl.internalGL.createProgram();
+            this._program = this._gl.context.createProgram();
         }
 
         public get status(): GLProgramStatus {
@@ -372,7 +463,7 @@ namespace MITOIA {
             if (this._program) {
                 this._gl.nonuseProgram(this);
 
-                this._gl.internalGL.deleteProgram(this._program);
+                this._gl.context.deleteProgram(this._program);
                 this._program = null;
 
                 this._gl = null;
@@ -380,7 +471,7 @@ namespace MITOIA {
         }
 
         public compileAndLink(vertexSource: string, fragmentSource: string): null | string {
-            let gl = this._gl.internalGL;
+            let gl = this._gl.context;
 
             let vert = GLShader.compileShader(this._gl, GLShaderType.VERTEX_SHADER, vertexSource);
             let frag = GLShader.compileShader(this._gl, GLShaderType.FRAGMENT_SHADER, fragmentSource);
@@ -398,7 +489,7 @@ namespace MITOIA {
         }
 
         public linkByInternalShander(vertexShader: WebGLShader, fragmentShader: WebGLShader): null | string {
-            let gl = this._gl.internalGL;
+            let gl = this._gl.context;
 
             gl.attachShader(this._program, vertexShader);
             gl.attachShader(this._program, fragmentShader);
@@ -424,12 +515,14 @@ namespace MITOIA {
                     if (pu.isSampler) ++this._numSamplers;
                 }
 
-                this._status = GLProgramStatus.SUCESS;
+                this._status = GLProgramStatus.SUCCESSED;
             } else {
                 gl.validateProgram(this._program);
                 err = gl.getProgramInfoLog(this._program);
                 console.log("link program error : " + err);
 
+                this._attributes = null;
+                this._uniforms = null;
                 this._status = GLProgramStatus.COMPILE_FAILED;
             }
 
@@ -453,7 +546,7 @@ namespace MITOIA {
             this._id = ++AbstractGLTexture._idGenerator;
             this._gl = gl;
             this._textureType = type;
-            this._tex = this._gl.internalGL.createTexture();
+            this._tex = this._gl.context.createTexture();
         }
 
         public get id(): number {
@@ -472,7 +565,7 @@ namespace MITOIA {
             if (this._tex) {
                 this._gl.unbindTexture(this);
 
-                this._gl.internalGL.deleteTexture(this._tex);
+                this._gl.context.deleteTexture(this._tex);
                 this._tex = null;
 
                 this._gl = null;
@@ -482,32 +575,32 @@ namespace MITOIA {
         public setFilters(value: GLTexFilterValue): void {
             this.bind();
 
-            let gl = this._gl.internalGL;
+            let gl = this._gl.context;
             gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MIN_FILTER, value);
             gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MAG_FILTER, value);
         }
 
         public setFilter(type: GLTexFilterType, value: GLTexFilterValue): void {
             this.bind();
-            this._gl.internalGL.texParameteri(this._textureType, type, value);
+            this._gl.context.texParameteri(this._textureType, type, value);
         }
 
         public setWraps(value: GLTexWrapValue): void {
             this.bind();
 
-            let gl = this._gl.internalGL;
+            let gl = this._gl.context;
             gl.texParameteri(this._textureType, GLTexWrapType.TEXTURE_WRAP_S, value);
             gl.texParameteri(this._textureType, GLTexWrapType.TEXTURE_WRAP_T, value);
         }
 
         public setWrap(type: GLTexWrapType, value: GLTexFilterValue): void {
             this.bind();
-            this._gl.internalGL.texParameteri(this._textureType, type, value);
+            this._gl.context.texParameteri(this._textureType, type, value);
         }
 
         public generateMipmap(): void {
             this.bind();
-            this._gl.internalGL.generateMipmap(this._textureType);
+            this._gl.context.generateMipmap(this._textureType);
         }
 
         public bind(force: boolean = false): void {
@@ -516,7 +609,7 @@ namespace MITOIA {
 
         public use(index: uint, location: WebGLUniformLocation): boolean {
             if (this._gl.activeTexture(this, index)) {
-                this._gl.internalGL.uniform1i(location, index);
+                this._gl.context.uniform1i(location, index);
                 return true;
             }
             return false;
@@ -532,18 +625,34 @@ namespace MITOIA {
             if (this._tex) {
                 this.bind();
 
-                let gl = this._gl.internalGL;
+                let gl = this._gl.context;
                 gl.texImage2D(this._textureType, level, internalformat, format, type, data);
                 //gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MAG_FILTER, GLTexFilterValue.LINEAR);
                 gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MIN_FILTER, GLTexFilterValue.LINEAR);
             }
         }
 
-        public uploadWithBinary(level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, data: ArrayBufferView): void {
+        public uploadSub(level: int, xoffset: number, yoffset: number, format: GLTexFormat, type: GLTexDataType, data: ImageBitmap | ImageData | HTMLVideoElement | HTMLImageElement | HTMLCanvasElement): void {
             if (this._tex) {
                 this.bind();
 
-                this._gl.internalGL.texImage2D(this._textureType, level, internalformat, width, height, 0, format, type, data);
+                this._gl.context.texSubImage2D(this._textureType, level, xoffset, yoffset, format, type, data);
+            }
+        }
+
+        public uploadBinary(level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, data: ArrayBufferView): void {
+            if (this._tex) {
+                this.bind();
+                
+                this._gl.context.texImage2D(this._textureType, level, internalformat, width, height, 0, format, type, data);
+            }
+        }
+
+        public uploadSubBinary(level: int, xoffset: number, yoffset: number, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, data: ArrayBufferView): void {
+            if (this._tex) {
+                this.bind();
+                
+                this._gl.context.texSubImage2D(this._textureType, level, xoffset, yoffset, width, height, format, type, data);
             }
         }
     }
@@ -561,7 +670,7 @@ namespace MITOIA {
         constructor(gl: GL) {
             this._gl = gl;
 
-            this._buffer = this._gl.internalGL.createFramebuffer();
+            this._buffer = this._gl.context.createFramebuffer();
         }
 
         public get internalBuffer(): WebGLFramebuffer {
@@ -572,7 +681,7 @@ namespace MITOIA {
             if (this._buffer) {
                 this._gl.unbindFrameBuffer(this);
 
-                this._gl.internalGL.deleteTexture(this._buffer);
+                this._gl.context.deleteTexture(this._buffer);
                 this._buffer = null;
 
                 this._gl = null;
@@ -587,7 +696,7 @@ namespace MITOIA {
         constructor(gl: GL) {
             this._gl = gl;
 
-            this._buffer = this._gl.internalGL.createRenderbuffer();
+            this._buffer = this._gl.context.createRenderbuffer();
         }
 
         public get internalBuffer(): WebGLRenderbuffer {
@@ -598,7 +707,7 @@ namespace MITOIA {
             if (this._buffer) {
                 this._gl.unbindRenderBuffer(this);
 
-                this._gl.internalGL.deleteTexture(this._buffer);
+                this._gl.context.deleteTexture(this._buffer);
                 this._buffer = null;
 
                 this._gl = null;
@@ -606,11 +715,14 @@ namespace MITOIA {
         }
     }
 
+    /** 
+     * In the WebGL, constant color and constant alpha cannot be used together as source and destination factors in the blend function.
+     */
     export class GLBlendFunc {
-        public srcRGB: GLBlendFactorValue;
-        public srcAlpha: GLBlendFactorValue;
-        public dstRGB: GLBlendFactorValue;
-        public dstAlpha: GLBlendFactorValue;
+        public srcRGB: GLBlendFactorValue = GLBlendFactorValue.ONE;
+        public srcAlpha: GLBlendFactorValue = GLBlendFactorValue.ONE;
+        public dstRGB: GLBlendFactorValue = GLBlendFactorValue.ZERO;
+        public dstAlpha: GLBlendFactorValue = GLBlendFactorValue.ZERO;
 
         public set(sfactor: GLBlendFactorValue, dfactor: GLBlendFactorValue): void {
             this.srcRGB = sfactor;
@@ -625,11 +737,22 @@ namespace MITOIA {
             this.dstRGB = dRGB;
             this.dstAlpha = dA;
         }
+
+        public copy(target: GLBlendFunc): void {
+            this.srcRGB = target.srcRGB;
+            this.srcAlpha = target.srcAlpha;
+            this.dstRGB = target.dstRGB;
+            this.dstAlpha = target.dstAlpha;
+        }
+
+        public isEqual(target: GLBlendFunc): boolean {
+            return this.srcRGB === target.srcRGB && this.srcAlpha === target.srcAlpha && this.dstRGB === target.dstRGB && this.dstAlpha === target.dstAlpha;
+        }
     }
 
     export class GLBlendEquation {
-        public rgb: GLBlendEquationType;
-        public alpha: GLBlendEquationType;
+        public rgb: GLBlendEquationType = GLBlendEquationType.FUNC_ADD;
+        public alpha: GLBlendEquationType = GLBlendEquationType.FUNC_ADD;
 
         public set(mode: GLBlendEquationType): void {
             this.rgb = mode;
@@ -639,6 +762,77 @@ namespace MITOIA {
         public setSeparate(modeRGB: GLBlendEquationType, modeA: GLBlendEquationType): void {
             this.rgb = modeRGB;
             this.alpha = modeA;
+        }
+    }
+
+    export class GLBlend {
+        public equation: GLBlendEquation = null;
+        public func: GLBlendFunc = null;
+        public constantColor: Color4 = null;
+
+        constructor(equation: GLBlendEquation = null, func: GLBlendFunc = null, color: Color4 = null) {
+            this.equation = equation || new GLBlendEquation();
+            this.func = func || new GLBlendFunc();
+            this.constantColor = color || Color4.TRANSPARENT_BLACK;
+        }
+    }
+
+    export class GLColorWrite {
+        public red: boolean = true;
+        public green: boolean = true;
+        public blue: boolean = true;
+        public alpha: boolean = true;
+
+        public isEqual(target: GLColorWrite): boolean {
+            return this.red === target.red && this.green === target.green && this.blue === target.blue && this.alpha === target.alpha;
+        }
+
+        public set(target: GLColorWrite): void {
+            this.red = target.red;
+            this.green = target.green;
+            this.blue = target.blue;
+            this.alpha = target.alpha;
+        }
+    }
+    
+    export class GLStencil {
+        /** In the WebGL, Front and Back must be consistent. */
+        public writeMask: uint = 0xFFFFFFFF;
+
+        //func
+        public func: GLStencilFunc = GLStencilFunc.ALWAYS;
+        /** In the WebGL, Front and Back must be consistent. */
+        public ref: uint = 0;
+        /** In the WebGL, Front and Back must be consistent. */
+        public funcMask: uint = 0xFFFFFFFF;
+
+        //op
+        public stenciFail: GLStencilOpType = GLStencilOpType.KEEP;
+        public depthlFail: GLStencilOpType = GLStencilOpType.KEEP;
+        public pass: GLStencilOpType = GLStencilOpType.KEEP;
+
+        public copyFunc(target: GLStencil): void {
+            this.func = target.func;
+            this.ref = target.ref;
+            this.funcMask = target.funcMask;
+        }
+
+        public copyOp(target: GLStencil): void {
+            this.stenciFail = target.stenciFail;
+            this.depthlFail = target.depthlFail;
+            this.pass = target.pass;
+        }
+
+        public isEqual(target: GLStencil): boolean {
+            return this.writeMask === target.writeMask && this.isFuncEqual(target) && this.isOpEqual(target);
+        }
+
+        public isFuncEqual(target: GLStencil): boolean {
+            return this.func === target.func && this.ref === target.ref && this.funcMask === target.funcMask;
+        }
+
+        public isOpEqual(target: GLStencil): boolean {
+            return this.stenciFail === target.stenciFail && this.depthlFail === target.depthlFail && this.pass === target.pass;
         }
     }
 
@@ -656,12 +850,13 @@ namespace MITOIA {
         public texID: number = null;
     }
 
-    export interface GLOptions {
+    export interface GLOptions extends WebGLContextAttributes {
         version?: number;
     }
 
     /**
      * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Constants
+     * @see https://www.khronos.org/registry/webgl/specs/1.0/#6.10
      */
     export class GL {
         /** 
@@ -1826,34 +2021,35 @@ namespace MITOIA {
         private _maxFragmentUniformVectors: uint = 0;
         private _maxTextureSize: uint = 0;
         private _maxTexutreImageUnits: uint = 0;
+        private _stencilBits: uint = 0;
 
         private _supportUintIndexes: boolean = false;
 
-        private _clearColor: Color4 = Color4.BLACK;
-        private _depthValue: number = 1;
-        private _stencilValue: uint = 0;
+        private _clear: GLClear = new GLClear();
 
         private _usedProgram: WebGLProgram = null;
         private _boundVertexBuffer: WebGLBuffer = null;
         private _boundIndexBuffer: WebGLBuffer = null;
 
         private _enabledBlend: boolean = false;
-
-        private _blendEquationRGB: GLBlendEquationType;
-        private _blendEquationAlpha: GLBlendEquationType;
-
-        private _blendSrcRGB: GLBlendFactorValue;
-        private _blendSrcAlpha: GLBlendFactorValue;
-        private _blendDstRGB: GLBlendFactorValue;
-        private _blendDstAlpha: GLBlendFactorValue;
-
-        private _blendColor: Color4 = Color4.BLACK;
+        private _defaultBlend: GLBlend = new GLBlend();
+        private _blend: GLBlend = new GLBlend();
 
         private _enabledCullFace: boolean;
         private _cullFace: GLCullFace;
 
         private _enabledDepthTest: boolean;
         private _depthTest: GLDepthTest;
+
+        private _depthWrite:boolean;
+
+        private _enabledStencilTest: boolean;
+        private _defaultStencil: GLStencil = new GLStencil();
+        private _stencilFrontFace: GLStencil = new GLStencil();
+        private _stencilBackFace: GLStencil = new GLStencil();
+
+        private _defaultColorWrite: GLColorWrite = new GLColorWrite();
+        private _colorWrite: GLColorWrite = new GLColorWrite();
 
         private _boundTexture2D: WebGLTexture = null;
         private _boundTextureCube: WebGLTexture = null;
@@ -1876,15 +2072,18 @@ namespace MITOIA {
             this._maxFragmentUniformVectors = this._gl.getParameter(GL.MAX_FRAGMENT_UNIFORM_VECTORS);
             this._maxTexutreImageUnits = this._gl.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS);
             this._maxTextureSize = this._gl.getParameter(GL.MAX_TEXTURE_SIZE);
+            this._stencilBits = this._gl.getParameter(GL.STENCIL_BITS);
 
             this._supportUintIndexes = false || this._gl.getExtension('OES_element_index_uint') !== null;
 
             this._initClear();
             this._initBlend();
-            this._initDepthTest();
+            this._initDepth();
+            this._initStencil();
             this._initCullFace();
             this._initVertexAttribs();
             this._initActivedTextures();
+            this._initColorMask();
 
             this._boundTexture2D = this._gl.getParameter(GL.TEXTURE_BINDING_2D);
             this._boundFrameBuffer = this._gl.getParameter(GL.FRAMEBUFFER_BINDING);
@@ -1909,7 +2108,7 @@ namespace MITOIA {
                 if (ver === 2) {
                     try {
                         gl = <any>(canvas.getContext("webgl2", options) || canvas.getContext("experimental-webgl2", options));
-                        if (gl) this._version = 2.0;
+                        if (gl) this._version = 2;
                     } catch (e) {
                     }
                 }
@@ -1917,19 +2116,19 @@ namespace MITOIA {
                 if (!gl) {
                     try {
                         gl = <WebGLRenderingContext>(canvas.getContext("webgl", options) || canvas.getContext("experimental-webgl", options));
-                        if (gl) this._version = 1.0;
+                        if (gl) this._version = 1;
                     } catch (e) {
                         throw new Error("WebGL not supported");
                     }
                 }
 
                 if (!gl) throw new Error("WebGL not supported");
+
+                gl.frontFace(GL.CW);
             } else {
                 gl = <WebGLRenderingContext>canvasOrContext;
                 if (gl) {
-                    if (gl.renderbufferStorageMultisample) {
-                        this._version = 2.0;
-                    }
+                    if (gl.renderbufferStorageMultisample) this._version = 2.0;
                 } else {
                     throw new Error("WebGL not supported");
                 }
@@ -1940,29 +2139,28 @@ namespace MITOIA {
         }
 
         private _initClear(): void {
-            this._gl.clearColor(this._clearColor.r, this._clearColor.g, this._clearColor.b, this._clearColor.a);
-            this._gl.clearDepth(this._depthValue);
-            this._gl.clearStencil(this._stencilValue);
+            let color = this._gl.getParameter(GL.COLOR_CLEAR_VALUE);
+            this._clear.color.r = color[0];
+            this._clear.color.g = color[1];
+            this._clear.color.b = color[2];
+            this._clear.color.a = color[3];
+            this._clear.depth = this._gl.getParameter(GL.DEPTH_CLEAR_VALUE);
+            this._clear.stencil = this._gl.getParameter(GL.STENCIL_CLEAR_VALUE);
         }
 
         private _initBlend(): void {
             this._enabledBlend = this._gl.isEnabled(GL.BLEND);
 
-            this._blendEquationRGB = this._gl.getParameter(GL.BLEND_EQUATION_RGB);
-            this._blendEquationAlpha = this._gl.getParameter(GL.BLEND_EQUATION_ALPHA);
+            this._blend.equation.rgb = this._gl.getParameter(GL.BLEND_EQUATION_RGB);
+            this._blend.equation.alpha = this._gl.getParameter(GL.BLEND_EQUATION_ALPHA);
 
-            this._blendSrcRGB = this._gl.getParameter(GL.BLEND_SRC_RGB);
-            this._blendSrcAlpha = this._gl.getParameter(GL.BLEND_SRC_ALPHA);
-            this._blendDstRGB = this._gl.getParameter(GL.BLEND_DST_RGB);
-            this._blendDstAlpha = this._gl.getParameter(GL.BLEND_DST_ALPHA);
+            this._blend.func.srcRGB = this._gl.getParameter(GL.BLEND_SRC_RGB);
+            this._blend.func.srcAlpha = this._gl.getParameter(GL.BLEND_SRC_ALPHA);
+            this._blend.func.dstRGB = this._gl.getParameter(GL.BLEND_DST_RGB);
+            this._blend.func.dstAlpha = this._gl.getParameter(GL.BLEND_DST_ALPHA);
 
             let blendColor = this._gl.getParameter(GL.BLEND_COLOR);
-            this._blendColor.setFromRGBA(blendColor[0], blendColor[1], blendColor[2], blendColor[3]);
-        }
-
-        private _initDepthTest():void {
-            this._enabledDepthTest = this._gl.isEnabled(GL.DEPTH_TEST);
-            this._depthTest = this._gl.getParameter(GL.DEPTH_FUNC);
+            this._blend.constantColor.setFromRGBA(blendColor[0], blendColor[1], blendColor[2], blendColor[3]);
         }
 
         private _initCullFace(): void {
@@ -1978,6 +2176,41 @@ namespace MITOIA {
         private _initActivedTextures(): void {
             this._activedTextures.length = this._maxTexutreImageUnits;
             for (let i = 0; i < this._maxTexutreImageUnits; ++i) this._activedTextures[i] = new ActivedTextureInfo();
+        }
+
+        private _initDepth(): void {
+            this._depthWrite = this._gl.getParameter(GL.DEPTH_WRITEMASK);
+
+            this._enabledDepthTest = this._gl.isEnabled(GL.DEPTH_TEST);
+            this._depthTest = this._gl.getParameter(GL.DEPTH_FUNC);
+        }
+
+        private _initStencil(): void {
+            this._enabledStencilTest = this._gl.isEnabled(GL.STENCIL_TEST);
+
+            this._stencilFrontFace.writeMask = this._gl.getParameter(GL.STENCIL_WRITEMASK);
+            this._stencilFrontFace.func = this._gl.getParameter(GL.STENCIL_FUNC);
+            this._stencilFrontFace.ref = this._gl.getParameter(GL.STENCIL_REF);
+            this._stencilFrontFace.funcMask = this._gl.getParameter(GL.STENCIL_VALUE_MASK);
+            this._stencilFrontFace.stenciFail = this._gl.getParameter(GL.STENCIL_FAIL);
+            this._stencilFrontFace.depthlFail = this._gl.getParameter(GL.STENCIL_PASS_DEPTH_FAIL);
+            this._stencilFrontFace.pass = this._gl.getParameter(GL.STENCIL_PASS_DEPTH_PASS);
+
+            this._stencilBackFace.writeMask = this._gl.getParameter(GL.STENCIL_BACK_WRITEMASK);
+            this._stencilBackFace.func = this._gl.getParameter(GL.STENCIL_BACK_FUNC);
+            this._stencilBackFace.ref = this._gl.getParameter(GL.STENCIL_BACK_REF);
+            this._stencilBackFace.funcMask = this._gl.getParameter(GL.STENCIL_BACK_VALUE_MASK);
+            this._stencilBackFace.stenciFail = this._gl.getParameter(GL.STENCIL_BACK_FAIL);
+            this._stencilBackFace.depthlFail = this._gl.getParameter(GL.STENCIL_BACK_PASS_DEPTH_FAIL);
+            this._stencilBackFace.pass = this._gl.getParameter(GL.STENCIL_BACK_PASS_DEPTH_PASS);
+        }
+
+        private _initColorMask(): void {
+            let color = this._gl.getParameter(GL.COLOR_WRITEMASK);
+            this._colorWrite.red = color[0];
+            this._colorWrite.green = color[1];
+            this._colorWrite.blue = color[2];
+            this._colorWrite.alpha = color[3];
         }
 
         public get canvas(): HTMLCanvasElement {
@@ -2024,43 +2257,35 @@ namespace MITOIA {
             return this._maxTextureSize;
         }
 
+        public get stencilBits(): uint {
+            return this._stencilBits;
+        }
+
         public get supprotUintIndexes(): boolean {
             return this._supportUintIndexes;
         }
 
-        public get internalGL(): WebGLRenderingContext {
+        public get context(): WebGLRenderingContext {
             return this._gl;
         }
 
-        public setViewport(x: number, y: number, width: number, height: number): void {
-            this._gl.viewport(x, y, width, height);
-        }
-
-        public clearWithClearData(data: GLClearData): void {
-            this.clear(data.color, data.clearColor, data.depth, data.clearDepth, data.stencil, data.clearStencil);
-        }
-
-        public clear(color: Color4, clearColor: boolean, depth: number, clearDepth: boolean, stencil: uint, clearStencil: boolean): void {
-            if (color && !this._clearColor.isEqual(color)) {
-                this._clearColor.setFromColor4(color);
-                this._gl.clearColor(this._clearColor.r, this._clearColor.g, this._clearColor.b, this._clearColor.a);
+        public clear(data: GLClear): void {
+            if (!this._clear.color.isEqual(data.color)) {
+                this._clear.color.setFromColor4(data.color);
+                this._gl.clearColor(data.color.r, data.color.g, data.color.b, data.color.a);
             }
 
-            if (this._depthValue !== depth) {
-                this._depthValue = depth;
-                this._gl.clearDepth(this._depthValue);
+            if (this._clear.depth !== data.depth) {
+                this._clear.depth = data.depth;
+                this._gl.clearDepth(data.depth);
             }
 
-            if (this._stencilValue !== stencil) {
-                this._stencilValue = stencil;
-                this._gl.clearStencil(this._stencilValue);
+            if (this._clear.stencil !== data.stencil) {
+                this._clear.stencil = data.stencil;
+                this._gl.clearStencil(data.stencil);
             }
 
-            let mask = 0;
-            if (clearColor) mask |= GL.COLOR_BUFFER_BIT;
-            if (clearDepth) mask |= GL.DEPTH_BUFFER_BIT;
-            if (clearStencil) mask |= GL.STENCIL_BUFFER_BIT;
-
+            let mask = data.clearMask;
             if (mask !== 0) this._gl.clear(mask);
         }
 
@@ -2081,30 +2306,41 @@ namespace MITOIA {
          * color(A) = (sourceAlpha * srcAlpha) + (destinationAlpha * dstAlpha)
          */
         public setBlendFunc(func: GLBlendFunc): void {
-            if (this._blendSrcRGB !== func.srcRGB || this._blendSrcAlpha !== func.srcAlpha || this._blendDstRGB !== func.dstRGB || this._blendDstAlpha !== func.dstAlpha) {
-                this._blendSrcRGB = func.srcRGB;
-                this._blendSrcAlpha = func.srcAlpha;
-                this._blendDstRGB = func.dstRGB;
-                this._blendDstAlpha = func.dstAlpha;
+            func = func || this._defaultBlend.func;
+            if (!this._blend.func.isEqual(func)) {
+                this._blend.func.copy(func);
 
-                this._gl.blendFuncSeparate(this._blendSrcRGB, this._blendDstRGB, this._blendSrcAlpha, this._blendDstAlpha);
+                this._gl.blendFuncSeparate(func.srcRGB, func.dstRGB, func.srcAlpha, func.dstAlpha);
             }
         }
 
         public setBlendColor(color: Color4): void {
-            if (!this._blendColor.isEqual(color)) {
-                this._blendColor.setFromColor4(color);
+            color = color || this._defaultBlend.constantColor;
+            if (!this._blend.constantColor.isEqual(color)) {
+                this._blend.constantColor.setFromColor4(color);
 
-                this._gl.blendColor(this._blendColor.r, this._blendColor.g, this._blendColor.b, this._blendColor.a);
+                this._gl.blendColor(color.r, color.g, color.b, color.a);
             }
         }
 
         public setBlendEquation(mode: GLBlendEquation): void {
-            if (this._blendEquationRGB !== mode.rgb || this._blendEquationAlpha !== mode.alpha) {
-                this._blendEquationRGB = mode.rgb;
-                this._blendEquationAlpha = mode.alpha;
+            mode = mode || this._defaultBlend.equation;
+            if (this._blend.equation.rgb !== mode.rgb || this._blend.equation.alpha !== mode.alpha) {
+                this._blend.equation.rgb = mode.rgb;
+                this._blend.equation.alpha = mode.alpha;
 
-                this._gl.blendEquationSeparate(this._blendEquationRGB, this._blendEquationAlpha);
+                this._gl.blendEquationSeparate(mode.rgb, mode.alpha);
+            }
+        }
+
+        public setBlend(blend: GLBlend): void {
+            if (blend) {
+                this.enableBlend(true);
+                this.setBlendEquation(blend.equation);
+                this.setBlendFunc(blend.func);
+                this.setBlendColor(blend.constantColor);
+            } else {
+                this.enableBlend(false);
             }
         }
 
@@ -2148,6 +2384,133 @@ namespace MITOIA {
                     this._depthTest = mode;
 
                     this._gl.depthFunc(mode);
+                }
+            }
+        }
+
+        public setDepthWrite(b: boolean) {
+            if (this._depthWrite !== b) {
+                this._depthWrite = b;
+
+                this._gl.depthMask(b);
+            }
+        }
+
+        public setColorWrite(cw: GLColorWrite) {
+            cw = cw || this._defaultColorWrite;
+            if (!this._colorWrite.isEqual(cw)) {
+                this._colorWrite.set(cw);
+
+                this._gl.colorMask(cw.red, cw.green, cw.blue, cw.alpha);
+            }
+        }
+
+        public setStencil(front: GLStencil, back: GLStencil): void {
+            if (front || back) {
+                //webgl special handling
+                let writeMask: number = null, ref: number = null, funcMask: number = null;
+
+                if (front) {
+                    if (!back) {
+                        back = this._defaultStencil;
+                        writeMask = back.writeMask;
+                        ref = back.ref;
+                        funcMask = back.funcMask;
+                        
+                        back.writeMask = front.writeMask;
+                        back.ref = front.ref;
+                        back.funcMask = front.funcMask;
+                    }
+                } else {
+                    front = this._defaultStencil;
+                    writeMask = front.writeMask;
+                    ref = front.ref;
+                    funcMask = front.funcMask;
+
+                    front.writeMask = back.writeMask;
+                    front.ref = back.ref;
+                    front.funcMask = back.funcMask;
+                }
+                //
+
+                //front = front || this._defaultStencil;
+                //back = back || this._defaultStencil;
+
+                if (!this._enabledStencilTest) {
+                    this._enabledStencilTest = true;
+
+                    this._gl.enable(GL.STENCIL_TEST);
+                }
+                
+                if (front === back || front.isEqual(back)) {
+                    if (this._stencilFrontFace.writeMask !== front.writeMask || this._stencilBackFace.writeMask !== front.writeMask) {
+                        this._stencilFrontFace.writeMask = front.writeMask;
+                        this._stencilBackFace.writeMask = front.writeMask;
+    
+                        this._gl.stencilMaskSeparate(GL.FRONT_AND_BACK, front.writeMask);
+                    }
+    
+                    if (!this._stencilFrontFace.isFuncEqual(front) || this._stencilBackFace.isFuncEqual(front)) {
+                        this._stencilFrontFace.copyFunc(front);
+                        this._stencilBackFace.copyFunc(front);
+    
+                        this._gl.stencilFuncSeparate(GL.FRONT_AND_BACK, front.func, front.ref, front.funcMask);
+                    }
+    
+                    if (!this._stencilFrontFace.isOpEqual(front) || !this._stencilBackFace.isOpEqual(front)) {
+                        this._stencilFrontFace.copyOp(front);
+                        this._stencilBackFace.copyOp(front);
+    
+                        this._gl.stencilOpSeparate(GL.FRONT_AND_BACK, front.stenciFail, front.depthlFail, front.pass);
+                    }
+                } else {
+                    this._setStencilSingleFace(GLStencilFace.FRONT, this._stencilFrontFace, front);
+                    this._setStencilSingleFace(GLStencilFace.BACK, this._stencilBackFace, back);
+                }
+
+                if (writeMask !== null) {
+                    this._defaultStencil.writeMask = writeMask;
+                    this._defaultStencil.ref = ref;
+                    this._defaultStencil.funcMask = funcMask;
+                }
+            } else {
+                if (this._enabledStencilTest) {
+                    this._enabledStencilTest = false;
+
+                    this._gl.disable(GL.STENCIL_TEST);
+                }
+            }
+        }
+
+        private _setStencilSingleFace(face: GLStencilFace, self: GLStencil, target: GLStencil): void {
+            if (true || self.writeMask !== target.writeMask) {
+                self.writeMask = target.writeMask;
+
+                this._gl.stencilMaskSeparate(face, target.writeMask);
+
+                let err = this._gl.getError();
+                if (err !== this._gl.NO_ERROR) {
+                    let a = 1;
+                }
+            }
+
+            if (true || !self.isFuncEqual(target)) {
+                self.copyFunc(target);
+
+                this._gl.stencilFuncSeparate(face, target.func, target.ref, target.funcMask);
+
+                if (this._gl.getError() !== this._gl.NO_ERROR) {
+                    let a = 1;
+                }
+            }
+
+            if (true || !self.isOpEqual(target)) {
+                self.copyOp(target);
+
+                this._gl.stencilOpSeparate(face, target.stenciFail, target.depthlFail, target.pass);
+
+                if (this._gl.getError() !== this._gl.NO_ERROR) {
+                    let a = 1;
                 }
             }
         }
@@ -2370,7 +2733,13 @@ namespace MITOIA {
     export enum GLBlendEquationType {
         FUNC_ADD = GL.FUNC_ADD,
         FUNC_SUBTRACT = GL.FUNC_SUBTRACT,
-        FUNC_REVERSE_SUBTRACT = GL.FUNC_REVERSE_SUBTRACT
+        FUNC_REVERSE_SUBTRACT = GL.FUNC_REVERSE_SUBTRACT,
+        
+        /**
+         * EXT_blend_minmax or WebGL 2.0
+         */
+        MIN = GL.MIN,
+        MAX = GL.MAX
     }
 
     export enum GLBlendFactorValue {
@@ -2713,5 +3082,49 @@ namespace MITOIA {
         NOTEQUAL = GL.NOTEQUAL,
         GEQUAL = GL.GEQUAL,
         ALWAYS = GL.ALWAYS
+    }
+
+    export enum GLStencilFace {
+        FRONT = GL.FRONT,
+        BACK = GL.BACK,
+        FRONT_AND_BACK = GL.FRONT_AND_BACK
+    }
+
+    export enum GLStencilFunc {
+        /**Always fails. */
+        NEVER = GL.NEVER,
+        /** Passes if ( ref & funcMask ) < ( stencil & funcMask ). */
+        LESS = GL.LESS,
+        /** Passes if ( ref & funcMask ) <= ( stencil & funcMask ). */
+        LEQUAL = GL.LEQUAL,
+        /** Passes if ( ref & funcMask ) > ( stencil & funcMask ). */
+        GREATER = GL.GREATER,
+        /** Passes if ( ref & funcMask ) >= ( stencil & funcMask ). */
+        GEQUAL = GL.GEQUAL,
+        /** Passes if ( ref & funcMask ) = ( stencil & funcMask ). */
+        EQUAL = GL.EQUAL,
+        /** Passes if ( ref & funcMask ) != ( stencil & funcMask ). */
+        NOTEQUAL = GL.NOTEQUAL,
+        /** Always passes. default value */
+        ALWAYS = GL.ALWAYS
+    }
+
+    export enum GLStencilOpType {
+        /** Keeps the current value. default value */
+        KEEP = GL.KEEP,
+        /** Sets the stencil buffer value to 0. */
+        ZERO = GL.ZERO,
+        /** Sets the stencil buffer value to ref. */
+        REPLACE = GL.REPLACE,
+        /** Increments the current stencil buffer value. Clamps to the maximum representable unsigned value. */
+        INCR = GL.INCR,
+        /** Increments the current stencil buffer value. Wraps stencil buffer value to zero when incrementing the maximum representable unsigned value. */
+        INCR_WRAP = GL.INCR_WRAP,
+        /** Decrements the current stencil buffer value. Clamps to 0. */
+        DECR = GL.DECR,
+        /** Decrements the current stencil buffer value. Wraps stencil buffer value to the maximum representable unsigned value when decrementing a stencil buffer value of zero. */
+        DECR_WRAP = GL.DECR_WRAP,
+        /** Bitwise inverts the current stencil buffer value. */
+        INVERT = GL.INVERT
     }
 }

@@ -29,11 +29,11 @@ namespace MITOIA {
         }
 
         public render(gl: GL, camera: Camera, node: Node): void {
-            this._gl = gl.internalGL;
+            this._gl = gl.context;
 
             super.render(gl, camera, node);
             
-            gl.clearWithClearData(camera.clearData);
+            gl.clear(camera.clear);
 
             this._collectNode(node);
             
@@ -95,7 +95,7 @@ namespace MITOIA {
             let alphaBlendStart: number = null;
             for (let i = 0; i < this._renderingQueueLength; ++i) {
                 let rn = this._renderingQueue[i];
-                if (rn.material.enabledBlend) {
+                if (rn.material.blend) {
                     if (alphaBlendStart === null) {
                         alphaBlendStart = i;
                         renderingPriority = rn.material.renderingPriority;

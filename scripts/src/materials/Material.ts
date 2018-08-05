@@ -4,13 +4,17 @@ namespace MITOIA {
 
         public renderingPriority: int = 0;
 
-        public enabledBlend: boolean = false;
-        public blendEquation: GLBlendEquation = null;
-        public blendFunc: GLBlendFunc = null;
-        public blendColor: Color4 = null;
+        public blend: GLBlend = null;
 
         public cullFace: GLCullFace = GLCullFace.BACK;
+
         public depthTest: GLDepthTest = GLDepthTest.LESS;
+
+        public depthWrite: boolean = true;
+        public colorWrite: GLColorWrite = null;
+
+        public stencilFront: GLStencil = null;
+        public stencilBack: GLStencil = null;
 
         public defines: ShaderDefines = new ShaderDefines();
         public uniforms: ShaderUniforms = new ShaderUniforms();
@@ -30,15 +34,12 @@ namespace MITOIA {
 
         public use(globalUniforms: ShaderUniforms): GLProgram {
             let gl = this.shader.gl;
-            gl.enableBlend(this.enabledBlend);
-            if (this.enabledBlend) {
-                if (this.blendEquation) gl.setBlendEquation(this.blendEquation);
-                if (this.blendFunc) gl.setBlendFunc(this.blendFunc);
-                if (this.blendColor) gl.setBlendColor(this.blendColor);
-            }
-
+            gl.setBlend(this.blend);
             gl.setCullFace(this.cullFace);
             gl.setDepthTest(this.depthTest);
+            gl.setDepthWrite(this.depthWrite);
+            gl.setColorWrite(this.colorWrite);
+            gl.setStencil(this.stencilFront, this.stencilBack);
 
             return this.shader.use(globalUniforms, this.uniforms);
         }

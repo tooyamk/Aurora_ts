@@ -13,7 +13,9 @@ namespace MITOIA {
             if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
                 canvas.width = canvas.clientWidth;
                 canvas.height = canvas.clientHeight;
-                this._gl.setViewport(0, 0, canvas.width, canvas.height);
+
+                let gl = this._gl.context;
+                gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
 
                 return true;
             }

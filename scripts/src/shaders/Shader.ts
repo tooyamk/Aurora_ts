@@ -65,7 +65,7 @@ namespace MITOIA {
             this._attributes = this._curProgram.attributes;
             this._uniforms = this._curProgram.uniforms;
 
-            return this._curProgram.status === GLProgramStatus.SUCESS;
+            return this._curProgram.status === GLProgramStatus.SUCCESSED;
         }
 
         public use(globalUniforms: ShaderUniforms, localUniforms: ShaderUniforms): GLProgram {
@@ -76,7 +76,7 @@ namespace MITOIA {
 
                 if (this._curProgram.uniforms) {
                     let uniforms = this._curProgram.uniforms;
-                    let gl = this._gl.internalGL;
+                    let gl = this._gl.context;
                     let samplerIndex = 0;
                     for (let i = 0, n = uniforms.length; i < n; ++i) {
                         let info = uniforms[i];
