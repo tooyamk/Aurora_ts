@@ -1,5 +1,7 @@
+//WebGL 2.0
 interface WebGLRenderingContext {
     renderbufferStorageMultisample(target: number, samples: number, internalformat: number, width: number, height: number): void;
+    drawBuffers(buffers: number[]): void;
 }
 
 namespace MITOIA {
@@ -301,7 +303,7 @@ namespace MITOIA {
             this._gl.context.drawElements(mode, count, this._dataType, offset);
             let err = this._gl.context.getError();
             if (err !== GL.NO_ERROR) {
-                console.log("gl has error : " + err);
+                this._gl.printConstant("draw error : ", err);
             }
         }
     }
@@ -617,6 +619,8 @@ namespace MITOIA {
     }
 
     export class GLTexture2D extends AbstractGLTexture {
+        private _isNotUpload = true;
+
         constructor(gl: GL) {
             super(gl, GLTexType.TEXTURE_2D);
         }
@@ -625,10 +629,8 @@ namespace MITOIA {
             if (this._tex) {
                 this.bind();
 
-                let gl = this._gl.context;
-                gl.texImage2D(this._textureType, level, internalformat, format, type, data);
-                //gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MAG_FILTER, GLTexFilterValue.LINEAR);
-                gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MIN_FILTER, GLTexFilterValue.LINEAR);
+                this._gl.context.texImage2D(this._textureType, level, internalformat, format, type, data);
+                this._setDefaultFilter();
             }
         }
 
@@ -645,6 +647,7 @@ namespace MITOIA {
                 this.bind();
                 
                 this._gl.context.texImage2D(this._textureType, level, internalformat, width, height, 0, format, type, data);
+                this._setDefaultFilter();
             }
         }
 
@@ -653,6 +656,13 @@ namespace MITOIA {
                 this.bind();
                 
                 this._gl.context.texSubImage2D(this._textureType, level, xoffset, yoffset, width, height, format, type, data);
+            }
+        }
+
+        private _setDefaultFilter(): void {
+            if (this._isNotUpload) {
+                this._isNotUpload = false;
+                this._gl.context.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MIN_FILTER, GLTexFilterValue.LINEAR);
             }
         }
     }
@@ -666,11 +676,23 @@ namespace MITOIA {
     export class GLFrameBuffer {
         private _gl: GL;
         private _buffer: WebGLFramebuffer;
+        private _width: uint;
+        private _height: uint;
 
-        constructor(gl: GL) {
+        constructor(gl: GL, width: uint = 0, height: uint = 0) {
             this._gl = gl;
+            this._width = width;
+            this._height = height;
 
             this._buffer = this._gl.context.createFramebuffer();
+        }
+
+        public get width(): uint {
+            return this._width;
+        }
+
+        public get height(): uint {
+            return this._height;
         }
 
         public get internalBuffer(): WebGLFramebuffer {
@@ -679,13 +701,61 @@ namespace MITOIA {
 
         public dispose(): void {
             if (this._buffer) {
-                this._gl.unbindFrameBuffer(this);
+                this._gl.unbindFrameBuffer(0, this);
 
-                this._gl.context.deleteTexture(this._buffer);
+                this._gl.context.deleteFramebuffer(this._buffer);
                 this._buffer = null;
 
                 this._gl = null;
             }
+        }
+
+        public setSize(width: uint, height: uint): void {
+            this._width = width;
+            this._height = height;
+        }
+
+        public setAttachmentRenderBuffer(attachment: GLRenderBufferAttachment, renderBuffer: GLRenderBuffer): void {
+            if (this._buffer) {
+                this.bind();
+                renderBuffer.bind();
+
+                this._gl.context.framebufferRenderbuffer(GL.FRAMEBUFFER, attachment, GL.RENDERBUFFER, renderBuffer.internalBuffer);
+            }
+        }
+
+        public setAttachmentTexture2D(attachment: GLTex2DAttachment, texTarget: GLFrameBufferTexTarget, tex: AbstractGLTexture): void {
+            if (this._buffer) {
+                this.bind();
+                tex.bind();
+
+                this._gl.context.framebufferTexture2D(GL.FRAMEBUFFER, attachment, texTarget, tex.internalTexture, 0);
+            }
+        }
+
+        public checkStatus(): boolean {
+            if (this._buffer) {
+                this.bind();
+
+                let err = this._gl.context.checkFramebufferStatus(GL.FRAMEBUFFER);
+                if (err === GL.FRAMEBUFFER_COMPLETE) {
+                    return true;
+                } else {
+                    this._gl.printConstant("frame buffer status error : ", err);
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        public bind(target: GLFrameBufferTarget = GLFrameBufferTarget.FRAMEBUFFER): void {
+            this._gl.bindFrameBuffer(target, this);
+        }
+
+        public clear(data: GLClear): void {
+            this.bind();
+            this._gl.clear(data);
         }
     }
 
@@ -707,11 +777,34 @@ namespace MITOIA {
             if (this._buffer) {
                 this._gl.unbindRenderBuffer(this);
 
-                this._gl.context.deleteTexture(this._buffer);
+                this._gl.context.deleteRenderbuffer(this._buffer);
                 this._buffer = null;
 
                 this._gl = null;
             }
+        }
+
+        public storage(internalFormat: GLRenderBufferInternalFormat, width: uint, height: uint): void {
+            if (this._buffer) {
+                this.bind();
+                this._gl.context.renderbufferStorage(GL.RENDERBUFFER, internalFormat, width, height);
+            }
+        }
+
+        /**
+         * **WebGL Version:** WebGL 2.0
+         * 
+         * ---
+         */
+        public multiSample(internalFormat: GLRenderBufferInternalFormat, samples: int, width: uint, height: uint): void {
+            if (this._buffer) {
+                this.bind();
+                this._gl.context.renderbufferStorageMultisample(GL.RENDERBUFFER, samples, internalFormat, width, height);
+            }
+        }
+
+        public bind(): void {
+            this._gl.bindRenderBuffer(this);
         }
     }
 
@@ -778,20 +871,20 @@ namespace MITOIA {
     }
 
     export class GLColorWrite {
-        public red: boolean = true;
-        public green: boolean = true;
-        public blue: boolean = true;
-        public alpha: boolean = true;
+        public r: boolean = true;
+        public g: boolean = true;
+        public b: boolean = true;
+        public a: boolean = true;
 
         public isEqual(target: GLColorWrite): boolean {
-            return this.red === target.red && this.green === target.green && this.blue === target.blue && this.alpha === target.alpha;
+            return this.r === target.r && this.g === target.g && this.b === target.b && this.a === target.a;
         }
 
         public set(target: GLColorWrite): void {
-            this.red = target.red;
-            this.green = target.green;
-            this.blue = target.blue;
-            this.alpha = target.alpha;
+            this.r = target.r;
+            this.g = target.g;
+            this.b = target.b;
+            this.a = target.a;
         }
     }
     
@@ -2025,6 +2118,7 @@ namespace MITOIA {
 
         private _supportUintIndexes: boolean = false;
 
+        private _defaultClear: GLClear = new GLClear();
         private _clear: GLClear = new GLClear();
 
         private _usedProgram: WebGLProgram = null;
@@ -2041,7 +2135,9 @@ namespace MITOIA {
         private _enabledDepthTest: boolean;
         private _depthTest: GLDepthTest;
 
-        private _depthWrite:boolean;
+        private _depthWrite: boolean;
+
+        private _viewport: Rect = new Rect();
 
         private _enabledStencilTest: boolean;
         private _defaultStencil: GLStencil = new GLStencil();
@@ -2054,6 +2150,8 @@ namespace MITOIA {
         private _boundTexture2D: WebGLTexture = null;
         private _boundTextureCube: WebGLTexture = null;
         private _boundFrameBuffer: WebGLFramebuffer = null;
+        private _boundReadFrameBuffer: WebGLFramebuffer = null;
+        private _boundDrawFrameBuffer: WebGLFramebuffer = null;
         private _boundRenderBuffer: WebGLRenderbuffer = null;
 
         private _usedVertexAttribs: UsedVertexAttribInfo[] = [];
@@ -2076,6 +2174,7 @@ namespace MITOIA {
 
             this._supportUintIndexes = false || this._gl.getExtension('OES_element_index_uint') !== null;
 
+            this._initViewport();
             this._initClear();
             this._initBlend();
             this._initDepth();
@@ -2084,10 +2183,8 @@ namespace MITOIA {
             this._initVertexAttribs();
             this._initActivedTextures();
             this._initColorMask();
-
-            this._boundTexture2D = this._gl.getParameter(GL.TEXTURE_BINDING_2D);
-            this._boundFrameBuffer = this._gl.getParameter(GL.FRAMEBUFFER_BINDING);
-            this._boundRenderBuffer = this._gl.getParameter(GL.RENDERBUFFER_BINDING);
+            this._initFrameBuffer();
+            this._initRenderBUffer();
         }
 
         private _acquireGL(canvasOrContext: HTMLCanvasElement | WebGLRenderingContext, options: GLOptions): void {
@@ -2128,14 +2225,22 @@ namespace MITOIA {
             } else {
                 gl = <WebGLRenderingContext>canvasOrContext;
                 if (gl) {
-                    if (gl.renderbufferStorageMultisample) this._version = 2.0;
+                    if (gl.drawBuffers) this._version = 2.0;
                 } else {
                     throw new Error("WebGL not supported");
                 }
             }
 
-            this._canvas = canvas;
             this._gl = gl;
+            this._canvas = gl.canvas;
+        }
+
+        private _initViewport(): void {
+            let vp = this._gl.getParameter(GL.VIEWPORT);
+            this._viewport.x = vp[0];
+            this._viewport.y = vp[1];
+            this._viewport.width = vp[2];
+            this._viewport.height = vp[3];
         }
 
         private _initClear(): void {
@@ -2207,10 +2312,23 @@ namespace MITOIA {
 
         private _initColorMask(): void {
             let color = this._gl.getParameter(GL.COLOR_WRITEMASK);
-            this._colorWrite.red = color[0];
-            this._colorWrite.green = color[1];
-            this._colorWrite.blue = color[2];
-            this._colorWrite.alpha = color[3];
+            this._colorWrite.r = color[0];
+            this._colorWrite.g = color[1];
+            this._colorWrite.b = color[2];
+            this._colorWrite.a = color[3];
+        }
+
+        private _initFrameBuffer(): void {
+            this._boundFrameBuffer = this._gl.getParameter(GL.FRAMEBUFFER_BINDING);
+
+            if (this._version >= 2) {
+                this._boundReadFrameBuffer = this._gl.getParameter(GL.READ_FRAMEBUFFER_BINDING);
+                this._boundDrawFrameBuffer = this._gl.getParameter(GL.DRAW_FRAMEBUFFER_BINDING);
+            }
+        }
+
+        private _initRenderBUffer(): void {
+            this._boundRenderBuffer = this._gl.getParameter(GL.RENDERBUFFER_BINDING);
         }
 
         public get canvas(): HTMLCanvasElement {
@@ -2269,7 +2387,41 @@ namespace MITOIA {
             return this._gl;
         }
 
+        public get drawingBufferWidth(): number {
+            return this._gl.drawingBufferWidth;
+        }
+
+        public get drawingBufferHeight(): number {
+            return this._gl.drawingBufferHeight;
+        }
+
+        public setViewport(x: int, y: int, width: int, height: int): void {
+            if (this._viewport.x !== x || this._viewport.y !== y || this._viewport.width !== width || this._viewport.height !== height) {
+                this._viewport.x = x;
+                this._viewport.y = y;
+                this._viewport.width = width;
+                this._viewport.height = height;
+
+                this._gl.viewport(x, y, width, height);
+            }
+        }
+
+        public restoreBackBuffer(): void {
+            if (this._boundFrameBuffer !== null) {
+                this._boundFrameBuffer = null;
+
+                if (this._version >= 2) {
+                    this._boundReadFrameBuffer = null;
+                    this._boundDrawFrameBuffer = null;
+                }
+
+                this._gl.bindFramebuffer(GL.FRAMEBUFFER, null);
+            }
+        }
+
         public clear(data: GLClear): void {
+            data = data || this._defaultClear;
+
             if (!this._clear.color.isEqual(data.color)) {
                 this._clear.color.setFromColor4(data.color);
                 this._gl.clearColor(data.color.r, data.color.g, data.color.b, data.color.a);
@@ -2401,7 +2553,7 @@ namespace MITOIA {
             if (!this._colorWrite.isEqual(cw)) {
                 this._colorWrite.set(cw);
 
-                this._gl.colorMask(cw.red, cw.green, cw.blue, cw.alpha);
+                this._gl.colorMask(cw.r, cw.g, cw.b, cw.a);
             }
         }
 
@@ -2483,35 +2635,22 @@ namespace MITOIA {
         }
 
         private _setStencilSingleFace(face: GLStencilFace, self: GLStencil, target: GLStencil): void {
-            if (true || self.writeMask !== target.writeMask) {
+            if (self.writeMask !== target.writeMask) {
                 self.writeMask = target.writeMask;
 
                 this._gl.stencilMaskSeparate(face, target.writeMask);
-
-                let err = this._gl.getError();
-                if (err !== this._gl.NO_ERROR) {
-                    let a = 1;
-                }
             }
 
-            if (true || !self.isFuncEqual(target)) {
+            if (!self.isFuncEqual(target)) {
                 self.copyFunc(target);
 
                 this._gl.stencilFuncSeparate(face, target.func, target.ref, target.funcMask);
-
-                if (this._gl.getError() !== this._gl.NO_ERROR) {
-                    let a = 1;
-                }
             }
 
-            if (true || !self.isOpEqual(target)) {
+            if (!self.isOpEqual(target)) {
                 self.copyOp(target);
 
                 this._gl.stencilOpSeparate(face, target.stenciFail, target.depthlFail, target.pass);
-
-                if (this._gl.getError() !== this._gl.NO_ERROR) {
-                    let a = 1;
-                }
             }
         }
 
@@ -2597,17 +2736,123 @@ namespace MITOIA {
             }
         }
 
-        public bindFrameBuffer(buffer: GLFrameBuffer): void {
-            if (this._boundFrameBuffer !== buffer.internalBuffer) {
-                this._boundFrameBuffer = buffer.internalBuffer;
-                this._gl.bindFramebuffer(GLFrameBufferType.FRAMEBUFFER, this._boundFrameBuffer);
+        public bindFrameBuffer(target: GLFrameBufferTarget, buffer: GLFrameBuffer): void {
+            let buf = buffer.internalBuffer;
+
+            switch (target) {
+                case 0:
+                    {
+                        if (this._boundFrameBuffer !== buf) {
+                            this._boundFrameBuffer = buf;
+                            
+                            if (this._version >= 2) {
+                                this._boundReadFrameBuffer = buf;
+                                this._boundDrawFrameBuffer = buf;
+                            }
+
+                            this._gl.bindFramebuffer(target, buf);
+                        }
+
+                        break;
+                    }
+                case GLFrameBufferTarget.FRAMEBUFFER:
+                    {
+                        if (this._boundFrameBuffer !== buf) {
+                            this._boundFrameBuffer = buf;
+
+                            if (this._version >= 2) {
+                                this._boundReadFrameBuffer = buf;
+                                this._boundDrawFrameBuffer = buf;
+                            }
+
+                            this._gl.bindFramebuffer(target, buf);
+                        }
+
+                        break;
+                    }
+                case GLFrameBufferTarget.READ_FRAMEBUFFER:
+                    {
+                        if (this._version >= 2 && this._boundReadFrameBuffer !== buf) {
+                            this._boundReadFrameBuffer = buf;
+
+                            this._gl.bindFramebuffer(target, buf);
+                        }
+
+                        break;
+                    }
+                case GLFrameBufferTarget.DRAW_FRAMEBUFFER:
+                    {
+                        if (this._version >= 2 && this._boundDrawFrameBuffer !== buf) {
+                            this._boundDrawFrameBuffer = buf;
+                            this._boundFrameBuffer = buf;
+
+                            this._gl.bindFramebuffer(target, buf);
+                        }
+
+                        break;
+                    }
+                default:
+                    break;
             }
         }
 
-        public unbindFrameBuffer(buffer: GLFrameBuffer): void {
-            if (this._boundFrameBuffer === buffer.internalBuffer) {
-                this._boundFrameBuffer = null;
-                this._gl.bindTexture(GLFrameBufferType.FRAMEBUFFER, null);
+        public unbindFrameBuffer(target: GLFrameBufferTarget, buffer: GLFrameBuffer): void {
+            let buf = buffer.internalBuffer;
+
+            switch (target) {
+                case 0:
+                    {
+                        if (this._boundFrameBuffer === buf) {
+                            this._boundFrameBuffer = null;
+
+                            if (this._version >= 2) {
+                                this._boundReadFrameBuffer = null;
+                                this._boundDrawFrameBuffer = null;
+                            }
+
+                            this._gl.bindFramebuffer(target, null);
+                        }
+
+                        break;
+                    }
+                case GLFrameBufferTarget.FRAMEBUFFER:
+                    {
+                        if (this._boundFrameBuffer === buf) {
+                            this._boundFrameBuffer = null;
+
+                            if (this._version >= 2) {
+                                this._boundReadFrameBuffer = null;
+                                this._boundDrawFrameBuffer = null;
+                            }
+
+                            this._gl.bindFramebuffer(target, null);
+                        }
+
+                        break;
+                    }
+                case GLFrameBufferTarget.READ_FRAMEBUFFER:
+                    {
+                        if (this._version >= 2 && this._boundReadFrameBuffer === buf) {
+                            this._boundReadFrameBuffer = null;
+
+                            this._gl.bindFramebuffer(target, null);
+                        }
+
+                        break;
+                    }
+                case GLFrameBufferTarget.DRAW_FRAMEBUFFER:
+                    {
+                        if (this._version >= 2 && this._boundDrawFrameBuffer === buf) {
+                            this._boundDrawFrameBuffer = null;
+                            this._boundFrameBuffer = null;
+
+                            this._gl.bindFramebuffer(target, null);
+                        }
+
+                        break;
+                    }
+                default:
+                    break;
             }
         }
 
@@ -2660,6 +2905,10 @@ namespace MITOIA {
             }
 
             return false;
+        }
+
+        public printConstant(msg: string, value: number): void {
+            console.log(msg + value + "(" + value.toString(16).toUpperCase() + ")");
         }
     }
 
@@ -2735,10 +2984,9 @@ namespace MITOIA {
         FUNC_SUBTRACT = GL.FUNC_SUBTRACT,
         FUNC_REVERSE_SUBTRACT = GL.FUNC_REVERSE_SUBTRACT,
         
-        /**
-         * EXT_blend_minmax or WebGL 2.0
-         */
+        /** **WebGL Version:** EXT_blend_minmax or WebGL 2.0. */
         MIN = GL.MIN,
+        /** **WebGL Version:** EXT_blend_minmax or WebGL 2.0. */
         MAX = GL.MAX
     }
 
@@ -2817,196 +3065,282 @@ namespace MITOIA {
 
     export enum GLTexInternalFormat {
         /**
-         * Format: ALPHA
-         * Type: UNSIGNED_BYTE
+         ** **Format:** ALPHA
+         ** **Type:** UNSIGNED_BYTE
+         *
          * Discards the red, green and blue components and reads the alpha component.
          */
         ALPHA = GL.ALPHA,
 
         /**
-         * Format: RGB
-         * Type: UNSIGNED_BYTE, UNSIGNED_SHORT_5_6_5
+         ** **Format:** RGB
+         ** **Type:** UNSIGNED_BYTE, UNSIGNED_SHORT_5_6_5
+         *
          * Discards the alpha components and reads the red, green and blue components.
          */
         RGB = GL.RGB,
 
         /**
-         * Format: RGBA
-         * 
-         * Type: UNSIGNED_BYTE, UNSIGNED_SHORT_4_4_4_4, UNSIGNED_SHORT_5_5_5_1
+         ** **Format:** RGBA
+         ** **Type:** UNSIGNED_BYTE, UNSIGNED_SHORT_4_4_4_4, UNSIGNED_SHORT_5_5_5_1
          * 
          * Red, green, blue and alpha components are read from the color buffer.
          */
         RGBA = GL.RGBA, 
         
         /**
-         * Format: LUMINANCE
-         * Type: UNSIGNED_BYTE
+         ** **Format:** LUMINANCE
+         ** **Type:** UNSIGNED_BYTE
+         *
          * Each color component is a luminance component, alpha is 1.0.
          */
         LUMINANCE = GL.LUMINANCE,
 
         /**
-         * Format: LUMINANCE_ALPHA
-         * Type: UNSIGNED_BYTE
+         ** **Format:** LUMINANCE_ALPHA
+         ** **Type:** UNSIGNED_BYTE
+         *
          * Each component is a luminance/alpha component.
          */
         LUMINANCE_ALPHA = GL.LUMINANCE_ALPHA,
 
-        /** WEBGL_depth_texture extension */
+        /** **WebGL Version:** WEBGL_depth_texture extension. */
         DEPTH_COMPONENT = GL.DEPTH_COMPONENT,
+        /** **WebGL Version:** WEBGL_depth_texture extension. */
         DEPTH_STENCIL = GL.DEPTH_STENCIL,
 
-        /** EXT_sRGB extension */
+        /** **WebGL Version:** EXT_sRGB extension. */
         SRGB_EXT = GL.SRGB_EXT,
+        /** **WebGL Version:** EXT_sRGB extension. */
         SRGB_ALPHA_EXT = GL.SRGB_ALPHA_EXT,
 
-        /** WebGL 2.0 */
-
         /**
-         * Format: RED
-         * Type: UNSIGNED_BYTE
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RED
+         ** **Type:** UNSIGNED_BYTE
          */
         R8 = GL.R8,
 
         /**
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
          * Format: RED
          * Type: HALF_FLOAT, FLOAT
          */
         R16F = GL.R16F,
 
         /**
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
          * Format: RED
          * Type: FLOAT
          */
         R32F = GL.R32F,
 
         /**
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
          * Format: RED_INTEGER
          * Type: UNSIGNED_BYTE
          */
         R8UI = GL.R8UI,
 
         /**
-         * Format: RG
-         * Type: UNSIGNED_BYTE
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RG
+         ** **Type:** UNSIGNED_BYTE
          */
         RG8 = GL.RG8,
 
         /**
-         * Format: RG
-         * Type: HALF_FLOAT, FLOAT
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RG
+         ** **Type:** HALF_FLOAT, FLOAT
          */
         RG16F = GL.RG16F,
 
         /**
-         * Format: RG
-         * Type: FLOAT
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RG
+         ** **Type:** FLOAT
          */
         RG32F = GL.RG32F,
 
         /**
-         * Format: RG_INTEGER
-         * Type: UNSIGNED_BYTE
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RG_INTEGER
+         ** **Type:** UNSIGNED_BYTE
          */
         RG8UI = GL.RG8UI,
 
+        /**
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         */
         RG16UI = GL.RG16UI,
+
+        /**
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         */
         RG32UI = GL.RG32UI,
 
         /**
-         * Format: RGB
-         * Type: UNSIGNED_BYTE
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGB
+         ** **Type:** UNSIGNED_BYTE
          */
         RGB8 = GL.RGB8,
 
         /**
-         * Format: RGB
-         * Type: UNSIGNED_BYTE
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGB
+         ** **Type:** UNSIGNED_BYTE
          */
         SRGB8 = GL.SRGB8,
 
         /**
-         * Format: RGB
-         * Type: UNSIGNED_BYTE, UNSIGNED_SHORT_5_6_5
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGB
+         ** **Type:** UNSIGNED_BYTE, UNSIGNED_SHORT_5_6_5
          */
         RGB565 = GL.RGB565,
 
         /**
-         * Format: RGB
-         * Type: UNSIGNED_INT_10F_11F_11F_REV, HALF_FLOAT, FLOAT
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGB
+         ** **Type:** UNSIGNED_INT_10F_11F_11F_REV, HALF_FLOAT, FLOAT
          */
         R11F_G11F_B10F = GL.R11F_G11F_B10F,
 
         /**
-         * Format: RGB
-         * Type: HALF_FLOAT, FLOAT
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGB
+         ** **Type:** HALF_FLOAT, FLOAT
          */
         RGB9_E5 = GL.RGB9_E5,
 
         /**
-         * Format: RGB
-         * Type: HALF_FLOAT, FLOAT
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGB
+         ** **Type:** HALF_FLOAT, FLOAT
          */
         RGB16F = GL.RGB16F,
 
         /**
-         * Format: RGB
-         * Type: FLOAT
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGB
+         ** **Type:** FLOAT
          */
         RGB32F = GL.RGB32F,
 
         /**
-         * Format: RGB_INTEGER
-         * Type: UNSIGNED_BYTE
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGB_INTEGER
+         ** **Type:** UNSIGNED_BYTE
          */
         RGB8UI = GL.RGB8UI,
 
         /**
-         * Format: RGBA
-         * Type: UNSIGNED_BYTE
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGBA
+         ** **Type:** UNSIGNED_BYTE
          */
         RGBA8 = GL.RGBA8,
 
         /**
-         * Format: RGBA
-         * Type: UNSIGNED_BYTE
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGBA
+         ** **Type:** UNSIGNED_BYTE
          */
         SRGB8_ALPHA8 = GL.SRGB8_ALPHA8,
 
         /**
-         * Format: RGBA
-         * Type: UNSIGNED_BYTE, UNSIGNED_SHORT_5_5_5_1
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGBA
+         ** **Type:** UNSIGNED_BYTE, UNSIGNED_SHORT_5_5_5_1
          */
         RGB5_A1 = GL.RGB5_A1,
 
         /**
-         * Format: RGBA
-         * Type: UNSIGNED_INT_2_10_10_10_REV
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGBA
+         ** **Type:** UNSIGNED_INT_2_10_10_10_REV
          */
         RGB10_A2 = GL.RGB10_A2,
 
         /**
-         * Format: RGBA
-         * Type: UNSIGNED_BYTE, UNSIGNED_SHORT_4_4_4_4
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGBA
+         ** **Type:** UNSIGNED_BYTE, UNSIGNED_SHORT_4_4_4_4
          */
         RGBA4 = GL.RGBA4,
 
         /**
-         * Format: RGBA
-         * Type: HALF_FLOAT, FLOAT
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGBA
+         ** **Type:** HALF_FLOAT, FLOAT
          */
         RGBA16F = GL.RGBA16F,
 
         /**
-         * Format: RGBA
-         * Type: FLOAT
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGBA
+         ** **Type:** FLOAT
          */
         RGBA32F = GL.RGBA32F,
 
         /**
-         * Format: RGBA_INTEGER
-         * Type: UNSIGNED_BYTE
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         ** **Format:** RGBA_INTEGER
+         ** **Type:** UNSIGNED_BYTE
          */
         RGBA8UI = GL.RGBA8UI
     }
@@ -3031,32 +3365,54 @@ namespace MITOIA {
         UNSIGNED_SHORT_4_4_4_4 = GL.UNSIGNED_SHORT_4_4_4_4,
         UNSIGNED_SHORT_5_5_5_1 = GL.UNSIGNED_SHORT_5_5_5_1,
 
-        /** WEBGL_depth_texture extension */
+        /** **WebGL Version:** WEBGL_depth_texture extension or WebGL 2.0. */
         UNSIGNED_SHORT = GL.UNSIGNED_SHORT,
+        /** **WebGL Version:** WEBGL_depth_texture extension or WebGL 2.0. */
         UNSIGNED_INT = GL.UNSIGNED_INT,
-        /** constant provided by the extension. */
+        /** 
+         * **WebGL Version:** WEBGL_depth_texture extension.
+         * 
+         * ---
+         * constant provided by the extension.
+         */
         UNSIGNED_INT_24_8_WEBGL = GL.UNSIGNED_INT_24_8_WEBGL,
 
-        /** OES_texture_float extension */
+        /** **WebGL Version:** WOES_texture_float extension or WebGL 2.0. */
         FLOAT = GL.FLOAT,
 
-        /** OES_texture_half_float extension */
-        /** constant provided by the extension. */
+        /** 
+         * **WebGL Version:** OES_texture_half_float extension.
+         * 
+         * ---
+         * constant provided by the extension.
+         */
         HALF_FLOAT_OES = GL.HALF_FLOAT_OES,
 
-        /** WebGL 2.0 */
+        /** **WebGL Version:** WebGL 2.0 */
         BYTE = GL.BYTE,
-        /** UNSIGNED_SHORT = GL.UNSIGNED_SHORT, //already define. */                           
+        // UNSIGNED_SHORT = GL.UNSIGNED_SHORT, //already define.
+        /** **WebGL Version:** WebGL 2.0 */
         SHORT = GL.SHORT,
-        /** UNSIGNED_INT = GL.UNSIGNED_INT, //already define. */                               
+        // UNSIGNED_INT = GL.UNSIGNED_INT, //already define.    
+        /** **WebGL Version:** WebGL 2.0 */
         INT = GL.INT,
+        /** **WebGL Version:** WebGL 2.0 */
         HALF_FLOAT = GL.HALF_FLOAT,
-        /** FLOAT = GL.FLOAT, //already define. */                                            
+        // FLOAT = GL.FLOAT, //already define.  
+        /** **WebGL Version:** WebGL 2.0 */
         UNSIGNED_INT_2_10_10_10_REV = GL.UNSIGNED_INT_2_10_10_10_REV,
+        /** **WebGL Version:** WebGL 2.0 */
         UNSIGNED_INT_10F_11F_11F_REV = GL.UNSIGNED_INT_10F_11F_11F_REV,
+        /** **WebGL Version:** WebGL 2.0 */
         UNSIGNED_INT_5_9_9_9_REV = GL.UNSIGNED_INT_5_9_9_9_REV,
+        /** **WebGL Version:** WebGL 2.0 */
         UNSIGNED_INT_24_8 = GL.UNSIGNED_INT_24_8,
-        /** pixels must be null. */
+        /** 
+         * **WebGL Version:** WebGL 2.0
+         * 
+         * ---
+         * pixels must be null. 
+         */
         FLOAT_32_UNSIGNED_INT_24_8_REV = GL.FLOAT_32_UNSIGNED_INT_24_8_REV
     }
 
@@ -3126,5 +3482,281 @@ namespace MITOIA {
         DECR_WRAP = GL.DECR_WRAP,
         /** Bitwise inverts the current stencil buffer value. */
         INVERT = GL.INVERT
+    }
+
+    export enum GLFrameBufferTarget {
+        FRAMEBUFFER = GL.FRAMEBUFFER,
+
+        /**
+         * **WebGL Version:** WebGL 2.0.
+         * 
+         * ---
+         * Equivalent to FRAMEBUFFER. Used as a destination for drawing, rendering, clearing, and writing operations.
+         */
+        DRAW_FRAMEBUFFER = GL.DRAW_FRAMEBUFFER,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        READ_FRAMEBUFFER = GL.READ_FRAMEBUFFER,
+    }
+
+    export enum GLRenderBufferInternalFormat {
+        RGBA4 = GL.RGBA4,
+        RGB565 = GL.RGB565,
+        RGB5_A1 = GL.RGB5_A1,
+        DEPTH_COMPONENT16 = GL.DEPTH_COMPONENT16,
+        STENCIL_INDEX8 = GL.STENCIL_INDEX8,
+        DEPTH_STENCIL = GL.DEPTH_STENCIL,
+
+        /**
+         * **WebGL Version:** WEBGL_color_buffer_float extension
+         * 
+         * ---
+         * RGBA 32-bit floating-point type.
+         */
+        RGBA32F_EXT = GL.RGBA32F_EXT,
+
+        /**
+         * **WebGL Version:** WEBGL_color_buffer_float extension
+         * 
+         * ---
+         * RGB 32-bit floating-point type.
+         */
+        RGB32F_EXT = GL.RGB32F_EXT,
+
+        /**
+         * **WebGL Version:** EXT_sRGB extension or WebGL 2.0.
+         * 
+         * ---
+         * 8-bit sRGB and alpha.
+         */
+        SRGB8_ALPHA8_EXT = GL.SRGB8_ALPHA8_EXT,
+
+        /** **WebGL Version:** EXT_color_buffer_float extension or WebGL 2.0. */
+        R16F = GL.R16F,
+
+        /** **WebGL Version:** EXT_color_buffer_float extension or WebGL 2.0. */
+        RG16F = GL.RG16F,
+
+        /** **WebGL Version:** EXT_color_buffer_float extension or WebGL 2.0. */
+        RGBA16F = GL.RGBA16F,
+
+        /** **WebGL Version:** EXT_color_buffer_float extension or WebGL 2.0. */
+        R32F = GL.R32F,
+
+        /** **WebGL Version:** EXT_color_buffer_float extension or WebGL 2.0. */
+        RG32F = GL.RG32F,
+
+        /** **WebGL Version:** EXT_color_buffer_float extension or WebGL 2.0. */
+        RGBA32F = GL.RGBA32F,
+
+        /** **WebGL Version:** EXT_color_buffer_float extension or WebGL 2.0. */
+        R11F_G11F_B10F = GL.R11F_G11F_B10F,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        R8 = GL.R8,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        R8UI = GL.R8UI,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        R8I = GL.R8I,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        R16UI = GL.R16UI,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        R16I = GL.R16I,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        R32UI = GL.R32UI,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        R32I = GL.R32I,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RG8 = GL.RG8,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RG8UI = GL.RG8UI,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RG8I = GL.RG8I,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RG16UI = GL.RG16UI,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RG16I = GL.RG16I,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RG32UI = GL.RG32UI,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RG32I = GL.RG32I,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RGB8 = GL.RGB8,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RGBA8 = GL.RGBA8,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RGB10_A2 = GL.RGB10_A2,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RGBA8UI = GL.RGBA8UI,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RGBA8I = GL.RGBA8I,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RGB10_A2UI = GL.RGB10_A2UI,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RGBA16UI = GL.RGBA16UI,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RGBA16I = GL.RGBA16I,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RGBA32I = GL.RGBA32I,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        RGBA32UI = GL.RGBA32UI,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        DEPTH_COMPONENT24 = GL.DEPTH_COMPONENT24,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        DEPTH_COMPONENT32F = GL.DEPTH_COMPONENT32F,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        DEPTH24_STENCIL8 = GL.DEPTH24_STENCIL8,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        DEPTH32F_STENCIL8 = GL.DEPTH32F_STENCIL8
+    }
+
+    export enum GLRenderBufferAttachment {
+        COLOR_ATTACHMENT0 = GL.COLOR_ATTACHMENT0,
+        DEPTH_ATTACHMENT = GL.DEPTH_ATTACHMENT,
+        DEPTH_STENCIL_ATTACHMENT = GL.DEPTH_STENCIL_ATTACHMENT,
+        STENCIL_ATTACHMENT = GL.STENCIL_ATTACHMENT,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT1 = GL.COLOR_ATTACHMENT1,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT2 = GL.COLOR_ATTACHMENT2,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT3 = GL.COLOR_ATTACHMENT3,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT4 = GL.COLOR_ATTACHMENT4,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT5 = GL.COLOR_ATTACHMENT5,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT6 = GL.COLOR_ATTACHMENT6,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT7 = GL.COLOR_ATTACHMENT7,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT8 = GL.COLOR_ATTACHMENT8,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT9 = GL.COLOR_ATTACHMENT9,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT10 = GL.COLOR_ATTACHMENT10,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT11 = GL.COLOR_ATTACHMENT11,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT12 = GL.COLOR_ATTACHMENT12,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT13 = GL.COLOR_ATTACHMENT13,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT14 = GL.COLOR_ATTACHMENT14,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT15 = GL.COLOR_ATTACHMENT15
+    }
+
+    export enum GLTex2DAttachment {
+        COLOR_ATTACHMENT0 = GL.COLOR_ATTACHMENT0,
+        DEPTH_ATTACHMENT = GL.DEPTH_ATTACHMENT,
+        STENCIL_ATTACHMENT = GL.STENCIL_ATTACHMENT,
+
+        /** **WebGL Version:** WEBGL_depth_texture extension or WebGL 2.0. */
+        DEPTH_STENCIL_ATTACHMENT = GL.DEPTH_STENCIL_ATTACHMENT,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT1 = GL.COLOR_ATTACHMENT1,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT2 = GL.COLOR_ATTACHMENT2,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT3 = GL.COLOR_ATTACHMENT3,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT4 = GL.COLOR_ATTACHMENT4,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT5 = GL.COLOR_ATTACHMENT5,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT6 = GL.COLOR_ATTACHMENT6,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT7 = GL.COLOR_ATTACHMENT7,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT8 = GL.COLOR_ATTACHMENT8,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT9 = GL.COLOR_ATTACHMENT9,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT10 = GL.COLOR_ATTACHMENT10,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT11 = GL.COLOR_ATTACHMENT11,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT12 = GL.COLOR_ATTACHMENT12,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT13 = GL.COLOR_ATTACHMENT13,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT14 = GL.COLOR_ATTACHMENT14,
+
+        /** **WebGL Version:** WEBGL_draw_buffers extension or WebGL 2.0. */
+        COLOR_ATTACHMENT15 = GL.COLOR_ATTACHMENT15
+    }
+
+    export enum GLFrameBufferTexTarget {
+        /** A 2D image. */
+        TEXTURE_2D = GL.TEXTURE_2D,
+        /** Image for the positive X face of the cube. */
+        TEXTURE_CUBE_MAP_POSITIVE_X = GL.TEXTURE_CUBE_MAP_POSITIVE_X,
+        /** Image for the negative X face of the cube. */
+        TEXTURE_CUBE_MAP_NEGATIVE_X = GL.TEXTURE_CUBE_MAP_NEGATIVE_X,
+        /** Image for the positive Y face of the cube. */
+        TEXTURE_CUBE_MAP_POSITIVE_Y = GL.TEXTURE_CUBE_MAP_POSITIVE_Y,
+        /** Image for the negative Y face of the cube. */
+        TEXTURE_CUBE_MAP_NEGATIVE_Y = GL.TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        /** Image for the positive Z face of the cube. */
+        TEXTURE_CUBE_MAP_POSITIVE_Z = GL.TEXTURE_CUBE_MAP_POSITIVE_Z,
+        /** Image for the negative Z face of the cube. */
+        TEXTURE_CUBE_MAP_NEGATIVE_Z = GL.TEXTURE_CUBE_MAP_NEGATIVE_Z
     }
 }

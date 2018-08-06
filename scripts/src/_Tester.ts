@@ -59,8 +59,8 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL) {
 
     mat.cullFace = MITOIA.GLCullFace.NONE;
     mat.depthTest = MITOIA.GLDepthTest.ALWAYS;
-    mat.stencilFront = stencil;
-    mat.stencilBack = stencil2;
+    //mat.stencilFront = stencil;
+    //mat.stencilBack = stencil2;
     renderer.materials[0] = mat;
 
     let tex = new MITOIA.GLTexture2D(gl);
@@ -85,6 +85,7 @@ window.addEventListener("DOMContentLoaded", () => {
     options.preserveDrawingBuffer = true;
     options.depth = true;
     options.stencil = true;
+    options.version = 1;
     let gl = new MITOIA.GL(canvas, options);
 
     console.log(MITOIA.Version, gl.version, gl.versionFullInfo);
@@ -97,6 +98,25 @@ window.addEventListener("DOMContentLoaded", () => {
     model2Node.setParent(worldNode);
     cameraNode.setParent(worldNode);
 
+    let fbo = new MITOIA.GLFrameBuffer(gl, 200, 200);
+
+    let depthRBO = new MITOIA.GLRenderBuffer(gl);
+    depthRBO.storage(MITOIA.GLRenderBufferInternalFormat.DEPTH_COMPONENT16, fbo.width, fbo.height);
+
+    let stencilRBO = new MITOIA.GLRenderBuffer(gl);
+    stencilRBO.storage(MITOIA.GLRenderBufferInternalFormat.STENCIL_INDEX8, fbo.width, fbo.height);
+
+    let depthAndStencilRBO = new MITOIA.GLRenderBuffer(gl);
+    depthAndStencilRBO.storage(MITOIA.GLRenderBufferInternalFormat.DEPTH_STENCIL, fbo.width, fbo.height);
+
+    let colorTex = new MITOIA.GLTexture2D(gl);
+    colorTex.uploadBinary(0, MITOIA.GLTexInternalFormat.RGBA, fbo.width, fbo.height, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, null);
+
+    
+    fbo.setAttachmentRenderBuffer(MITOIA.GLRenderBufferAttachment.DEPTH_STENCIL_ATTACHMENT, depthAndStencilRBO);
+    //fbo.setAttachmentRenderBuffer(MITOIA.GLFrameBufferRenderBufferAttachment.STENCIL_ATTACHMENT, stencilRBO);
+    fbo.setAttachmentTexture2D(MITOIA.GLTex2DAttachment.COLOR_ATTACHMENT0, MITOIA.GLFrameBufferTexTarget.TEXTURE_2D, colorTex);
+
     let cam = cameraNode.addComponent(new MITOIA.Camera());
     //cam.setProjectionMatrix(MITOIA.Matrix44.createOrthoLHMatrix(engine.canvasWidth, engine.canvasHeight, 10, 10000));
     //cam.setProjectionMatrix(MITOIA.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, engine.canvasWidth / engine.canvasHeight, 1, 10000));
@@ -105,6 +125,11 @@ window.addEventListener("DOMContentLoaded", () => {
     //cam.clear.clearColor = false;
     //cam.clear.clearDepth = false;
     cam.owner.setLocalPosition(0, 0, -10);
+    if (fbo.checkStatus()) {
+        cam.frameBuffer = fbo;
+    } else {
+        let a = 1;
+    }
 
     model1Node.appendLocalTranslate(0, 0, 500);
 
@@ -128,6 +153,7 @@ window.addEventListener("DOMContentLoaded", () => {
         model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI / 180));
 
         rp.render(gl, cam, worldNode);
+        let b = gl.context.getError() === MITOIA.GL.NO_ERROR;
 
         fps.record();
         //console.log(fps.fps);
@@ -136,7 +162,7 @@ window.addEventListener("DOMContentLoaded", () => {
     let request = new XMLHttpRequest();
     request.addEventListener("loadend", () => {
         //request.response;
-        request.responseText;
+        //request.responseText;
     });
     request.open("GET", getURL("tex1.png"), true);
     request.send();

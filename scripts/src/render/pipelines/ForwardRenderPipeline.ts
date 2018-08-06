@@ -33,6 +33,14 @@ namespace MITOIA {
 
             super.render(gl, camera, node);
             
+            if (camera.frameBuffer) {
+                camera.frameBuffer.bind();
+                gl.setViewport(0, 0, camera.frameBuffer.width, camera.frameBuffer.height);
+            } else {
+                gl.restoreBackBuffer();
+                gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+            }
+
             gl.clear(camera.clear);
 
             this._collectNode(node);
@@ -54,6 +62,9 @@ namespace MITOIA {
                 rn.renderer = null;
             }
             this._renderingQueueLength = 0;
+
+            gl.restoreBackBuffer();
+            gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         }
 
         private _collectNode(node: Node): void {

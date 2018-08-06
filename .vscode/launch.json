@@ -11,7 +11,9 @@
             "preLaunchTask": "build",
             "cwd": "${workspaceRoot}",
             "webRoot": "${workspaceRoot}",
-            "runtimeArgs": ["--enable-unsafe-es3-apis"]
+            "runtimeArgs": [
+                "--enable-unsafe-es3-apis"
+            ]
         },
 
         {

@@ -9,6 +9,8 @@ namespace MITOIA {
 
         public cullingMask: uint = 0xFFFFFFFF;
 
+        public frameBuffer: GLFrameBuffer = null;
+
         public get aspectRatio(): number {
             return this._aspectRatio;
         }

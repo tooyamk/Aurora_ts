@@ -238,7 +238,7 @@ namespace MITOIA {
                                     if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix4fv(info.location, false, v.array);
                                     break;
                                 case GLUniformType.SAMPLER_2D:
-                                    if (v.sampler2D.use(samplerIndex, info.location))++samplerIndex;
+                                    if (v.sampler2D.use(samplerIndex, info.location)) ++samplerIndex;
                                     break;
                                 case GLUniformType.SAMPLER_CUBE:
                                     break;
