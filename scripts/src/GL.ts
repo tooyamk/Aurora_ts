@@ -1,7 +1,16 @@
 //WebGL 2.0
 interface WebGLRenderingContext {
-    renderbufferStorageMultisample(target: number, samples: number, internalformat: number, width: number, height: number): void;
+    /** **WebGL Version:** 2.0 */
     drawBuffers(buffers: number[]): void;
+
+    /** **WebGL Version:** 2.0 */
+    renderbufferStorageMultisample(target: number, samples: number, internalformat: number, width: number, height: number): void;
+
+    /** **WebGL Version:** 2.0 */
+    texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, srcData: ArrayBufferView | null, srcOffset: number): void;
+
+    /** **WebGL Version:** 2.0 */
+    texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, srcData: ArrayBufferView | null, srcOffset: number): void;
 }
 
 namespace MITOIA {
@@ -575,58 +584,68 @@ namespace MITOIA {
         }
 
         public setFilters(value: GLTexFilterValue): void {
-            this.bind();
-
-            let gl = this._gl.context;
-            gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MIN_FILTER, value);
-            gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MAG_FILTER, value);
+            if (this.bind()) {
+                let gl = this._gl.context;
+                gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MIN_FILTER, value);
+                gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MAG_FILTER, value);
+            }
         }
 
         public setFilter(type: GLTexFilterType, value: GLTexFilterValue): void {
-            this.bind();
-            this._gl.context.texParameteri(this._textureType, type, value);
+            if (this.bind()) this._gl.context.texParameteri(this._textureType, type, value);
         }
 
         public setWraps(value: GLTexWrapValue): void {
-            this.bind();
-
-            let gl = this._gl.context;
-            gl.texParameteri(this._textureType, GLTexWrapType.TEXTURE_WRAP_S, value);
-            gl.texParameteri(this._textureType, GLTexWrapType.TEXTURE_WRAP_T, value);
+            if (this.bind()) {
+                let gl = this._gl.context;
+                gl.texParameteri(this._textureType, GLTexWrapType.TEXTURE_WRAP_S, value);
+                gl.texParameteri(this._textureType, GLTexWrapType.TEXTURE_WRAP_T, value);
+            }
         }
 
         public setWrap(type: GLTexWrapType, value: GLTexFilterValue): void {
-            this.bind();
-            this._gl.context.texParameteri(this._textureType, type, value);
+            if (this.bind()) this._gl.context.texParameteri(this._textureType, type, value);
         }
 
         public generateMipmap(): void {
-            this.bind();
-            this._gl.context.generateMipmap(this._textureType);
+            if (this.bind()) this._gl.context.generateMipmap(this._textureType);
         }
 
-        public bind(force: boolean = false): void {
-            this._gl.bindTexture(this, force);
+        public bind(force: boolean = false): boolean {
+            if (this._tex) {
+                this._gl.bindTexture(this, force);
+                return true;
+            } else {
+                console.log("can not call bind method, tex is disposed");
+                return false;
+            }
         }
 
         public use(index: uint, location: WebGLUniformLocation): boolean {
-            if (this._gl.activeTexture(this, index)) {
-                this._gl.context.uniform1i(location, index);
-                return true;
+            if (this._tex) {
+                if (this._gl.activeTexture(this, index)) {
+                    this._gl.context.uniform1i(location, index);
+                    return true;
+                }
+                return false;
+            } else {
+                console.log("can not call use method, tex is disposed");
             }
-            return false;
         }
     }
 
     export class GLTexture2D extends AbstractGLTexture {
-        private _isNotUpload = true;
+        private _isNotUpload: boolean = true;
 
         constructor(gl: GL) {
             super(gl, GLTexType.TEXTURE_2D);
         }
 
+        /**
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         */
         public upload(level: int, internalformat: GLTexInternalFormat, format: GLTexFormat, type: GLTexDataType, data: ImageBitmap | ImageData | HTMLVideoElement | HTMLImageElement | HTMLCanvasElement): void {
-            if (this._tex) {
+            if (this._tex && data) {
                 this.bind();
 
                 this._gl.context.texImage2D(this._textureType, level, internalformat, format, type, data);
@@ -642,6 +661,9 @@ namespace MITOIA {
             }
         }
 
+        /**
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         */
         public uploadBinary(level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, data: ArrayBufferView): void {
             if (this._tex) {
                 this.bind();
@@ -668,8 +690,62 @@ namespace MITOIA {
     }
 
     export class GLTextureCube extends AbstractGLTexture {
+        private _isNotUpload: uint = 0;
+
         constructor(gl: GL) {
             super(gl, GLTexType.TEXTURE_CUBE_MAP);
+        }
+
+        /**
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         */
+        public upload(face:GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, format: GLTexFormat, type: GLTexDataType, data: ImageBitmap | ImageData | HTMLVideoElement | HTMLImageElement | HTMLCanvasElement): void {
+            if (this._tex && data) {
+                this.bind();
+
+                this._gl.context.texImage2D(face, level, internalformat, format, type, data);
+                this._setDefaultFilter(face);
+            }
+        }
+
+        public uploadSub(face:GLTexCubeFace, level: int, xoffset: number, yoffset: number, format: GLTexFormat, type: GLTexDataType, data: ImageBitmap | ImageData | HTMLVideoElement | HTMLImageElement | HTMLCanvasElement): void {
+            if (this._tex) {
+                this.bind();
+
+                this._gl.context.texSubImage2D(face, level, xoffset, yoffset, format, type, data);
+            }
+        }
+
+        /**
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         * @param srcOffset Use for WebGL 2.0
+         */
+        public uploadBinary(face:GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, srcData: ArrayBufferView, srcOffset: int = 0): void {
+            if (this._tex) {
+                this.bind();
+                
+                this._gl.context.texImage2D(face, level, internalformat, width, height, 0, format, type, srcData);
+                this._setDefaultFilter(face);
+            }
+        }
+
+        /**
+         * @param srcOffset Use for WebGL 2.0
+         */
+        public uploadSubBinary(face:GLTexCubeFace, level: int, xoffset: number, yoffset: number, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, srcData: ArrayBufferView, srcOffset: int = 0): void {
+            if (this._tex) {
+                this.bind();
+                
+                this._gl.context.texSubImage2D(face, level, xoffset, yoffset, width, height, format, type, srcData);
+            }
+        }
+
+        private _setDefaultFilter(face:GLTexCubeFace): void {
+            let mask = 0b1 << (face - GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_X);
+            if ((this._isNotUpload & mask) === 0) {
+                this._isNotUpload |= mask;
+                this._gl.context.texParameteri(face, GLTexFilterType.TEXTURE_MIN_FILTER, GLTexFilterValue.LINEAR);
+            }
         }
     }
 
@@ -3015,7 +3091,13 @@ namespace MITOIA {
 
     export enum GLTexType {
         TEXTURE_2D = GL.TEXTURE_2D,
-        TEXTURE_CUBE_MAP = GL.TEXTURE_CUBE_MAP
+        TEXTURE_CUBE_MAP = GL.TEXTURE_CUBE_MAP,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        TEXTURE_3D = GL.TEXTURE_3D,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        TEXTURE_2D_ARRAY = GL.TEXTURE_2D_ARRAY
     }
 
     export enum GLFrameBufferType {
@@ -3054,7 +3136,7 @@ namespace MITOIA {
         MIRRORED_REPEAT = GL.MIRRORED_REPEAT
     }
 
-    export enum GLTexCubeTarget {
+    export enum GLTexCubeFace {
         TEXTURE_CUBE_MAP_POSITIVE_X = GL.TEXTURE_CUBE_MAP_POSITIVE_X,
         TEXTURE_CUBE_MAP_NEGATIVE_X = GL.TEXTURE_CUBE_MAP_NEGATIVE_X,
         TEXTURE_CUBE_MAP_POSITIVE_Y = GL.TEXTURE_CUBE_MAP_POSITIVE_Y,
@@ -3388,24 +3470,24 @@ namespace MITOIA {
          */
         HALF_FLOAT_OES = GL.HALF_FLOAT_OES,
 
-        /** **WebGL Version:** WebGL 2.0 */
+        /** **WebGL Version:** 2.0 */
         BYTE = GL.BYTE,
         // UNSIGNED_SHORT = GL.UNSIGNED_SHORT, //already define.
-        /** **WebGL Version:** WebGL 2.0 */
+        /** **WebGL Version:** 2.0 */
         SHORT = GL.SHORT,
         // UNSIGNED_INT = GL.UNSIGNED_INT, //already define.    
-        /** **WebGL Version:** WebGL 2.0 */
+        /** **WebGL Version:** 2.0 */
         INT = GL.INT,
-        /** **WebGL Version:** WebGL 2.0 */
+        /** **WebGL Version:** 2.0 */
         HALF_FLOAT = GL.HALF_FLOAT,
         // FLOAT = GL.FLOAT, //already define.  
-        /** **WebGL Version:** WebGL 2.0 */
+        /** **WebGL Version:** 2.0 */
         UNSIGNED_INT_2_10_10_10_REV = GL.UNSIGNED_INT_2_10_10_10_REV,
-        /** **WebGL Version:** WebGL 2.0 */
+        /** **WebGL Version:** 2.0 */
         UNSIGNED_INT_10F_11F_11F_REV = GL.UNSIGNED_INT_10F_11F_11F_REV,
-        /** **WebGL Version:** WebGL 2.0 */
+        /** **WebGL Version:** 2.0 */
         UNSIGNED_INT_5_9_9_9_REV = GL.UNSIGNED_INT_5_9_9_9_REV,
-        /** **WebGL Version:** WebGL 2.0 */
+        /** **WebGL Version:** 2.0 */
         UNSIGNED_INT_24_8 = GL.UNSIGNED_INT_24_8,
         /** 
          * **WebGL Version:** WebGL 2.0

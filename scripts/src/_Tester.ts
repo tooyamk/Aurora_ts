@@ -69,7 +69,7 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL) {
     img.src = getURL("tex1.png");
     img.onload = () => {
         gl.context.pixelStorei(MITOIA.GL.UNPACK_FLIP_Y_WEBGL, true);
-        tex.upload(0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, img);
+        //tex.upload(0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, img);
         gl.context.pixelStorei(MITOIA.GL.UNPACK_FLIP_Y_WEBGL, false);
         mat.uniforms.setTexture("tex", tex);
     }
