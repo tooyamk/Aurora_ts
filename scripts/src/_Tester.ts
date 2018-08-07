@@ -3,17 +3,20 @@ function getURL(name: string): string {
 }
 
 function createModel(node: MITOIA.Node, gl: MITOIA.GL) {
-    let vert = `
+    let vert = `#define CCVV 
         precision highp float;
         attribute vec3 a_Position;
-        attribute vec2 a_TexCoord0;
+        attribute vec2 a_TexCoord;
         uniform mat4 u_MatL2P;
         varying vec2 v_uv;
+        #define AAAA
+        abc
         void main(void){
-            v_uv = vec2(a_TexCoord0);
+            v_uv = vec2(a_TexCoord);
             //gl_Position = vec4(a_Position.x, a_Position.y, a_Position.z, 1);
             gl_Position = u_MatL2P * vec4(a_Position, 1.0);
-        }`;
+        }
+        #define NNN`;
 
     let frag = `
         precision highp float;
@@ -29,6 +32,21 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL) {
             gl_FragColor = vec4(c);
         }`;
 
+    let match_Cmd_Arg = (cmd: string, data: string) => {
+        let arr = data.match(new RegExp("[    \\r\\n]" + cmd + "[  ]+\\S+[  \\r\\n]", "gm"));
+        if (arr) {
+            for (let i = 0, n = arr.length; i < n; ++i) {
+                let ss = arr[i].replace("[    \\r\\n]", "x");
+                let s = arr[i];
+                arr[i] = s.substr(9, s.length - 10);
+            }
+        }
+        return arr;
+    }
+
+    let vert1 = " " + vert + " ";
+    let defines = match_Cmd_Arg("#define", vert1);
+
     let vertexBuffer = new MITOIA.GLVertexBuffer(gl);
     vertexBuffer.upload([-100, -100, 0.1, -280.0, 100, 0.1, 100, -50, 0.1], MITOIA.GLVertexBufferSize.THREE, MITOIA.GLVertexDataType.FLOAT, false, MITOIA.GLUsageType.STATIC_DRAW);
 
@@ -39,8 +57,8 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL) {
     indexBuffer.upload([0, 1, 2], MITOIA.GLUsageType.STATIC_DRAW);
 
     let assetStore = new MITOIA.AssetStore();
-    assetStore.a_Position = vertexBuffer;
-    assetStore.a_TexCoord0 = uvBuffer;
+    assetStore.vertexBuffers.set(MITOIA.Shader.a_Position, vertexBuffer);
+    assetStore.vertexBuffers.set(MITOIA.Shader.a_TexCoord, uvBuffer);
     assetStore.indexBuffer = indexBuffer;
 
     let renderer = node.addComponent(new MITOIA.MeshRenderer());
@@ -110,8 +128,7 @@ window.addEventListener("DOMContentLoaded", () => {
     depthAndStencilRBO.storage(MITOIA.GLRenderBufferInternalFormat.DEPTH_STENCIL, fbo.width, fbo.height);
 
     let colorTex = new MITOIA.GLTexture2D(gl);
-    colorTex.uploadBinary(0, MITOIA.GLTexInternalFormat.RGBA, fbo.width, fbo.height, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, null);
-
+    colorTex.upload(0, MITOIA.GLTexInternalFormat.RGBA, fbo.width, fbo.height, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, <ArrayBufferView>null, 0);
     
     fbo.setAttachmentRenderBuffer(MITOIA.GLRenderBufferAttachment.DEPTH_STENCIL_ATTACHMENT, depthAndStencilRBO);
     //fbo.setAttachmentRenderBuffer(MITOIA.GLFrameBufferRenderBufferAttachment.STENCIL_ATTACHMENT, stencilRBO);

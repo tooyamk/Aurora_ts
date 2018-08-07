@@ -1,5 +1,11 @@
 namespace MITOIA {
     export class Shader {
+        public static readonly a_Position: string = "a_Position";
+        public static readonly a_Normal: string = "a_Normal";
+        public static readonly a_TexCoord: string = "a_TexCoord";
+        public static readonly a_Color: string = "a_Color";
+        public static readonly a_Index: string = "a_Index";
+
         public static readonly u_MatW2V: string = "u_MatW2V";
         public static readonly u_MatW2P: string = "u_MatW2P";
         public static readonly u_MatV2P: string = "u_MatV2P";
@@ -7,6 +13,8 @@ namespace MITOIA {
         public static readonly u_MatL2V: string = "u_MatL2V";
         public static readonly u_MatL2W: string = "u_MatL2W";
         public static readonly u_MatL2P: string = "u_MatL2P";
+
+        public static readonly s_Sampler: string = "s_Sampler";
 
         protected _gl: GL;
         protected _vertexSource: string;
@@ -20,6 +28,13 @@ namespace MITOIA {
         protected _uniforms: GLProgramUniformInfo[] = null;
 
         constructor(gl: GL, vertexSource: string, fragmentSource: string) {
+            //#ifdef name
+            //#ifndef name
+            //#define name
+            //#if defined(name)
+            //#if name == any
+            //#elif name == any
+            
             this._gl = gl;
             this._vertexSource = vertexSource;
             this._fragmentSource = fragmentSource;

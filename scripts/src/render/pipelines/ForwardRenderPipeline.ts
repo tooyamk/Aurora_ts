@@ -17,6 +17,10 @@ namespace MITOIA {
         private _renderingQueueLength: uint = 0;
         private _renderingQueueCapacity: uint = 0;
 
+        protected _viewToProjMatrix: Matrix44 = new Matrix44();
+        protected _worldToViewMatrix: Matrix44 = new Matrix44();
+        protected _worldToProjMatrix: Matrix44 = new Matrix44();
+
         private _renderingNode: RenderNode = null;
 
         constructor() {
@@ -31,7 +35,20 @@ namespace MITOIA {
         public render(gl: GL, camera: Camera, node: Node): void {
             this._gl = gl.context;
 
-            super.render(gl, camera, node);
+            if (camera.owner) {
+                camera.owner.getWorldMatrix(this._worldToViewMatrix);
+                this._worldToViewMatrix.invert();
+            } else {
+                this._worldToViewMatrix.identity();
+            }
+
+            camera.getProjectionMatrix(this._viewToProjMatrix);
+
+            this._worldToViewMatrix.append44(this._viewToProjMatrix, this._worldToProjMatrix);
+
+            this._shaderUniform.setNumberArray(Shader.u_MatV2P, this._viewToProjMatrix.toArray44());
+            this._shaderUniform.setNumberArray(Shader.u_MatW2P, this._worldToProjMatrix.toArray44());
+            this._shaderUniform.setNumberArray(Shader.u_MatW2V, this._worldToViewMatrix.toArray44());
             
             if (camera.frameBuffer) {
                 camera.frameBuffer.bind();
@@ -62,9 +79,6 @@ namespace MITOIA {
                 rn.renderer = null;
             }
             this._renderingQueueLength = 0;
-
-            gl.restoreBackBuffer();
-            gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
         }
 
         private _collectNode(node: Node): void {

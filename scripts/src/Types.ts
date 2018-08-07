@@ -7,4 +7,5 @@ namespace MITOIA {
     export type uint = number;
     export type float = number;
     export type double = number;
+    export type GLImage = HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | ImageBitmap | ImageData;
 }

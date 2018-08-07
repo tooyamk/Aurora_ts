@@ -7,7 +7,19 @@ interface WebGLRenderingContext {
     renderbufferStorageMultisample(target: number, samples: number, internalformat: number, width: number, height: number): void;
 
     /** **WebGL Version:** 2.0 */
+    texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, offset: GLintptr): void;
+
+    /** **WebGL Version:** 2.0 */
+    texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, source: MITOIA.GLImage): void;
+
+    /** **WebGL Version:** 2.0 */
     texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, srcData: ArrayBufferView | null, srcOffset: number): void;
+
+    /** **WebGL Version:** 2.0 */
+    texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, format: number, type: number, offset: GLintptr): void;
+
+    /** **WebGL Version:** 2.0 */
+    texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, source: MITOIA.GLImage): void;
 
     /** **WebGL Version:** 2.0 */
     texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, srcData: ArrayBufferView | null, srcOffset: number): void;
@@ -227,7 +239,7 @@ namespace MITOIA {
             this._dataType = type;
         }
 
-        public upload(data: number[] | Uint32Array | Uint16Array | Uint8Array, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
+        public upload(data: uint[] | Uint32Array | Uint16Array | Uint8Array, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
             if (this._buffer) {
                 this._usage = usage;
 
@@ -632,6 +644,91 @@ namespace MITOIA {
                 console.log("can not call use method, tex is disposed");
             }
         }
+
+        protected _upload2D(target: int, level: int, internalformat: GLTexInternalFormat, args: any[]): void {
+            if (this._tex) {
+                this.bind();
+
+                if (this._gl.version >= 2) {
+                    if (args.length > 5) {
+                        if (args[4] instanceof AbstractGLBuffer) {
+                            args[4].bind();
+                            this._gl.context.texImage2D(target, level, internalformat, <uint>args[0], <uint>args[1], 0, <GLTexFormat>args[2], <GLTexDataType>args[3], <GLintptr>args[5]);
+                        } else {
+                            this._gl.context.texImage2D(target, level, internalformat, <uint>args[0], <uint>args[1], 0, <GLTexFormat>args[2], <GLTexDataType>args[3], <ArrayBufferView>args[4], <int>args[1]);
+                        }
+                    } else if (args.length > 4) {
+                        this._gl.context.texImage2D(target, level, internalformat, <uint>args[0], <uint>args[1], 0, <GLTexFormat>args[2], <GLTexDataType>args[3], <GLImage>args[4]);
+                    } else {
+                        let img = <GLImage>args[2];
+                        this._gl.context.texImage2D(target, level, internalformat, img.width, img.height, 0, <GLTexFormat>args[0], <GLTexDataType>args[1], img);
+                    }
+                } else {
+                    if (args.length > 5) {
+                        if (args[4] instanceof AbstractGLBuffer) {
+                            //not supproted
+                        } else {
+                            this._gl.context.texImage2D(target, level, internalformat, <uint>args[0], <uint>args[1], 0, <GLTexFormat>args[2], <GLTexDataType>args[3], <ArrayBufferView>args[4]);
+                        }
+                    } else if (args.length > 4) {
+                        this._gl.context.texImage2D(target, level, internalformat, <GLTexFormat>args[2], <GLTexDataType>args[3], <GLImage>args[4]);
+                    } else {
+                        this._gl.context.texImage2D(target, level, internalformat, <GLTexFormat>args[0], <GLTexDataType>args[1], <GLImage>args[2]);
+                    }
+                }
+            }
+        }
+
+        protected _uploadSub2D(target: int, level: int, xoffset: number, yoffset: number, args: any[]): void {
+            if (this._tex) {
+                this.bind();
+
+                let argsLen = args.length;
+
+                if (this._gl.version >= 2) {
+                    switch (args.length) {
+                        case 6:
+                            this._gl.context.texSubImage2D(target, level, xoffset, yoffset, <uint>args[0], <uint>args[1], <GLTexFormat>args[2], <GLTexDataType>args[3], <ArrayBufferView>args[4], <int>args[1]);
+                            break;
+                        case 5:
+                            this._gl.context.texSubImage2D(target, level, xoffset, yoffset, <uint>args[0], <uint>args[1], <GLTexFormat>args[2], <GLTexDataType>args[3], <GLImage>args[4]);
+                            break;
+                        case 4:
+                            {
+                                (<AbstractGLBuffer>args[2]).bind();
+                                this._gl.context.texSubImage2D(target, level, xoffset, yoffset, <GLTexFormat>args[0], <GLTexDataType>args[1], <GLintptr>args[3]);
+
+                                break;
+                            }
+                        case 3:
+                            {
+                                let img = <GLImage>args[2];
+                                this._gl.context.texSubImage2D(target, level, xoffset, yoffset, img.width, img.height, <GLTexFormat>args[0], <GLTexDataType>args[1], img);
+
+                                break;
+                            }
+                        default:
+                            break;
+                    }
+                } else {
+                    switch (args.length) {
+                        case 6:
+                            this._gl.context.texSubImage2D(target, level, xoffset, yoffset, <uint>args[0], <uint>args[1], <GLTexFormat>args[2], <GLTexDataType>args[3], <ArrayBufferView>args[4]);
+                            break;
+                        case 5:
+                            this._gl.context.texSubImage2D(target, level, xoffset, yoffset, <GLTexFormat>args[2], <GLTexDataType>args[3], <GLImage>args[4]);
+                            break;
+                        case 4://not supported
+                            break;
+                        case 3:
+                            this._gl.context.texSubImage2D(target, level, xoffset, yoffset, <GLTexFormat>args[0], <GLTexDataType>args[1], <GLImage>args[2]);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
     }
 
     export class GLTexture2D extends AbstractGLTexture {
@@ -642,43 +739,64 @@ namespace MITOIA {
         }
 
         /**
+         * **WebGL Version:** 2.0.
+         * 
+         * ---
          * @param format In WebGL 1.0 the value must equal internalformat.
          */
-        public upload(level: int, internalformat: GLTexInternalFormat, format: GLTexFormat, type: GLTexDataType, data: ImageBitmap | ImageData | HTMLVideoElement | HTMLImageElement | HTMLCanvasElement): void {
-            if (this._tex && data) {
-                this.bind();
-
-                this._gl.context.texImage2D(this._textureType, level, internalformat, format, type, data);
-                this._setDefaultFilter();
-            }
-        }
-
-        public uploadSub(level: int, xoffset: number, yoffset: number, format: GLTexFormat, type: GLTexDataType, data: ImageBitmap | ImageData | HTMLVideoElement | HTMLImageElement | HTMLCanvasElement): void {
-            if (this._tex) {
-                this.bind();
-
-                this._gl.context.texSubImage2D(this._textureType, level, xoffset, yoffset, format, type, data);
-            }
-        }
+        public upload(level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, buffer: AbstractGLBuffer, offset: GLintptr): void;
 
         /**
          * @param format In WebGL 1.0 the value must equal internalformat.
          */
-        public uploadBinary(level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, data: ArrayBufferView): void {
-            if (this._tex) {
-                this.bind();
-                
-                this._gl.context.texImage2D(this._textureType, level, internalformat, width, height, 0, format, type, data);
-                this._setDefaultFilter();
-            }
+        public upload(level: int, internalformat: GLTexInternalFormat, format: GLTexFormat, type: GLTexDataType, source: GLImage): void;
+
+        /**
+         * @param width Use for WebGL 2.0.
+         * @param height Use for WebGL 2.0.
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         */
+        public upload(level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, source: GLImage): void;
+        
+        /**
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         * @param srcOffset Use for WebGL 2.0
+         */
+        public upload(level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, srcData: ArrayBufferView, srcOffset: int): void;
+
+        public upload(level: int, internalformat: GLTexInternalFormat, ...args: any[]): void {
+            this._upload2D(this._textureType, level, internalformat, args);
+            this._setDefaultFilter();
         }
 
-        public uploadSubBinary(level: int, xoffset: number, yoffset: number, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, data: ArrayBufferView): void {
-            if (this._tex) {
-                this.bind();
-                
-                this._gl.context.texSubImage2D(this._textureType, level, xoffset, yoffset, width, height, format, type, data);
-            }
+        /**
+         * **WebGL Version:** 2.0.
+         * 
+         * ---
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         */
+        public uploadSub(level: int, xoffset: number, yoffset: number, format: GLTexFormat, type: GLTexDataType, buffer: AbstractGLBuffer, offset: GLintptr): void;
+
+        /**
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         */
+        public uploadSub(level: int, xoffset: number, yoffset: number, format: GLTexFormat, type: GLTexDataType, source: GLImage): void
+
+        /**
+         * @param width Use for WebGL 2.0.
+         * @param height Use for WebGL 2.0.
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         */
+        public uploadSub(level: int, xoffset: number, yoffset: number, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, source: GLImage): void;
+
+        /**
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         * @param srcOffset Use for WebGL 2.0
+         */
+        public uploadSub(level: int, xoffset: number, yoffset: number, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, srcData: ArrayBufferView, srcOffset: int): void;
+
+        public uploadSub(level: int, xoffset: number, yoffset: number, ...args: any[]): void {
+            this._uploadSub2D(this._textureType, level, xoffset, yoffset, args);
         }
 
         private _setDefaultFilter(): void {
@@ -697,47 +815,64 @@ namespace MITOIA {
         }
 
         /**
+         * **WebGL Version:** 2.0.
+         * 
+         * ---
          * @param format In WebGL 1.0 the value must equal internalformat.
          */
-        public upload(face:GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, format: GLTexFormat, type: GLTexDataType, data: ImageBitmap | ImageData | HTMLVideoElement | HTMLImageElement | HTMLCanvasElement): void {
-            if (this._tex && data) {
-                this.bind();
+        public upload(face:GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, buffer: AbstractGLBuffer, offset: GLintptr): void;
 
-                this._gl.context.texImage2D(face, level, internalformat, format, type, data);
-                this._setDefaultFilter(face);
-            }
-        }
+        /**
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         */
+        public upload(face: GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, format: GLTexFormat, type: GLTexDataType, source: GLImage): void;
 
-        public uploadSub(face:GLTexCubeFace, level: int, xoffset: number, yoffset: number, format: GLTexFormat, type: GLTexDataType, data: ImageBitmap | ImageData | HTMLVideoElement | HTMLImageElement | HTMLCanvasElement): void {
-            if (this._tex) {
-                this.bind();
-
-                this._gl.context.texSubImage2D(face, level, xoffset, yoffset, format, type, data);
-            }
-        }
+        /**
+         * @param width Use for WebGL 2.0.
+         * @param height Use for WebGL 2.0.
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         */
+        public upload(face: GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, source: GLImage): void;
 
         /**
          * @param format In WebGL 1.0 the value must equal internalformat.
          * @param srcOffset Use for WebGL 2.0
          */
-        public uploadBinary(face:GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, srcData: ArrayBufferView, srcOffset: int = 0): void {
-            if (this._tex) {
-                this.bind();
-                
-                this._gl.context.texImage2D(face, level, internalformat, width, height, 0, format, type, srcData);
-                this._setDefaultFilter(face);
-            }
+        public upload(face: GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, srcData: ArrayBufferView, srcOffset: int): void;
+
+        public upload(face: GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, ...args: any[]): void {
+            this._upload2D(face, level, internalformat, args);
+            this._setDefaultFilter(face);
         }
 
         /**
+         * **WebGL Version:** 2.0.
+         * 
+         * ---
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         */
+        public uploadSub(face: GLTexCubeFace, level: int, xoffset: number, yoffset: number, format: GLTexFormat, type: GLTexDataType, buffer: AbstractGLBuffer, offset: GLintptr): void;
+
+        /**
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         */
+        public uploadSub(face: GLTexCubeFace, level: int, xoffset: number, yoffset: number, format: GLTexFormat, type: GLTexDataType, source: GLImage): void
+
+        /**
+         * @param width Use for WebGL 2.0.
+         * @param height Use for WebGL 2.0.
+         * @param format In WebGL 1.0 the value must equal internalformat.
+         */
+        public uploadSub(face: GLTexCubeFace, level: int, xoffset: number, yoffset: number, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, source: GLImage): void;
+
+        /**
+         * @param format In WebGL 1.0 the value must equal internalformat.
          * @param srcOffset Use for WebGL 2.0
          */
-        public uploadSubBinary(face:GLTexCubeFace, level: int, xoffset: number, yoffset: number, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, srcData: ArrayBufferView, srcOffset: int = 0): void {
-            if (this._tex) {
-                this.bind();
-                
-                this._gl.context.texSubImage2D(face, level, xoffset, yoffset, width, height, format, type, srcData);
-            }
+        public uploadSub(face: GLTexCubeFace, level: int, xoffset: number, yoffset: number, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, srcData: ArrayBufferView, srcOffset: int): void;
+
+        public uploadSub(face: GLTexCubeFace, level: int, xoffset: number, yoffset: number, ...args: any[]): void {
+            this._uploadSub2D(face, level, xoffset, yoffset, args);
         }
 
         private _setDefaultFilter(face:GLTexCubeFace): void {
