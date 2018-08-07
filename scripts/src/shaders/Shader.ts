@@ -17,8 +17,10 @@ namespace MITOIA {
         public static readonly s_Sampler: string = "s_Sampler";
 
         protected _gl: GL;
-        protected _vertexSource: string;
-        protected _fragmentSource: string;
+        protected _vert: ShaderSource;
+        protected _frag: ShaderSource;
+
+        protected _defines: string[] = [];
 
         protected _cachedNoDefineProgram: GLProgram = null;
         protected _cachedPrograms: { [key: string]: GLProgram} = {};
@@ -27,10 +29,19 @@ namespace MITOIA {
         protected _attributes: GLProgramAttribInfo[] = null;
         protected _uniforms: GLProgramUniformInfo[] = null;
 
-        constructor(gl: GL, vertexSource: string, fragmentSource: string) {
+        constructor(gl: GL, vert: ShaderSource, frag: ShaderSource) {
             this._gl = gl;
-            this._vertexSource = vertexSource;
-            this._fragmentSource = fragmentSource;
+            this._vert = vert;
+            this._frag = frag;
+
+            let defines: { [key: string]: boolean } = {};
+            for (let n of vert.defines) defines[n] = true;
+            for (let n of frag.defines) defines[n] = true;
+
+            for (let n in defines) this._defines.push(n);
+            Sort.Merge.sort(this._defines, (a: string, b: string) => {
+                return a < b;
+            });
         }
 
         public get gl(): GL {
@@ -54,17 +65,28 @@ namespace MITOIA {
         }
 
         public ready(globalDefines: ShaderDefines, localDefines: ShaderDefines): boolean {
-            let key = (globalDefines ? globalDefines.getKey() : "") + (localDefines ? localDefines.getKey() : "");
+            let appendDefines = "";
+            for (let i = 0, n = this._defines.length; i < n; ++i) {
+                let name = this._defines[i];
 
-            this._curProgram = this._getProgramFromCache(key);
+                let v: string = undefined;
+                if (localDefines) v = localDefines.getDefine(name);
+                if (v === undefined && globalDefines) v = globalDefines.getDefine(name);
+
+                if (v == null) {
+                    appendDefines += "#define " + name + "\n";
+                } else if (v !== undefined) {
+                    appendDefines += "#define " + name + " " + v + "\n";
+                }
+            }
+
+            this._curProgram = this._getProgramFromCache(appendDefines);
             if (!this._curProgram) {
-                let appendDefs = (globalDefines ? globalDefines.getDefineString() : "") + (localDefines ? localDefines.getDefineString() : "");
-
                 this._curProgram = new GLProgram(this._gl);
-                this._curProgram.compileAndLink(appendDefs + this._vertexSource, appendDefs + this._fragmentSource);
+                this._curProgram.compileAndLink(appendDefines + this._vert.source, appendDefines + this._frag.source);
 
-                if (key && key.length > 0) {
-                    this._cachedPrograms[key] = this._curProgram;
+                if (appendDefines.length > 0) {
+                    this._cachedPrograms[appendDefines] = this._curProgram;
                 } else {
                     this._cachedNoDefineProgram = this._curProgram;
                 }

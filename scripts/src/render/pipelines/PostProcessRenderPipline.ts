@@ -87,6 +87,7 @@ namespace MITOIA {
                 this._defaultIndexBuffer = new GLIndexBuffer(gl);
                 this._defaultIndexBuffer.upload([0, 1, 2, 0, 2, 3], GLUsageType.STATIC_DRAW);
 
+                /*
                 this._defaultShader = new Shader(gl,
                 `
                 attribute vec2 a_Position;
@@ -104,6 +105,7 @@ namespace MITOIA {
                     gl_FragColor = texture2D(s_Sampler, v_uv);
                 }
                 `);
+                */
             }
         }
     }

@@ -24,45 +24,38 @@ namespace MITOIA {
             return this._defines[name] !== undefined;
         }
 
-        public getDefine(name: string): null | boolean | string {
-            let v = this._defines[name];
-            if (v === undefined) {
-                return null;
-            } else if (v === null) {
-                return true;
-            } else {
-                return v;
-            }
+        public getDefine(name: string): null | undefined | string {
+            return this._defines[name];
         }
 
         public setDefine(name: string, value: boolean | string): void {
-            if (value !== null && value !== undefined) {
-                let v = this._defines[name];
+            if (value === null || value === undefined || value === "") value = false;
+            
+            let v = this._defines[name];
 
-                if (value === true) {
-                    if (v === undefined) {
-                        this._defines[name] = null;
-                        this._dirty = true;
-                        ++this._count;
-                    } else if (v !== null) {
-                        this._defines[name] = null;
-                        this._dirty = true;
-                    }
-                } else if (value === false) {
-                    if (this._defines[name] !== undefined) {
-                        delete this._defines[name];
-                        this._dirty = true;
-                        --this._count;
-                    }
-                } else {
-                    if (v != value) {
-                        this._defines[name] = value;
-                        this._dirty = true;
-                    }
+            if (value === true) {
+                if (v === undefined) {
+                    this._defines[name] = null;
+                    this._dirty = true;
+                    ++this._count;
+                } else if (v !== null) {
+                    this._defines[name] = null;
+                    this._dirty = true;
                 }
-
-                if (this._dirty) this._defStrDirty = true;
+            } else if (value === false) {
+                if (this._defines[name] !== undefined) {
+                    delete this._defines[name];
+                    this._dirty = true;
+                    --this._count;
+                }
+            } else {
+                if (v != value) {
+                    this._defines[name] = value;
+                    this._dirty = true;
+                }
             }
+
+            if (this._dirty) this._defStrDirty = true;
         }
 
         public getDefineString(): string {
@@ -99,7 +92,7 @@ namespace MITOIA {
                     }
                 }
 
-                MITOIA.Sort.Merge.sort(arr, (a: string, b: string) => {
+                Sort.Merge.sort(arr, (a: string, b: string) => {
                     return a < b;
                 });
 

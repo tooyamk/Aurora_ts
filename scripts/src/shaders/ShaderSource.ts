@@ -8,6 +8,10 @@ namespace MITOIA {
             this._defines = ShaderSource._searchDefineNames(data);
         }
 
+        public get source(): string {
+            return this._source;
+        }
+
         public get defines(): Set<string> {
             return this._defines;
         }
