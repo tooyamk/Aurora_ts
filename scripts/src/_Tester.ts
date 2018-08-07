@@ -3,13 +3,13 @@ function getURL(name: string): string {
 }
 
 function createModel(node: MITOIA.Node, gl: MITOIA.GL) {
-    let vert = `#define CCVV 
+    let vert = `    #define CCVV )//wegwegwe
         precision highp float;
         attribute vec3 a_Position;
         attribute vec2 a_TexCoord;
         uniform mat4 u_MatL2P;
         varying vec2 v_uv;
-        #define AAAA
+        #elif defined (AAAA) || fuck == 2
         abc
         void main(void){
             v_uv = vec2(a_TexCoord);
@@ -32,20 +32,105 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL) {
             gl_FragColor = vec4(c);
         }`;
 
-    let match_Cmd_Arg = (cmd: string, data: string) => {
-        let arr = data.match(new RegExp("[    \\r\\n]" + cmd + "[  ]+\\S+[  \\r\\n]", "gm"));
-        if (arr) {
-            for (let i = 0, n = arr.length; i < n; ++i) {
-                let ss = arr[i].replace("[    \\r\\n]", "x");
-                let s = arr[i];
-                arr[i] = s.substr(9, s.length - 10);
+    let searchDefineNames = (data: string) => {
+        let op = new Set<string>();
+        let lines = ("\n" + data + "\n").match(/[\r\n][  ]*#(define|undef|ifdef|ifndef|if|elif)[  ]+[^\r\n/]*/g);
+        if (lines) {
+            let searchRegs: RegExp[] = [];
+            let replaceRegs: RegExp[] = [];
+            let searchIfOrElifReg = /#(if|elif)[  ]*/;
+            let splitReg = /==|>|<|!=|>=|<=|&&|\|\|/;
+            let replaceReg = /\s*!*defined\s*\(\s*|\s|\)/g;
+            let noNumberReg = /\D/;
+
+            let createReg = (name: string) => {
+                searchRegs.push(new RegExp("#" + name + "[  ]+\\S+"));
+                replaceRegs.push(new RegExp("#" + name + "|\\s", "g"));
+            }
+
+            createReg("define");
+            createReg("undef");
+            createReg("ifdef");
+            createReg("ifndef");
+
+            let regsLen = searchRegs.length;
+
+            for (let i = 0, n = lines.length; i < n; ++i) {
+                let line = lines[i];
+                let isBreak: boolean = false;
+                for (let j = 0; j < regsLen; ++j) {
+                    let find = line.match(searchRegs[j]);
+                    if (find) {
+                        op.add(find[0].replace(replaceRegs[j], ""));
+                        isBreak = true;
+                        break;
+                    }
+                }
+
+                if (!isBreak) {
+                    let idx = line.search(searchIfOrElifReg);
+                    if (idx >= 0) {
+                        line = line.replace(searchIfOrElifReg, "");
+                        let params = line.split(splitReg);
+                        for (let j = 0, n = params.length; j < n; ++j) {
+                            let value = params[j].replace(replaceReg, "");
+                            if (value.search(noNumberReg) == 0) op.add(value);
+                        }
+                    }
+                }
             }
         }
+
+        for (let value of op) {
+            console.log(value);
+        }
+        let b = 1;
+    }
+    
+    let match_Cmd_Arg = (cmd: string, data: string) => {
+        let reg1 = new RegExp("\\s" + cmd + "[  ]+\\S+\\s", "gm");
+        let reg2 = new RegExp("\\s|" + cmd, "g");
+        let arr = data.match(reg1)
+        if (arr) {
+            for (let i = 0, n = arr.length; i < n; ++i) {
+                arr[i] = arr[i].replace(reg2, "");
+            }
+        }
+
         return arr;
     }
 
-    let vert1 = " " + vert + " ";
-    let defines = match_Cmd_Arg("#define", vert1);
+    let match_Cmd1_Cmd2_Arg = (cmd1: string, cmd2: string, data: string) => {
+        let reg1 = new RegExp("\\s" + cmd1 + "[  ]+" + cmd2 + "[  ]*\\([  ]*\\S+[  ]*\\)\\s", "gm");
+        let reg2 = new RegExp(cmd1 + "[  ]+" + cmd2 + "|\\s|\\(|\\)", "g");
+        let arr = data.match(reg1)
+        if (arr) {
+            for (let i = 0, n = arr.length; i < n; ++i) {
+                arr[i] = arr[i].replace(reg2, "");
+            }
+        }
+
+        return arr;
+    }
+
+    let match_Cmd1_Cmd2_Equal_Arg = (cmd1: string, cmd2: string, data: string) => {
+        let reg1 = new RegExp("\\s" + cmd1 + "[  ]+" + cmd2 + "[  ]*\\([  ]*\\S+[  ]*\\)\\s", "gm");
+        let reg2 = new RegExp(cmd1 + "[  ]+" + cmd2 + "|\\s|\\(|\\)", "g");
+        let arr = data.match(reg1)
+        if (arr) {
+            for (let i = 0, n = arr.length; i < n; ++i) {
+                arr[i] = arr[i].replace(reg2, "");
+            }
+        }
+
+        return arr;
+    }
+
+    searchDefineNames(vert);
+
+    //let vert1 = " " + vert + " ";
+    //let defines1 = match_Cmd_Arg("#define", vert1);
+    //let defines2 = match_Cmd1_Cmd2_Arg("#if", "!defined", vert1);
 
     let vertexBuffer = new MITOIA.GLVertexBuffer(gl);
     vertexBuffer.upload([-100, -100, 0.1, -280.0, 100, 0.1, 100, -50, 0.1], MITOIA.GLVertexBufferSize.THREE, MITOIA.GLVertexDataType.FLOAT, false, MITOIA.GLUsageType.STATIC_DRAW);

@@ -28,13 +28,6 @@ namespace MITOIA {
         protected _uniforms: GLProgramUniformInfo[] = null;
 
         constructor(gl: GL, vertexSource: string, fragmentSource: string) {
-            //#ifdef name
-            //#ifndef name
-            //#define name
-            //#if defined(name)
-            //#if name == any
-            //#elif name == any
-            
             this._gl = gl;
             this._vertexSource = vertexSource;
             this._fragmentSource = fragmentSource;
