@@ -87,25 +87,28 @@ namespace MITOIA {
                 this._defaultIndexBuffer = new GLIndexBuffer(gl);
                 this._defaultIndexBuffer.upload([0, 1, 2, 0, 2, 3], GLUsageType.STATIC_DRAW);
 
-                /*
                 this._defaultShader = new Shader(gl,
-                `
-                attribute vec2 a_Position;
-                attribute vec2 a_TexCoord;
-                varying vec2 v_uv;
-                void main(void){
-                    v_uv = a_TexCoord;
-                    gl_Position = vec4(a_Position.x, a_Position.y, 0, 1);
-                }
-                `, 
-                `
-                uniform sampler2D s_Sampler;
-                varying vec2 v_uv;
-                void main(void){
-                    gl_FragColor = texture2D(s_Sampler, v_uv);
-                }
-                `);
-                */
+                    new ShaderSource(`
+                    attribute vec2 a_Position;
+                    attribute vec2 a_TexCoord;
+                    varying vec2 v_uv;
+                    void main(void){
+                        v_uv = a_TexCoord;
+                        gl_Position = vec4(a_Position.x, a_Position.y, 0, 1);
+                    }
+                    `), 
+                    new ShaderSource(`
+                    #ifdef GL_FRAGMENT_PRECISION_HIGH
+                    precision highp float;
+                    #else  
+                    precision mediump float;  
+                    #endif
+                    uniform sampler2D s_Sampler;
+                    varying vec2 v_uv;
+                    void main(void){
+                        gl_FragColor = texture2D(s_Sampler, v_uv);
+                    }
+                    `));
             }
         }
     }

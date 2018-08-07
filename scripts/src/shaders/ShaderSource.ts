@@ -1,7 +1,9 @@
 namespace MITOIA {
     export class ShaderSource {
+        private static readonly SYS_DEFINES: Set<string> = new Set(["GL_ES", "GL_FRAGMENT_PRECISION_HIGH"]);
+
         private _source: string;
-        private _defines: Set<string>;
+        private _defines: Set<string> = null;
 
         constructor(data: string) {
             this._source = data;
@@ -16,7 +18,7 @@ namespace MITOIA {
             return this._defines;
         }
 
-        private static _searchDefineNames(data: string) {
+        private static _searchDefineNames(data: string): Set<string> {
             let op = new Set<string>();
             let lines = ("\n" + data + "\n").match(/[\r\n][  ]*#(define|undef|ifdef|ifndef|if|elif)[  ]+[^\r\n/]*/g);
             if (lines) {
@@ -37,6 +39,10 @@ namespace MITOIA {
                 createReg("ifdef");
                 createReg("ifndef");
 
+                let addDefine = (name: string) => {
+                    if (!ShaderSource.SYS_DEFINES.has(name)) op.add(name);
+                }
+
                 let regsLen = searchRegs.length;
 
                 for (let i = 0, n = lines.length; i < n; ++i) {
@@ -45,7 +51,7 @@ namespace MITOIA {
                     for (let j = 0; j < regsLen; ++j) {
                         let find = line.match(searchRegs[j]);
                         if (find) {
-                            op.add(find[0].replace(replaceRegs[j], ""));
+                            addDefine(find[0].replace(replaceRegs[j], ""));
                             isBreak = true;
                             break;
                         }
@@ -58,7 +64,7 @@ namespace MITOIA {
                             let params = line.split(splitReg);
                             for (let j = 0, n = params.length; j < n; ++j) {
                                 let value = params[j].replace(replaceReg, "");
-                                if (value.search(noNumberReg) == 0) op.add(value);
+                                if (value.search(noNumberReg) == 0) addDefine(value);
                             }
                         }
                     }

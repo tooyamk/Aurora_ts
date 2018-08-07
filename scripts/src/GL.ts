@@ -570,6 +570,9 @@ namespace MITOIA {
             this._gl = gl;
             this._textureType = type;
             this._tex = this._gl.context.createTexture();
+
+            this.setWraps(GLTexWrapValue.CLAMP_TO_EDGE);
+            this.setFilters(GLTexFilterValue.LINEAR);
         }
 
         public get id(): number {
@@ -655,7 +658,12 @@ namespace MITOIA {
                             args[4].bind();
                             this._gl.context.texImage2D(target, level, internalformat, <uint>args[0], <uint>args[1], 0, <GLTexFormat>args[2], <GLTexDataType>args[3], <GLintptr>args[5]);
                         } else {
-                            this._gl.context.texImage2D(target, level, internalformat, <uint>args[0], <uint>args[1], 0, <GLTexFormat>args[2], <GLTexDataType>args[3], <ArrayBufferView>args[4], <int>args[1]);
+                            let buf = <ArrayBufferView>args[4];
+                            if (buf) {
+                                this._gl.context.texImage2D(target, level, internalformat, <uint>args[0], <uint>args[1], 0, <GLTexFormat>args[2], <GLTexDataType>args[3], buf, <int>args[1]);
+                            } else {
+                                this._gl.context.texImage2D(target, level, internalformat, <uint>args[0], <uint>args[1], 0, <GLTexFormat>args[2], <GLTexDataType>args[3], buf);
+                            }
                         }
                     } else if (args.length > 4) {
                         this._gl.context.texImage2D(target, level, internalformat, <uint>args[0], <uint>args[1], 0, <GLTexFormat>args[2], <GLTexDataType>args[3], <GLImage>args[4]);
@@ -732,8 +740,6 @@ namespace MITOIA {
     }
 
     export class GLTexture2D extends AbstractGLTexture {
-        private _isNotUpload: boolean = true;
-
         constructor(gl: GL) {
             super(gl, GLTexType.TEXTURE_2D);
         }
@@ -766,7 +772,6 @@ namespace MITOIA {
 
         public upload(level: int, internalformat: GLTexInternalFormat, ...args: any[]): void {
             this._upload2D(this._textureType, level, internalformat, args);
-            this._setDefaultFilter();
         }
 
         /**
@@ -798,18 +803,9 @@ namespace MITOIA {
         public uploadSub(level: int, xoffset: number, yoffset: number, ...args: any[]): void {
             this._uploadSub2D(this._textureType, level, xoffset, yoffset, args);
         }
-
-        private _setDefaultFilter(): void {
-            if (this._isNotUpload) {
-                this._isNotUpload = false;
-                this._gl.context.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MIN_FILTER, GLTexFilterValue.LINEAR);
-            }
-        }
     }
 
     export class GLTextureCube extends AbstractGLTexture {
-        private _isNotUpload: uint = 0;
-
         constructor(gl: GL) {
             super(gl, GLTexType.TEXTURE_CUBE_MAP);
         }
@@ -842,7 +838,6 @@ namespace MITOIA {
 
         public upload(face: GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, ...args: any[]): void {
             this._upload2D(face, level, internalformat, args);
-            this._setDefaultFilter(face);
         }
 
         /**
@@ -873,14 +868,6 @@ namespace MITOIA {
 
         public uploadSub(face: GLTexCubeFace, level: int, xoffset: number, yoffset: number, ...args: any[]): void {
             this._uploadSub2D(face, level, xoffset, yoffset, args);
-        }
-
-        private _setDefaultFilter(face:GLTexCubeFace): void {
-            let mask = 0b1 << (face - GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_X);
-            if ((this._isNotUpload & mask) === 0) {
-                this._isNotUpload |= mask;
-                this._gl.context.texParameteri(face, GLTexFilterType.TEXTURE_MIN_FILTER, GLTexFilterValue.LINEAR);
-            }
         }
     }
 
@@ -2358,15 +2345,16 @@ namespace MITOIA {
         private _defaultColorWrite: GLColorWrite = new GLColorWrite();
         private _colorWrite: GLColorWrite = new GLColorWrite();
 
-        private _boundTexture2D: WebGLTexture = null;
-        private _boundTextureCube: WebGLTexture = null;
-        private _boundFrameBuffer: WebGLFramebuffer = null;
-        private _boundReadFrameBuffer: WebGLFramebuffer = null;
-        private _boundDrawFrameBuffer: WebGLFramebuffer = null;
-        private _boundRenderBuffer: WebGLRenderbuffer = null;
+        private _bindingTexture2D: WebGLTexture = null;
+        private _bindingTextureCube: WebGLTexture = null;
+        private _bindingFrameBuffer: WebGLFramebuffer = null;
+        private _bindingReadFrameBuffer: WebGLFramebuffer = null;
+        private _bindingDrawFrameBuffer: WebGLFramebuffer = null;
+        private _bindingRenderBuffer: WebGLRenderbuffer = null;
+
+        private _activingTextureIndex: uint = 0;
 
         private _usedVertexAttribs: UsedVertexAttribInfo[] = [];
-        private _activedTextures: ActivedTextureInfo[] = [];
 
         constructor(canvasOrContext: HTMLCanvasElement | WebGLRenderingContext, options: GLOptions = null) {
             this._acquireGL(canvasOrContext, options);
@@ -2392,10 +2380,10 @@ namespace MITOIA {
             this._initStencil();
             this._initCullFace();
             this._initVertexAttribs();
-            this._initActivedTextures();
             this._initColorMask();
             this._initFrameBuffer();
             this._initRenderBUffer();
+            this._initTexture();
         }
 
         private _acquireGL(canvasOrContext: HTMLCanvasElement | WebGLRenderingContext, options: GLOptions): void {
@@ -2489,11 +2477,6 @@ namespace MITOIA {
             for (let i = 0; i < this._maxFragmentUniformVectors; ++i) this._usedVertexAttribs[i] = new UsedVertexAttribInfo();
         }
 
-        private _initActivedTextures(): void {
-            this._activedTextures.length = this._maxTexutreImageUnits;
-            for (let i = 0; i < this._maxTexutreImageUnits; ++i) this._activedTextures[i] = new ActivedTextureInfo();
-        }
-
         private _initDepth(): void {
             this._depthWrite = this._gl.getParameter(GL.DEPTH_WRITEMASK);
 
@@ -2530,16 +2513,21 @@ namespace MITOIA {
         }
 
         private _initFrameBuffer(): void {
-            this._boundFrameBuffer = this._gl.getParameter(GL.FRAMEBUFFER_BINDING);
+            this._bindingFrameBuffer = this._gl.getParameter(GL.FRAMEBUFFER_BINDING);
 
             if (this._version >= 2) {
-                this._boundReadFrameBuffer = this._gl.getParameter(GL.READ_FRAMEBUFFER_BINDING);
-                this._boundDrawFrameBuffer = this._gl.getParameter(GL.DRAW_FRAMEBUFFER_BINDING);
+                this._bindingReadFrameBuffer = this._gl.getParameter(GL.READ_FRAMEBUFFER_BINDING);
+                this._bindingDrawFrameBuffer = this._gl.getParameter(GL.DRAW_FRAMEBUFFER_BINDING);
             }
         }
 
         private _initRenderBUffer(): void {
-            this._boundRenderBuffer = this._gl.getParameter(GL.RENDERBUFFER_BINDING);
+            this._bindingRenderBuffer = this._gl.getParameter(GL.RENDERBUFFER_BINDING);
+        }
+
+        private _initTexture(): void {
+            this._bindingTexture2D = this._gl.getParameter(GL.TEXTURE_BINDING_2D);
+            this._bindingTextureCube = this._gl.getParameter(GL.TEXTURE_BINDING_CUBE_MAP);
         }
 
         public get canvas(): HTMLCanvasElement {
@@ -2618,12 +2606,12 @@ namespace MITOIA {
         }
 
         public restoreBackBuffer(): void {
-            if (this._boundFrameBuffer !== null) {
-                this._boundFrameBuffer = null;
+            if (this._bindingFrameBuffer !== null) {
+                this._bindingFrameBuffer = null;
 
                 if (this._version >= 2) {
-                    this._boundReadFrameBuffer = null;
-                    this._boundDrawFrameBuffer = null;
+                    this._bindingReadFrameBuffer = null;
+                    this._bindingDrawFrameBuffer = null;
                 }
 
                 this._gl.bindFramebuffer(GL.FRAMEBUFFER, null);
@@ -2916,15 +2904,15 @@ namespace MITOIA {
         public bindTexture(tex: AbstractGLTexture, force: boolean = false): boolean {
             let type = tex.textureType;
             if (type === GLTexType.TEXTURE_2D) {
-                if (force || this._boundTexture2D !== tex.internalTexture) {
-                    this._boundTexture2D = tex.internalTexture;
-                    this._gl.bindTexture(type, this._boundTexture2D);
+                if (force || this._bindingTexture2D !== tex.internalTexture) {
+                    this._bindingTexture2D = tex.internalTexture;
+                    this._gl.bindTexture(type, this._bindingTexture2D);
                     return true;
                 }
             } else if (type === GLTexType.TEXTURE_CUBE_MAP) {
-                if (force || this._boundTextureCube !== tex.internalTexture) {
-                    this._boundTextureCube = tex.internalTexture;
-                    this._gl.bindTexture(type, this._boundTextureCube);
+                if (force || this._bindingTextureCube !== tex.internalTexture) {
+                    this._bindingTextureCube = tex.internalTexture;
+                    this._gl.bindTexture(type, this._bindingTextureCube);
                     return true;
                 }
             }
@@ -2935,13 +2923,13 @@ namespace MITOIA {
         public unbindTexture(tex: AbstractGLTexture): void {
             let type = tex.textureType;
             if (type === GLTexType.TEXTURE_2D) {
-                if (this._boundTexture2D === tex.internalTexture) {
-                    this._boundTexture2D = null;
+                if (this._bindingTexture2D === tex.internalTexture) {
+                    this._bindingTexture2D = null;
                     this._gl.bindBuffer(type, null);
                 }
             } else if (type === GLTexType.TEXTURE_CUBE_MAP) {
-                if (this._boundTextureCube === tex.internalTexture) {
-                    this._boundTextureCube = null;
+                if (this._bindingTextureCube === tex.internalTexture) {
+                    this._bindingTextureCube = null;
                     this._gl.bindBuffer(type, null);
                 }
             }
@@ -2953,12 +2941,12 @@ namespace MITOIA {
             switch (target) {
                 case 0:
                     {
-                        if (this._boundFrameBuffer !== buf) {
-                            this._boundFrameBuffer = buf;
+                        if (this._bindingFrameBuffer !== buf) {
+                            this._bindingFrameBuffer = buf;
                             
                             if (this._version >= 2) {
-                                this._boundReadFrameBuffer = buf;
-                                this._boundDrawFrameBuffer = buf;
+                                this._bindingReadFrameBuffer = buf;
+                                this._bindingDrawFrameBuffer = buf;
                             }
 
                             this._gl.bindFramebuffer(target, buf);
@@ -2968,12 +2956,12 @@ namespace MITOIA {
                     }
                 case GLFrameBufferTarget.FRAMEBUFFER:
                     {
-                        if (this._boundFrameBuffer !== buf) {
-                            this._boundFrameBuffer = buf;
+                        if (this._bindingFrameBuffer !== buf) {
+                            this._bindingFrameBuffer = buf;
 
                             if (this._version >= 2) {
-                                this._boundReadFrameBuffer = buf;
-                                this._boundDrawFrameBuffer = buf;
+                                this._bindingReadFrameBuffer = buf;
+                                this._bindingDrawFrameBuffer = buf;
                             }
 
                             this._gl.bindFramebuffer(target, buf);
@@ -2983,8 +2971,8 @@ namespace MITOIA {
                     }
                 case GLFrameBufferTarget.READ_FRAMEBUFFER:
                     {
-                        if (this._version >= 2 && this._boundReadFrameBuffer !== buf) {
-                            this._boundReadFrameBuffer = buf;
+                        if (this._version >= 2 && this._bindingReadFrameBuffer !== buf) {
+                            this._bindingReadFrameBuffer = buf;
 
                             this._gl.bindFramebuffer(target, buf);
                         }
@@ -2993,9 +2981,9 @@ namespace MITOIA {
                     }
                 case GLFrameBufferTarget.DRAW_FRAMEBUFFER:
                     {
-                        if (this._version >= 2 && this._boundDrawFrameBuffer !== buf) {
-                            this._boundDrawFrameBuffer = buf;
-                            this._boundFrameBuffer = buf;
+                        if (this._version >= 2 && this._bindingDrawFrameBuffer !== buf) {
+                            this._bindingDrawFrameBuffer = buf;
+                            this._bindingFrameBuffer = buf;
 
                             this._gl.bindFramebuffer(target, buf);
                         }
@@ -3013,12 +3001,12 @@ namespace MITOIA {
             switch (target) {
                 case 0:
                     {
-                        if (this._boundFrameBuffer === buf) {
-                            this._boundFrameBuffer = null;
+                        if (this._bindingFrameBuffer === buf) {
+                            this._bindingFrameBuffer = null;
 
                             if (this._version >= 2) {
-                                this._boundReadFrameBuffer = null;
-                                this._boundDrawFrameBuffer = null;
+                                this._bindingReadFrameBuffer = null;
+                                this._bindingDrawFrameBuffer = null;
                             }
 
                             this._gl.bindFramebuffer(target, null);
@@ -3028,12 +3016,12 @@ namespace MITOIA {
                     }
                 case GLFrameBufferTarget.FRAMEBUFFER:
                     {
-                        if (this._boundFrameBuffer === buf) {
-                            this._boundFrameBuffer = null;
+                        if (this._bindingFrameBuffer === buf) {
+                            this._bindingFrameBuffer = null;
 
                             if (this._version >= 2) {
-                                this._boundReadFrameBuffer = null;
-                                this._boundDrawFrameBuffer = null;
+                                this._bindingReadFrameBuffer = null;
+                                this._bindingDrawFrameBuffer = null;
                             }
 
                             this._gl.bindFramebuffer(target, null);
@@ -3043,8 +3031,8 @@ namespace MITOIA {
                     }
                 case GLFrameBufferTarget.READ_FRAMEBUFFER:
                     {
-                        if (this._version >= 2 && this._boundReadFrameBuffer === buf) {
-                            this._boundReadFrameBuffer = null;
+                        if (this._version >= 2 && this._bindingReadFrameBuffer === buf) {
+                            this._bindingReadFrameBuffer = null;
 
                             this._gl.bindFramebuffer(target, null);
                         }
@@ -3053,9 +3041,9 @@ namespace MITOIA {
                     }
                 case GLFrameBufferTarget.DRAW_FRAMEBUFFER:
                     {
-                        if (this._version >= 2 && this._boundDrawFrameBuffer === buf) {
-                            this._boundDrawFrameBuffer = null;
-                            this._boundFrameBuffer = null;
+                        if (this._version >= 2 && this._bindingDrawFrameBuffer === buf) {
+                            this._bindingDrawFrameBuffer = null;
+                            this._bindingFrameBuffer = null;
 
                             this._gl.bindFramebuffer(target, null);
                         }
@@ -3068,15 +3056,15 @@ namespace MITOIA {
         }
 
         public bindRenderBuffer(buffer: GLRenderBuffer): void {
-            if (this._boundRenderBuffer !== buffer.internalBuffer) {
-                this._boundRenderBuffer = buffer.internalBuffer;
-                this._gl.bindRenderbuffer(GLRenderBufferType.RENDERBUFFER, this._boundRenderBuffer);
+            if (this._bindingRenderBuffer !== buffer.internalBuffer) {
+                this._bindingRenderBuffer = buffer.internalBuffer;
+                this._gl.bindRenderbuffer(GLRenderBufferType.RENDERBUFFER, this._bindingRenderBuffer);
             }
         }
 
         public unbindRenderBuffer(buffer: GLRenderBuffer): void {
-            if (this._boundRenderBuffer === buffer.internalBuffer) {
-                this._boundRenderBuffer = null;
+            if (this._bindingRenderBuffer === buffer.internalBuffer) {
+                this._bindingRenderBuffer = null;
                 this._gl.bindRenderbuffer(GLRenderBufferType.RENDERBUFFER, null);
             }
         }
@@ -3103,14 +3091,40 @@ namespace MITOIA {
 
         public activeTexture(tex: AbstractGLTexture, index: uint): boolean {
             if (index < this._maxTexutreImageUnits) {
-                let info = this._activedTextures[index];
 
-                if (info.texID !== tex.id) {
-                    info.texID = tex.id;
-
-                    this._gl.activeTexture(GL.TEXTURE0 + index);
-                    tex.bind(true);
+                let idx = GL.TEXTURE0 + index;
+                if (this._activingTextureIndex !== idx) {
+                    this._activingTextureIndex = idx;
+                    this._gl.activeTexture(idx);
                 }
+                tex.bind(true);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public activeNullTexture(type: GLTexType, index: uint): boolean {
+            if (index < this._maxTexutreImageUnits) {
+                let idx = GL.TEXTURE0 + index;
+                if (this._activingTextureIndex !== idx) {
+                    this._activingTextureIndex = idx;
+                    this._gl.activeTexture(idx);
+                }
+                
+                switch (type) {
+                    case GLTexType.TEXTURE_2D:
+                        if (this._bindingTexture2D) this._bindingTexture2D = null;
+                        break;
+                    case GLTexType.TEXTURE_CUBE_MAP:
+                        if (this._bindingTextureCube) this._bindingTextureCube = null;
+                        break;
+                    default:
+                        break;
+                }
+                
+                this._gl.bindTexture(type, null);
 
                 return true;
             }

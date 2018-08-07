@@ -73,15 +73,16 @@ namespace MITOIA {
                 if (localDefines) v = localDefines.getDefine(name);
                 if (v === undefined && globalDefines) v = globalDefines.getDefine(name);
 
-                if (v == null) {
-                    appendDefines += "#define " + name + "\n";
+                if (v === null) {
+                    appendDefines += "\n" + name;
                 } else if (v !== undefined) {
-                    appendDefines += "#define " + name + " " + v + "\n";
+                    appendDefines += "\n" + name + " " + v;
                 }
             }
 
             this._curProgram = this._getProgramFromCache(appendDefines);
             if (!this._curProgram) {
+                if (appendDefines.length > 0) appendDefines = appendDefines.replace(/\n/g, "#define ") + "\n";
                 this._curProgram = new GLProgram(this._gl);
                 this._curProgram.compileAndLink(appendDefines + this._vert.source, appendDefines + this._frag.source);
 
@@ -99,8 +100,6 @@ namespace MITOIA {
         }
 
         public use(globalUniforms: ShaderUniforms, localUniforms: ShaderUniforms): GLProgram {
-            if (this._curProgram) this._curProgram.use();
-
             if (this._curProgram) {
                 this._curProgram.use();
 
@@ -112,10 +111,10 @@ namespace MITOIA {
                         let info = uniforms[i];
                         let v = localUniforms ? localUniforms._uniforms[info.name] : null;
                         if (!v) v = globalUniforms ? globalUniforms._uniforms[info.name] : null;
-                        if (v) {
-                            switch (info.type) {
-                                case GLUniformType.FLOAT:
-                                    {
+                        switch (info.type) {
+                            case GLUniformType.FLOAT:
+                                {
+                                    if (v) {
                                         if (v.type === ShaderUniformType.NUMBER) {
                                             if (info.isArray) {
                                                 gl.uniform1fv(info.location, v.array);
@@ -123,158 +122,165 @@ namespace MITOIA {
                                                 gl.uniform1f(info.location, v.array[0]);
                                             }
                                         }
-
-                                        break;
                                     }
-                                case GLUniformType.FLOAT_VEC2:
-                                    {
-                                        if (v.type === ShaderUniformType.NUMBER) {
-                                            if (info.isArray) {
-                                                gl.uniform2fv(info.location, v.array);
-                                            } else {
-                                                gl.uniform2f(info.location, v.array[0], v.array[1]);
-                                            }
-                                        }
 
-                                        break;
-                                    }
-                                case GLUniformType.FLOAT_VEC3:
-                                    {
-                                        if (v.type === ShaderUniformType.NUMBER) {
-                                            if (info.isArray) {
-                                                gl.uniform3fv(info.location, v.array);
-                                            } else {
-                                                gl.uniform3f(info.location, v.array[0], v.array[1], v.array[2]);
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                case GLUniformType.FLOAT_VEC4:
-                                    {
-                                        if (v.type === ShaderUniformType.NUMBER) {
-                                            if (info.isArray) {
-                                                gl.uniform4fv(info.location, v.array);
-                                            } else {
-                                                gl.uniform4f(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                case GLUniformType.INT:
-                                    {
-                                        if (v.type === ShaderUniformType.NUMBER) {
-                                            if (info.isArray) {
-                                                gl.uniform1iv(info.location, v.array);
-                                            } else {
-                                                gl.uniform1i(info.location, v.array[0]);
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                case GLUniformType.INT_VEC2:
-                                    {
-                                        if (v.type === ShaderUniformType.NUMBER) {
-                                            if (info.isArray) {
-                                                gl.uniform2iv(info.location, v.array);
-                                            } else {
-                                                gl.uniform2i(info.location, v.array[0], v.array[1]);
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                case GLUniformType.INT_VEC3:
-                                    {
-                                        if (v.type === ShaderUniformType.NUMBER) {
-                                            if (info.isArray) {
-                                                gl.uniform3iv(info.location, v.array);
-                                            } else {
-                                                gl.uniform3i(info.location, v.array[0], v.array[1], v.array[2]);
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                case GLUniformType.INT_VEC4:
-                                    {
-                                        if (v.type === ShaderUniformType.NUMBER) {
-                                            if (info.isArray) {
-                                                gl.uniform4iv(info.location, v.array);
-                                            } else {
-                                                gl.uniform4i(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                case GLUniformType.BOOL:
-                                    {
-                                        if (v.type === ShaderUniformType.NUMBER) {
-                                            if (info.isArray) {
-                                                gl.uniform1fv(info.location, v.array);
-                                            } else {
-                                                gl.uniform1f(info.location, v.array[0]);
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                case GLUniformType.BOOL_VEC2:
-                                    {
-                                        if (v.type === ShaderUniformType.NUMBER) {
-                                            if (info.isArray) {
-                                                gl.uniform2fv(info.location, v.array);
-                                            } else {
-                                                gl.uniform2f(info.location, v.array[0], v.array[1]);
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                case GLUniformType.BOOL_VEC3:
-                                    {
-                                        if (v.type === ShaderUniformType.NUMBER) {
-                                            if (info.isArray) {
-                                                gl.uniform3fv(info.location, v.array);
-                                            } else {
-                                                gl.uniform3f(info.location, v.array[0], v.array[1], v.array[2]);
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                case GLUniformType.BOOL_VEC4:
-                                    {
-                                        if (v.type === ShaderUniformType.NUMBER) {
-                                            if (info.isArray) {
-                                                gl.uniform4fv(info.location, v.array);
-                                            } else {
-                                                gl.uniform4f(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                case GLUniformType.FLOAT_MAT2:
-                                    if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix2fv(info.location, false, v.array);
                                     break;
-                                case GLUniformType.FLOAT_MAT3:
-                                    if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix3fv(info.location, false, v.array);
+                                }
+                            case GLUniformType.FLOAT_VEC2:
+                                {
+                                    if (v.type === ShaderUniformType.NUMBER) {
+                                        if (info.isArray) {
+                                            gl.uniform2fv(info.location, v.array);
+                                        } else {
+                                            gl.uniform2f(info.location, v.array[0], v.array[1]);
+                                        }
+                                    }
+
                                     break;
-                                case GLUniformType.FLOAT_MAT4:
-                                    if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix4fv(info.location, false, v.array);
+                                }
+                            case GLUniformType.FLOAT_VEC3:
+                                {
+                                    if (v.type === ShaderUniformType.NUMBER) {
+                                        if (info.isArray) {
+                                            gl.uniform3fv(info.location, v.array);
+                                        } else {
+                                            gl.uniform3f(info.location, v.array[0], v.array[1], v.array[2]);
+                                        }
+                                    }
+
                                     break;
-                                case GLUniformType.SAMPLER_2D:
-                                    if (v.sampler2D.use(samplerIndex, info.location)) ++samplerIndex;
+                                }
+                            case GLUniformType.FLOAT_VEC4:
+                                {
+                                    if (v.type === ShaderUniformType.NUMBER) {
+                                        if (info.isArray) {
+                                            gl.uniform4fv(info.location, v.array);
+                                        } else {
+                                            gl.uniform4f(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
+                                        }
+                                    }
+
                                     break;
-                                case GLUniformType.SAMPLER_CUBE:
+                                }
+                            case GLUniformType.INT:
+                                {
+                                    if (v.type === ShaderUniformType.NUMBER) {
+                                        if (info.isArray) {
+                                            gl.uniform1iv(info.location, v.array);
+                                        } else {
+                                            gl.uniform1i(info.location, v.array[0]);
+                                        }
+                                    }
+
                                     break;
-                                default:
+                                }
+                            case GLUniformType.INT_VEC2:
+                                {
+                                    if (v.type === ShaderUniformType.NUMBER) {
+                                        if (info.isArray) {
+                                            gl.uniform2iv(info.location, v.array);
+                                        } else {
+                                            gl.uniform2i(info.location, v.array[0], v.array[1]);
+                                        }
+                                    }
+
                                     break;
-                            }
+                                }
+                            case GLUniformType.INT_VEC3:
+                                {
+                                    if (v.type === ShaderUniformType.NUMBER) {
+                                        if (info.isArray) {
+                                            gl.uniform3iv(info.location, v.array);
+                                        } else {
+                                            gl.uniform3i(info.location, v.array[0], v.array[1], v.array[2]);
+                                        }
+                                    }
+
+                                    break;
+                                }
+                            case GLUniformType.INT_VEC4:
+                                {
+                                    if (v.type === ShaderUniformType.NUMBER) {
+                                        if (info.isArray) {
+                                            gl.uniform4iv(info.location, v.array);
+                                        } else {
+                                            gl.uniform4i(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
+                                        }
+                                    }
+
+                                    break;
+                                }
+                            case GLUniformType.BOOL:
+                                {
+                                    if (v.type === ShaderUniformType.NUMBER) {
+                                        if (info.isArray) {
+                                            gl.uniform1fv(info.location, v.array);
+                                        } else {
+                                            gl.uniform1f(info.location, v.array[0]);
+                                        }
+                                    }
+
+                                    break;
+                                }
+                            case GLUniformType.BOOL_VEC2:
+                                {
+                                    if (v.type === ShaderUniformType.NUMBER) {
+                                        if (info.isArray) {
+                                            gl.uniform2fv(info.location, v.array);
+                                        } else {
+                                            gl.uniform2f(info.location, v.array[0], v.array[1]);
+                                        }
+                                    }
+
+                                    break;
+                                }
+                            case GLUniformType.BOOL_VEC3:
+                                {
+                                    if (v.type === ShaderUniformType.NUMBER) {
+                                        if (info.isArray) {
+                                            gl.uniform3fv(info.location, v.array);
+                                        } else {
+                                            gl.uniform3f(info.location, v.array[0], v.array[1], v.array[2]);
+                                        }
+                                    }
+
+                                    break;
+                                }
+                            case GLUniformType.BOOL_VEC4:
+                                {
+                                    if (v.type === ShaderUniformType.NUMBER) {
+                                        if (info.isArray) {
+                                            gl.uniform4fv(info.location, v.array);
+                                        } else {
+                                            gl.uniform4f(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
+                                        }
+                                    }
+
+                                    break;
+                                }
+                            case GLUniformType.FLOAT_MAT2:
+                                if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix2fv(info.location, false, v.array);
+                                break;
+                            case GLUniformType.FLOAT_MAT3:
+                                if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix3fv(info.location, false, v.array);
+                                break;
+                            case GLUniformType.FLOAT_MAT4:
+                                if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix4fv(info.location, false, v.array);
+                                break;
+                            case GLUniformType.SAMPLER_2D:
+                                {
+                                    if (v) {
+                                        if (v.sampler2D.use(samplerIndex, info.location)) ++samplerIndex;
+                                    } else {
+                                        if (this._gl.activeNullTexture(GLTexType.TEXTURE_2D, samplerIndex)) ++samplerIndex;
+                                    }
+                                    
+                                    break;
+                                }
+                            case GLUniformType.SAMPLER_CUBE:
+                                break;
+                            default:
+                                break;
                         }
                     }
                 }

@@ -5,7 +5,6 @@ namespace MITOIA {
         private _frags: { [key: string]: ShaderSource } = {};
 
         constructor() {
-
         }
 
         public addLibrary(name: string, source: string): void {
@@ -19,12 +18,16 @@ namespace MITOIA {
             return map[name];
         }
 
+        public createShaderSource(data: string): ShaderSource {
+            return new ShaderSource(data);
+        }
+
         public addSource(name: string, data: string, type: GLShaderType, forceUpdate: boolean = false): ShaderSource {
             let map = type == GLShaderType.VERTEX_SHADER ? this._verts : this._frags;
             let ss = map[name];
             if (ss && !forceUpdate) ss;
 
-            ss = new ShaderSource(data);
+            ss = this.createShaderSource(data);
             map[name] = ss;
             return ss;
         }

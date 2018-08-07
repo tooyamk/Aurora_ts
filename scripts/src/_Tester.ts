@@ -2,21 +2,18 @@ function getURL(name: string): string {
     return "http://127.0.0.1/Mitoia/res/" + name + "?ts=" + MITOIA.Timer.utc;
 }
 
-function createModel(node: MITOIA.Node, gl: MITOIA.GL) {
-    let vert = `    #define CCVV )//wegwegwe
-        precision highp float;
+function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.ShaderStore) {
+    let vert = `
         attribute vec3 a_Position;
         attribute vec2 a_TexCoord;
         uniform mat4 u_MatL2P;
         varying vec2 v_uv;
-        #elif defined (AAAA) || fuck == 2
-        abc
         void main(void){
-            v_uv = vec2(a_TexCoord);
+            v_uv = a_TexCoord;
             //gl_Position = vec4(a_Position.x, a_Position.y, a_Position.z, 1);
             gl_Position = u_MatL2P * vec4(a_Position, 1.0);
         }
-        #define NNN`;
+        `;
 
     let frag = `
         precision highp float;
@@ -30,11 +27,8 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL) {
             //gl_FragColor = vec4(u_color.x, u_color.y, u_color.z, u_color.w);
             //gl_FragColor = vec4(u_color[0], u_color[1], u_color[2], u_color[3]);
             gl_FragColor = vec4(c);
-        }`;
-
-    //let vert1 = " " + vert + " ";
-    //let defines1 = match_Cmd_Arg("#define", vert1);
-    //let defines2 = match_Cmd1_Cmd2_Arg("#if", "!defined", vert1);
+        }
+        `;
 
     let vertexBuffer = new MITOIA.GLVertexBuffer(gl);
     vertexBuffer.upload([-100, -100, 0.1, -280.0, 100, 0.1, 100, -50, 0.1], MITOIA.GLVertexBufferSize.THREE, MITOIA.GLVertexDataType.FLOAT, false, MITOIA.GLUsageType.STATIC_DRAW);
@@ -53,7 +47,7 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL) {
     let renderer = node.addComponent(new MITOIA.MeshRenderer());
     renderer.assetStore = assetStore;
 
-    let mat = new MITOIA.Material(new MITOIA.Shader(gl, null, null));
+    let mat = new MITOIA.Material(new MITOIA.Shader(gl, shaderStore.createShaderSource(vert), shaderStore.createShaderSource(frag)));
     //mat.uniforms.setFloat("u_color", -0.1, 1, 0, 0.2);
     //mat.uniforms.setNumberArray("u_color", new Int32Array([1, 1, 0, 1]));
     let stencil = new MITOIA.GLStencil();
@@ -69,16 +63,18 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL) {
     //mat.stencilFront = stencil;
     //mat.stencilBack = stencil2;
     renderer.materials[0] = mat;
+    renderer.enabled = false;
 
     let tex = new MITOIA.GLTexture2D(gl);
-   
+
     let img = new Image();
     img.src = getURL("tex1.png");
     img.onload = () => {
         gl.context.pixelStorei(MITOIA.GL.UNPACK_FLIP_Y_WEBGL, true);
-        //tex.upload(0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, img);
+        tex.upload(0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, img);
         gl.context.pixelStorei(MITOIA.GL.UNPACK_FLIP_Y_WEBGL, false);
         mat.uniforms.setTexture("tex", tex);
+        //renderer.enabled = true;
     }
 }
 
@@ -96,6 +92,8 @@ window.addEventListener("DOMContentLoaded", () => {
     let gl = new MITOIA.GL(canvas, options);
 
     console.log(MITOIA.Version, gl.version, gl.versionFullInfo);
+
+    let shaderStore = new MITOIA.ShaderStore();
     
     let worldNode = new MITOIA.Node();
     let model1Node = new MITOIA.Node();
@@ -105,7 +103,7 @@ window.addEventListener("DOMContentLoaded", () => {
     model2Node.setParent(worldNode);
     cameraNode.setParent(worldNode);
 
-    let fbo = new MITOIA.GLFrameBuffer(gl, 200, 200);
+    let fbo = new MITOIA.GLFrameBuffer(gl, 256, 250);
 
     let depthRBO = new MITOIA.GLRenderBuffer(gl);
     depthRBO.storage(MITOIA.GLRenderBufferInternalFormat.DEPTH_COMPONENT16, fbo.width, fbo.height);
@@ -119,9 +117,9 @@ window.addEventListener("DOMContentLoaded", () => {
     let colorTex = new MITOIA.GLTexture2D(gl);
     colorTex.upload(0, MITOIA.GLTexInternalFormat.RGBA, fbo.width, fbo.height, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, <ArrayBufferView>null, 0);
     
+    fbo.setAttachmentTexture2D(MITOIA.GLTex2DAttachment.COLOR_ATTACHMENT0, MITOIA.GLFrameBufferTexTarget.TEXTURE_2D, colorTex);
     fbo.setAttachmentRenderBuffer(MITOIA.GLRenderBufferAttachment.DEPTH_STENCIL_ATTACHMENT, depthAndStencilRBO);
     //fbo.setAttachmentRenderBuffer(MITOIA.GLFrameBufferRenderBufferAttachment.STENCIL_ATTACHMENT, stencilRBO);
-    fbo.setAttachmentTexture2D(MITOIA.GLTex2DAttachment.COLOR_ATTACHMENT0, MITOIA.GLFrameBufferTexTarget.TEXTURE_2D, colorTex);
 
     let cam = cameraNode.addComponent(new MITOIA.Camera());
     //cam.setProjectionMatrix(MITOIA.Matrix44.createOrthoLHMatrix(engine.canvasWidth, engine.canvasHeight, 10, 10000));
@@ -132,20 +130,27 @@ window.addEventListener("DOMContentLoaded", () => {
     //cam.clear.clearDepth = false;
     cam.owner.setLocalPosition(0, 0, -10);
     if (fbo.checkStatus()) {
-        cam.frameBuffer = fbo;
+        fbo.clear(new MITOIA.GLClear());
+        //cam.frameBuffer = fbo;
     } else {
         let a = 1;
     }
 
     model1Node.appendLocalTranslate(0, 0, 500);
 
-    createModel(model1Node, gl);
+    createModel(model1Node, gl, shaderStore);
 
     model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI));
 
-    let rp = new MITOIA.ForwardRenderPipeline();
+    let frp = new MITOIA.ForwardRenderPipeline();
+    let pprp = new MITOIA.PostProcessRenderPipline();
 
     let stretcher = new MITOIA.CanvasAutoStretcher(gl);
+
+    let pp = new MITOIA.PostProcess();
+    pp.material = new MITOIA.Material();
+    pp.material.cullFace = MITOIA.GLCullFace.NONE;
+    pp.material.uniforms.setTexture(MITOIA.Shader.s_Sampler, colorTex);
 
     let fps = new MITOIA.FPSDetector();
     fps.show();
@@ -157,9 +162,10 @@ window.addEventListener("DOMContentLoaded", () => {
         }
 
         model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI / 180));
-
-        rp.render(gl, cam, worldNode);
-        let b = gl.context.getError() === MITOIA.GL.NO_ERROR;
+//gl.context.bindTexture(MITOIA.GL.TEXTURE_2D, null);
+        //frp.render(gl, cam, worldNode);
+        pprp.render(gl, [pp]);
+        //gl.clear(null);
 
         fps.record();
         //console.log(fps.fps);
