@@ -32,6 +32,8 @@ varying vec2 v_uv;
 uniform vec4 ${ShaderPredefined.u_DiffuseColor};
 #endif
 
+#include<${BuiltinShader.Lib.ALPHA_TEST_HEADER.name}>
+
 void main(void){
     vec4 c = vec4(0, 0, 0, 0);
 

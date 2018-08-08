@@ -41,7 +41,11 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     renderer.enabled = false;
     mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_TEX, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_COLOR, true);
+    mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST, true);
+    mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST_FUNC, true);
+    mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST_FUNC, MITOIA.ShaderPredefined.ALPHA_TEST_FUNC_GEQUAL);
     mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
+    mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_AlphaTestCompareValue, 0.8);
 
     let tex = new MITOIA.GLTexture2D(gl);
 
@@ -66,13 +70,13 @@ window.addEventListener("DOMContentLoaded", () => {
     options.preserveDrawingBuffer = true;
     options.depth = true;
     options.stencil = true;
-    options.version = 2;
+    options.version = 1;
     let gl = new MITOIA.GL(canvas, options);
 
     console.log(MITOIA.Version, gl.version, gl.versionFullInfo);
 
     let shaderStore = new MITOIA.ShaderStore();
-    shaderStore.addLibrary(MITOIA.BuiltinShader.Lib.ALPHA_TEST);
+    shaderStore.addLibrary(MITOIA.BuiltinShader.Lib.ALPHA_TEST_SOURCES);
 
     shaderStore.addSource("mesh", MITOIA.BuiltinShader.Mesh.VERTEX, MITOIA.GLShaderType.VERTEX_SHADER);
     shaderStore.addSource("mesh", MITOIA.BuiltinShader.Mesh.FRAGMENT, MITOIA.GLShaderType.FRAGMENT_SHADER);
@@ -126,8 +130,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
     model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI));
 
-    let frp = new MITOIA.ForwardRenderer();
-    let pprp = new MITOIA.PostProcessRenderer();
+    let forwardRenderer = new MITOIA.ForwardRenderer();
+    let postProcessRenderer = new MITOIA.PostProcessRenderer();
 
     let stretcher = new MITOIA.CanvasAutoStretcher(gl);
 
@@ -147,8 +151,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
         model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI / 180));
 //gl.context.bindTexture(MITOIA.GL.TEXTURE_2D, null);
-        frp.render(gl, cam, worldNode);
-        pprp.render(gl, [pp]);
+        forwardRenderer.render(gl, cam, worldNode);
+        postProcessRenderer.render(gl, [pp]);
         //gl.context.flush();
         //gl.clear(null);
 

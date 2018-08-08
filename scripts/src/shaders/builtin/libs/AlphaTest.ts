@@ -1,10 +1,18 @@
 namespace MITOIA.BuiltinShader.Lib {
+    export const ALPHA_TEST_HEADER: ShaderLib = {
+        name:"_AlphaTest_header",
+        source: `
+#if defined(${ShaderPredefined.ALPHA_TEST}) && defined(${ShaderPredefined.ALPHA_TEST_FUNC})
+uniform float ${ShaderPredefined.u_AlphaTestCompareValue};
+#endif
+`};
+
     /**
      * @param alpha
      */
     export const ALPHA_TEST: ShaderLib = {
         name:"_AlphaTest",
-        lib: `
+        source: `
 #ifdef ${ShaderPredefined.ALPHA_TEST}
     #ifdef ${ShaderPredefined.ALPHA_TEST_FUNC}
         #if ${ShaderPredefined.ALPHA_TEST_FUNC} == ${ShaderPredefined.ALPHA_TEST_FUNC_LESS}
@@ -25,4 +33,6 @@ namespace MITOIA.BuiltinShader.Lib {
     #endif
 #endif
 `};
+
+    export const ALPHA_TEST_SOURCES: ShaderLib[] = [ALPHA_TEST_HEADER, ALPHA_TEST];
 }

@@ -1,7 +1,7 @@
 namespace MITOIA {
     export interface ShaderLib {
         name: string;
-        lib: string;
+        source: string;
     }
 
     export class ShaderStore {
@@ -14,6 +14,7 @@ namespace MITOIA {
 
         public addLibrary(name: string, source: string): void;
         public addLibrary(lib: ShaderLib): void;
+        public addLibrary(libs: ShaderLib[]): void;
         public addLibrary(name: string, lib: ShaderLib): void;
 
         public addLibrary(...args: any[]): void {
@@ -22,11 +23,19 @@ namespace MITOIA {
                 if (typeof args[1] === "string") {
                     this._addLibrary(args[0], args[1]);
                 } else {
-                    this._addLibrary(args[0], (<ShaderLib>args[1]).lib);
+                    this._addLibrary(args[0], (<ShaderLib>args[1]).source);
                 }
             } else if (args.length == 1) {
-                let lib = <ShaderLib>args[0];
-                this._addLibrary(lib.name, lib.lib);
+                if (args[0] instanceof Array) {
+                    let libs = <ShaderLib[]>args[0];
+                    for (let i = 0, n = libs.length; i < n; ++i) {
+                        let lib = libs[i];
+                        this._addLibrary(lib.name, lib.source);
+                    }
+                } else {
+                    let lib = <ShaderLib>args[0];
+                    this._addLibrary(lib.name, lib.source);
+                }
             }
         }
 
@@ -72,7 +81,7 @@ namespace MITOIA {
                 let lib = this._libs[name];
                 if (lib) {
                     if (params) {
-                        for (let i = 0, n = params.length; i < n; ++i) lib = lib.replace("\${0}", params[i]);
+                        for (let i = 0, n = params.length; i < n; ++i) lib = lib.replace(new RegExp("\\$\\{" + i + "\\}", "g"), params[i]);
                     }
 
                     return lib;

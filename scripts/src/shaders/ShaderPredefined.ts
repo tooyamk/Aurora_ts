@@ -28,7 +28,7 @@ namespace MITOIA.ShaderPredefined {
 
     export const u_DiffuseColor: string = "u_DiffuseColor";
 
-    export const u_LightPos: string = "u_LightPos";
+    export const u_Light0Pos: string = "u_Light0Pos";
 
     export const u_AlphaTestCompareValue: string = "u_AlphaTestCompareValue";
 
