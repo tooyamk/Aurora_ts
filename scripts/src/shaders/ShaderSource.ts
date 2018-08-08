@@ -5,9 +5,9 @@ namespace MITOIA {
         private _source: string;
         private _defines: Set<string> = null;
 
-        constructor(data: string) {
-            this._source = data;
-            this._defines = ShaderSource._searchDefineNames(data);
+        constructor(source: string, format: boolean = true) {
+            this._source = format ? ShaderSource.deleteUnnecessaryContent(source) : source;
+            this._defines = ShaderSource.parseDefineNames(this._source);
         }
 
         public get source(): string {
@@ -18,9 +18,15 @@ namespace MITOIA {
             return this._defines;
         }
 
-        private static _searchDefineNames(data: string): Set<string> {
+        public static deleteUnnecessaryContent(source: string): string {
+            return source.replace(/\/\/.*|\/\*[\s\S]*?\*\/|/g, "").replace(/^\s*?[\r\n]|^[  ]+/gm, "").replace(/\$\{[  ]*\d+[  ]*\}/g, (substring: string, ...args: any[]) => {
+                return substring.replace(/[  ]/g, "");
+            });
+        }
+
+        public static parseDefineNames(source: string): Set<string> {
             let op = new Set<string>();
-            let lines = ("\n" + data + "\n").match(/[\r\n][  ]*#(define|undef|ifdef|ifndef|if|elif)[  ]+[^\r\n/]*/g);
+            let lines = ("\n" + source + "\n").match(/[\r\n][  ]*#(define|undef|ifdef|ifndef|if|elif)[  ]+[^\r\n\/]*/g);
             if (lines) {
                 let searchRegs: RegExp[] = [];
                 let replaceRegs: RegExp[] = [];

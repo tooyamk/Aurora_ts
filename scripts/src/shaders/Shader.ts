@@ -1,21 +1,5 @@
 namespace MITOIA {
     export class Shader {
-        public static readonly a_Position: string = "a_Position";
-        public static readonly a_Normal: string = "a_Normal";
-        public static readonly a_TexCoord: string = "a_TexCoord";
-        public static readonly a_Color: string = "a_Color";
-        public static readonly a_Index: string = "a_Index";
-
-        public static readonly u_MatW2V: string = "u_MatW2V";
-        public static readonly u_MatW2P: string = "u_MatW2P";
-        public static readonly u_MatV2P: string = "u_MatV2P";
-        
-        public static readonly u_MatL2V: string = "u_MatL2V";
-        public static readonly u_MatL2W: string = "u_MatL2W";
-        public static readonly u_MatL2P: string = "u_MatL2P";
-
-        public static readonly s_Sampler: string = "s_Sampler";
-
         protected _gl: GL;
         protected _vert: ShaderSource;
         protected _frag: ShaderSource;
@@ -82,9 +66,9 @@ namespace MITOIA {
 
             this._curProgram = this._getProgramFromCache(appendDefines);
             if (!this._curProgram) {
-                if (appendDefines.length > 0) appendDefines = appendDefines.replace(/\n/g, "#define ") + "\n";
+                let finalAppendDefines = appendDefines.length > 0 ? appendDefines.replace(/\n/g, "\n#define ") + "\n" : "";
                 this._curProgram = new GLProgram(this._gl);
-                this._curProgram.compileAndLink(appendDefines + this._vert.source, appendDefines + this._frag.source);
+                this._curProgram.compileAndLink(finalAppendDefines + this._vert.source, finalAppendDefines + this._frag.source);
 
                 if (appendDefines.length > 0) {
                     this._cachedPrograms[appendDefines] = this._curProgram;
@@ -128,11 +112,13 @@ namespace MITOIA {
                                 }
                             case GLUniformType.FLOAT_VEC2:
                                 {
-                                    if (v.type === ShaderUniformType.NUMBER) {
-                                        if (info.isArray) {
-                                            gl.uniform2fv(info.location, v.array);
-                                        } else {
-                                            gl.uniform2f(info.location, v.array[0], v.array[1]);
+                                    if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform2fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform2f(info.location, v.array[0], v.array[1]);
+                                            }
                                         }
                                     }
 
@@ -140,11 +126,13 @@ namespace MITOIA {
                                 }
                             case GLUniformType.FLOAT_VEC3:
                                 {
-                                    if (v.type === ShaderUniformType.NUMBER) {
-                                        if (info.isArray) {
-                                            gl.uniform3fv(info.location, v.array);
-                                        } else {
-                                            gl.uniform3f(info.location, v.array[0], v.array[1], v.array[2]);
+                                    if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform3fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform3f(info.location, v.array[0], v.array[1], v.array[2]);
+                                            }
                                         }
                                     }
 
@@ -152,11 +140,13 @@ namespace MITOIA {
                                 }
                             case GLUniformType.FLOAT_VEC4:
                                 {
-                                    if (v.type === ShaderUniformType.NUMBER) {
-                                        if (info.isArray) {
-                                            gl.uniform4fv(info.location, v.array);
-                                        } else {
-                                            gl.uniform4f(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
+                                        if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform4fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform4f(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
+                                            }
                                         }
                                     }
 
@@ -164,11 +154,13 @@ namespace MITOIA {
                                 }
                             case GLUniformType.INT:
                                 {
-                                    if (v.type === ShaderUniformType.NUMBER) {
-                                        if (info.isArray) {
-                                            gl.uniform1iv(info.location, v.array);
-                                        } else {
-                                            gl.uniform1i(info.location, v.array[0]);
+                                    if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform1iv(info.location, v.array);
+                                            } else {
+                                                gl.uniform1i(info.location, v.array[0]);
+                                            }
                                         }
                                     }
 
@@ -176,11 +168,13 @@ namespace MITOIA {
                                 }
                             case GLUniformType.INT_VEC2:
                                 {
-                                    if (v.type === ShaderUniformType.NUMBER) {
-                                        if (info.isArray) {
-                                            gl.uniform2iv(info.location, v.array);
-                                        } else {
-                                            gl.uniform2i(info.location, v.array[0], v.array[1]);
+                                    if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform2iv(info.location, v.array);
+                                            } else {
+                                                gl.uniform2i(info.location, v.array[0], v.array[1]);
+                                            }
                                         }
                                     }
 
@@ -188,11 +182,13 @@ namespace MITOIA {
                                 }
                             case GLUniformType.INT_VEC3:
                                 {
-                                    if (v.type === ShaderUniformType.NUMBER) {
-                                        if (info.isArray) {
-                                            gl.uniform3iv(info.location, v.array);
-                                        } else {
-                                            gl.uniform3i(info.location, v.array[0], v.array[1], v.array[2]);
+                                    if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform3iv(info.location, v.array);
+                                            } else {
+                                                gl.uniform3i(info.location, v.array[0], v.array[1], v.array[2]);
+                                            }
                                         }
                                     }
 
@@ -200,11 +196,13 @@ namespace MITOIA {
                                 }
                             case GLUniformType.INT_VEC4:
                                 {
-                                    if (v.type === ShaderUniformType.NUMBER) {
-                                        if (info.isArray) {
-                                            gl.uniform4iv(info.location, v.array);
-                                        } else {
-                                            gl.uniform4i(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
+                                    if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform4iv(info.location, v.array);
+                                            } else {
+                                                gl.uniform4i(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
+                                            }
                                         }
                                     }
 
@@ -212,11 +210,13 @@ namespace MITOIA {
                                 }
                             case GLUniformType.BOOL:
                                 {
-                                    if (v.type === ShaderUniformType.NUMBER) {
-                                        if (info.isArray) {
-                                            gl.uniform1fv(info.location, v.array);
-                                        } else {
-                                            gl.uniform1f(info.location, v.array[0]);
+                                    if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform1fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform1f(info.location, v.array[0]);
+                                            }
                                         }
                                     }
 
@@ -224,11 +224,13 @@ namespace MITOIA {
                                 }
                             case GLUniformType.BOOL_VEC2:
                                 {
-                                    if (v.type === ShaderUniformType.NUMBER) {
-                                        if (info.isArray) {
-                                            gl.uniform2fv(info.location, v.array);
-                                        } else {
-                                            gl.uniform2f(info.location, v.array[0], v.array[1]);
+                                    if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform2fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform2f(info.location, v.array[0], v.array[1]);
+                                            }
                                         }
                                     }
 
@@ -236,11 +238,13 @@ namespace MITOIA {
                                 }
                             case GLUniformType.BOOL_VEC3:
                                 {
-                                    if (v.type === ShaderUniformType.NUMBER) {
-                                        if (info.isArray) {
-                                            gl.uniform3fv(info.location, v.array);
-                                        } else {
-                                            gl.uniform3f(info.location, v.array[0], v.array[1], v.array[2]);
+                                    if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform3fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform3f(info.location, v.array[0], v.array[1], v.array[2]);
+                                            }
                                         }
                                     }
 
@@ -248,29 +252,46 @@ namespace MITOIA {
                                 }
                             case GLUniformType.BOOL_VEC4:
                                 {
-                                    if (v.type === ShaderUniformType.NUMBER) {
-                                        if (info.isArray) {
-                                            gl.uniform4fv(info.location, v.array);
-                                        } else {
-                                            gl.uniform4f(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
+                                    if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) {
+                                            if (info.isArray) {
+                                                gl.uniform4fv(info.location, v.array);
+                                            } else {
+                                                gl.uniform4f(info.location, v.array[0], v.array[1], v.array[2], v.array[3]);
+                                            }
                                         }
                                     }
 
                                     break;
                                 }
                             case GLUniformType.FLOAT_MAT2:
-                                if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix2fv(info.location, false, v.array);
-                                break;
-                            case GLUniformType.FLOAT_MAT3:
-                                if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix3fv(info.location, false, v.array);
-                                break;
-                            case GLUniformType.FLOAT_MAT4:
-                                if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix4fv(info.location, false, v.array);
-                                break;
-                            case GLUniformType.SAMPLER_2D:
                                 {
                                     if (v) {
-                                        if (v.sampler2D.use(samplerIndex, info.location)) ++samplerIndex;
+                                        if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix2fv(info.location, false, v.array);
+                                    }
+                                    
+                                    break;
+                                }
+                            case GLUniformType.FLOAT_MAT3:
+                                {
+                                    if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix3fv(info.location, false, v.array);
+                                    }
+
+                                    break;
+                                }
+                            case GLUniformType.FLOAT_MAT4:
+                                {
+                                    if (v) {
+                                        if (v.type === ShaderUniformType.NUMBER) gl.uniformMatrix4fv(info.location, false, v.array);
+                                    }
+
+                                    break;
+                                }
+                            case GLUniformType.SAMPLER_2D:
+                                {
+                                    if (v && v.sampler.textureType === GLTexType.TEXTURE_2D) {
+                                        if (v.sampler.use(samplerIndex, info.location)) ++samplerIndex;
                                     } else {
                                         if (this._gl.activeNullTexture(GLTexType.TEXTURE_2D, samplerIndex)) ++samplerIndex;
                                     }
@@ -278,7 +299,15 @@ namespace MITOIA {
                                     break;
                                 }
                             case GLUniformType.SAMPLER_CUBE:
-                                break;
+                                {
+                                    if (v && v.sampler.textureType === GLTexType.TEXTURE_CUBE_MAP) {
+                                        if (v.sampler.use(samplerIndex, info.location)) ++samplerIndex;
+                                    } else {
+                                        if (this._gl.activeNullTexture(GLTexType.TEXTURE_CUBE_MAP, samplerIndex)) ++samplerIndex;
+                                    }
+
+                                    break;
+                                }
                             default:
                                 break;
                         }

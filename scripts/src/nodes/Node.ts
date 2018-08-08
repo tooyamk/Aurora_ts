@@ -1,5 +1,5 @@
-/// <reference path="math/Matrix44.ts" />
-/// <reference path="math/Vector.ts" />
+/// <reference path="../math/Matrix44.ts" />
+/// <reference path="../math/Vector.ts" />
 
 namespace MITOIA {
     export class Node {
@@ -17,7 +17,7 @@ namespace MITOIA {
         protected _numChildren: number = 0;
         protected _traversingStack: Node[] = null;
 
-        protected _components: AbstractComponent[] = null;
+        protected _components: AbstractNodeComponent[] = null;
 
         protected _localRot: Quaternion = new Quaternion();
         protected _localScale: Vector3 = Vector3.One;
@@ -56,16 +56,19 @@ namespace MITOIA {
             return this._numChildren;
         }
 
-        public getAllChildren(rst: Node[] = null): Node[] {
-            if (!rst) rst = [];
-
-            let node = this._childHead;
-            while (node) {
-                rst.push(node);
-                node = node._next;
+        /**
+         * @returns numChildren.
+         */
+        public getAllChildren(rst: Node[], start: uint = 0): uint {
+            if (rst) {
+                let node = this._childHead;
+                while (node) {
+                    rst[start++] = node;
+                    node = node._next;
+                }
             }
 
-            return rst;
+            return this._numChildren;
         }
 
         public removeAllChildren(notificationUpdate: boolean = true): void {
@@ -170,36 +173,36 @@ namespace MITOIA {
             }
         }
 
-        public addComponent<T extends AbstractComponent>(component: T): T {
-            if (component && component.owner !== this) {
+        public addComponent<T extends AbstractNodeComponent>(component: T): T {
+            if (component && component.node !== this) {
                 if (!this._components) this._components = [];
-                if (component.owner) component.owner._removeComponent(component);
+                if (component.node) component.node._removeComponent(component);
                 this._components.push(component);
-                component._setOwner(this);
+                component._setNode(this);
             }
 
             return component;
         }
 
-        public removeComponent(component: AbstractComponent): void {
-            if (component && this._components && component.owner === this) {
-                component._setOwner(null);
+        public removeComponent(component: AbstractNodeComponent): void {
+            if (component && this._components && component.node === this) {
+                component._setNode(null);
                 this._removeComponent(component);
             }
         }
 
-        protected _removeComponent(component: AbstractComponent): void {
+        protected _removeComponent(component: AbstractNodeComponent): void {
             this._components.splice(this._components.indexOf(component), 1);
         }
 
         public remvoeAllComponents(): void {
             if (this._components) {
-                for (let i = 0, n = this._components.length; i < n; ++i) this._components[i]._setOwner(null);
+                for (let i = 0, n = this._components.length; i < n; ++i) this._components[i]._setNode(null);
                 this._components.length = 0;
             }
         }
 
-        public getComponentByType<T extends AbstractComponent>(c: {prototype: T}, checkEnabled: boolean = false): T {
+        public getComponentByType<T extends AbstractNodeComponent>(c: {prototype: T}, checkEnabled: boolean = false): T {
             if (this._components) {
                 let type = <any>c;
 
@@ -244,10 +247,6 @@ namespace MITOIA {
             this._worldMatrixDirty = true;
 
             this._nofificationUpdate();
-        }
-
-        public getDepth(m: Matrix44): number {
-            return m.transform34Z(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32);
         }
 
         public getLocalPositon(rst: Vector3 = null): Vector3 {

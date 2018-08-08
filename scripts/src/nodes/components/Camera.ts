@@ -1,15 +1,16 @@
+/// <reference path="AbstractNodeComponent.ts" />
+
 namespace MITOIA {
-    export class Camera extends AbstractComponent {
-        public readonly clear: GLClear = new GLClear();
+    export class Camera extends AbstractNodeComponent implements IRenderPass {
+        public clear: GLClear = new GLClear();
+        public frameBuffer: GLFrameBuffer = null;
+
+        public cullingMask: uint = 0xFFFFFFFF;
 
         protected _projectionMatrix: Matrix44 = new Matrix44();
         protected _zNear: number;
         protected _zFar: number;
         protected _aspectRatio: number;
-
-        public cullingMask: uint = 0xFFFFFFFF;
-
-        public frameBuffer: GLFrameBuffer = null;
 
         public get aspectRatio(): number {
             return this._aspectRatio;
@@ -44,8 +45,8 @@ namespace MITOIA {
         public getWorldToProjectionMatrix(rst: Matrix44 = null): Matrix44 {
             rst = rst || new Matrix44();
 
-            if (this._owner) {
-                this._owner.getWorldMatrix(rst);
+            if (this._node) {
+                this._node.getWorldMatrix(rst);
             } else {
                 rst.identity();
             }

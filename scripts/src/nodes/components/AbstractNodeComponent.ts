@@ -1,20 +1,17 @@
 namespace MITOIA {
-    export abstract class AbstractComponent {
-        protected _owner: Node = null;
+    export abstract class AbstractNodeComponent {
+        protected _node: Node = null;
         protected _enabled: boolean = true;
 
-        constructor() {
+        public get node(): Node {
+            return this._node;
         }
 
-        public get owner(): Node {
-            return this._owner;
-        }
+        public _setNode(node: Node): void {
+            let old = this._node;
+            this._node = node;
 
-        public _setOwner(owner: Node): void {
-            let old = this._owner;
-            this._owner = owner;
-
-            this._ownerChanged(old);
+            this._nodeChanged(old);
         }
 
         public get enabled(): boolean {
@@ -29,7 +26,7 @@ namespace MITOIA {
             }
         }
 
-        protected _ownerChanged(old: Node): void {
+        protected _nodeChanged(old: Node): void {
             //todo
         }
 

@@ -1,14 +1,14 @@
-/// <reference path="Renderer.ts" />
+/// <reference path="AbstractRenderableObject.ts" />
 
 namespace MITOIA {
-    export class MeshRenderer extends Renderer {
+    export class Mesh extends AbstractRenderableObject {
         public assetStore: AssetStore = null;
 
         public isReady(): boolean {
             return this.assetStore != null;
         }
 
-        public draw(renderPipeline: AbstractRenderPipeline, material: Material): void {
+        public draw(renderPipeline: AbstractRenderer, material: Material): void {
             if (material.ready(renderPipeline.shaderDefines)) {
                 renderPipeline.onShaderPreUse();
 
@@ -18,7 +18,11 @@ namespace MITOIA {
                 for (let i = 0, n = atts.length; i < n; ++i) {
                     let att = atts[i];
                     let buffer = this.assetStore.getVertexBuffer(att);
-                    if (buffer) buffer.use(att.location);
+                    if (buffer) {
+                        buffer.use(att.location);
+                    } else {
+                        p.gl.deactiveVertexAttrib(att.location);
+                    }
                 }
 
                 let buffer = this.assetStore.getIndexBuffer();

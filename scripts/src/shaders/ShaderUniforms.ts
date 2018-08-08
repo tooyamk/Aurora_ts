@@ -1,16 +1,14 @@
 namespace MITOIA {
     export const enum ShaderUniformType {
         NUMBER,
-        SAMPLER_2D,
-        SAMPLER_CUBE
+        SAMPLER
     }
 
     export class ShaderUniformValue {
         public type: ShaderUniformType;
         public vec4: number[] = null;
         public array: ArrayLike<number> | Float32Array | Int32Array = null;
-        public sampler2D: GLTexture2D = null;
-        public samplerCube: GLTextureCube = null;
+        public sampler: AbstractGLTexture = null;
     }
 
     export class ShaderUniforms {
@@ -42,11 +40,11 @@ namespace MITOIA {
             }
         }
 
-        public setTexture(name: string, tex: GLTexture2D): void {
+        public setTexture(name: string, tex: AbstractGLTexture): void {
             if (tex) {
                 let v = this._getOrCreateUnifomr(name);
-                v.type = ShaderUniformType.SAMPLER_2D;
-                v.sampler2D = tex;
+                v.type = ShaderUniformType.SAMPLER;
+                v.sampler = tex;
             }
         }
 

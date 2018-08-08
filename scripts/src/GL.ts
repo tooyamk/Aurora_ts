@@ -85,21 +85,26 @@ namespace MITOIA {
         }
     }
 
-    export const enum GLVertexBufferSize {
-        ONE = 1,
-        TWO = 2,
-        THREE = 3,
-        FOUR = 4
+    export abstract class AbstractGLObject {
+        protected _gl: GL;
+
+        constructor(gl: GL) {
+            this._gl = gl;
+        }
+
+        public get gl(): GL {
+            return this._gl;
+        }
     }
 
-    export abstract class AbstractGLBuffer {
-        protected _gl: GL;
+    export abstract class AbstractGLBuffer extends AbstractGLObject {
         protected _buffer: WebGLBuffer;
         protected _bufferType: GLBufferType;
         protected _usage: GLUsageType = GLUsageType.STATIC_DRAW;
 
         constructor(gl: GL, type: GLBufferType) {
-            this._gl = gl;
+            super(gl);
+
             this._bufferType = type;
             this._buffer = this._gl.context.createBuffer();
         }
@@ -138,7 +143,7 @@ namespace MITOIA {
         private _uploadCount: number = 0;
 
         private _size: GLVertexBufferSize = GLVertexBufferSize.FOUR;
-        private _dataType: GLVertexDataType = GLVertexDataType.FLOAT;
+        private _dataType: GLVertexBufferDataType = GLVertexBufferDataType.FLOAT;
         private _normalized: boolean = false;
 
         private _location: number = -1;
@@ -161,11 +166,11 @@ namespace MITOIA {
             this._size = size;
         }
 
-        public get datatTpe(): GLVertexDataType {
+        public get datatTpe(): GLVertexBufferDataType {
             return this._dataType;
         }
 
-        public set dataType(type: GLVertexDataType) {
+        public set dataType(type: GLVertexBufferDataType) {
             this._dataType = type;
         }
 
@@ -181,7 +186,7 @@ namespace MITOIA {
             return this._uploadCount;
         }
 
-        public upload(data: number[] | Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer | ArrayBufferView, size: GLVertexBufferSize = GLVertexBufferSize.FOUR, type: GLVertexDataType = GLVertexDataType.FLOAT, normalized: boolean = false, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
+        public upload(data: GLVertexBufferData, size: GLVertexBufferSize = GLVertexBufferSize.FOUR, type: GLVertexBufferDataType = GLVertexBufferDataType.FLOAT, normalized: boolean = false, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
             if (this._buffer) {
                 ++this._uploadCount;
                 this._size = size;
@@ -203,7 +208,7 @@ namespace MITOIA {
             }
         }
 
-        public uploadSub(data: number[] | Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer | ArrayBufferView, offset: int): void {
+        public uploadSub(data: GLVertexBufferData, offset: int): void {
             if (this._buffer) {
                 ++this._uploadCount;
                 let gl = this._gl.context;
@@ -219,7 +224,7 @@ namespace MITOIA {
         }
 
         public use(location: uint): void {
-            this._gl.vertexAttribPointerEx(this, location, this._size, this._dataType, this._normalized, 0, 0);
+            this._gl.activeVertexAttrib(this, location, this._size, this._dataType, this._normalized, 0, 0);
         }
     }
 
@@ -329,18 +334,15 @@ namespace MITOIA {
         }
     }
 
-    export class GLShader {
-        private _gl: GL;
+    export class GLShader extends AbstractGLObject {
         private _shader: WebGLShader;
         private _type: GLShaderType;
 
         constructor(gl: GL, type: GLShaderType) {
-            this._gl = gl;
+            super(gl);
+
             this._type = type;
-
-            let internalGL = this._gl.context;
-
-            this._shader = internalGL.createShader(type);
+            this._shader = this._gl.context.createShader(type);
         }
 
         public get internalShader(): WebGLShader {
@@ -438,8 +440,7 @@ namespace MITOIA {
         COMPILE_FAILED
     }
 
-    export class GLProgram {
-        private _gl: GL;
+    export class GLProgram extends AbstractGLObject {
         private _program: WebGLProgram;
         private _attributes: GLProgramAttribInfo[] = null;
         private _uniforms: GLProgramUniformInfo[] = null;
@@ -447,7 +448,7 @@ namespace MITOIA {
         private _status: GLProgramStatus = GLProgramStatus.EMPTY;
 
         constructor(gl: GL) {
-            this._gl = gl;
+            super(gl);
 
             this._program = this._gl.context.createProgram();
         }
@@ -557,26 +558,18 @@ namespace MITOIA {
         }
     }
 
-    export abstract class AbstractGLTexture {
-        private static _idGenerator = 0;
-
-        protected _id: number;
-        protected _gl: GL;
+    export abstract class AbstractGLTexture extends AbstractGLObject {
         protected _tex: WebGLTexture;
         protected _textureType: GLTexType;
 
         constructor(gl: GL, type: GLTexType) {
-            this._id = ++AbstractGLTexture._idGenerator;
-            this._gl = gl;
+            super(gl);
+
             this._textureType = type;
             this._tex = this._gl.context.createTexture();
 
             this.setWraps(GLTexWrapValue.CLAMP_TO_EDGE);
             this.setFilters(GLTexFilterValue.LINEAR);
-        }
-
-        public get id(): number {
-            return this._id;
         }
 
         public get textureType(): GLTexType {
@@ -871,14 +864,14 @@ namespace MITOIA {
         }
     }
 
-    export class GLFrameBuffer {
-        private _gl: GL;
+    export class GLFrameBuffer extends AbstractGLObject {
         private _buffer: WebGLFramebuffer;
         private _width: uint;
         private _height: uint;
 
         constructor(gl: GL, width: uint = 0, height: uint = 0) {
-            this._gl = gl;
+            super(gl);
+
             this._width = width;
             this._height = height;
 
@@ -916,18 +909,21 @@ namespace MITOIA {
         public setAttachmentRenderBuffer(attachment: GLRenderBufferAttachment, renderBuffer: GLRenderBuffer): void {
             if (this._buffer) {
                 this.bind();
-                renderBuffer.bind();
 
-                this._gl.context.framebufferRenderbuffer(GL.FRAMEBUFFER, attachment, GL.RENDERBUFFER, renderBuffer.internalBuffer);
+                let buf: WebGLRenderbuffer = renderBuffer ? renderBuffer.internalBuffer : null;
+                //renderBuffer.bind();
+
+                this._gl.context.framebufferRenderbuffer(GL.FRAMEBUFFER, attachment, GL.RENDERBUFFER, buf);
             }
         }
 
         public setAttachmentTexture2D(attachment: GLTex2DAttachment, texTarget: GLFrameBufferTexTarget, tex: AbstractGLTexture): void {
             if (this._buffer) {
                 this.bind();
-                tex.bind();
 
-                this._gl.context.framebufferTexture2D(GL.FRAMEBUFFER, attachment, texTarget, tex.internalTexture, 0);
+                let internalTex = tex ? tex.internalTexture : null;
+
+                this._gl.context.framebufferTexture2D(GL.FRAMEBUFFER, attachment, texTarget, internalTex, 0);
             }
         }
 
@@ -957,12 +953,11 @@ namespace MITOIA {
         }
     }
 
-    export class GLRenderBuffer {
-        private _gl: GL;
+    export class GLRenderBuffer extends AbstractGLObject {
         private _buffer: WebGLRenderbuffer;
 
         constructor(gl: GL) {
-            this._gl = gl;
+            super(gl);
 
             this._buffer = this._gl.context.createRenderbuffer();
         }
@@ -2701,8 +2696,8 @@ namespace MITOIA {
 
         public setCullFace(mode: GLCullFace): void {
             if (mode === GLCullFace.NONE) {
-                if (this._enabledBlend) {
-                    this._enabledBlend = false;
+                if (this._enabledCullFace) {
+                    this._enabledCullFace = false;
                     this._gl.disable(GL.CULL_FACE);
                 }
             } else {
@@ -2935,6 +2930,20 @@ namespace MITOIA {
             }
         }
 
+        public unbindTextureByType(type: GLTexType): void {
+            if (type === GLTexType.TEXTURE_2D) {
+                if (this._bindingTexture2D) {
+                    this._bindingTexture2D = null;
+                    this._gl.bindBuffer(type, null);
+                }
+            } else if (type === GLTexType.TEXTURE_CUBE_MAP) {
+                if (this._bindingTextureCube) {
+                    this._bindingTextureCube = null;
+                    this._gl.bindBuffer(type, null);
+                }
+            }
+        }
+
         public bindFrameBuffer(target: GLFrameBufferTarget, buffer: GLFrameBuffer): void {
             let buf = buffer.internalBuffer;
 
@@ -3056,20 +3065,34 @@ namespace MITOIA {
         }
 
         public bindRenderBuffer(buffer: GLRenderBuffer): void {
-            if (this._bindingRenderBuffer !== buffer.internalBuffer) {
-                this._bindingRenderBuffer = buffer.internalBuffer;
-                this._gl.bindRenderbuffer(GLRenderBufferType.RENDERBUFFER, this._bindingRenderBuffer);
+            if (buffer) {
+                if (this._bindingRenderBuffer !== buffer.internalBuffer) {
+                    this._bindingRenderBuffer = buffer.internalBuffer;
+                    this._gl.bindRenderbuffer(GLRenderBufferType.RENDERBUFFER, this._bindingRenderBuffer);
+                }
+            } else {
+                if (this._bindingRenderBuffer) {
+                    this._bindingRenderBuffer = null;
+                    this._gl.bindRenderbuffer(GLRenderBufferType.RENDERBUFFER, null);
+                }
             }
         }
 
         public unbindRenderBuffer(buffer: GLRenderBuffer): void {
-            if (this._bindingRenderBuffer === buffer.internalBuffer) {
-                this._bindingRenderBuffer = null;
-                this._gl.bindRenderbuffer(GLRenderBufferType.RENDERBUFFER, null);
+            if (buffer) {
+                if (this._bindingRenderBuffer === buffer.internalBuffer) {
+                    this._bindingRenderBuffer = null;
+                    this._gl.bindRenderbuffer(GLRenderBufferType.RENDERBUFFER, null);
+                }
+            } else {
+                if (this._bindingRenderBuffer) {
+                    this._bindingRenderBuffer = null;
+                    this._gl.bindRenderbuffer(GLRenderBufferType.RENDERBUFFER, null);
+                }
             }
         }
 
-        public vertexAttribPointerEx(buffer: GLVertexBuffer, index: uint, size: number, type: number, normalized: boolean, stride: number, offset: number): void {
+        public activeVertexAttrib(buffer: GLVertexBuffer, index: uint, size: GLVertexBufferSize, type: GLVertexBufferDataType, normalized: boolean, stride: number, offset: number): void {
             if (index < this._maxVertexAttributes) {
                 let info = this._usedVertexAttribs[index];
 
@@ -3085,6 +3108,17 @@ namespace MITOIA {
                     this._gl.enableVertexAttribArray(index);
                     buffer.bind();
                     this._gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
+                }
+            }
+        }
+
+        public deactiveVertexAttrib(index: uint): void {
+            if (index < this._maxVertexAttributes) {
+                let info = this._usedVertexAttribs[index];
+                if (info.bufferID !== 0) {
+                    info.bufferID = 0;
+
+                    this._gl.disableVertexAttribArray(index);
                 }
             }
         }
@@ -3147,7 +3181,14 @@ namespace MITOIA {
         TRIANGLE_FAN = GL.TRIANGLE_FAN
     }
 
-    export enum GLVertexDataType {
+    export const enum GLVertexBufferSize {
+        ONE = 1,
+        TWO = 2,
+        THREE = 3,
+        FOUR = 4
+    }
+
+    export enum GLVertexBufferDataType {
         BYTE = GL.BYTE,
         UNSIGNED_BYTE = GL.UNSIGNED_BYTE,
         SHORT = GL.SHORT,

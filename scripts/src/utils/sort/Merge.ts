@@ -1,7 +1,7 @@
 namespace MITOIA.Sort {
     export abstract class Merge {
         /**
-         * compareFn : if a <b, a is before to b.
+         * @param compareFn : If return true, a is before to b.
          */
         public static sort<T>(L: T[], compareFn: (a: T, b: T) => boolean, start: number = 0, end: number = -1) {
             if (end < 0 || end >= L.length) end = L.length - 1;
