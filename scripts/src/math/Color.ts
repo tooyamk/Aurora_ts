@@ -17,6 +17,22 @@ namespace MITOIA {
         public static get BLACK(): Color3 {
             return new Color3(0, 0, 0);
         }
+
+        public setFromRGB(r: number = 0, g: number = 0, b: number = 0): void {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+        }
+
+        public setFromColor3(color: Color3): void {
+            this.r = color.r;
+            this.g = color.g;
+            this.b = color.b;
+        }
+
+        public isEqual(color: Color3): boolean {
+            return this.r === color.r && this.g === color.g && this.b === color.b;
+        }
     }
 
     export class Color4 {

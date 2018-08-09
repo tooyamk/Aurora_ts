@@ -18,6 +18,7 @@ namespace MITOIA {
         private _renderingQueueLength: uint = 0;
         private _renderingQueueCapacity: uint = 0;
 
+        protected _cameraWorldMatrix: Matrix44 = new Matrix44();
         protected _viewToProjMatrix: Matrix44 = new Matrix44();
         protected _worldToViewMatrix: Matrix44 = new Matrix44();
         protected _worldToProjMatrix: Matrix44 = new Matrix44();
@@ -26,6 +27,10 @@ namespace MITOIA {
 
         constructor() {
             super();
+
+            this._shaderDefines.setDefine(ShaderPredefined.LIGHTING_SPECULAR, ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
+
+            this._shaderUniforms.setNumber(ShaderPredefined.u_LighitngSpecularShininess, 32);
 
             this._renderingQueueCapacity = 100;
             for (let i = 0; i < this._renderingQueueCapacity; ++i) this._renderingQueue[i] = new RenderNode();
@@ -36,9 +41,10 @@ namespace MITOIA {
             this._renderingReplaceMaterials = replaceMaterials;
 
             if (camera.node) {
-                camera.node.getWorldMatrix(this._worldToViewMatrix);
-                this._worldToViewMatrix.invert();
+                camera.node.getWorldMatrix(this._cameraWorldMatrix);
+                this._cameraWorldMatrix.invert(this._worldToViewMatrix);
             } else {
+                this._cameraWorldMatrix.identity();
                 this._worldToViewMatrix.identity();
             }
 
@@ -49,6 +55,7 @@ namespace MITOIA {
             this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_V2P, this._viewToProjMatrix.toArray44());
             this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_W2P, this._worldToProjMatrix.toArray44());
             this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_W2V, this._worldToViewMatrix.toArray44());
+            this._shaderUniforms.setNumber(ShaderPredefined.u_CamPosW, this._cameraWorldMatrix.m30, this._cameraWorldMatrix.m31, this._cameraWorldMatrix.m32);
 
             if (light) {
                 this._shaderDefines.setDefine(ShaderPredefined.LIGHTING, true);

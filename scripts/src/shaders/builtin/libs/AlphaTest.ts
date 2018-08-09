@@ -34,5 +34,5 @@ uniform float ${ShaderPredefined.u_AlphaTestCompareValue};
 #endif
 `};
 
-    export const ALPHA_TEST_SOURCES: ShaderLib[] = [ALPHA_TEST_HEADER, ALPHA_TEST];
+    export const ALPHA_TEST_FRAG_SOURCES: ShaderLib[] = [ALPHA_TEST_HEADER, ALPHA_TEST];
 }

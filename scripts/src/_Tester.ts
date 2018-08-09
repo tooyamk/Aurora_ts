@@ -42,9 +42,10 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     //mat.stencilBack = stencil2;
     mesh.materials[0] = mat;
     mesh.enabled = false;
-    //mat.defines.setDefine(MITOIA.ShaderPredefined.LIGHTING, true);
+    mat.defines.setDefine(MITOIA.ShaderPredefined.LIGHTING, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_TEX, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_COLOR, true);
+    mat.defines.setDefine(MITOIA.ShaderPredefined.LIGHTING_SPECULAR, MITOIA.ShaderPredefined.LIGHTING_SPECULAR_PHONE);
     mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
     /*
     mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST, true);
@@ -92,7 +93,7 @@ window.addEventListener("DOMContentLoaded", () => {
     console.log(MITOIA.Version, gl.version, gl.versionFullInfo);
 
     let shaderStore = new MITOIA.ShaderStore();
-    shaderStore.addLibrary(MITOIA.BuiltinShader.Lib.ALPHA_TEST_SOURCES);
+    shaderStore.addLibrary(MITOIA.BuiltinShader.Lib.ALPHA_TEST_FRAG_SOURCES);
     shaderStore.addLibrary(MITOIA.BuiltinShader.Lib.LIGHTING_SOURCES);
 
     shaderStore.addSource("mesh", MITOIA.BuiltinShader.Mesh.VERTEX, MITOIA.GLShaderType.VERTEX_SHADER);
@@ -109,6 +110,8 @@ window.addEventListener("DOMContentLoaded", () => {
     lightNode.setParent(worldNode);
 
     let light = lightNode.addComponent(new MITOIA.DirectionLight());
+    light.color.setFromRGB(1, 1, 1);
+    light.intensity = 0.5;
 
     let fbo = new MITOIA.GLFrameBuffer(gl, 1000, 1000);
 

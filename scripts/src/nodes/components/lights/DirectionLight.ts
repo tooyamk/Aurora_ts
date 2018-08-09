@@ -7,7 +7,8 @@ namespace MITOIA {
 
             let wm = this.node.readonlyWorldMatrix;
 
-            uniforms.setNumber(ShaderPredefined.u_LightAtrrib0, wm.m20, wm.m21, wm.m22);
+            uniforms.setNumberArray(ShaderPredefined.u_LightAtrrib0, [this.color.r * this.intensity, this.color.g * this.intensity, this.color.b * this.intensity, 0.0, 
+                wm.m20, wm.m21, wm.m22, 0]);
         }
     }
 }

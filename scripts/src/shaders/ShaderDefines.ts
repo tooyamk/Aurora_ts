@@ -1,6 +1,14 @@
 namespace MITOIA {
+    export class ShaderDefineValue {
+        public static readonly UNKNOW: int = 0;
+        public static readonly BOOL: int = 1;
+        public static readonly INT: int = 2;
+        public type: int = ShaderDefineValue.UNKNOW;
+        public value: boolean | int = null;
+    }
+
     export class ShaderDefines {
-        private _defines: { [key: string] : null | string } = {};
+        private _defines: { [key: string] : ShaderDefineValue } = {};
         private _count: uint = 0;
 
         public get count(): uint {
@@ -18,34 +26,39 @@ namespace MITOIA {
             return this._defines[name] !== undefined;
         }
 
-        public getDefine(name: string): null | undefined | string {
+        public getDefine(name: string): ShaderDefineValue {
             return this._defines[name];
         }
 
-        public setDefine(name: string, value: boolean | string): void {
-            if (value === null || value === undefined || value === "") value = false;
+        public setDefine(name: string, value: boolean | int): void {
+            if (value === null || value === undefined) value = false;
             
             let v = this._defines[name];
+            if (!v) {
+                v = new ShaderDefineValue();
+                this._defines[name] = v;
+            }
 
             if (value === true) {
-                if (v === undefined) {
-                    this._defines[name] = null;
+                if (v.type !== ShaderDefineValue.BOOL || v.value !== true) {
+                    v.type = ShaderDefineValue.BOOL;
+                    v.value = true;
                     //this._dirty = true;
                     ++this._count;
-                } else if (v !== null) {
-                    this._defines[name] = null;
-                    //this._dirty = true;
                 }
             } else if (value === false) {
-                if (this._defines[name] !== undefined) {
-                    delete this._defines[name];
+                if (v.type !== ShaderDefineValue.BOOL || v.value !== true) {
+                    v.type = ShaderDefineValue.BOOL;
+                    v.value = false;
                     //this._dirty = true;
-                    --this._count;
+                    ++this._count;
                 }
             } else {
-                if (v != value) {
-                    this._defines[name] = value;
+                if (v.type !== ShaderDefineValue.INT || v.value !== value) {
+                    v.type = ShaderDefineValue.INT;
+                    v.value = value;
                     //this._dirty = true;
+                    ++this._count;
                 }
             }
 

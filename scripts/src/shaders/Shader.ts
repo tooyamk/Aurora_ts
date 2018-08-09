@@ -53,14 +53,16 @@ namespace MITOIA {
             for (let i = 0, n = this._defines.length; i < n; ++i) {
                 let name = this._defines[i];
 
-                let v: string = undefined;
+                let v: ShaderDefineValue = null;
                 if (localDefines) v = localDefines.getDefine(name);
-                if (v === undefined && globalDefines) v = globalDefines.getDefine(name);
+                if (!v && globalDefines) v = globalDefines.getDefine(name);
 
-                if (v === null) {
-                    appendDefines += "\n" + name;
-                } else if (v !== undefined) {
-                    appendDefines += "\n" + name + " " + v;
+                if (v) {
+                    if (v.type === ShaderDefineValue.BOOL) {
+                        if (v.value) appendDefines += "\n" + name;
+                    } else if (v.type === ShaderDefineValue.INT) {
+                        appendDefines += "\n" + name + " " + v.value;
+                    }
                 }
             }
 

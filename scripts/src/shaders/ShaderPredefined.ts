@@ -1,24 +1,37 @@
 namespace MITOIA.ShaderPredefined {
     export const ALPHA_TEST: string = "ALPHA_TEST";
     export const ALPHA_TEST_FUNC: string = "ALPHA_TEST_FUNC";
-    export const ALPHA_TEST_FUNC_LESS: string = "1";
-    export const ALPHA_TEST_FUNC_EQUAL: string = "2";
-    export const ALPHA_TEST_FUNC_NOTEQUAL: string = "3";
-    export const ALPHA_TEST_FUNC_LEQUAL: string = "4";
-    export const ALPHA_TEST_FUNC_GREATER: string = "5";
-    export const ALPHA_TEST_FUNC_GEQUAL: string = "6";
+    export const ALPHA_TEST_FUNC_LESS: int = 1;
+    export const ALPHA_TEST_FUNC_EQUAL: int = 2;
+    export const ALPHA_TEST_FUNC_NOTEQUAL: int = 3;
+    export const ALPHA_TEST_FUNC_LEQUAL: int = 4;
+    export const ALPHA_TEST_FUNC_GREATER: int = 5;
+    export const ALPHA_TEST_FUNC_GEQUAL: int = 6;
 
     export const LIGHTING: string = "LIGHTING";
     export const LIGHT0: string = "LIGHT0";
 
     export const LIGHT_TYPE0: string = "LIGHT_TYPE0";
-    export const LIGHT_TYPE_DIRECTION: string = "1";
+    export const LIGHT_TYPE_DIRECTION: int = 1;
+
+    export const LIGHTING_SPECULAR: string = "LIGHTING_SPECULAR";
+    export const LIGHTING_SPECULAR_NONE: int = 0;
+    export const LIGHTING_SPECULAR_PHONE: int = 1;
+    export const LIGHTING_SPECULAR_BANK_BRDF: int = 2;
+    export const LIGHTING_SPECULAR_BLINN_PHONE: int = 3;
 
     /**
+     * General:
+     ** v0, v1, v2 = color.
+     * 
      * Direction Light:
-     ** v0,v1,v2 = lighting world dir
+     ** v4,v5,v6 = lighting world dir
      */
     export const u_LightAtrrib0: string = "u_LightAtrrib0";
+
+    export const u_LighitngSpecularShininess = "u_LighitngSpecularShininess";
+
+    export const u_CamPosW: string = "u_CamPosW";
 
     export const DIFFUSE_TEX: string = "DIFFUSE_TEX";
     export const DIFFUSE_COLOR: string = "DIFFUSE_COLOR";
