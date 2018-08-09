@@ -17,7 +17,7 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_TexCoord, uvBuffer);
     assetStore.drawIndexBuffer = indexBuffer;
 
-    assetStore = MITOIA.Geometries.createSphere(100, 10, true);
+    assetStore = MITOIA.Geometries.createSphere(100, 100, true);
     assetStore.addVertexSource(MITOIA.MeshAssetHelper.createLerpNormals(assetStore.drawIndexSource.data, assetStore.vertexSources.get(MITOIA.ShaderPredefined.a_Position).data));
 
     let mesh = node.addComponent(new MITOIA.RenderableMesh());
@@ -42,14 +42,17 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     //mat.stencilBack = stencil2;
     mesh.materials[0] = mat;
     mesh.enabled = false;
+    //mat.defines.setDefine(MITOIA.ShaderPredefined.LIGHTING, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_TEX, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_COLOR, true);
-    //mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST, true);
+    mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
+    /*
+    mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST_FUNC, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST_FUNC, MITOIA.ShaderPredefined.ALPHA_TEST_FUNC_GEQUAL);
-    mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
     mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_AlphaTestCompareValue, 0.8);
-    mat.drawMode = MITOIA.GLDrawMode.LINE_LOOP;
+    */
+    mat.drawMode = MITOIA.GLDrawMode.TRIANGLES;
 
     let tex = new MITOIA.GLTexture2D(gl);
 
@@ -90,6 +93,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     let shaderStore = new MITOIA.ShaderStore();
     shaderStore.addLibrary(MITOIA.BuiltinShader.Lib.ALPHA_TEST_SOURCES);
+    shaderStore.addLibrary(MITOIA.BuiltinShader.Lib.LIGHTING_SOURCES);
 
     shaderStore.addSource("mesh", MITOIA.BuiltinShader.Mesh.VERTEX, MITOIA.GLShaderType.VERTEX_SHADER);
     shaderStore.addSource("mesh", MITOIA.BuiltinShader.Mesh.FRAGMENT, MITOIA.GLShaderType.FRAGMENT_SHADER);
@@ -98,11 +102,15 @@ window.addEventListener("DOMContentLoaded", () => {
     let model1Node = new MITOIA.Node();
     let model2Node = new MITOIA.Node();
     let cameraNode = new MITOIA.Node();
+    let lightNode = new MITOIA.Node();
     model1Node.setParent(worldNode);
     model2Node.setParent(worldNode);
     cameraNode.setParent(worldNode);
+    lightNode.setParent(worldNode);
 
-    let fbo = new MITOIA.GLFrameBuffer(gl, 500, 500);
+    let light = lightNode.addComponent(new MITOIA.DirectionLight());
+
+    let fbo = new MITOIA.GLFrameBuffer(gl, 1000, 1000);
 
     let depthRBO = new MITOIA.GLRenderBuffer(gl);
     depthRBO.storage(MITOIA.GLRenderBufferInternalFormat.DEPTH_COMPONENT16, fbo.width, fbo.height);
@@ -136,6 +144,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     model1Node.appendLocalTranslate(0, 0, 500);
+    lightNode.appendLocalTranslate(-500, 0, 500);
 
     createModel(model1Node, gl, shaderStore, "mesh", "mesh");
 
@@ -162,7 +171,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
         model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI / 180));
 //gl.context.bindTexture(MITOIA.GL.TEXTURE_2D, null);
-        forwardRenderer.render(gl, cam, worldNode);
+        forwardRenderer.render(gl, cam, worldNode, light);
         postProcessRenderer.render(gl, [pp]);
         //gl.context.flush();
         //gl.clear(null);

@@ -56,6 +56,16 @@ namespace MITOIA {
             return this._numChildren;
         }
 
+        public get readonlyLocalMatrix(): Matrix44 {
+            this.updateLocalMatrix();
+            return this._localMatrix;
+        }
+
+        public get readonlyWorldMatrix(): Matrix44 {
+            this.updateWorldMatrix();
+            return this._worldMatrix;
+        }
+
         /**
          * @returns numChildren.
          */

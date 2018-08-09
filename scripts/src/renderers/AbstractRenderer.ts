@@ -1,14 +1,14 @@
 namespace MITOIA {
     export abstract class AbstractRenderer {
         protected _shaderDefines: ShaderDefines = new ShaderDefines();
-        protected _shaderUniform: ShaderUniforms = new ShaderUniforms();
+        protected _shaderUniforms: ShaderUniforms = new ShaderUniforms();
 
         public get shaderDefines(): ShaderDefines {
             return this._shaderDefines;
         }
 
-        public get shaderUniform(): ShaderUniforms {
-            return this._shaderUniform;
+        public get shaderUniforms(): ShaderUniforms {
+            return this._shaderUniforms;
         }
 
         public onShaderPreUse(): void {

@@ -31,7 +31,7 @@ namespace MITOIA {
             for (let i = 0; i < this._renderingQueueCapacity; ++i) this._renderingQueue[i] = new RenderNode();
         }
 
-        public render(gl: GL, camera: Camera, node: Node, replaceMaterials: Material[] = null): void {
+        public render(gl: GL, camera: Camera, node: Node, light: AbstractLight = null, replaceMaterials: Material[] = null): void {
             this._renderingGL = gl.context;
             this._renderingReplaceMaterials = replaceMaterials;
 
@@ -46,9 +46,16 @@ namespace MITOIA {
 
             this._worldToViewMatrix.append44(this._viewToProjMatrix, this._worldToProjMatrix);
 
-            this._shaderUniform.setNumberArray(ShaderPredefined.u_M44_V2P, this._viewToProjMatrix.toArray44());
-            this._shaderUniform.setNumberArray(ShaderPredefined.u_M44_W2P, this._worldToProjMatrix.toArray44());
-            this._shaderUniform.setNumberArray(ShaderPredefined.u_M44_W2V, this._worldToViewMatrix.toArray44());
+            this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_V2P, this._viewToProjMatrix.toArray44());
+            this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_W2P, this._worldToProjMatrix.toArray44());
+            this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_W2V, this._worldToViewMatrix.toArray44());
+
+            if (light) {
+                this._shaderDefines.setDefine(ShaderPredefined.LIGHTING, true);
+                light.preRender(this);
+            } else {
+                this._shaderDefines.setDefine(ShaderPredefined.LIGHTING, false);
+            }
 
             this.begin(gl, camera);
 
@@ -150,10 +157,10 @@ namespace MITOIA {
         public onShaderPreUse(): void {
             let shader = this._renderingNode.material.shader;
 
-            if (shader.hasUniform(ShaderPredefined.u_M33_L2W)) this._shaderUniform.setNumberArray(ShaderPredefined.u_M33_L2W, this._renderingNode.localToWorld.toArray33());
-            if (shader.hasUniform(ShaderPredefined.u_M44_L2P)) this._shaderUniform.setNumberArray(ShaderPredefined.u_M44_L2P, this._renderingNode.localToProj.toArray44());
-            if (shader.hasUniform(ShaderPredefined.u_M44_L2V)) this._shaderUniform.setNumberArray(ShaderPredefined.u_M44_L2V, this._renderingNode.localToView.toArray44());
-            if (shader.hasUniform(ShaderPredefined.u_M44_L2W)) this._shaderUniform.setNumberArray(ShaderPredefined.u_M44_L2W, this._renderingNode.localToWorld.toArray44());
+            if (shader.hasUniform(ShaderPredefined.u_M33_L2W)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M33_L2W, this._renderingNode.localToWorld.toArray33());
+            if (shader.hasUniform(ShaderPredefined.u_M44_L2P)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2P, this._renderingNode.localToProj.toArray44());
+            if (shader.hasUniform(ShaderPredefined.u_M44_L2V)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2V, this._renderingNode.localToView.toArray44());
+            if (shader.hasUniform(ShaderPredefined.u_M44_L2W)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2W, this._renderingNode.localToWorld.toArray44());
         }
     }
 }

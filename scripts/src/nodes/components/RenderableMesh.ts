@@ -12,7 +12,7 @@ namespace MITOIA {
             if (material.ready(renderer.shaderDefines)) {
                 renderer.onShaderPreUse();
 
-                let p = material.use(renderer.shaderUniform);
+                let p = material.use(renderer.shaderUniforms);
 
                 let atts = p.attributes;
                 for (let i = 0, n = atts.length; i < n; ++i) {

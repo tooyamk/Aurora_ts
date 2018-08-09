@@ -8,9 +8,20 @@ namespace MITOIA.ShaderPredefined {
     export const ALPHA_TEST_FUNC_GREATER: string = "5";
     export const ALPHA_TEST_FUNC_GEQUAL: string = "6";
 
+    export const LIGHTING: string = "LIGHTING";
+    export const LIGHT0: string = "LIGHT0";
+
+    export const LIGHT_TYPE0: string = "LIGHT_TYPE0";
+    export const LIGHT_TYPE_DIRECTION: string = "1";
+
+    /**
+     * Direction Light:
+     ** v0,v1,v2 = lighting world dir
+     */
+    export const u_LightAtrrib0: string = "u_LightAtrrib0";
+
     export const DIFFUSE_TEX: string = "DIFFUSE_TEX";
     export const DIFFUSE_COLOR: string = "DIFFUSE_COLOR";
-    export const LIGHTING: string = "LIGHTING";
 
     export const a_Position: string = "a_Position";
     export const a_Normal: string = "a_Normal";

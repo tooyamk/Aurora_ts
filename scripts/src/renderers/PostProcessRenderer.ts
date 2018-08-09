@@ -27,7 +27,7 @@ namespace MITOIA {
                         if (pp.material.ready(this.shaderDefines)) {
                             this.begin(gl, pp);
 
-                            let p = pp.material.use(this.shaderUniform);
+                            let p = pp.material.use(this.shaderUniforms);
 
                             let atts = p.attributes;
                             for (let i = 0, n = atts.length; i < n; ++i) {
