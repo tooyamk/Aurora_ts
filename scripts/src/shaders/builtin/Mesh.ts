@@ -9,7 +9,7 @@ attribute vec2 ${ShaderPredefined.a_TexCoord};
 varying vec2 v_uv;
 #endif
 
-uniform mat4 ${ShaderPredefined.u_MatL2P};
+uniform mat4 ${ShaderPredefined.u_M44_L2P};
 
 void main(void){
 
@@ -17,7 +17,7 @@ void main(void){
     v_uv = ${ShaderPredefined.a_TexCoord};
 #endif
 
-    gl_Position = ${ShaderPredefined.u_MatL2P} * vec4(${ShaderPredefined.a_Position}, 1.0);
+    gl_Position = ${ShaderPredefined.u_M44_L2P} * vec4(${ShaderPredefined.a_Position}, 1.0);
 }`;
 
     export const FRAGMENT: string = `

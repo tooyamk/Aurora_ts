@@ -4,6 +4,8 @@ namespace MITOIA {
 
         public renderingPriority: int = 0;
 
+        public drawMode: GLDrawMode = GLDrawMode.TRIANGLES;
+
         public blend: GLBlend = null;
 
         public cullFace: GLCullFace = GLCullFace.BACK;

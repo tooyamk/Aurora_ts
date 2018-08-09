@@ -32,7 +32,7 @@ namespace MITOIA {
                             let atts = p.attributes;
                             for (let i = 0, n = atts.length; i < n; ++i) {
                                 let att = atts[i];
-                                let buffer = pp.assetStore ? pp.assetStore.getVertexBuffer(att) : null;
+                                let buffer = pp.assetStore ? pp.assetStore.getVertexBuffer(gl, att) : null;
                                 if (!buffer) {
                                     if (att.name == ShaderPredefined.a_Position) {
                                         buffer = this._defaultVertexBuffer;
@@ -43,9 +43,9 @@ namespace MITOIA {
                                 if (buffer) buffer.use(att.location);
                             }
 
-                            let buffer = pp.assetStore ? pp.assetStore.getIndexBuffer() : this._defaultIndexBuffer;
+                            let buffer = pp.assetStore ? pp.assetStore.getDrawIndexBuffer(gl) : this._defaultIndexBuffer;
                             if (!buffer) buffer = this._defaultIndexBuffer;
-                            if (buffer) buffer.draw(GLDrawMode.TRIANGLES);
+                            if (buffer) buffer.draw(pp.material.drawMode);
                         }
 
                         if (useDefaultShader) pp.material.shader = null;

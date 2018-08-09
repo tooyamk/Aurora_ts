@@ -1,23 +1,23 @@
 /// <reference path="AbstractRenderableObject.ts" />
 
 namespace MITOIA {
-    export class Mesh extends AbstractRenderableObject {
+    export class RenderableMesh extends AbstractRenderableObject {
         public assetStore: AssetStore = null;
 
         public isReady(): boolean {
             return this.assetStore != null;
         }
 
-        public draw(renderPipeline: AbstractRenderer, material: Material): void {
-            if (material.ready(renderPipeline.shaderDefines)) {
-                renderPipeline.onShaderPreUse();
+        public draw(renderer: AbstractRenderer, material: Material): void {
+            if (material.ready(renderer.shaderDefines)) {
+                renderer.onShaderPreUse();
 
-                let p = material.use(renderPipeline.shaderUniform);
+                let p = material.use(renderer.shaderUniform);
 
                 let atts = p.attributes;
                 for (let i = 0, n = atts.length; i < n; ++i) {
                     let att = atts[i];
-                    let buffer = this.assetStore.getVertexBuffer(att);
+                    let buffer = this.assetStore.getVertexBuffer(p.gl, att);
                     if (buffer) {
                         buffer.use(att.location);
                     } else {
@@ -25,8 +25,8 @@ namespace MITOIA {
                     }
                 }
 
-                let buffer = this.assetStore.getIndexBuffer();
-                if (buffer) buffer.draw(GLDrawMode.TRIANGLES);
+                let buffer = this.assetStore.getDrawIndexBuffer(p.gl);
+                if (buffer) buffer.draw(material.drawMode);
             }
         }
     }

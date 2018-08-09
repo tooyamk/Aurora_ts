@@ -15,10 +15,13 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     let assetStore = new MITOIA.AssetStore();
     assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_Position, vertexBuffer);
     assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_TexCoord, uvBuffer);
-    assetStore.indexBuffer = indexBuffer;
+    assetStore.drawIndexBuffer = indexBuffer;
 
-    let renderer = node.addComponent(new MITOIA.Mesh());
-    renderer.assetStore = assetStore;
+    assetStore = MITOIA.Geometries.createSphere(100, 10, true);
+    assetStore.addVertexSource(MITOIA.MeshAssetHelper.createLerpNormals(assetStore.drawIndexSource.data, assetStore.vertexSources.get(MITOIA.ShaderPredefined.a_Position).data));
+
+    let mesh = node.addComponent(new MITOIA.RenderableMesh());
+    mesh.assetStore = assetStore;
 
     let mat = new MITOIA.Material(new MITOIA.Shader(gl, shaderStore.getShaderSource(vert, MITOIA.GLShaderType.VERTEX_SHADER), shaderStore.getShaderSource(frag, MITOIA.GLShaderType.FRAGMENT_SHADER)));
     //mat.uniforms.setFloat("u_color", -0.1, 1, 0, 0.2);
@@ -37,15 +40,16 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     //mat.blend.func.setSeparate(MITOIA.GLBlendFactorValue.SRC_ALPHA, MITOIA.GLBlendFactorValue.ONE_MINUS_SRC_ALPHA, MITOIA.GLBlendFactorValue.ONE, MITOIA.GLBlendFactorValue.ONE_MINUS_SRC_ALPHA);
     //mat.stencilFront = stencil;
     //mat.stencilBack = stencil2;
-    renderer.materials[0] = mat;
-    renderer.enabled = false;
+    mesh.materials[0] = mat;
+    mesh.enabled = false;
     mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_TEX, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_COLOR, true);
-    mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST, true);
+    //mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST_FUNC, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST_FUNC, MITOIA.ShaderPredefined.ALPHA_TEST_FUNC_GEQUAL);
     mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
     mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_AlphaTestCompareValue, 0.8);
+    mat.drawMode = MITOIA.GLDrawMode.LINE_LOOP;
 
     let tex = new MITOIA.GLTexture2D(gl);
 
@@ -56,7 +60,7 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
         tex.upload(0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, img);
         gl.context.pixelStorei(MITOIA.GL.UNPACK_FLIP_Y_WEBGL, false);
         mat.uniforms.setTexture(MITOIA.ShaderPredefined.s_DiffuseSampler, tex);
-        renderer.enabled = true;
+        mesh.enabled = true;
     }
 }
 
@@ -64,6 +68,15 @@ window.addEventListener("DOMContentLoaded", () => {
     document.oncontextmenu = () => {
         return false;
     }
+
+    let n: number = -1.6;
+    n |= 0;
+
+
+    let quat = new MITOIA.Quaternion();
+    quat.append(MITOIA.Quaternion.createFromEulerX(Math.PI * 0.25));
+    //quat.append(MITOIA.Quaternion.createFromEulerZ(Math.PI * 0.25));
+    let p1 = quat.rotateXYZ(0, 1, 0);
 
     let canvas = <HTMLCanvasElement>document.getElementById("renderCanvas");
     let options: MITOIA.GLOptions = {};
@@ -88,8 +101,6 @@ window.addEventListener("DOMContentLoaded", () => {
     model1Node.setParent(worldNode);
     model2Node.setParent(worldNode);
     cameraNode.setParent(worldNode);
-
-    let zz
 
     let fbo = new MITOIA.GLFrameBuffer(gl, 500, 500);
 

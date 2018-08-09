@@ -18,13 +18,14 @@ namespace MITOIA.ShaderPredefined {
     export const a_Color: string = "a_Color";
     export const a_Index: string = "a_Index";
 
-    export const u_MatW2V: string = "u_MatW2V";
-    export const u_MatW2P: string = "u_MatW2P";
-    export const u_MatV2P: string = "u_MatV2P";
+    export const u_M44_W2V: string = "u_M44_W2V";
+    export const u_M44_W2P: string = "u_M44_W2P";
+    export const u_M44_V2P: string = "u_M44_V2P";
     
-    export const u_MatL2V: string = "u_MatL2V";
-    export const u_MatL2W: string = "u_MatL2W";
-    export const u_MatL2P: string = "u_MatL2P";
+    export const u_M44_L2V: string = "u_M44_L2V";
+    export const u_M33_L2W: string = "u_M33_L2W";
+    export const u_M44_L2W: string = "u_M44_L2W";
+    export const u_M44_L2P: string = "u_M44_L2P";
 
     export const u_DiffuseColor: string = "u_DiffuseColor";
 

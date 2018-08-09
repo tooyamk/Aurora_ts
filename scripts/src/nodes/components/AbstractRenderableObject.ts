@@ -8,7 +8,7 @@ namespace MITOIA {
             return false;
         }
 
-        public draw(renderPipeline: AbstractRenderer, material: Material): void {
+        public draw(renderer: AbstractRenderer, material: Material): void {
             //todo
         }
     }

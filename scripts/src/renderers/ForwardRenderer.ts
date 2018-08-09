@@ -46,9 +46,9 @@ namespace MITOIA {
 
             this._worldToViewMatrix.append44(this._viewToProjMatrix, this._worldToProjMatrix);
 
-            this._shaderUniform.setNumberArray(ShaderPredefined.u_MatV2P, this._viewToProjMatrix.toArray44());
-            this._shaderUniform.setNumberArray(ShaderPredefined.u_MatW2P, this._worldToProjMatrix.toArray44());
-            this._shaderUniform.setNumberArray(ShaderPredefined.u_MatW2V, this._worldToViewMatrix.toArray44());
+            this._shaderUniform.setNumberArray(ShaderPredefined.u_M44_V2P, this._viewToProjMatrix.toArray44());
+            this._shaderUniform.setNumberArray(ShaderPredefined.u_M44_W2P, this._worldToProjMatrix.toArray44());
+            this._shaderUniform.setNumberArray(ShaderPredefined.u_M44_W2V, this._worldToViewMatrix.toArray44());
 
             this.begin(gl, camera);
 
@@ -150,9 +150,10 @@ namespace MITOIA {
         public onShaderPreUse(): void {
             let shader = this._renderingNode.material.shader;
 
-            if (shader.hasUniform(ShaderPredefined.u_MatL2P)) this._shaderUniform.setNumberArray(ShaderPredefined.u_MatL2P, this._renderingNode.localToProj.toArray44());
-            if (shader.hasUniform(ShaderPredefined.u_MatL2V)) this._shaderUniform.setNumberArray(ShaderPredefined.u_MatL2V, this._renderingNode.localToView.toArray44());
-            if (shader.hasUniform(ShaderPredefined.u_MatL2W)) this._shaderUniform.setNumberArray(ShaderPredefined.u_MatL2W, this._renderingNode.localToWorld.toArray44());
+            if (shader.hasUniform(ShaderPredefined.u_M33_L2W)) this._shaderUniform.setNumberArray(ShaderPredefined.u_M33_L2W, this._renderingNode.localToWorld.toArray33());
+            if (shader.hasUniform(ShaderPredefined.u_M44_L2P)) this._shaderUniform.setNumberArray(ShaderPredefined.u_M44_L2P, this._renderingNode.localToProj.toArray44());
+            if (shader.hasUniform(ShaderPredefined.u_M44_L2V)) this._shaderUniform.setNumberArray(ShaderPredefined.u_M44_L2V, this._renderingNode.localToView.toArray44());
+            if (shader.hasUniform(ShaderPredefined.u_M44_L2W)) this._shaderUniform.setNumberArray(ShaderPredefined.u_M44_L2W, this._renderingNode.localToWorld.toArray44());
         }
     }
 }
