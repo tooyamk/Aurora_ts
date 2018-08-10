@@ -1,18 +1,19 @@
 namespace MITOIA.ShaderPredefined {
     export const ALPHA_TEST: string = "ALPHA_TEST";
-    export const ALPHA_TEST_FUNC: string = "ALPHA_TEST_FUNC";
-    export const ALPHA_TEST_FUNC_LESS: int = 1;
-    export const ALPHA_TEST_FUNC_EQUAL: int = 2;
-    export const ALPHA_TEST_FUNC_NOTEQUAL: int = 3;
-    export const ALPHA_TEST_FUNC_LEQUAL: int = 4;
-    export const ALPHA_TEST_FUNC_GREATER: int = 5;
-    export const ALPHA_TEST_FUNC_GEQUAL: int = 6;
+    export const ALPHA_TEST_LESS: int = 1;
+    export const ALPHA_TEST_EQUAL: int = 2;
+    export const ALPHA_TEST_NOTEQUAL: int = 3;
+    export const ALPHA_TEST_LEQUAL: int = 4;
+    export const ALPHA_TEST_GREATER: int = 5;
+    export const ALPHA_TEST_GEQUAL: int = 6;
 
     export const LIGHTING: string = "LIGHTING";
     export const LIGHT0: string = "LIGHT0";
 
     export const LIGHT_TYPE0: string = "LIGHT_TYPE0";
     export const LIGHT_TYPE_DIRECTION: int = 1;
+    export const LIGHT_TYPE_POINT: int = 2;
+    export const LIGHT_TYPE_SPOT: int = 3;
 
     export const LIGHTING_SPECULAR: string = "LIGHTING_SPECULAR";
     export const LIGHTING_SPECULAR_NONE: int = 0;
@@ -20,14 +21,22 @@ namespace MITOIA.ShaderPredefined {
     export const LIGHTING_SPECULAR_BANK_BRDF: int = 2;
     export const LIGHTING_SPECULAR_BLINN_PHONE: int = 3;
 
+    export const u_LightColor0: string = "u_LightColor0";
+    export const u_LightPosW0: string = "u_LightPosW0";
+    export const u_LightDirW0: string = "u_LightDirW0";
+
     /**
-     * General:
-     ** v0, v1, v2 = color.
-     * 
      * Direction Light:
-     ** v4,v5,v6 = lighting world dir
+     ** none.
+     *
+     * Point Light:
+     ** v0 = range.
+     *
+     * Spot Light:
+     ** v0 = range.
+     ** v1 = cos(spotAngle * 0.5).
      */
-    export const u_LightAtrrib0: string = "u_LightAtrrib0";
+    export const u_LightAttrib0: string = "u_LightAtrrib0";
 
     export const u_LighitngSpecularShininess = "u_LighitngSpecularShininess";
 
@@ -35,6 +44,9 @@ namespace MITOIA.ShaderPredefined {
 
     export const DIFFUSE_TEX: string = "DIFFUSE_TEX";
     export const DIFFUSE_COLOR: string = "DIFFUSE_COLOR";
+
+    export const SPECULAR_TEX: string = "SPECULAR_TEX";
+    export const SPECULAR_COLOR: string = "SPECULAR_COLOR";
 
     export const a_Position: string = "a_Position";
     export const a_Normal: string = "a_Normal";
@@ -52,11 +64,15 @@ namespace MITOIA.ShaderPredefined {
     export const u_M44_L2P: string = "u_M44_L2P";
 
     export const u_DiffuseColor: string = "u_DiffuseColor";
-
-    export const u_Light0Pos: string = "u_Light0Pos";
+    export const u_SpecularColor: string = "u_SpecularColor";
 
     export const u_AlphaTestCompareValue: string = "u_AlphaTestCompareValue";
 
     export const s_Sampler: string = "s_Sampler";
     export const s_DiffuseSampler: string = "s_DiffuseSampler";
+    export const s_SpecularSampler: string = "s_SpecularSampler";
+
+    export const v_TexCoord: string = "v_TexCoord";
+    export const v_NormalW: string = "v_NormalW";
+    export const v_PosW: string = "v_PosW";
 }

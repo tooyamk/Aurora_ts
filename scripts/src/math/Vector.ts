@@ -81,6 +81,12 @@ namespace MITOIA {
             return new Vector3(0, 0, -1);
         }
 
+        public get length(): number {
+            let len = this.x * this.x + this.y * this.y + this.z * this.z;
+            if (len !== 1) len = Math.sqrt(len);
+            return len;
+        }
+
         public clone(): Vector3 {
             return new Vector3(this.x, this.y, this.z);
         }
@@ -108,6 +114,44 @@ namespace MITOIA {
 
         public setFromVector3(vec: Vector3): Vector3 {
             return this.setFromXYZ(vec.x, vec.y, vec.z);
+        }
+
+        public normalize(): Vector3 {
+            let len = this.x * this.x + this.y * this.y + this.z * this.z;
+            if (len !== 1) {
+                len = Math.sqrt(len);
+                this.x /= len;
+                this.y /= len;
+                this.z /= len;
+            }
+
+            return this;
+        }
+
+        public static dot(p1: Vector3, p2: Vector3): number {
+            return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
+        }
+
+        public static cross(p1: Vector3, p2: Vector3, rst: Vector3 = null): Vector3 {
+            let x: number = p1.y * p2.z - p1.z * p2.y;
+            let y: number = p1.z * p2.x - p1.x * p2.z;
+            let z: number = p1.x * p2.y - p1.y * p2.x;
+            return rst ? rst.setFromXYZ(x, y, z) : new Vector3(x, y, z);
+        }
+
+        public static angleBetween(p1: Vector3, p2: Vector3, clamp: boolean = false): number {
+            var len: number = p1.length * p2.length;
+            var val: number = p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
+            if (len !== 1) val /= len;
+
+            if (clamp) {
+                if (val > 1) {
+                    val = 1;
+                } else if (val < -1) {
+                    val = -1;
+                }
+            }
+            return Math.acos(val);
         }
     }
 

@@ -1,11 +1,13 @@
+/// <reference path="../General.ts" />
+
 namespace MITOIA.BuiltinShader.PostProcess.Default {
     export const VERTEX: string = `
 attribute vec2 ${ShaderPredefined.a_Position};
 attribute vec2 ${ShaderPredefined.a_TexCoord};
-varying vec2 v_uv;
+varying vec2 ${ShaderPredefined.v_TexCoord};
 
 void main(void) {
-    v_uv = ${ShaderPredefined.a_TexCoord};
+    ${ShaderPredefined.v_TexCoord} = ${ShaderPredefined.a_TexCoord};
     gl_Position = vec4(${ShaderPredefined.a_Position}, 0, 1);
 }`;
 
@@ -13,9 +15,9 @@ void main(void) {
 ${General.PRECISION_HEAD}
 
 uniform sampler2D ${ShaderPredefined.s_Sampler};
-varying vec2 v_uv;
+varying vec2 ${ShaderPredefined.v_TexCoord};
 
 void main(void) {
-    gl_FragColor = texture2D(${ShaderPredefined.s_Sampler}, v_uv);
+    gl_FragColor = texture2D(${ShaderPredefined.s_Sampler}, ${ShaderPredefined.v_TexCoord});
 }`;
 }

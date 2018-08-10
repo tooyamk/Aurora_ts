@@ -1,9 +1,11 @@
+/// <reference path="../../ShaderPredefined.ts" />
+
 namespace MITOIA.BuiltinShader.Lib {
     export const ALPHA_TEST_HEADER: ShaderLib = {
         name:"_AlphaTest_Header",
         source: `
-#if defined(${ShaderPredefined.ALPHA_TEST}) && defined(${ShaderPredefined.ALPHA_TEST_FUNC})
-uniform float ${ShaderPredefined.u_AlphaTestCompareValue};
+#ifdef ${ShaderPredefined.ALPHA_TEST}
+#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(float, ${ShaderPredefined.u_AlphaTestCompareValue})
 #endif
 `};
 
@@ -14,22 +16,18 @@ uniform float ${ShaderPredefined.u_AlphaTestCompareValue};
         name:"_AlphaTest",
         source: `
 #ifdef ${ShaderPredefined.ALPHA_TEST}
-    #ifdef ${ShaderPredefined.ALPHA_TEST_FUNC}
-        #if ${ShaderPredefined.ALPHA_TEST_FUNC} == ${ShaderPredefined.ALPHA_TEST_FUNC_LESS}
-            if (\${0} < ${ShaderPredefined.u_AlphaTestCompareValue}) discard;
-        #elif ${ShaderPredefined.ALPHA_TEST_FUNC} == ${ShaderPredefined.ALPHA_TEST_FUNC_EQUAL}
-            if (\${0} == ${ShaderPredefined.u_AlphaTestCompareValue}) discard;
-        #elif ${ShaderPredefined.ALPHA_TEST_FUNC} == ${ShaderPredefined.ALPHA_TEST_FUNC_NOTEQUAL}
-            if (\${0} != ${ShaderPredefined.u_AlphaTestCompareValue}) discard;
-        #elif ${ShaderPredefined.ALPHA_TEST_FUNC} == ${ShaderPredefined.ALPHA_TEST_FUNC_LEQUAL}
-            if (\${0} <= ${ShaderPredefined.u_AlphaTestCompareValue}) discard;
-        #elif ${ShaderPredefined.ALPHA_TEST_FUNC} == ${ShaderPredefined.ALPHA_TEST_FUNC_GREATER}
-            if (\${0} > ${ShaderPredefined.u_AlphaTestCompareValue}) discard;
-        #elif ${ShaderPredefined.ALPHA_TEST_FUNC} == ${ShaderPredefined.ALPHA_TEST_FUNC_GEQUAL}
-            if (\${0} >= ${ShaderPredefined.u_AlphaTestCompareValue}) discard;
-        #endif
-    #else
-        if (\${0} < 1.0) discard;
+    #if ${ShaderPredefined.ALPHA_TEST} == ${ShaderPredefined.ALPHA_TEST_LESS}
+        if (\${0} < ${ShaderPredefined.u_AlphaTestCompareValue}) discard;
+    #elif ${ShaderPredefined.ALPHA_TEST} == ${ShaderPredefined.ALPHA_TEST_EQUAL}
+        if (\${0} == ${ShaderPredefined.u_AlphaTestCompareValue}) discard;
+    #elif ${ShaderPredefined.ALPHA_TEST} == ${ShaderPredefined.ALPHA_TEST_NOTEQUAL}
+        if (\${0} != ${ShaderPredefined.u_AlphaTestCompareValue}) discard;
+    #elif ${ShaderPredefined.ALPHA_TEST} == ${ShaderPredefined.ALPHA_TEST_LEQUAL}
+        if (\${0} <= ${ShaderPredefined.u_AlphaTestCompareValue}) discard;
+    #elif ${ShaderPredefined.ALPHA_TEST} == ${ShaderPredefined.ALPHA_TEST_GREATER}
+        if (\${0} > ${ShaderPredefined.u_AlphaTestCompareValue}) discard;
+    #elif ${ShaderPredefined.ALPHA_TEST} == ${ShaderPredefined.ALPHA_TEST_GEQUAL}
+        if (\${0} >= ${ShaderPredefined.u_AlphaTestCompareValue}) discard;
     #endif
 #endif
 `};

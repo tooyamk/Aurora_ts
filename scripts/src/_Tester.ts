@@ -17,11 +17,13 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_TexCoord, uvBuffer);
     assetStore.drawIndexBuffer = indexBuffer;
 
-    assetStore = MITOIA.Geometries.createSphere(100, 100, true);
-    assetStore.addVertexSource(MITOIA.MeshAssetHelper.createLerpNormals(assetStore.drawIndexSource.data, assetStore.vertexSources.get(MITOIA.ShaderPredefined.a_Position).data));
+    assetStore = MITOIA.Geometries.createSphere(100, 100, true, true);
 
     let mesh = node.addComponent(new MITOIA.RenderableMesh());
     mesh.assetStore = assetStore;
+
+    console.log(shaderStore.getShaderSource(vert, MITOIA.GLShaderType.VERTEX_SHADER).source);
+    console.log(shaderStore.getShaderSource(vert, MITOIA.GLShaderType.FRAGMENT_SHADER).source);
 
     let mat = new MITOIA.Material(new MITOIA.Shader(gl, shaderStore.getShaderSource(vert, MITOIA.GLShaderType.VERTEX_SHADER), shaderStore.getShaderSource(frag, MITOIA.GLShaderType.FRAGMENT_SHADER)));
     //mat.uniforms.setFloat("u_color", -0.1, 1, 0, 0.2);
@@ -45,8 +47,10 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     mat.defines.setDefine(MITOIA.ShaderPredefined.LIGHTING, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_TEX, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_COLOR, true);
-    mat.defines.setDefine(MITOIA.ShaderPredefined.LIGHTING_SPECULAR, MITOIA.ShaderPredefined.LIGHTING_SPECULAR_PHONE);
     mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
+    //mat.defines.setDefine(MITOIA.ShaderPredefined.SPECULAR_COLOR, true);
+    //mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_SpecularColor, 0.5, 0, 0);
+    mat.defines.setDefine(MITOIA.ShaderPredefined.LIGHTING_SPECULAR, MITOIA.ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
     /*
     mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST, true);
     mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST_FUNC, true);
@@ -73,10 +77,6 @@ window.addEventListener("DOMContentLoaded", () => {
         return false;
     }
 
-    let n: number = -1.6;
-    n |= 0;
-
-
     let quat = new MITOIA.Quaternion();
     quat.append(MITOIA.Quaternion.createFromEulerX(Math.PI * 0.25));
     //quat.append(MITOIA.Quaternion.createFromEulerZ(Math.PI * 0.25));
@@ -93,11 +93,12 @@ window.addEventListener("DOMContentLoaded", () => {
     console.log(MITOIA.Version, gl.version, gl.versionFullInfo);
 
     let shaderStore = new MITOIA.ShaderStore();
+    shaderStore.addLibrary(MITOIA.BuiltinShader.General.SOURCES);
     shaderStore.addLibrary(MITOIA.BuiltinShader.Lib.ALPHA_TEST_FRAG_SOURCES);
     shaderStore.addLibrary(MITOIA.BuiltinShader.Lib.LIGHTING_SOURCES);
 
-    shaderStore.addSource("mesh", MITOIA.BuiltinShader.Mesh.VERTEX, MITOIA.GLShaderType.VERTEX_SHADER);
-    shaderStore.addSource("mesh", MITOIA.BuiltinShader.Mesh.FRAGMENT, MITOIA.GLShaderType.FRAGMENT_SHADER);
+    shaderStore.addSource("mesh", MITOIA.BuiltinShader.DefaultMesh.VERTEX, MITOIA.GLShaderType.VERTEX_SHADER);
+    shaderStore.addSource("mesh", MITOIA.BuiltinShader.DefaultMesh.FRAGMENT, MITOIA.GLShaderType.FRAGMENT_SHADER);
     
     let worldNode = new MITOIA.Node();
     let model1Node = new MITOIA.Node();
@@ -109,9 +110,10 @@ window.addEventListener("DOMContentLoaded", () => {
     cameraNode.setParent(worldNode);
     lightNode.setParent(worldNode);
 
-    let light = lightNode.addComponent(new MITOIA.DirectionLight());
+    let light = lightNode.addComponent(new MITOIA.PointLight());
+    //light.spotAngle = 8 * Math.PI / 180;
     light.color.setFromRGB(1, 1, 1);
-    light.intensity = 0.5;
+    light.intensity = 1.0;
 
     let fbo = new MITOIA.GLFrameBuffer(gl, 1000, 1000);
 
@@ -147,11 +149,12 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     model1Node.appendLocalTranslate(0, 0, 500);
-    lightNode.appendLocalTranslate(-500, 0, 500);
+    lightNode.appendLocalTranslate(-500, 0, 0);
+    lightNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI * 0.25));
 
     createModel(model1Node, gl, shaderStore, "mesh", "mesh");
 
-    model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI));
+    //model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI));
 
     let forwardRenderer = new MITOIA.ForwardRenderer();
     let postProcessRenderer = new MITOIA.PostProcessRenderer();

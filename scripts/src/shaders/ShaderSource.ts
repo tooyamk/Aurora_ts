@@ -34,6 +34,8 @@ namespace MITOIA {
                 let splitReg = /==|>|<|!=|>=|<=|&&|\|\|/;
                 let replaceReg = /\s*!*defined\s*\(\s*|\s|\)/g;
                 let noNumberReg = /\D/;
+                let excludeDefines: string[] = [`${BuiltinShader.General.DECLARE_UNIFORM_DEFINE_PREFIX}`, `${BuiltinShader.General.DECLARE_VARYING_DEFINE_PREFIX}`];
+                let numExcludeDefines = excludeDefines.length;
 
                 let createReg = (name: string) => {
                     searchRegs.push(new RegExp("#" + name + "[  ]+\\S+"));
@@ -46,7 +48,17 @@ namespace MITOIA {
                 createReg("ifndef");
 
                 let addDefine = (name: string) => {
-                    if (!ShaderSource.SYS_DEFINES.has(name)) op.add(name);
+                    if (!ShaderSource.SYS_DEFINES.has(name)) {
+                        if (name.charAt(0) === '_') {
+                            for (let i = 0; i < numExcludeDefines; ++i) {
+                                if (name.indexOf(excludeDefines[i]) == 0) {
+                                    return;
+                                }
+                            }
+                        }
+
+                        op.add(name);
+                    }
                 }
 
                 let regsLen = searchRegs.length;

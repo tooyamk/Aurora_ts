@@ -1,5 +1,5 @@
 namespace MITOIA.Geometries {
-    export function createSphere(radius: number, segments: uint = 4, generateTexCoords: Boolean = true): AssetStore {
+    export function createSphere(radius: number, segments: uint = 4, generateTexCoords: boolean = true, generateNormals: boolean = false): AssetStore {
         if (radius < 0) radius = 0;
         if (segments < 4) segments = 4;
 
@@ -71,6 +71,8 @@ namespace MITOIA.Geometries {
             let j = index + i;
             drawIndices.push(last, j + 1, j);
         }
+
+        if (generateNormals) assetStore.addVertexSource(MeshAssetHelper.createLerpNormals(drawIndices, vertices));
 
         return assetStore;
     }

@@ -30,7 +30,10 @@ namespace MITOIA {
 
             this._shaderDefines.setDefine(ShaderPredefined.LIGHTING_SPECULAR, ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
 
+            this._shaderUniforms.setNumber(ShaderPredefined.u_AlphaTestCompareValue, 1);
             this._shaderUniforms.setNumber(ShaderPredefined.u_LighitngSpecularShininess, 32);
+            this._shaderUniforms.setNumber(ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
+            this._shaderUniforms.setNumber(ShaderPredefined.u_SpecularColor, 1, 1, 1, 1);
 
             this._renderingQueueCapacity = 100;
             for (let i = 0; i < this._renderingQueueCapacity; ++i) this._renderingQueue[i] = new RenderNode();
@@ -59,7 +62,7 @@ namespace MITOIA {
 
             if (light) {
                 this._shaderDefines.setDefine(ShaderPredefined.LIGHTING, true);
-                light.preRender(this);
+                light.readyRender(this);
             } else {
                 this._shaderDefines.setDefine(ShaderPredefined.LIGHTING, false);
             }
