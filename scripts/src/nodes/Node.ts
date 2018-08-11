@@ -7,6 +7,7 @@ namespace MITOIA {
         protected static _tmpMat: Matrix44 = new Matrix44();
 
         public name: string = "";
+        public layer: uint = 0xFFFFFFFF;
 
         protected _parent: Node = null;
 

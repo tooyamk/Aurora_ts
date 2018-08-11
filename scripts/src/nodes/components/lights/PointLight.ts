@@ -5,13 +5,11 @@ namespace MITOIA {
          */
         public range: number = 1000.0;
 
-        public readyRender(renderer: AbstractRenderer): void {
-            super.readyRender(renderer);
+        public ready(defines: ShaderDefines, uniforms: ShaderUniforms): void {
+            super.ready(defines, uniforms);
             
-            let defines = renderer.shaderDefines;
             defines.setDefine(ShaderPredefined.LIGHT_TYPE0, ShaderPredefined.LIGHT_TYPE_POINT);
 
-            let uniforms = renderer.shaderUniforms;
             uniforms.setNumber(ShaderPredefined.u_LightAttrib0, this.range);
         }
     }

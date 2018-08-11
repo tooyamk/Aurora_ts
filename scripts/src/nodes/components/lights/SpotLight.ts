@@ -7,13 +7,11 @@ namespace MITOIA {
 
         public spotAngle: number = Math.PI / 6.0;
 
-        public readyRender(renderer: AbstractRenderer): void {
-            super.readyRender(renderer);
+        public ready(defines: ShaderDefines, uniforms: ShaderUniforms): void {
+            super.ready(defines, uniforms);
             
-            let defines = renderer.shaderDefines;
             defines.setDefine(ShaderPredefined.LIGHT_TYPE0, ShaderPredefined.LIGHT_TYPE_SPOT);
 
-            let uniforms = renderer.shaderUniforms;
             uniforms.setNumber(ShaderPredefined.u_LightAttrib0, this.range, Math.cos(this.spotAngle * 0.5));
         }
     }

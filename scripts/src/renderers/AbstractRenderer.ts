@@ -1,7 +1,26 @@
 namespace MITOIA {
     export abstract class AbstractRenderer {
-        protected _shaderDefines: ShaderDefines = new ShaderDefines();
-        protected _shaderUniforms: ShaderUniforms = new ShaderUniforms();
+        public isRendering: boolean = false;
+
+        protected _shaderDefines: ShaderDefines = null;
+        protected _shaderUniforms: ShaderUniforms = null;
+
+        protected _lights: AbstractLight[] = null;
+
+        public preRender(shaderDefines: ShaderDefines, shaderUniforms: ShaderUniforms, lights: AbstractLight[]): void {
+            this._shaderDefines = shaderDefines;
+            this._shaderUniforms = shaderUniforms;
+            this._lights = lights;
+        }
+
+        public render(renderingObjects: RenderingObject[], start: int, end: int): void {
+        }
+
+        public postRender(): void {
+            this._shaderDefines = null;
+            this._shaderUniforms = null;
+            this._lights = null;
+        }
 
         public get shaderDefines(): ShaderDefines {
             return this._shaderDefines;
@@ -12,18 +31,6 @@ namespace MITOIA {
         }
 
         public onShaderPreUse(): void {
-        }
-
-        public begin(gl: GL, pass: IRenderPass): void {
-            if (pass.frameBuffer) {
-                pass.frameBuffer.bind();
-                gl.setViewport(0, 0, pass.frameBuffer.width, pass.frameBuffer.height);
-            } else {
-                gl.restoreBackBuffer();
-                gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            }
-
-            gl.clear(pass.clear);
         }
     }
 }

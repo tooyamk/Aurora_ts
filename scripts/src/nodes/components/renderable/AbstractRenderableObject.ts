@@ -1,7 +1,8 @@
-/// <reference path="AbstractNodeComponent.ts" />
+/// <reference path="../AbstractNodeComponent.ts" />
 
 namespace MITOIA {
     export abstract class AbstractRenderableObject extends AbstractNodeComponent {
+        public renderer: AbstractRenderer = null;
         public materials: Material[] = [];
 
         public isReady(): boolean {

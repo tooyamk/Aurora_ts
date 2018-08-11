@@ -64,24 +64,36 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     let img = new Image();
     img.src = getURL("tex1.png");
     img.onload = () => {
-        gl.context.pixelStorei(MITOIA.GL.UNPACK_FLIP_Y_WEBGL, true);
-        tex.upload(0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, img);
-        gl.context.pixelStorei(MITOIA.GL.UNPACK_FLIP_Y_WEBGL, false);
+        var text = document.createElement("canvas");
+        text.width = 512, text.height = 256;
+        //对其绘制文字
+        (function (g) {
+            //设置文字属性
+            g.textBaseline = "middle", g.textAlign = "center";
+            g.font = "128px 楷体";
+            //设置文字渐变
+            g.fillStyle = g.createLinearGradient(0, 0, text.width, 0);
+            g.fillStyle.addColorStop(0, "rgba(255,255,0,0.5)");
+            g.fillStyle.addColorStop(0.5, "rgba(0,255,255,0.5)");
+            g.fillStyle.addColorStop(1, "rgba(255,0,255,0.5)");
+            //绘制文字
+            g.fillText("噶唔热好热哇和日历了", 256, 128);
+        })(text.getContext("2d"))
+
+        //gl.context.pixelStorei(MITOIA.GL.UNPACK_FLIP_Y_WEBGL, true);
+        tex.upload(0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, text);
+        //gl.context.pixelStorei(MITOIA.GL.UNPACK_FLIP_Y_WEBGL, false);
         mat.uniforms.setTexture(MITOIA.ShaderPredefined.s_DiffuseSampler, tex);
         mesh.enabled = true;
     }
+
+    return mesh;
 }
 
 window.addEventListener("DOMContentLoaded", () => {
     document.oncontextmenu = () => {
         return false;
     }
-
-    let quat = new MITOIA.Quaternion();
-    quat.append(MITOIA.Quaternion.createFromEulerX(Math.PI * 0.25));
-    //quat.append(MITOIA.Quaternion.createFromEulerZ(Math.PI * 0.25));
-    let p1 = quat.rotateXYZ(0, 1, 0);
-
     let canvas = <HTMLCanvasElement>document.getElementById("renderCanvas");
     let options: MITOIA.GLOptions = {};
     options.preserveDrawingBuffer = true;
@@ -89,6 +101,8 @@ window.addEventListener("DOMContentLoaded", () => {
     options.stencil = true;
     options.version = 1;
     let gl = new MITOIA.GL(canvas, options);
+
+    let forwardRenderer = new MITOIA.ForwardRenderer();
 
     console.log(MITOIA.Version, gl.version, gl.versionFullInfo);
 
@@ -152,12 +166,11 @@ window.addEventListener("DOMContentLoaded", () => {
     lightNode.appendLocalTranslate(-500, 0, 0);
     lightNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI * 0.25));
 
-    createModel(model1Node, gl, shaderStore, "mesh", "mesh");
+    createModel(model1Node, gl, shaderStore, "mesh", "mesh").renderer = forwardRenderer;
 
     //model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI));
 
-    let forwardRenderer = new MITOIA.ForwardRenderer();
-    let postProcessRenderer = new MITOIA.PostProcessRenderer();
+    let renderingManager = new MITOIA.RenderingManager();
 
     let stretcher = new MITOIA.CanvasAutoStretcher(gl);
 
@@ -177,8 +190,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
         model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI / 180));
 //gl.context.bindTexture(MITOIA.GL.TEXTURE_2D, null);
-        forwardRenderer.render(gl, cam, worldNode, light);
-        postProcessRenderer.render(gl, [pp]);
+        renderingManager.render(gl, cam, worldNode, [light]);
+        renderingManager.postProcess(gl, [pp]);
         //gl.context.flush();
         //gl.clear(null);
 

@@ -3,9 +3,7 @@ namespace MITOIA {
         public readonly color: Color3 = Color3.WHITE;
         public intensity: number = 1.0;
 
-        public readyRender(renderer: AbstractRenderer): void {
-            let uniforms = renderer.shaderUniforms;
-
+        public ready(defines: ShaderDefines, uniforms: ShaderUniforms): void {
             let wm = this.node.readonlyWorldMatrix;
 
             uniforms.setNumber(ShaderPredefined.u_LightColor0, this.color.r * this.intensity, this.color.g * this.intensity, this.color.b * this.intensity);
