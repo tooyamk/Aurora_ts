@@ -624,6 +624,18 @@ namespace MITOIA {
             this.m33 += x * this.m03 + y * this.m13 + z * this.m23;
         }
 
+        public transform33XYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
+            let dstX: number = x * this.m00 + y * this.m10 + z * this.m20;
+            let dstY: number = x * this.m01 + y * this.m11 + z * this.m21;
+            let dstZ: number = x * this.m02 + y * this.m12 + z * this.m22;
+
+            return rst ? rst.setFromXYZ(dstX, dstY, dstZ) : new Vector3(dstX, dstY, dstZ);
+        }
+
+        public transform33Vector3(vec3: Vector3, rst: Vector3 = null): Vector3 {
+            return this.transform33XYZ(vec3.x, vec3.y, vec3.z, rst);
+        }
+
         public transform34XYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
             let dstX: number = x * this.m00 + y * this.m10 + z * this.m20 + this.m30;
             let dstY: number = x * this.m01 + y * this.m11 + z * this.m21 + this.m31;

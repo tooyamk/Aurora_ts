@@ -11,10 +11,10 @@ namespace MITOIA {
 
         protected _parent: Node = null;
 
-        protected _prev: Node = null;
-        protected _next: Node = null;
+        public _prev: Node = null;
+        public _next: Node = null;
 
-        protected _childHead: Node = null;
+        public _childHead: Node = null;
         protected _numChildren: number = 0;
         protected _traversingStack: Node[] = null;
 
@@ -28,7 +28,9 @@ namespace MITOIA {
 
         protected _worldRot: Quaternion = new Quaternion();
         protected _worldMatrix: Matrix44 = new Matrix44();
+        protected _inverseWorldMatrix: Matrix44 = new Matrix44();
         protected _worldMatrixDirty = false;
+        protected _inverseWorldMatrixDirty = false;
         protected _worldRotDirty: number = 0;
         protected _notificationDirty = false;
 
@@ -39,17 +41,25 @@ namespace MITOIA {
             return this._parent;
         }
 
-        public setParent(value: Node, notificationUpdate: boolean = true) {
-            if (this._parent !== value) {
-                if (this._parent) this._parent._removeNode(this);
-                if (value) value._addNode(this);
-                this._parentChanged(notificationUpdate);
+        public addChild(c: Node, notificationUpdate: boolean = true): void {
+            if (c._parent !== this) {
+                if (c._parent) c._parent._removeNode(null);
+                this._addNode(c);
+                c._parentChanged(notificationUpdate);
+            }
+        }
+
+        public removeChild(c: Node, notificationUpdate: boolean = true): void {
+            if (c._parent === this) {
+                this._removeNode(null);
+                c._parentChanged(notificationUpdate);
             }
         }
 
         protected _parentChanged(notificationUpdate: boolean): void {
             this._worldRotDirty = 2;
             this._worldMatrixDirty = true;
+            this._inverseWorldMatrixDirty = true;
             this._doNofificationUpdate(notificationUpdate);
         }
 
@@ -67,19 +77,45 @@ namespace MITOIA {
             return this._worldMatrix;
         }
 
+        public get readonlyInverseWorldMatrix(): Matrix44 {
+            this.updateInverseWorldMatrix();
+            return this._inverseWorldMatrix;
+        }
+
+        [Symbol.iterator]() {
+            let next = this._childHead;
+
+            return {
+                done: false,
+                value: <Node>null,
+                next() {
+                    if (next) {
+                        this.value = next;
+                        next = next._next;
+                    } else {
+                        this.value = null;
+                    }
+                    this.done = this.value === null;
+
+                    return this;
+                }
+            };
+        }
+
+
         /**
          * @returns numChildren.
          */
-        public getAllChildren(rst: Node[], start: uint = 0): uint {
-            if (rst) {
-                let node = this._childHead;
-                while (node) {
-                    rst[start++] = node;
-                    node = node._next;
-                }
+        public getAllChildren(rst: Node[], start: uint = 0): Node[] {
+            rst = rst || [];
+            
+            let node = this._childHead;
+            while (node) {
+                rst[start++] = node;
+                node = node._next;
             }
 
-            return this._numChildren;
+            return rst;
         }
 
         public removeAllChildren(notificationUpdate: boolean = true): void {
@@ -256,6 +292,7 @@ namespace MITOIA {
         protected _receiveNofificationUpdate(worldRotationDirty: boolean): void {
             if (worldRotationDirty) this._worldRotDirty = 2;
             this._worldMatrixDirty = true;
+            this._inverseWorldMatrixDirty = true;
 
             this._nofificationUpdate();
         }
@@ -270,6 +307,7 @@ namespace MITOIA {
             this._localMatrix.m32 = z;
 
             this._worldMatrixDirty = true;
+            this._inverseWorldMatrixDirty = true;
             this._notificationDirty = true;
 
             this._doNofificationUpdate(notificationUpdate);
@@ -283,6 +321,7 @@ namespace MITOIA {
             this._localMatrix.m32 += vec3.z;
 
             this._worldMatrixDirty = true;
+            this._inverseWorldMatrixDirty = true;
 
             this._doNofificationUpdate(notificationUpdate);
         }
@@ -300,7 +339,7 @@ namespace MITOIA {
             this._worldMatrix.m31 = y;
             this._worldMatrix.m32 = z;
 
-            this._wordPositionChanged(notificationUpdate);
+            this._worldPositionChanged(notificationUpdate);
         }
 
         public appendWorldTranslate(x: number = 0, y: number = 0, z: number = 0, notificationUpdate: boolean = true): void {
@@ -308,24 +347,23 @@ namespace MITOIA {
 
             this._worldMatrix.prependTranslate34XYZ(x, y, z);
 
-            this._wordPositionChanged(notificationUpdate);
+            this._worldPositionChanged(notificationUpdate);
         }
 
-        protected _wordPositionChanged(notificationUpdate: boolean): void {
+        protected _worldPositionChanged(notificationUpdate: boolean): void {
             if (this._parent) {
-                let m = Node._tmpMat;
-                if (this._parent._worldMatrix.invert(m)) {
-                    let vec3 = m.transform34XYZ(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32, Node._tmpVec3);
-
-                    this._localMatrix.m30 = vec3.x;
-                    this._localMatrix.m31 = vec3.y;
-                    this._localMatrix.m32 = vec3.z;
-                }
+                let vec3 = this._parent.readonlyInverseWorldMatrix.transform34XYZ(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32, Node._tmpVec3);
+                
+                this._localMatrix.m30 = vec3.x;
+                this._localMatrix.m31 = vec3.y;
+                this._localMatrix.m32 = vec3.z;
             } else {
                 this._localMatrix.m30 = this._worldMatrix.m30;
                 this._localMatrix.m31 = this._worldMatrix.m31;
                 this._localMatrix.m32 = this._worldMatrix.m32;
             }
+
+            this._inverseWorldMatrixDirty = true;
 
             this._doNofificationUpdate(notificationUpdate);
         }
@@ -350,6 +388,7 @@ namespace MITOIA {
             this._localMatrixDirty = true;
             this._worldRotDirty = worldRotDirty;
             this._worldMatrixDirty = true;
+            this._inverseWorldMatrixDirty = true;
 
             this._doNofificationUpdate(notificationUpdate);
         }
@@ -418,6 +457,7 @@ namespace MITOIA {
 
             this._localMatrixDirty = true;
             this._worldMatrixDirty = true;
+            this._inverseWorldMatrixDirty = true;
 
             this._doNofificationUpdate(notificationUpdate);
         }
@@ -446,10 +486,12 @@ namespace MITOIA {
         public setWorldMatrix(m: Matrix44, notificationUpdate: boolean = true): void {
             this._worldMatrix.set34FromMatrix(m);
 
-            if (this._parent) {
-                this._parent.updateWorldMatrix();
+            this._worldMatrixDirty = false;
+            this._inverseWorldMatrixDirty = true;
 
-                if (this._worldMatrix.invert(Node._tmpMat)) this._worldMatrix.append34(Node._tmpMat, this._localMatrix);
+            if (this._parent) {
+                this.updateInverseWorldMatrix();
+                this._worldMatrix.append34(this._inverseWorldMatrix, this._localMatrix);
             } else {
                 this._localMatrix.set34FromMatrix(this._worldMatrix);
             }
@@ -458,6 +500,12 @@ namespace MITOIA {
             Node._tmpMat.toQuaternion(this._localRot);
 
             this._localMatrix_worldMatrix_worldRot_Changed(notificationUpdate, 2);
+        }
+
+        public getInverseWorldMatrix(rst: Matrix44 = null): Matrix44 {
+            this.updateInverseWorldMatrix();
+
+            return rst ? rst.set44FromMatrix(this._inverseWorldMatrix) : this._inverseWorldMatrix.clone();
         }
 
         public identity(notificationUpdate: boolean = true): void {
@@ -504,6 +552,16 @@ namespace MITOIA {
                 } else {
                     this._worldMatrix.set34FromMatrix(this._localMatrix);
                 }
+            }
+        }
+
+        public updateInverseWorldMatrix(): void {
+            this.updateWorldMatrix();
+
+            if (this._inverseWorldMatrixDirty) {
+                this._inverseWorldMatrixDirty = false;
+
+                this._worldMatrix.invert(this._inverseWorldMatrix);
             }
         }
 

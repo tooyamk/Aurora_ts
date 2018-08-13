@@ -17,13 +17,14 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_TexCoord, uvBuffer);
     assetStore.drawIndexBuffer = indexBuffer;
 
-    assetStore = MITOIA.Geometries.createSphere(100, 100, true, true);
+    //assetStore = MITOIA.MeshBuilder.createSphere(100, 100, true, true);
+    assetStore = MITOIA.MeshBuilder.createBox(100, 100, 100, 1, 1, 1, true, true);
 
     let mesh = node.addComponent(new MITOIA.RenderableMesh());
     mesh.assetStore = assetStore;
 
-    console.log(shaderStore.getShaderSource(vert, MITOIA.GLShaderType.VERTEX_SHADER).source);
-    console.log(shaderStore.getShaderSource(vert, MITOIA.GLShaderType.FRAGMENT_SHADER).source);
+    //console.log(shaderStore.getShaderSource(vert, MITOIA.GLShaderType.VERTEX_SHADER).source);
+    //console.log(shaderStore.getShaderSource(vert, MITOIA.GLShaderType.FRAGMENT_SHADER).source);
 
     let mat = new MITOIA.Material(new MITOIA.Shader(gl, shaderStore.getShaderSource(vert, MITOIA.GLShaderType.VERTEX_SHADER), shaderStore.getShaderSource(frag, MITOIA.GLShaderType.FRAGMENT_SHADER)));
     //mat.uniforms.setFloat("u_color", -0.1, 1, 0, 0.2);
@@ -36,7 +37,7 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     stencil2.func = MITOIA.GLStencilFunc.ALWAYS;
     //stencil2.ref = 2;
     
-    mat.cullFace = MITOIA.GLCullFace.NONE;
+    mat.cullFace = MITOIA.GLCullFace.BACK;
     mat.depthTest = MITOIA.GLDepthTest.LESS;
     //mat.blend = new MITOIA.GLBlend();
     //mat.blend.func.setSeparate(MITOIA.GLBlendFactorValue.SRC_ALPHA, MITOIA.GLBlendFactorValue.ONE_MINUS_SRC_ALPHA, MITOIA.GLBlendFactorValue.ONE, MITOIA.GLBlendFactorValue.ONE_MINUS_SRC_ALPHA);
@@ -119,10 +120,28 @@ window.addEventListener("DOMContentLoaded", () => {
     let model2Node = new MITOIA.Node();
     let cameraNode = new MITOIA.Node();
     let lightNode = new MITOIA.Node();
-    model1Node.setParent(worldNode);
-    model2Node.setParent(worldNode);
-    cameraNode.setParent(worldNode);
-    lightNode.setParent(worldNode);
+    worldNode.addChild(model1Node);
+    worldNode.addChild(model2Node);
+    worldNode.addChild(cameraNode);
+    worldNode.addChild(lightNode);
+
+    
+
+    let t1 = MITOIA.Timer.utc;
+    for (let i = 0; i < 999999; ++i) {
+        //for (let c of worldNode) {}
+
+        worldNode.foreach(()=>{})
+
+        //let arr: MITOIA.Node[] = [];
+        //worldNode.getAllChildren(arr);
+        //for (let j = 0, n = arr.length; j < n; ++j) {}
+
+        //let node = worldNode._childHead;
+        //while (node) { node = node._next; }
+    }
+    
+    let t2 = MITOIA.Timer.utc - t1;
 
     let light = lightNode.addComponent(new MITOIA.PointLight());
     //light.spotAngle = 8 * Math.PI / 180;
@@ -162,11 +181,18 @@ window.addEventListener("DOMContentLoaded", () => {
         let a = 1;
     }
 
+    let zz = Math.cos(Math.PI * 0.5);
+
     model1Node.appendLocalTranslate(0, 0, 500);
     lightNode.appendLocalTranslate(-500, 0, 0);
     lightNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI * 0.25));
 
-    createModel(model1Node, gl, shaderStore, "mesh", "mesh").renderer = forwardRenderer;
+    let mesh = createModel(model1Node, gl, shaderStore, "mesh", "mesh");
+    mesh.renderer = forwardRenderer;
+    //model1Node.addComponent(new MITOIA.Collider(new MITOIA.BoundingMesh(mesh.assetStore)));
+    model1Node.addComponent(new MITOIA.Collider(new MITOIA.BoundingSphere(null, 100)));
+   // model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerX(Math.PI / 180));
+    let hit = new MITOIA.Ray(new MITOIA.Vector3(0, 0, 490)).cast(worldNode, 0xFFFFFFFF, MITOIA.GLCullFace.NONE);
 
     //model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI));
 

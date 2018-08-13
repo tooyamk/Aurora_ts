@@ -81,6 +81,12 @@ namespace MITOIA {
             return new Vector3(0, 0, -1);
         }
 
+        public setZero(): void {
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+        }
+
         public get length(): number {
             let len = this.x * this.x + this.y * this.y + this.z * this.z;
             if (len !== 1) len = Math.sqrt(len);

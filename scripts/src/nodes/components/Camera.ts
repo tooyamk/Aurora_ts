@@ -46,19 +46,20 @@ namespace MITOIA {
             rst = rst || new Matrix44();
 
             if (this._node) {
-                this._node.getWorldMatrix(rst);
+                this._node.getInverseWorldMatrix(rst);
             } else {
                 rst.identity();
             }
 
-            rst.invert();
             rst.append44(this._projectionMatrix);
 
             return rst;
         }
 
         /**
-		 * foucs (0, 0) = (left, top)
+		 * @param foucs (0, 0) = (left, top).
+         * 
+         * @returns view space ray.
 		 */
         public getRay(screenWidth: number, screenHeight: number, focusX: number, focusY: number, rst: Ray = null): Ray {
             rst = rst || new Ray();

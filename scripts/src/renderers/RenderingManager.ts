@@ -62,7 +62,7 @@ namespace MITOIA {
         public render(gl: GL, camera: Camera, node: Node, lights: AbstractLight[] = null, replaceMaterials: Material[] = null): void {
             if (camera.node) {
                 camera.node.getWorldMatrix(this._cameraWorldMatrix);
-                this._cameraWorldMatrix.invert(this._worldToViewMatrix);
+                camera.node.getInverseWorldMatrix(this._worldToViewMatrix);
             } else {
                 this._cameraWorldMatrix.identity();
                 this._worldToViewMatrix.identity();
@@ -79,7 +79,7 @@ namespace MITOIA {
 
             this.begin(gl, camera);
 
-            this._collectNode(camera.cullingMask, node, replaceMaterials);
+            this._collectNode(node, camera.cullingMask, replaceMaterials);
 
             Sort.Merge.sort(this._renderingQueue, (a: RenderingObject, b: RenderingObject) => {
                 return a.material.renderingPriority < b.material.renderingPriority;
@@ -97,7 +97,7 @@ namespace MITOIA {
             this._renderingQueueLength = 0;
         }
 
-        private _collectNode(cullingMask: uint, node: Node, replaceMaterials: Material[]): void {
+        private _collectNode(node: Node, cullingMask: uint, replaceMaterials: Material[]): void {
             let renderable = node.getComponentByType(AbstractRenderableObject, true);
             if (renderable && renderable.renderer && (node.layer & cullingMask) && renderable.isReady()) {
                 let materials = replaceMaterials ? replaceMaterials : renderable.materials;
@@ -130,9 +130,11 @@ namespace MITOIA {
                 }
             }
 
-            node.foreach(child => {
-                this._collectNode(cullingMask, child, replaceMaterials);
-            });
+            let child = node._childHead;
+            while (child) {
+                this._collectNode(child, cullingMask, replaceMaterials);
+                child = child._next;
+            }
         }
 
         private _renderByQueue(lights: AbstractLight[]): void {
