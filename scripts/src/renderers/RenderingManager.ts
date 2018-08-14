@@ -81,9 +81,11 @@ namespace MITOIA {
 
             this._collectNode(node, camera.cullingMask, replaceMaterials);
 
-            Sort.Merge.sort(this._renderingQueue, (a: RenderingObject, b: RenderingObject) => {
-                return a.material.renderingPriority < b.material.renderingPriority;
-            }, 0, this._renderingQueueLength);
+            if (this._renderingQueueLength > 0) {
+                Sort.Merge.sort(this._renderingQueue, (a: RenderingObject, b: RenderingObject) => {
+                    return a.material.renderingPriority < b.material.renderingPriority;
+                }, 0, this._renderingQueueLength - 1);
+            }
 
             this._renderByQueue(lights);
 

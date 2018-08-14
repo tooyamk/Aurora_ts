@@ -16,7 +16,6 @@ namespace MITOIA.ShaderPredefined {
     export const LIGHT_TYPE_SPOT: int = 3;
 
     export const LIGHTING_SPECULAR: string = "LIGHTING_SPECULAR";
-    export const LIGHTING_SPECULAR_NONE: int = 0;
     export const LIGHTING_SPECULAR_PHONE: int = 1;
     export const LIGHTING_SPECULAR_BANK_BRDF: int = 2;
     export const LIGHTING_SPECULAR_BLINN_PHONE: int = 3;
@@ -39,6 +38,8 @@ namespace MITOIA.ShaderPredefined {
     export const u_LightAttrib0: string = "u_LightAtrrib0";
 
     export const u_LighitngSpecularShininess = "u_LighitngSpecularShininess";
+
+    export const REFLECTION: string = "REFLECTION";
 
     export const u_CamPosW: string = "u_CamPosW";
 
@@ -71,8 +72,12 @@ namespace MITOIA.ShaderPredefined {
     export const s_Sampler: string = "s_Sampler";
     export const s_DiffuseSampler: string = "s_DiffuseSampler";
     export const s_SpecularSampler: string = "s_SpecularSampler";
+    export const s_ReflectionSampler: string = "s_ReflectionSampler";
 
     export const v_TexCoord: string = "v_TexCoord";
     export const v_NormalW: string = "v_NormalW";
     export const v_PosW: string = "v_PosW";
+
+    export const var_NormalW: string = "var_NormalW";
+    export const var_ViewDirW: string = "var_ViewDirW";
 }

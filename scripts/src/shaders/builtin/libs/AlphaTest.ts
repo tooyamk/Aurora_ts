@@ -1,19 +1,21 @@
-/// <reference path="../../ShaderPredefined.ts" />
+/// <reference path="../General.ts" />
 
-namespace MITOIA.BuiltinShader.Lib {
-    export const ALPHA_TEST_HEADER: ShaderLib = {
-        name:"_AlphaTest_Header",
+namespace MITOIA.BuiltinShader.Lib.AlphaTest {
+    const NAME: string = "_AlphaTest";
+
+    export const HEADER: ShaderLib = {
+        name: `${NAME}_Header`,
         source: `
 #ifdef ${ShaderPredefined.ALPHA_TEST}
-#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(float, ${ShaderPredefined.u_AlphaTestCompareValue})
+#include<${General.DECLARE_UNIFORM.name}>(float, ${ShaderPredefined.u_AlphaTestCompareValue})
 #endif
 `};
 
     /**
      * @param alpha float.
      */
-    export const ALPHA_TEST: ShaderLib = {
-        name:"_AlphaTest",
+    export const FRAG: ShaderLib = {
+        name: `${NAME}_Frag`,
         source: `
 #ifdef ${ShaderPredefined.ALPHA_TEST}
     #if ${ShaderPredefined.ALPHA_TEST} == ${ShaderPredefined.ALPHA_TEST_LESS}
@@ -32,5 +34,5 @@ namespace MITOIA.BuiltinShader.Lib {
 #endif
 `};
 
-    export const ALPHA_TEST_FRAG_SOURCES: ShaderLib[] = [ALPHA_TEST_HEADER, ALPHA_TEST];
+    export const SOURCES: ShaderLib[] = [HEADER, FRAG];
 }

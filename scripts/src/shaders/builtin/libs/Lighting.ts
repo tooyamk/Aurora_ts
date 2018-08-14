@@ -1,19 +1,21 @@
-/// <reference path="../../ShaderPredefined.ts" />
+/// <reference path="../General.ts" />
 
-namespace MITOIA.BuiltinShader.Lib {
+namespace MITOIA.BuiltinShader.Lib.Lighting {
+    const NAME: string = "_Lighting";
+
     /**
      * @param normal (vec3).
-     * @param lightingDir (vec3) lightPos - vertexPos.
+     * @param lightingDir (vec3) vertexPos - lightPos.
      */
-    export const LIGHTING_DIFFUSE_FACTOR_FUNC: ShaderLib = {
-        name: "_Lighting_DiffuseFactor",
+    export const DIFFUSE_FACTOR_FUNC: ShaderLib = {
+        name: `${NAME}_DiffuseFactor`,
         source: ``
     };
 
-    export const LIGHTING_DIFFUSE_FACTOR_HEADER: ShaderLib = {
-        name: `${LIGHTING_DIFFUSE_FACTOR_FUNC.name}_Header`,
+    export const DIFFUSE_FACTOR_HEADER: ShaderLib = {
+        name: `${DIFFUSE_FACTOR_FUNC.name}_Header`,
         source: `
-float ${LIGHTING_DIFFUSE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir) {
+float ${DIFFUSE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir) {
 	return max(dot(normal, lightingDir), 0.0);
 }
 `};
@@ -25,15 +27,15 @@ float ${LIGHTING_DIFFUSE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir) {
      * @param diffuseFactor (float).
      * @param shininess (float) default recommend 32.
      */
-    export const LIGHTING_SPECULAR_PHONE_FACTOR_FUNC: ShaderLib = {
-        name: "_Lighting_SpecularPhoneFactor",
+    export const SPECULAR_PHONE_FACTOR_FUNC: ShaderLib = {
+        name: `${NAME}_SpecularPhoneFactor`,
         source: ``
     }; 
 
-    export const LIGHTING_SPECULAR_PHONE_FACTOR_HEADER: ShaderLib = {
-        name: `${LIGHTING_SPECULAR_PHONE_FACTOR_FUNC.name}_Header`,
+    export const SPECULAR_PHONE_FACTOR_HEADER: ShaderLib = {
+        name: `${SPECULAR_PHONE_FACTOR_FUNC.name}_Header`,
         source: `
-float ${LIGHTING_SPECULAR_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, vec3 viewDir, float diffuseFactor, float shininess) {
+float ${SPECULAR_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, vec3 viewDir, float diffuseFactor, float shininess) {
     float df2 = diffuseFactor * diffuseFactor;
     vec3 r = normalize((df2 + df2) * normal - lightingDir);
     return pow(max(dot(viewDir, r), 0.0), shininess);
@@ -46,15 +48,15 @@ float ${LIGHTING_SPECULAR_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir,
      * @param viewDir (vec3) vertexPos - viewPos.
      * @param shininess (float) default recommend 32.
      */
-    export const LIGHTING_SPECULAR_BANK_BRDF_FACTOR_FUNC: ShaderLib = {
-        name: "_Lighting_SpecularBankBRDFFactor",
+    export const SPECULAR_BANK_BRDF_FACTOR_FUNC: ShaderLib = {
+        name: `${NAME}_SpecularBankBRDFFactor`,
         source: ``
     };
 
-    export const LIGHTING_SPECULAR_BANK_BRDF_FACTOR_HEADER: ShaderLib = {
-        name: `${LIGHTING_SPECULAR_BANK_BRDF_FACTOR_FUNC.name}_Header`,
+    export const SPECULAR_BANK_BRDF_FACTOR_HEADER: ShaderLib = {
+        name: `${SPECULAR_BANK_BRDF_FACTOR_FUNC.name}_Header`,
         source: `
-float ${LIGHTING_SPECULAR_BANK_BRDF_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, vec3 viewDir, float shininess) {
+float ${SPECULAR_BANK_BRDF_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, vec3 viewDir, float shininess) {
 	vec3 t = normalize(cross(normal, viewDir));
 	float a = dot(lightingDir, t);
 	float b = dot(viewDir, t);
@@ -69,77 +71,130 @@ float ${LIGHTING_SPECULAR_BANK_BRDF_FACTOR_FUNC.name}(vec3 normal, vec3 lighting
      * @param viewDir (vec3) vertexPos - viewPos.
      * @param shininess (float) default recommend 32.
      */
-    export const LIGHTING_SPECULAR_BLINN_PHONE_FACTOR_FUNC: ShaderLib = {
-        name: "_Lighting_SpecularBlinnPhoneFactor",
+    export const SPECULAR_BLINN_PHONE_FACTOR_FUNC: ShaderLib = {
+        name: `${NAME}_SpecularBlinnPhoneFactor`,
         source: ``
     };
 
-    export const LIGHTING_SPECULAR_BLINN_PHONE_FACTOR_HEADER: ShaderLib = {
-        name: `${LIGHTING_SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}_Header`,
+    export const SPECULAR_BLINN_PHONE_FACTOR_HEADER: ShaderLib = {
+        name: `${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}_Header`,
         source: `
-float ${LIGHTING_SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, vec3 viewDir, float shininess) {
+float ${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, vec3 viewDir, float shininess) {
 	vec3 h = normalize(lightingDir + viewDir);
 	return pow(max(dot(normal, h), 0.0), shininess);
 }
 `};
 
-    export const LIGHTING_HEADER: ShaderLib = {
-        name: "_Light_Header",
+    export const VERT_HEADER: ShaderLib = {
+        name: `${NAME}_VertHeader`,
         source: `
+#ifdef ${ShaderPredefined.LIGHTING}
+
+#include<${General.DECLARE_ATTRIB.name}>(vec3, ${ShaderPredefined.a_Normal})
+#include<${General.DECLARE_UNIFORM.name}>(mat3, ${ShaderPredefined.u_M33_L2W})
+#include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_NormalW})
+
+ #if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_POINT} || ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_SPOT} || defined(${ShaderPredefined.LIGHTING_SPECULAR})
+#include<${General.DECLARE_UNIFORM.name}>(mat4, ${ShaderPredefined.u_M44_L2W})
+#include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_PosW})
+#endif
+
+#endif
+`}
+
+    export const VERT: ShaderLib = {
+        name: `${NAME}_Vert`,
+        source: `
+#ifdef ${ShaderPredefined.LIGHTING}
+
+#ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_PosW}
+    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_PosW}
+    #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_PosW}
+${ShaderPredefined.v_PosW} = (${ShaderPredefined.u_M44_L2W} * vec4(${ShaderPredefined.a_Position}, 1.0)).xyz;
+    #endif
+#endif
+
+#ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_NormalW}
+    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_NormalW}
+    #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_NormalW}
+${ShaderPredefined.v_NormalW} = ${ShaderPredefined.u_M33_L2W} * ${ShaderPredefined.a_Normal};
+    #endif
+#endif
+
+#endif
+`}
+
+    export const FRAG_HEADER: ShaderLib = {
+        name: `${NAME}_FragHeader`,
+        source: `
+#ifdef ${ShaderPredefined.LIGHTING}
+
 struct _Light {
     vec3 color;
     float intensity;
     vec3 specularColor;
 };
-#include<${LIGHTING_DIFFUSE_FACTOR_HEADER.name}>
-#include<${BuiltinShader.General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_NormalW})
+#include<${DIFFUSE_FACTOR_HEADER.name}>
+#include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_NormalW})
 
-#if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_POINT} || ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_SPOT} || ${ShaderPredefined.LIGHTING_SPECULAR} != ${ShaderPredefined.LIGHTING_SPECULAR_NONE}
-#include<${BuiltinShader.General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_PosW})
+#if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_POINT} || ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_SPOT} || defined(${ShaderPredefined.LIGHTING_SPECULAR})
+#include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_PosW})
 #endif
 
-#if ${ShaderPredefined.LIGHTING_SPECULAR} != ${ShaderPredefined.LIGHTING_SPECULAR_NONE}
-#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_CamPosW})
-#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(float, ${ShaderPredefined.u_LighitngSpecularShininess})
+#ifdef ${ShaderPredefined.LIGHTING_SPECULAR}
+#include<${General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_CamPosW})
+#include<${General.DECLARE_UNIFORM.name}>(float, ${ShaderPredefined.u_LighitngSpecularShininess})
     #ifdef ${ShaderPredefined.SPECULAR_TEX}
-#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(sampler2D, ${ShaderPredefined.s_SpecularSampler})
+#include<${General.DECLARE_UNIFORM.name}>(sampler2D, ${ShaderPredefined.s_SpecularSampler})
     #endif
     #ifdef ${ShaderPredefined.SPECULAR_COLOR}
-#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_SpecularColor})
+#include<${General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_SpecularColor})
+    #endif
+
+    #if ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_PHONE}
+#include<${SPECULAR_PHONE_FACTOR_HEADER.name}>
+    #elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_BANK_BRDF}
+#include<${SPECULAR_BANK_BRDF_FACTOR_HEADER.name}>
+    #elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE}
+#include<${SPECULAR_BLINN_PHONE_FACTOR_HEADER.name}>
     #endif
 #endif
 
-#if ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_PHONE}
-#include<${LIGHTING_SPECULAR_PHONE_FACTOR_HEADER.name}>
-#elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_BANK_BRDF}
-#include<${LIGHTING_SPECULAR_BANK_BRDF_FACTOR_HEADER.name}>
-#elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE}
-#include<${LIGHTING_SPECULAR_BLINN_PHONE_FACTOR_HEADER.name}>
-#endif
-
-#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_LightColor0})
+#include<${General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_LightColor0})
 
 #if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_DIRECTION}
-#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_LightDirW0})
+#include<${General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_LightDirW0})
 #elif ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_POINT}
-#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_LightPosW0})
-#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(vec4, ${ShaderPredefined.u_LightAttrib0})
+#include<${General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_LightPosW0})
+#include<${General.DECLARE_UNIFORM.name}>(vec4, ${ShaderPredefined.u_LightAttrib0})
 #elif ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_SPOT}
-#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_LightDirW0})
-#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_LightPosW0})
-#include<${BuiltinShader.General.DECLARE_UNIFORM.name}>(vec4, ${ShaderPredefined.u_LightAttrib0})
+#include<${General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_LightDirW0})
+#include<${General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_LightPosW0})
+#include<${General.DECLARE_UNIFORM.name}>(vec4, ${ShaderPredefined.u_LightAttrib0})
+#endif
+
 #endif
 `};
 
     /**
      * @param (vec2) specularTex uv.
      */
-    export const LIGHTING_FRAG: ShaderLib = {
-        name: "_Light_Frag",
+    export const FRAG: ShaderLib = {
+        name: `${NAME}_Frag`,
         source: `
+#ifdef ${ShaderPredefined.LIGHTING}
+
 _Light _lightingInfo;
 vec3 _lightingDirW;
 _lightingInfo.color = ${ShaderPredefined.u_LightColor0};
+
+#ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_NormalW}
+#include<${General.DECLARE_TEMP_VAR.name}>(vec3, ${ShaderPredefined.var_NormalW})
+#endif
+
+#ifdef ${ShaderPredefined.LIGHTING_SPECULAR}
+#include<${General.DECLARE_TEMP_VAR.name}>(vec3, ${ShaderPredefined.var_ViewDirW})
+#endif
 
 #if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_DIRECTION}
 _lightingDirW = ${ShaderPredefined.u_LightDirW0};
@@ -166,42 +221,50 @@ if (_lightingInfo.intensity == 0.0) {
     _lightingInfo.color = vec3(0.0);
     _lightingInfo.specularColor = vec3(0.0);
 } else {
-    vec3 nrm = normalize(${ShaderPredefined.v_NormalW});
-    _lightingInfo.color *= ${LIGHTING_DIFFUSE_FACTOR_FUNC.name}(nrm, _lightingDirW);
-
-#if ${ShaderPredefined.LIGHTING_SPECULAR} != ${ShaderPredefined.LIGHTING_SPECULAR_NONE}
-    vec3 viewDirW = normalize(${ShaderPredefined.v_PosW} - ${ShaderPredefined.u_CamPosW});
+#ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_NormalW}
+#define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_NormalW}
+    ${ShaderPredefined.var_NormalW} = normalize(${ShaderPredefined.v_NormalW});
 #endif
 
-#if ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_NONE}
-    _lightingInfo.specularColor = vec3(0.0);
-#elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_PHONE}
-    _lightingInfo.specularColor = vec3(${LIGHTING_SPECULAR_PHONE_FACTOR_FUNC.name}(nrm, _lightingDirW, viewDirW, _lightingInfo.diffuseFactor, ${ShaderPredefined.u_LighitngSpecularShininess}));
-#elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_BANK_BRDF}
-    _lightingInfo.specularColor = vec3(${LIGHTING_SPECULAR_BANK_BRDF_FACTOR_FUNC.name}(nrm, _lightingDirW, viewDirW, ${ShaderPredefined.u_LighitngSpecularShininess}));
-#elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE}
-    _lightingInfo.specularColor = vec3(${LIGHTING_SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(nrm, _lightingDirW, viewDirW, ${ShaderPredefined.u_LighitngSpecularShininess}));
-#endif
+    _lightingInfo.color *= ${DIFFUSE_FACTOR_FUNC.name}(${ShaderPredefined.var_NormalW}, _lightingDirW);
 
-#if ${ShaderPredefined.LIGHTING_SPECULAR} != ${ShaderPredefined.LIGHTING_SPECULAR_NONE}
+#ifdef ${ShaderPredefined.LIGHTING_SPECULAR}
+    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_ViewDirW}
+    #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_ViewDirW}
+    ${ShaderPredefined.var_ViewDirW} = normalize(${ShaderPredefined.v_PosW} - ${ShaderPredefined.u_CamPosW});
+    #endif
+
+    #if ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_PHONE}
+    _lightingInfo.specularColor = vec3(${SPECULAR_PHONE_FACTOR_FUNC.name}(${ShaderPredefined.var_NormalW}, _lightingDirW, ${ShaderPredefined.var_ViewDirW}, _lightingInfo.diffuseFactor, ${ShaderPredefined.u_LighitngSpecularShininess}));
+    #elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_BANK_BRDF}
+    _lightingInfo.specularColor = vec3(${SPECULAR_BANK_BRDF_FACTOR_FUNC.name}(${ShaderPredefined.var_NormalW}, _lightingDirW, ${ShaderPredefined.var_ViewDirW}, ${ShaderPredefined.u_LighitngSpecularShininess}));
+    #elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE}
+    _lightingInfo.specularColor = vec3(${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(${ShaderPredefined.var_NormalW}, _lightingDirW, ${ShaderPredefined.var_ViewDirW}, ${ShaderPredefined.u_LighitngSpecularShininess}));
+    #else
+     _lightingInfo.specularColor = vec3(0.0);
+    #endif
+
     #ifdef ${ShaderPredefined.SPECULAR_TEX}
     _lightingInfo.specularColor *= texture2D(${ShaderPredefined.s_DiffuseSampler}, \${0}).xyz;
     #endif
+
     #ifdef ${ShaderPredefined.SPECULAR_COLOR}
     _lightingInfo.specularColor *= ${ShaderPredefined.u_SpecularColor};
     #endif
 #endif
 }
+
+#endif
 `};
 
-    export const LIGHTING_DIFFUSE_FACTOR_SOURCES: ShaderLib[] = [LIGHTING_DIFFUSE_FACTOR_HEADER, LIGHTING_DIFFUSE_FACTOR_FUNC];
-    export const LIGHTING_SPECULAR_PHONE_FACTOR_SOURCES: ShaderLib[] = [LIGHTING_SPECULAR_PHONE_FACTOR_HEADER, LIGHTING_SPECULAR_PHONE_FACTOR_FUNC];
-    export const LIGHTING_SPECULAR_BANK_BRDF_FACTOR_SOURCES: ShaderLib[] = [LIGHTING_SPECULAR_BANK_BRDF_FACTOR_HEADER, LIGHTING_SPECULAR_BANK_BRDF_FACTOR_FUNC];
-    export const LIGHTING_SPECULAR_BLINN_PHONE_FACTOR_SOURCES: ShaderLib[] = [LIGHTING_SPECULAR_BLINN_PHONE_FACTOR_HEADER, LIGHTING_SPECULAR_BLINN_PHONE_FACTOR_FUNC];
+    export const DIFFUSE_FACTOR_SOURCES: ShaderLib[] = [DIFFUSE_FACTOR_HEADER, DIFFUSE_FACTOR_FUNC];
+    export const SPECULAR_PHONE_FACTOR_SOURCES: ShaderLib[] = [SPECULAR_PHONE_FACTOR_HEADER, SPECULAR_PHONE_FACTOR_FUNC];
+    export const SPECULAR_BANK_BRDF_FACTOR_SOURCES: ShaderLib[] = [SPECULAR_BANK_BRDF_FACTOR_HEADER, SPECULAR_BANK_BRDF_FACTOR_FUNC];
+    export const SPECULAR_BLINN_PHONE_FACTOR_SOURCES: ShaderLib[] = [SPECULAR_BLINN_PHONE_FACTOR_HEADER, SPECULAR_BLINN_PHONE_FACTOR_FUNC];
 
-    export const LIGHTING_SOURCES: ShaderLib[] = LIGHTING_DIFFUSE_FACTOR_SOURCES.
-        concat(LIGHTING_SPECULAR_PHONE_FACTOR_SOURCES).
-        concat(LIGHTING_SPECULAR_BANK_BRDF_FACTOR_SOURCES).
-        concat(LIGHTING_SPECULAR_BLINN_PHONE_FACTOR_SOURCES).
-        concat(LIGHTING_HEADER, LIGHTING_FRAG);
+    export const SOURCES: ShaderLib[] = DIFFUSE_FACTOR_SOURCES.
+        concat(SPECULAR_PHONE_FACTOR_SOURCES).
+        concat(SPECULAR_BANK_BRDF_FACTOR_SOURCES).
+        concat(SPECULAR_BLINN_PHONE_FACTOR_SOURCES).
+        concat(VERT_HEADER, VERT, FRAG_HEADER, FRAG);
 }

@@ -26,7 +26,7 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     //console.log(shaderStore.getShaderSource(vert, MITOIA.GLShaderType.VERTEX_SHADER).source);
     //console.log(shaderStore.getShaderSource(vert, MITOIA.GLShaderType.FRAGMENT_SHADER).source);
 
-    let mat = new MITOIA.Material(new MITOIA.Shader(gl, shaderStore.getShaderSource(vert, MITOIA.GLShaderType.VERTEX_SHADER), shaderStore.getShaderSource(frag, MITOIA.GLShaderType.FRAGMENT_SHADER)));
+    let mat = new MITOIA.Material(shaderStore.createShader(gl, vert, frag));
     //mat.uniforms.setFloat("u_color", -0.1, 1, 0, 0.2);
     //mat.uniforms.setNumberArray("u_color", new Int32Array([1, 1, 0, 1]));
     let stencil = new MITOIA.GLStencil();
@@ -91,6 +91,51 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     return mesh;
 }
 
+function createSkyBox(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.ShaderStore, vert: string, frag: string) {
+    let mesh = node.addComponent(new MITOIA.RenderableMesh());
+    mesh.enabled = false;
+    mesh.assetStore = MITOIA.MeshBuilder.createBox(1000, 1000, 1000, 1, 1, 1, true, true);
+
+    let mat = new MITOIA.Material(shaderStore.createShader(gl, vert, frag));
+    mat.cullFace = MITOIA.GLCullFace.FRONT;
+    mat.depthWrite = false;
+    mat.renderingPriority = -1;
+    mat.defines.setDefine(MITOIA.ShaderPredefined.LIGHTING, false);
+    mat.defines.setDefine(MITOIA.ShaderPredefined.REFLECTION, true);
+
+    mesh.materials[0] = mat;
+
+    let tex = new MITOIA.GLTextureCube(gl);
+    let count = 0;
+
+    let checkFinish = () => {
+        if (++count == 6) {
+            mat.uniforms.setTexture(MITOIA.ShaderPredefined.s_ReflectionSampler, tex);
+            mesh.enabled = true;
+        }
+    }
+
+    let loadImg = (name: string, face: MITOIA.GLTexCubeFace) => {
+        let img = new Image();
+        img.src = getURL("skybox/" + name + ".jpg");
+        img.onload = () => {
+            gl.context.pixelStorei(MITOIA.GL.UNPACK_FLIP_Y_WEBGL, true);
+            tex.upload(face, 0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, img);
+            gl.context.pixelStorei(MITOIA.GL.UNPACK_FLIP_Y_WEBGL, false);
+            checkFinish();
+        }
+    }
+
+    loadImg("nx", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_X);
+    loadImg("ny", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_Y);
+    loadImg("nz", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_Z);
+    loadImg("px", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_X);
+    loadImg("py", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_Y);
+    loadImg("pz", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_Z);
+
+    return mesh;
+}
+
 window.addEventListener("DOMContentLoaded", () => {
     document.oncontextmenu = () => {
         return false;
@@ -108,18 +153,18 @@ window.addEventListener("DOMContentLoaded", () => {
     console.log(MITOIA.Version, gl.version, gl.versionFullInfo);
 
     let shaderStore = new MITOIA.ShaderStore();
-    shaderStore.addLibrary(MITOIA.BuiltinShader.General.SOURCES);
-    shaderStore.addLibrary(MITOIA.BuiltinShader.Lib.ALPHA_TEST_FRAG_SOURCES);
-    shaderStore.addLibrary(MITOIA.BuiltinShader.Lib.LIGHTING_SOURCES);
+    shaderStore.addBuiltinLibraries();
 
     shaderStore.addSource("mesh", MITOIA.BuiltinShader.DefaultMesh.VERTEX, MITOIA.GLShaderType.VERTEX_SHADER);
     shaderStore.addSource("mesh", MITOIA.BuiltinShader.DefaultMesh.FRAGMENT, MITOIA.GLShaderType.FRAGMENT_SHADER);
     
     let worldNode = new MITOIA.Node();
+    let skyNode = new MITOIA.Node();
     let model1Node = new MITOIA.Node();
     let model2Node = new MITOIA.Node();
     let cameraNode = new MITOIA.Node();
     let lightNode = new MITOIA.Node();
+    worldNode.addChild(skyNode);
     worldNode.addChild(model1Node);
     worldNode.addChild(model2Node);
     worldNode.addChild(cameraNode);
@@ -128,21 +173,6 @@ window.addEventListener("DOMContentLoaded", () => {
     
 
     let t1 = MITOIA.Timer.utc;
-    for (let i = 0; i < 999999; ++i) {
-        //for (let c of worldNode) {}
-
-        worldNode.foreach(()=>{})
-
-        //let arr: MITOIA.Node[] = [];
-        //worldNode.getAllChildren(arr);
-        //for (let j = 0, n = arr.length; j < n; ++j) {}
-
-        //let node = worldNode._childHead;
-        //while (node) { node = node._next; }
-    }
-    
-    let t2 = MITOIA.Timer.utc - t1;
-
     let light = lightNode.addComponent(new MITOIA.PointLight());
     //light.spotAngle = 8 * Math.PI / 180;
     light.color.setFromRGB(1, 1, 1);
@@ -181,8 +211,6 @@ window.addEventListener("DOMContentLoaded", () => {
         let a = 1;
     }
 
-    let zz = Math.cos(Math.PI * 0.5);
-
     model1Node.appendLocalTranslate(0, 0, 500);
     lightNode.appendLocalTranslate(-500, 0, 0);
     lightNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI * 0.25));
@@ -192,6 +220,10 @@ window.addEventListener("DOMContentLoaded", () => {
     //model1Node.addComponent(new MITOIA.Collider(new MITOIA.BoundingMesh(mesh.assetStore)));
     model1Node.addComponent(new MITOIA.Collider(new MITOIA.BoundingSphere(null, 100)));
    // model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerX(Math.PI / 180));
+
+    createSkyBox(skyNode, gl, shaderStore, "mesh", "mesh").renderer = forwardRenderer;
+
+
     let hit = new MITOIA.Ray(new MITOIA.Vector3(0, 0, 490)).cast(worldNode, 0xFFFFFFFF, MITOIA.GLCullFace.NONE);
 
     //model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI));

@@ -54,5 +54,41 @@ varying \${0} \${1};
 #endif
 `};
 
-    export const SOURCES: ShaderLib[] = [DECLARE_ATTRIB, DECLARE_UNIFORM, DECLARE_VARYING];
+    export const DECLARE_TEMP_VAR_PREFIX: string = "_DECLARE_TMP_VAR_";
+
+    /**
+     * @param type
+     * @param name
+     */
+    export const DECLARE_TEMP_VAR: ShaderLib = {
+        name: "_DECLARE_TMP_VAR",
+        source: `
+#ifndef ${DECLARE_VARYING_DEFINE_PREFIX}\${1}
+#define ${DECLARE_VARYING_DEFINE_PREFIX}\${1}
+\${0} \${1};
+#endif
+`};
+
+    export const ASSIGNMENT_PREFIX: string = "_ASSIGNMENT_";
+
+    /**
+     * @param diffuseColor (vec4).
+     */
+    export const FINAL_COLOR: ShaderLib = {
+        name: "_FINAL_COLOR",
+        source: `
+#ifdef ${ShaderPredefined.LIGHTING}
+    #ifdef ${ShaderPredefined.REFLECTION}
+    _lightingInfo.specularColor *= _reflectColor.xyz;
+    #endif
+
+    \${0}.xyz = (\${0}.xyz * _lightingInfo.color + _lightingInfo.specularColor) * _lightingInfo.intensity;
+#else
+    #ifdef ${ShaderPredefined.REFLECTION}
+    \${0}.xyz = _reflectColor.xyz;
+    #endif
+#endif
+`};
+
+    export const SOURCES: ShaderLib[] = [DECLARE_ATTRIB, DECLARE_UNIFORM, DECLARE_VARYING, DECLARE_TEMP_VAR, FINAL_COLOR];
 }

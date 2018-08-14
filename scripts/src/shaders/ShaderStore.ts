@@ -39,6 +39,13 @@ namespace MITOIA {
             }
         }
 
+        public addBuiltinLibraries(): void {
+            this.addLibrary(BuiltinShader.General.SOURCES);
+            this.addLibrary(BuiltinShader.Lib.AlphaTest.SOURCES);
+            this.addLibrary(BuiltinShader.Lib.Lighting.SOURCES);
+            this.addLibrary(BuiltinShader.Lib.Reflection.SOURCES);
+        }
+
         private _addLibrary(name: string, source: string): void {
             if (name && name.length > 0 && source && source.length > 0) {
                 this._libs[name] = this.doInclude(ShaderSource.deleteUnnecessaryContent(source));
@@ -52,6 +59,12 @@ namespace MITOIA {
 
         public createShaderSource(source: string): ShaderSource {
             return new ShaderSource(this.doInclude(ShaderSource.deleteUnnecessaryContent(source)), false);
+        }
+
+        public createShader(gl: GL, vertName: string, fragName: string): Shader {
+            let vertSrc = this.getShaderSource(vertName, GLShaderType.VERTEX_SHADER);
+            let fragSrc = this.getShaderSource(fragName, GLShaderType.FRAGMENT_SHADER);
+            return vertSrc && fragSrc ? new Shader(gl, vertSrc, fragSrc) : null;
         }
 
         public addSource(name: string, source: string, type: GLShaderType, forceUpdate: boolean = false): ShaderSource {
