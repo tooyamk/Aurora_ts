@@ -98,7 +98,7 @@ vec3 ${CUBIC_FUNC.name}(vec3 normal, vec3 viewDir) {
 vec4 _reflectColor = textureCube(${ShaderPredefined.u_ReflectionSampler}, ${CUBIC_FUNC.name}(${ShaderPredefined.var_ViewDirW}, ${ShaderPredefined.var_NormalW}));
 _reflectColor.xyz *= ${ShaderPredefined.u_ReflectionColor};
 
-#endif 
+#endif
 `};
 
     export const SOURCES: ShaderLib[] = [CUBIC_HEADER, CUBIC_FUNC, VERT_HEADER, VERT, FRAG_HEADER, FRAG];

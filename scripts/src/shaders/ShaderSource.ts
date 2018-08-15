@@ -1,13 +1,14 @@
 namespace MITOIA {
     export class ShaderSource {
-        private static readonly SYS_DEFINES: Set<string> = new Set(["GL_ES", "GL_FRAGMENT_PRECISION_HIGH"]);
+        private static SYS_DEFINES: Set<string> = null;
+        private static EXCLUDE_DEFINES: RegExp = null;
 
         private _source: string;
         private _defines: Set<string> = null;
 
-        constructor(source: string, format: boolean = true) {
+        constructor(source: string, excludeDefines: string[] = null, format: boolean = true) {
             this._source = format ? ShaderSource.deleteUnnecessaryContent(source) : source;
-            this._defines = ShaderSource.parseDefineNames(this._source);
+            this._defines = ShaderSource.parseDefineNames(this._source, excludeDefines);
         }
 
         public get source(): string {
@@ -24,7 +25,15 @@ namespace MITOIA {
             });
         }
 
-        public static parseDefineNames(source: string): Set<string> {
+        private static _init(): void {
+            if (!ShaderSource.SYS_DEFINES) {
+                ShaderSource.SYS_DEFINES = new Set(["GL_ES", "GL_FRAGMENT_PRECISION_HIGH"]);
+                ShaderSource.EXCLUDE_DEFINES = new RegExp(`^(${BuiltinShader.General.DECLARE_UNIFORM_DEFINE_PREFIX}|${BuiltinShader.General.DECLARE_UNIFORM_ARRAY_DEFINE_PREFIX}|${BuiltinShader.General.DECLARE_VARYING_DEFINE_PREFIX}|${BuiltinShader.General.DECLARE_TEMP_VAR_PREFIX})`);
+            }
+        }
+
+        public static parseDefineNames(source: string, excludeDefines: string[]): Set<string> {
+            ShaderSource._init();
             let op = new Set<string>();
             let lines = ("\n" + source + "\n").match(/[\r\n][  ]*#(define|undef|ifdef|ifndef|if|elif)[  ]+[^\r\n\/]*/g);
             if (lines) {
@@ -34,10 +43,29 @@ namespace MITOIA {
                 let splitReg = /==|>|<|!=|>=|<=|&&|\|\|/;
                 let replaceReg = /\s*!*defined\s*\(\s*|\s|\)/g;
                 let noNumberReg = /\D/;
-                let excludeDefines: string[] = [`${BuiltinShader.General.DECLARE_UNIFORM_DEFINE_PREFIX}`,
-                `${BuiltinShader.General.DECLARE_VARYING_DEFINE_PREFIX}`,
-                `${BuiltinShader.General.DECLARE_TEMP_VAR_PREFIX}`];
-                let numExcludeDefines = excludeDefines.length;
+
+                let ext1: Set<string> = null;
+                let ext2: RegExp = null;
+                if (excludeDefines) {
+                    let ext2Str: string = null;
+                    for (let i = 0, n = excludeDefines.length; i < n; ++i) {
+                        let n = excludeDefines[i];
+                        if (n && n.length > 0) {
+                            if (n.charAt(n.length - 1) === "*") {
+                                if (ext2Str) {
+                                    ext2Str += "|" + n;
+                                } else {
+                                    ext2Str = "^(" + n;
+                                }
+                            } else {
+                                if (!ext1) ext1 = new Set();
+                                ext1.add(n);
+                            }
+                        }
+                    }
+
+                    if (ext2Str) ext2 = new RegExp(ext2Str);
+                }
 
                 let createReg = (name: string) => {
                     searchRegs.push(new RegExp("#" + name + "[  ]+\\S+"));
@@ -51,15 +79,11 @@ namespace MITOIA {
 
                 let addDefine = (name: string) => {
                     if (!ShaderSource.SYS_DEFINES.has(name)) {
-                        if (name.charAt(0) === '_') {
-                            for (let i = 0; i < numExcludeDefines; ++i) {
-                                if (name.indexOf(excludeDefines[i]) == 0) {
-                                    return;
-                                }
-                            }
+                        if (ext1 && ext1.has(name)) return;
+                        if (name.search(ShaderSource.EXCLUDE_DEFINES) < 0) {
+                            if (ext2 && name.search(ext2) >= 0) return; 
+                            op.add(name);
                         }
-
-                        op.add(name);
                     }
                 }
 

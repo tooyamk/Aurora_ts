@@ -65,8 +65,8 @@ namespace MITOIA {
             return map[name];
         }
 
-        public createShaderSource(source: string): ShaderSource {
-            return new ShaderSource(this.doInclude(ShaderSource.deleteUnnecessaryContent(source)), false);
+        public createShaderSource(source: string, excludeDefines: string[] = null): ShaderSource {
+            return new ShaderSource(this.doInclude(ShaderSource.deleteUnnecessaryContent(source)), excludeDefines, false);
         }
 
         public createShader(gl: GL, vertName: string, fragName: string): Shader {
@@ -75,12 +75,12 @@ namespace MITOIA {
             return vertSrc && fragSrc ? new Shader(gl, vertSrc, fragSrc) : null;
         }
 
-        public addSource(name: string, source: string, type: GLShaderType, forceUpdate: boolean = false): ShaderSource {
+        public addSource(name: string, source: string, type: GLShaderType, excludeDefines: string[] = null, forceUpdate: boolean = false): ShaderSource {
             let map = type == GLShaderType.VERTEX_SHADER ? this._verts : this._frags;
             let ss = map[name];
             if (ss && !forceUpdate) ss;
 
-            ss = this.createShaderSource(source);
+            ss = this.createShaderSource(source, excludeDefines);
             map[name] = ss;
             return ss;
         }
