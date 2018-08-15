@@ -4,6 +4,9 @@ namespace MITOIA {
         public intensity: number = 1.0;
 
         public ready(defines: ShaderDefines, uniforms: ShaderUniforms): void {
+        }
+
+        protected _generalReady(defines: ShaderDefines, uniforms: ShaderUniforms): void {
             let wm = this.node.readonlyWorldMatrix;
 
             uniforms.setNumber(ShaderPredefined.u_LightColor0, this.color.r * this.intensity, this.color.g * this.intensity, this.color.b * this.intensity);

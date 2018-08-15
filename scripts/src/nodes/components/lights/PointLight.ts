@@ -1,18 +1,43 @@
 namespace MITOIA {
     export class PointLight extends AbstractLight {
-        /**
-         * final attenuation = 1 / (attenuationConstantFactor + attenuationLinearFactor * distance + attenuationExpFactor * distance * distance).
-         */
-        public attenuationConstantFactor = 1.0;
-        public attenuationLinearFactor = 0.01;
-        public attenuationExpFactor = 0.0;
+        
+        protected _attenConstant: number;
+        protected _attenLinear: number;
+        protected _attenQuadratic: number;
+
+        constructor() {
+            super();
+
+            this.setAttenuation(1000.0);
+        }
 
         public ready(defines: ShaderDefines, uniforms: ShaderUniforms): void {
-            super.ready(defines, uniforms);
+            this._generalReady(defines, uniforms);
             
             defines.setDefine(ShaderPredefined.LIGHT_TYPE0, ShaderPredefined.LIGHT_TYPE_POINT);
 
-            uniforms.setNumberArray(ShaderPredefined.u_LightAttrib0, [this.attenuationConstantFactor, this.attenuationLinearFactor, this.attenuationExpFactor]);
+            uniforms.setNumberArray(ShaderPredefined.u_LightAttrib0, [this._attenConstant, this._attenLinear, this._attenQuadratic]);
+        }
+
+        public setAttenuation(radius: number): void;
+        /**
+         * luminosity = 1 / (constant + linear * distance + quadratic * distance * distance).
+         */
+        public setAttenuation(constant: number, linear: number, quadratic: number): void;
+
+        public setAttenuation(...args: any[]): void {
+            if (args.length == 1) {
+                let radius = <number>args[0];
+                this._attenConstant = 1.0;
+                this._attenLinear = 4.5 / radius;
+                this._attenQuadratic = 75.0 / (radius * radius);
+            } else if (args.length == 3) {
+                this._attenConstant = args[0];
+                this._attenLinear = args[1];
+                this._attenQuadratic = args[2];
+            } else {
+                //error
+            }
         }
     }
 }

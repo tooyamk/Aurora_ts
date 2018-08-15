@@ -211,16 +211,16 @@ _lightingInfo.diffuseColor = ${ShaderPredefined.u_LightColor0};
     _lightingInfo.intensity = 1.0 / (${ShaderPredefined.u_LightAttrib0}[0] + ${ShaderPredefined.u_LightAttrib0}[1] * dis + ${ShaderPredefined.u_LightAttrib0}[2] * dis * dis);
 
     #if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_SPOT}
-        float thta = max(0.0, dot(-_lightingDirW, ${ShaderPredefined.u_LightDirW0}));
-        if (_lightingInfo.intensity > 0.0 && thta <= ${ShaderPredefined.u_LightAttrib0}[3]) {
+        float theta = max(0.0, dot(-_lightingDirW, ${ShaderPredefined.u_LightDirW0}));
+        if (_lightingInfo.intensity > 0.0 && theta <= ${ShaderPredefined.u_LightAttrib0}[3]) {
             _lightingInfo.intensity = 0.0;
         } else {
-            _lightingInfo.intensity *= pow(thta, ${ShaderPredefined.u_LightAttrib0}[4]);
+            _lightingInfo.intensity *= pow(theta, ${ShaderPredefined.u_LightAttrib0}[4]);
         }
     #endif
 #endif
 
-if (_lightingInfo.intensity == 0.0) {
+if (_lightingInfo.intensity < 0.00392) {
     _lightingInfo.diffuseColor = vec3(0.0);
     _lightingInfo.specularColor = vec3(0.0);
 } else {

@@ -89,10 +89,6 @@ varying \${0} \${1};
         name: "_FINAL_COLOR",
         source: `
 #ifdef ${ShaderPredefined.LIGHTING}
-    #ifdef ${ShaderPredefined.REFLECTION}
-        //_lightingInfo.specularColor *= _reflectColor.xyz;
-    #endif
-
     \${0}.xyz = (\${0}.xyz * _lightingInfo.ambientColor) + (\${0}.xyz * _lightingInfo.diffuseColor + _lightingInfo.specularColor) * _lightingInfo.intensity;
     #ifdef ${ShaderPredefined.REFLECTION}
         \${0}.xyz += _reflectColor.xyz;

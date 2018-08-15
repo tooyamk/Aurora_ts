@@ -81,7 +81,7 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     mesh.materials[0] = mat;
     mesh.enabled = false;
     mat.defines.setDefine(MITOIA.ShaderPredefined.LIGHTING, true);
-    mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_TEX, true);
+    mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_TEX, false);
     mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_COLOR, true);
     mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1.0);
     //mat.defines.setDefine(MITOIA.ShaderPredefined.SPECULAR_COLOR, true);
@@ -160,7 +160,7 @@ function createSkyBox(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shad
     mat.cullFace = MITOIA.GLCullFace.FRONT;
     mat.depthWrite = false;
     mat.depthTest = MITOIA.GLDepthTest.NONE;
-    //mat.renderingPriority = -1;
+    mat.renderingPriority = -1;
 
     mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_TEX, true);
 
@@ -172,7 +172,7 @@ function createSkyBox(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shad
     let checkFinish = () => {
         if (++count == 6) {
             mat.uniforms.setTexture(MITOIA.ShaderPredefined.u_DiffuseSampler, tex);
-            //mesh.enabled = true;
+            mesh.enabled = true;
         }
     }
 
@@ -231,13 +231,10 @@ window.addEventListener("DOMContentLoaded", () => {
     
 
     let t1 = MITOIA.Timer.utc;
-    let light = lightNode.addComponent(new MITOIA.SpotLight());
-    light.spotAngle = 10 * Math.PI / 180;
+    let light = lightNode.addComponent(new MITOIA.PointLight());
+    //light.spotAngle = 10 * Math.PI / 180;
     light.color.setFromRGB(1, 1, 1);
-    //light.range = 2000;
-    light.attenuationConstantFactor = 1.0;
-    light.attenuationLinearFactor = 0.005;
-    light.attenuationExpFactor = 0.0;
+    light.setAttenuation(2500);
     light.intensity = 1.0;
 
     let fbo = new MITOIA.GLFrameBuffer(gl, 1000, 1000);
@@ -313,6 +310,7 @@ window.addEventListener("DOMContentLoaded", () => {
         }
 
         model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI / 180));
+        //cameraNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerX(Math.PI / 180));
 //gl.context.bindTexture(MITOIA.GL.TEXTURE_2D, null);
         renderingManager.render(gl, cam, worldNode, [light]);
         renderingManager.postProcess(gl, [pp]);
