@@ -1,16 +1,18 @@
 namespace MITOIA {
     export class PointLight extends AbstractLight {
         /**
-         * if range < 0, infinite.
+         * final attenuation = 1 / (attenuationConstantFactor + attenuationLinearFactor * distance + attenuationExpFactor * distance * distance).
          */
-        public range: number = 1000.0;
+        public attenuationConstantFactor = 1.0;
+        public attenuationLinearFactor = 0.01;
+        public attenuationExpFactor = 0.0;
 
         public ready(defines: ShaderDefines, uniforms: ShaderUniforms): void {
             super.ready(defines, uniforms);
             
             defines.setDefine(ShaderPredefined.LIGHT_TYPE0, ShaderPredefined.LIGHT_TYPE_POINT);
 
-            uniforms.setNumber(ShaderPredefined.u_LightAttrib0, this.range);
+            uniforms.setNumberArray(ShaderPredefined.u_LightAttrib0, [this.attenuationConstantFactor, this.attenuationLinearFactor, this.attenuationExpFactor]);
         }
     }
 }

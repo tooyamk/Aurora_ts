@@ -142,7 +142,7 @@ namespace MITOIA {
                 if (generateTexCoords) currentV = i / uvMax;
                 for (let j = 0; j <= segments; ++j) {
                     if (j == segments) rotationY = 0;
-                    rotationY += angleY;
+                    rotationY -= angleY;
                     let x = z * Math.cos(rotationY);
                     let z1 = z * Math.sin(rotationY);
                     vertices.push(x, y, z1);

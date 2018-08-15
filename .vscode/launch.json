@@ -12,7 +12,10 @@
             "cwd": "${workspaceRoot}",
             "webRoot": "${workspaceRoot}",
             "runtimeArgs": [
-                "--enable-unsafe-es3-apis"
+                "--enable-unsafe-es3-apis",
+                "--disable-gpu-program-cache",
+                "--disable-gpu-shader-disk-cache",
+                "--disk-cache-size=1"
             ]
         },
 
@@ -27,7 +30,10 @@
             "cwd": "${workspaceRoot}",
             "webRoot": "${workspaceRoot}",
             "runtimeArgs": [
-                "--enable-unsafe-es3-apis"
+                "--enable-unsafe-es3-apis",
+                "--disable-gpu-program-cache",
+                "--disable-gpu-shader-disk-cache",
+                "--disk-cache-size=1"
             ]
         }
     ]

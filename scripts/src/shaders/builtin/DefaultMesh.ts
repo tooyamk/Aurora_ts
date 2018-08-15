@@ -3,7 +3,9 @@
 /// <reference path="libs/Reflection.ts" />
 
 namespace MITOIA.BuiltinShader.DefaultMesh {
-    export const VERTEX: string = `
+    export const NAME = "_Built-in_DefaultMesh";
+
+    export const VERTEX = `
 attribute vec3 ${ShaderPredefined.a_Position};
 
 #if defined(${ShaderPredefined.DIFFUSE_TEX}) || defined(${ShaderPredefined.SPECULAR_TEX})
@@ -27,11 +29,11 @@ void main(void) {
     gl_Position = ${ShaderPredefined.u_M44_L2P} * vec4(${ShaderPredefined.a_Position}, 1.0);
 }`;
 
-    export const FRAGMENT: string = `
+    export const FRAGMENT = `
 ${General.PRECISION_HEAD}
 
 #if defined(${ShaderPredefined.DIFFUSE_TEX}) || defined(${ShaderPredefined.SPECULAR_TEX})
-#include<${General.DECLARE_UNIFORM.name}>(sampler2D, ${ShaderPredefined.s_DiffuseSampler})
+#include<${General.DECLARE_UNIFORM.name}>(sampler2D, ${ShaderPredefined.u_DiffuseSampler})
 #include<${General.DECLARE_VARYING.name}>(vec2, ${ShaderPredefined.v_TexCoord})
 #endif
 
@@ -45,7 +47,7 @@ ${General.PRECISION_HEAD}
 
 void main(void) {
 #ifdef ${ShaderPredefined.DIFFUSE_TEX}
-    vec4 c = texture2D(${ShaderPredefined.s_DiffuseSampler}, ${ShaderPredefined.v_TexCoord});
+    vec4 c = texture2D(${ShaderPredefined.u_DiffuseSampler}, ${ShaderPredefined.v_TexCoord});
 
     #ifdef ${ShaderPredefined.DIFFUSE_COLOR}
     c *= ${ShaderPredefined.u_DiffuseColor};
@@ -58,8 +60,8 @@ void main(void) {
 
     #include<${Lib.AlphaTest.FRAG.name}>(c.w)
 
-#include<${Lib.Lighting.FRAG.name}>(${ShaderPredefined.v_TexCoord})
 #include<${Lib.Reflection.FRAG.name}>
+#include<${Lib.Lighting.FRAG.name}>(${ShaderPredefined.v_TexCoord})
 
 #include<${General.FINAL_COLOR.name}>(c)
 

@@ -198,8 +198,6 @@ namespace MITOIA {
 
                 this.bind();
 
-                gl.bindBuffer(GL.ARRAY_BUFFER, this._buffer);
-
                 if (data instanceof Array) {
                     gl.bufferData(GL.ARRAY_BUFFER, new Float32Array(data), usage);
                 } else {
@@ -739,9 +737,6 @@ namespace MITOIA {
 
         /**
          * **WebGL Version:** 2.0.
-         * 
-         * ---
-         * @param format In WebGL 1.0 the value must equal internalformat.
          */
         public upload(level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, buffer: AbstractGLBuffer, offset: GLintptr): void;
 
@@ -805,9 +800,6 @@ namespace MITOIA {
 
         /**
          * **WebGL Version:** 2.0.
-         * 
-         * ---
-         * @param format In WebGL 1.0 the value must equal internalformat.
          */
         public upload(face:GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, buffer: AbstractGLBuffer, offset: GLintptr): void;
 

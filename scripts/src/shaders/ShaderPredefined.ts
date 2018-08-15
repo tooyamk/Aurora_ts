@@ -43,11 +43,15 @@ namespace MITOIA.ShaderPredefined {
 
     export const u_CamPosW: string = "u_CamPosW";
 
+    export const AMBIENT_COLOR: string = "AMBIENT_COLOR";
+
     export const DIFFUSE_TEX: string = "DIFFUSE_TEX";
     export const DIFFUSE_COLOR: string = "DIFFUSE_COLOR";
 
     export const SPECULAR_TEX: string = "SPECULAR_TEX";
     export const SPECULAR_COLOR: string = "SPECULAR_COLOR";
+
+    export const REFLECTION_COLOR: string = "REFLECTION_COLOR";
 
     export const a_Position: string = "a_Position";
     export const a_Normal: string = "a_Normal";
@@ -64,15 +68,17 @@ namespace MITOIA.ShaderPredefined {
     export const u_M44_L2W: string = "u_M44_L2W";
     export const u_M44_L2P: string = "u_M44_L2P";
 
+    export const u_AmbientColor: string = "u_AmbientColor";
     export const u_DiffuseColor: string = "u_DiffuseColor";
     export const u_SpecularColor: string = "u_SpecularColor";
+    export const u_ReflectionColor: string = "u_ReflectionColor";
 
     export const u_AlphaTestCompareValue: string = "u_AlphaTestCompareValue";
 
-    export const s_Sampler: string = "s_Sampler";
-    export const s_DiffuseSampler: string = "s_DiffuseSampler";
-    export const s_SpecularSampler: string = "s_SpecularSampler";
-    export const s_ReflectionSampler: string = "s_ReflectionSampler";
+    export const u_Sampler: string = "u_Sampler";
+    export const u_DiffuseSampler: string = "u_DiffuseSampler";
+    export const u_SpecularSampler: string = "u_SpecularSampler";
+    export const u_ReflectionSampler: string = "u_ReflectionSampler";
 
     export const v_TexCoord: string = "v_TexCoord";
     export const v_NormalW: string = "v_NormalW";

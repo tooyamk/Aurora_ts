@@ -27,8 +27,7 @@ namespace MITOIA {
 
         public ready(globalDefines: ShaderDefines): boolean {
             if (this.shader) {
-                this.shader.ready(globalDefines, this.defines);
-                return true;
+                return this.shader.ready(globalDefines, this.defines);
             }
 
             return false;

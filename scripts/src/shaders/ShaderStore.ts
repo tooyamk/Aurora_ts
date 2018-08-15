@@ -46,6 +46,14 @@ namespace MITOIA {
             this.addLibrary(BuiltinShader.Lib.Reflection.SOURCES);
         }
 
+        public addBuiltinShaderSources(): void {
+            this.addSource(BuiltinShader.DefaultMesh.NAME, BuiltinShader.DefaultMesh.VERTEX, GLShaderType.VERTEX_SHADER);
+            this.addSource(BuiltinShader.DefaultMesh.NAME, BuiltinShader.DefaultMesh.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
+
+            this.addSource(BuiltinShader.DefaultSkyBox.NAME, BuiltinShader.DefaultSkyBox.VERTEX, GLShaderType.VERTEX_SHADER);
+            this.addSource(BuiltinShader.DefaultSkyBox.NAME, BuiltinShader.DefaultSkyBox.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
+        }
+
         private _addLibrary(name: string, source: string): void {
             if (name && name.length > 0 && source && source.length > 0) {
                 this._libs[name] = this.doInclude(ShaderSource.deleteUnnecessaryContent(source));

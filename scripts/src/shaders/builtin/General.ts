@@ -39,6 +39,17 @@ uniform \${0} \${1};
 #endif
 `};
 
+    export const DECLARE_UNIFORM_ARRAY_DEFINE_PREFIX: string = "_DECLARE_UNIFORM_ARRAY_";
+
+    export const DECLARE_UNIFORM_ARRAY: ShaderLib = {
+        name: "_DECLARE_UNIFORM_ARRAY",
+        source: `
+#ifndef ${DECLARE_UNIFORM_DEFINE_PREFIX}\${1}
+#define ${DECLARE_UNIFORM_DEFINE_PREFIX}\${1}
+uniform \${0} \${1}[\${2}];
+#endif
+`};
+
     export const DECLARE_VARYING_DEFINE_PREFIX: string = "_DECLARE_VARYING_";
 
     /**
@@ -79,16 +90,19 @@ varying \${0} \${1};
         source: `
 #ifdef ${ShaderPredefined.LIGHTING}
     #ifdef ${ShaderPredefined.REFLECTION}
-    _lightingInfo.specularColor *= _reflectColor.xyz;
+        //_lightingInfo.specularColor *= _reflectColor.xyz;
     #endif
 
-    \${0}.xyz = (\${0}.xyz * _lightingInfo.color + _lightingInfo.specularColor) * _lightingInfo.intensity;
+    \${0}.xyz = (\${0}.xyz * _lightingInfo.ambientColor) + (\${0}.xyz * _lightingInfo.diffuseColor + _lightingInfo.specularColor) * _lightingInfo.intensity;
+    #ifdef ${ShaderPredefined.REFLECTION}
+        \${0}.xyz += _reflectColor.xyz;
+    #endif
 #else
     #ifdef ${ShaderPredefined.REFLECTION}
-    \${0}.xyz = _reflectColor.xyz;
+        \${0}.xyz = _reflectColor.xyz;
     #endif
 #endif
 `};
 
-    export const SOURCES: ShaderLib[] = [DECLARE_ATTRIB, DECLARE_UNIFORM, DECLARE_VARYING, DECLARE_TEMP_VAR, FINAL_COLOR];
+    export const SOURCES: ShaderLib[] = [DECLARE_ATTRIB, DECLARE_UNIFORM, DECLARE_UNIFORM_ARRAY, DECLARE_VARYING, DECLARE_TEMP_VAR, FINAL_COLOR];
 }

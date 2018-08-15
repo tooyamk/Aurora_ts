@@ -34,7 +34,9 @@ namespace MITOIA {
                 let splitReg = /==|>|<|!=|>=|<=|&&|\|\|/;
                 let replaceReg = /\s*!*defined\s*\(\s*|\s|\)/g;
                 let noNumberReg = /\D/;
-                let excludeDefines: string[] = [`${BuiltinShader.General.DECLARE_UNIFORM_DEFINE_PREFIX}`, `${BuiltinShader.General.DECLARE_VARYING_DEFINE_PREFIX}`];
+                let excludeDefines: string[] = [`${BuiltinShader.General.DECLARE_UNIFORM_DEFINE_PREFIX}`,
+                `${BuiltinShader.General.DECLARE_VARYING_DEFINE_PREFIX}`,
+                `${BuiltinShader.General.DECLARE_TEMP_VAR_PREFIX}`];
                 let numExcludeDefines = excludeDefines.length;
 
                 let createReg = (name: string) => {

@@ -1,13 +1,13 @@
 /// <reference path="../General.ts" />
 
 namespace MITOIA.BuiltinShader.Lib.AlphaTest {
-    const NAME: string = "_AlphaTest";
+    export const NAME = "_AlphaTest";
 
     export const HEADER: ShaderLib = {
         name: `${NAME}_Header`,
         source: `
 #ifdef ${ShaderPredefined.ALPHA_TEST}
-#include<${General.DECLARE_UNIFORM.name}>(float, ${ShaderPredefined.u_AlphaTestCompareValue})
+    #include<${General.DECLARE_UNIFORM.name}>(float, ${ShaderPredefined.u_AlphaTestCompareValue})
 #endif
 `};
 

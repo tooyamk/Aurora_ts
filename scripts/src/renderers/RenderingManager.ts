@@ -26,6 +26,8 @@ namespace MITOIA {
             this._shaderUniforms.setNumber(ShaderPredefined.u_LighitngSpecularShininess, 32);
             this._shaderUniforms.setNumber(ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
             this._shaderUniforms.setNumber(ShaderPredefined.u_SpecularColor, 1, 1, 1, 1);
+            this._shaderUniforms.setNumber(ShaderPredefined.u_AmbientColor, 0.1, 0.1, 0.1);
+            this._shaderUniforms.setNumber(ShaderPredefined.u_ReflectionColor, 1, 1, 1, 1);
 
             this._renderingQueueCapacity = 100;
             for (let i = 0; i < this._renderingQueueCapacity; ++i) this._renderingQueue[i] = new RenderingObject();
@@ -47,6 +49,14 @@ namespace MITOIA {
             }
         }
 
+        public get shaderDefines(): ShaderDefines {
+            return this._shaderDefines;
+        }
+
+        public get shaderUniforms(): ShaderUniforms {
+            return this._shaderUniforms;
+        }
+
         public begin(gl: GL, pass: IRenderPass): void {
             if (pass.frameBuffer) {
                 pass.frameBuffer.bind();
@@ -56,6 +66,7 @@ namespace MITOIA {
                 gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
             }
 
+            gl.setDepthWrite(true);
             gl.clear(pass.clear);
         }
 
@@ -179,6 +190,8 @@ namespace MITOIA {
                             this.begin(gl, pp);
 
                             let p = pp.material.use(this._shaderUniforms);
+                            //gl.setDepthWrite(true);
+                            //gl.setDepthWrite(false);
 
                             let atts = p.attributes;
                             for (let i = 0, n = atts.length; i < n; ++i) {

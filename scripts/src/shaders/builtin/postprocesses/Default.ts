@@ -14,10 +14,10 @@ void main(void) {
     export const FRAGMENT: string = `
 ${General.PRECISION_HEAD}
 
-uniform sampler2D ${ShaderPredefined.s_Sampler};
+uniform sampler2D ${ShaderPredefined.u_Sampler};
 varying vec2 ${ShaderPredefined.v_TexCoord};
 
 void main(void) {
-    gl_FragColor = texture2D(${ShaderPredefined.s_Sampler}, ${ShaderPredefined.v_TexCoord});
+    gl_FragColor = texture2D(${ShaderPredefined.u_Sampler}, ${ShaderPredefined.v_TexCoord});
 }`;
 }
