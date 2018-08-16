@@ -53,11 +53,11 @@ namespace MITOIA.ShaderPredefined {
 
     export const REFLECTION_COLOR: string = "REFLECTION_COLOR";
 
-    export const a_Position: string = "a_Position";
-    export const a_Normal: string = "a_Normal";
-    export const a_TexCoord: string = "a_TexCoord";
-    export const a_Color: string = "a_Color";
-    export const a_Index: string = "a_Index";
+    export const a_Position0: string = "a_Position0";
+    export const a_Normal0: string = "a_Normal0";
+    export const a_TexCoord0: string = "a_TexCoord0";
+    export const a_Color0: string = "a_Color0";
+    export const a_Index0: string = "a_Index0";
 
     export const u_M44_W2V: string = "u_M44_W2V";
     export const u_M44_W2P: string = "u_M44_W2P";
@@ -75,15 +75,15 @@ namespace MITOIA.ShaderPredefined {
 
     export const u_AlphaTestCompareValue: string = "u_AlphaTestCompareValue";
 
-    export const u_Sampler: string = "u_Sampler";
+    export const u_Sampler0: string = "u_Sampler0";
     export const u_DiffuseSampler: string = "u_DiffuseSampler";
     export const u_SpecularSampler: string = "u_SpecularSampler";
     export const u_ReflectionSampler: string = "u_ReflectionSampler";
 
-    export const v_TexCoord: string = "v_TexCoord";
-    export const v_NormalW: string = "v_NormalW";
-    export const v_PosW: string = "v_PosW";
+    export const v_TexCoord0: string = "v_TexCoord0";
+    export const v_WorldNormal0: string = "v_WorldNormal0";
+    export const v_WorldPos0: string = "v_WorldPos0";
 
-    export const var_NormalW: string = "var_NormalW";
-    export const var_ViewDirW: string = "var_ViewDirW";
+    export const var_WorldNormal0: string = "var_WorldNormal0";
+    export const var_WorldViewDir0: string = "var_WorldViewDir0";
 }

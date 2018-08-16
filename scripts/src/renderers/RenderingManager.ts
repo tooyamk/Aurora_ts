@@ -198,9 +198,9 @@ namespace MITOIA {
                                 let att = atts[i];
                                 let buffer = pp.assetStore ? pp.assetStore.getVertexBuffer(gl, att) : null;
                                 if (!buffer) {
-                                    if (att.name == ShaderPredefined.a_Position) {
+                                    if (att.name == ShaderPredefined.a_Position0) {
                                         buffer = this._defaultPostProcessVertexBuffer;
-                                    } else if (att.name == ShaderPredefined.a_TexCoord) {
+                                    } else if (att.name == ShaderPredefined.a_TexCoord0) {
                                         buffer = this._defaultPostProcessTexCoordBuffer;
                                     }
                                 }

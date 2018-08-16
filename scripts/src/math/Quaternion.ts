@@ -23,16 +23,18 @@ namespace MITOIA {
             this.y = y;
             this.z = z;
             this.w = w;
-
             return this;
         }
 
         public setFromQuaternion(quat: Quaternion): Quaternion {
-            return this.setFromXYZW(quat.x, quat.y, quat.z, quat.w);
+            this.x = quat.x;
+            this.y = quat.y;
+            this.z = quat.z;
+            this.w = quat.w;
+            return this;
         }
 
         /**
-         * 
          * @param rst values are radian.
          */
         public getEuler(rst: Vector3 = null): Vector3 {
@@ -91,17 +93,17 @@ namespace MITOIA {
             y *= 0.5;
             z *= 0.5;
 
-            let sinX: number = Math.sin(x);
-            let cosX: number = Math.cos(x);
-            let sinY: number = Math.sin(y);
-            let cosY: number = Math.cos(y);
-            let sinZ: number = Math.sin(z);
-            let cosZ: number = Math.cos(z);
+            let sinX = Math.sin(x);
+            let cosX = Math.cos(x);
+            let sinY = Math.sin(y);
+            let cosY = Math.cos(y);
+            let sinZ = Math.sin(z);
+            let cosZ = Math.cos(z);
 
-            let scXY: number = sinX * cosY;
-            let csXY: number = cosX * sinY;
-            let ccXY: number = cosX * cosY;
-            let ssXY: number = sinX * sinY;
+            let scXY = sinX * cosY;
+            let csXY = cosX * sinY;
+            let ccXY = cosX * cosY;
+            let ssXY = sinX * sinY;
 
             rst.x = scXY * cosZ - csXY * sinZ;
             rst.y = csXY * cosZ + scXY * sinZ;
@@ -109,6 +111,74 @@ namespace MITOIA {
             rst.w = ccXY * cosZ + ssXY * sinZ;
 
             return rst;
+        }
+
+        /**
+		 * @param axis the axis is a normalize vector.
+		 */
+        public static createFromAxis(axis: Vector3, radian: number, rst: Quaternion = null): Quaternion {
+            rst = rst || new Quaternion();
+
+            radian *= 0.5;
+            let s = Math.sin(radian);
+            rst.x = -axis.x * s;
+            rst.y = -axis.y * s;
+            rst.z = -axis.z * s;
+            rst.w = Math.cos(radian);
+
+            return rst;
+        }
+
+        /**
+         * @param t [0.0 - 1.0]
+         */
+        public static slerp(from: Quaternion, to: Quaternion, t: number, rst: Quaternion = null): Quaternion {
+            rst = rst || new Quaternion();
+
+            let w1 = to.w;
+            let x1 = to.x;
+            let y1 = to.y;
+            let z1 = to.z;
+            let cosOmega = from.w * w1 + from.x * x1 + from.y * y1 + from.z * z1;
+            if (cosOmega < 0) {
+                w1 = -w1;
+                x1 = -x1;
+                y1 = -y1;
+                z1 = -z1;
+                cosOmega = -cosOmega;
+            }
+            let k0: number, k1: number;
+            if (cosOmega > 0.9999) {
+                k0 = 1 - t;
+                k1 = t;
+            } else {
+                let omega = Math.acos(cosOmega);
+                let sinOmega = Math.sin(omega);
+                k0 = Math.sin((1 - t) * omega) / sinOmega;
+                k1 = Math.sin(t * omega) / sinOmega;
+            }
+
+            rst.x = from.x * k0 + x1 * k1;
+            rst.y = from.y * k0 + y1 * k1;
+            rst.z = from.z * k0 + z1 * k1;
+            rst.w = from.w * k0 + w1 * k1;
+
+            return rst;
+        }
+
+        public isEqual(toCompare: Quaternion, tolerance: number = 0.0): boolean {
+            if (tolerance === 0.0) {
+                return this.x === toCompare.x && this.y === toCompare.y && this.z === toCompare.z && this.w === toCompare.w;
+            } else {
+                if (tolerance < 0) tolerance = -tolerance;
+                tolerance *= tolerance;
+                let x = this.x - toCompare.x;
+                let y = this.y - toCompare.y;
+                let z = this.z - toCompare.z;
+                let w = this.w - toCompare.w;
+
+                return (x * x + y * y + z * z + w * w) <= tolerance;
+            }
         }
 
         public clone(): Quaternion {
@@ -120,10 +190,10 @@ namespace MITOIA {
         }
 
         public append(quat: Quaternion, rst: Quaternion = null): void {
-            var w1: number = this.w * quat.w - this.x * quat.x - this.y * quat.y - this.z * quat.z;
-            var x1: number = this.w * quat.x + this.x * quat.w + this.y * quat.z - this.z * quat.y;
-            var y1: number = this.w * quat.y + this.y * quat.w + this.z * quat.x - this.x * quat.z;
-            var z1: number = this.w * quat.z + this.z * quat.w + this.x * quat.y - this.y * quat.x;
+            let w1 = this.w * quat.w - this.x * quat.x - this.y * quat.y - this.z * quat.z;
+            let x1 = this.w * quat.x + this.x * quat.w + this.y * quat.z - this.z * quat.y;
+            let y1 = this.w * quat.y + this.y * quat.w + this.z * quat.x - this.x * quat.z;
+            let z1 = this.w * quat.z + this.z * quat.w + this.x * quat.y - this.y * quat.x;
 
             rst = rst || this;
             rst.x = x1;
@@ -135,10 +205,10 @@ namespace MITOIA {
         public rotateXYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
             rst = rst || new Vector3();
 
-            let w1: number = -this.x * x - this.y * y - this.z * z;
-            let x1: number = this.w * x + this.y * z - this.z * y;
-            let y1: number = this.w * y - this.x * z + this.z * x;
-            let z1: number = this.w * z + this.x * y - this.y * x;
+            let w1 = -this.x * x - this.y * y - this.z * z;
+            let x1 = this.w * x + this.y * z - this.z * y;
+            let y1 = this.w * y - this.x * z + this.z * x;
+            let z1 = this.w * z + this.x * y - this.y * x;
 
             rst.x = -w1 * this.x + x1 * this.w - y1 * this.z + z1 * this.y;
             rst.y = -w1 * this.y + x1 * this.z + y1 * this.w - z1 * this.x;
@@ -152,18 +222,18 @@ namespace MITOIA {
         }
 
         public toMatrix33(rst: Matrix44 = null): Matrix44 {
-            let x2: number = this.x * 2.0;
-            let y2: number = this.y * 2.0;
-            let z2: number = this.z * 2.0;
-            let xx: number = this.x * x2;
-            let xy: number = this.x * y2;
-            let xz: number = this.x * z2;
-            let yy: number = this.y * y2;
-            let yz: number = this.y * z2;
-            let zz: number = this.z * z2;
-            let wx: number = this.w * x2;
-            let wy: number = this.w * y2;
-            let wz: number = this.w * z2;
+            let x2 = this.x * 2.0;
+            let y2 = this.y * 2.0;
+            let z2 = this.z * 2.0;
+            let xx = this.x * x2;
+            let xy = this.x * y2;
+            let xz = this.x * z2;
+            let yy = this.y * y2;
+            let yz = this.y * z2;
+            let zz = this.z * z2;
+            let wx = this.w * x2;
+            let wy = this.w * y2;
+            let wz = this.w * z2;
 
             if (rst) {
                 rst.m00 = 1 - yy - zz;

@@ -73,8 +73,8 @@ namespace MITOIA {
 		 * @param aspectRatio width / height.
 		 */
         public static createPerspectiveFovLHMatrix(fieldOfViewY: number, aspectRatio: number, zNear: number, zFar: number, rst: Matrix44 = null): Matrix44 {
-            let yScale: number = 1 / Math.tan(fieldOfViewY * 0.5);
-            let xScale: number = yScale / aspectRatio;
+            let yScale = 1 / Math.tan(fieldOfViewY * 0.5);
+            let xScale = yScale / aspectRatio;
 
             rst = rst || new Matrix44();
             rst.set44(
@@ -109,6 +109,214 @@ namespace MITOIA {
                 0, zNear2 / (top - bottom), 0, 0,
                 (left + right) / (left - right), (top + bottom) / (bottom - top), zFar / (zFar - zNear), 1,
                 0, 0, zNear * zFar / (zNear - zFar), 0);
+
+            return rst;
+        }
+
+        public static createLookAtLHMatrix(eye: Vector3, at: Vector3, up: Vector3, rst: Matrix44 = null): Matrix44 {
+            rst = rst || new Matrix44();
+
+            let axisZ_X = at.x - eye.x;
+            let axisZ_Y = at.y - eye.y;
+            let axisZ_Z = at.z - eye.z;
+
+            let d = axisZ_X * axisZ_X + axisZ_Y * axisZ_Y + axisZ_Z * axisZ_Z;
+            if (d != 1) {
+                d = Math.sqrt(d);
+                axisZ_X /= d;
+                axisZ_Y /= d;
+                axisZ_Z /= d;
+            }
+
+            let axisX_X = up.y * axisZ_Z - up.z * axisZ_Y;
+            let axisX_Y = up.z * axisZ_X - up.x * axisZ_Z;
+            let axisX_Z = up.x * axisZ_Y - up.y * axisZ_X;
+
+            d = axisX_X * axisX_X + axisX_Y * axisX_Y + axisX_Z * axisX_Z;
+            if (d != 1) {
+                d = Math.sqrt(d);
+                axisX_X /= d;
+                axisX_Y /= d;
+                axisX_Z /= d;
+            }
+
+            let axisY_X = axisZ_Y * axisX_Z - axisZ_Z * axisX_Y;
+            let axisY_Y = axisZ_Z * axisX_X - axisZ_X * axisX_Z;
+            let axisY_Z = axisZ_X * axisX_Y - axisZ_Y * axisX_X;
+
+            rst.m00 = axisX_X;
+            rst.m01 = axisX_Y;
+            rst.m02 = axisX_Z;
+            rst.m03 = 0;
+
+            rst.m10 = axisY_X;
+            rst.m11 = axisY_Y;
+            rst.m12 = axisY_Z;
+            rst.m13 = 0;
+
+            rst.m20 = axisZ_X;
+            rst.m21 = axisZ_Y;
+            rst.m22 = axisZ_Z;
+            rst.m23 = 0;
+
+            rst.m30 = eye.x;
+            rst.m31 = eye.y;
+            rst.m32 = eye.z;
+            //rst.m30 = -(axisX_X*eyeX+axisX_Y*eyeY+axisX_Z*eyeZ);
+            //rst.m31 = -(axisY_X*eyeX+axisY_Y*eyeY+axisY_Z*eyeZ);
+            //rst.m32 = -(axisZ_X*eyeX+axisZ_Y*eyeY+axisZ_Z*eyeZ);
+            rst.m33 = 1;
+
+            return rst;
+        }
+
+        public static createRotationAxisMatrix(axis: Vector3, radian: number, rst: Matrix44 = null): Matrix44 {
+            rst = rst || new Matrix44();
+
+            let axisX = axis.x;
+            let axisY = axis.y;
+            let axisZ = axis.z;
+            let sin = Math.sin(radian);
+            let cos = Math.cos(radian);
+            let cos1 = 1 - cos;
+            let cos1x = cos1 * axisX;
+            let cos1xy = cos1x * axisY;
+            let cos1xz = cos1x * axisZ;
+            let cos1y = cos1 * axisY;
+            let cos1yz = cos1y * axisZ;
+            let xsin = axisX * sin;
+            let ysin = axisY * sin;
+            let zsin = axisZ * sin;
+            
+            rst.m00 = cos + cos1x * axisX;
+            rst.m01 = cos1xy - zsin;
+            rst.m02 = cos1xz + ysin;
+            rst.m03 = 0;
+
+            rst.m10 = cos1xy + zsin;
+            rst.m11 = cos + cos1y * axisY;
+            rst.m12 = cos1yz - xsin;
+            rst.m13 = 0;
+
+            rst.m20 = cos1xz - ysin;
+            rst.m21 = cos1yz + xsin;
+            rst.m22 = cos + cos1 * axisZ * axisZ;
+            rst.m23 = 0;
+
+            rst.m30 = 0;
+            rst.m31 = 0;
+            rst.m32 = 0;
+            rst.m33 = 1;
+
+            return rst;
+        }
+
+        /**
+		 * direction(LH):(0, 1, 0) to (0, 0, 1)
+		 */
+        public static createRotationXMatrix(radian: number, rst: Matrix44 = null): Matrix44 {
+            let sin = Math.sin(radian);
+            let cos = Math.cos(radian);
+
+            if (rst) {
+                rst.set44(1, 0, 0, 0,
+                    0, cos, sin, 0,
+                    0, -sin, cos); 
+            } else {
+                rst = new Matrix44(1, 0, 0, 0,
+                    0, cos, sin, 0,
+                    0, -sin, cos); 
+            }
+
+            return rst;
+        }
+		/**
+		 * direction(LH):(1, 0, 0) to (0, 0, -1)
+		 */
+        public static createRotationYMatrix(radian: number, rst: Matrix44 = null): Matrix44 {
+            let sin = Math.sin(radian);
+            let cos = Math.cos(radian);
+
+            if (rst) {
+                rst.set44(cos, 0, -sin, 0,
+                    0, 1, 0, 0,
+                    sin, 0, cos);
+            } else {
+                rst = new Matrix44(cos, 0, -sin, 0,
+                    0, 1, 0, 0,
+                    sin, 0, cos);
+            }
+
+            return rst;
+        }
+		/**
+		 * direction(LH):(1, 0, 0) to (0, 1, 0)
+		 */
+        public static createRotationZMatrix(radian: number, rst: Matrix44 = null): Matrix44 {
+            let sin = Math.sin(radian);
+            let cos = Math.cos(radian);
+
+            if (rst) {
+                rst.set44(cos, sin, 0, 0,
+                    -sin, cos);
+            } else {
+                rst = new Matrix44(cos, sin, 0, 0,
+                    -sin, cos);
+            }
+
+            return rst;
+        }
+
+        public static createScaleMatrix(sx: number, sy: number, sz: number, rst: Matrix44 = null): Matrix44 {
+            if (rst) {
+                rst.set44(sx, 0, 0, 0,
+                    0, sy, 0, 0,
+                    0, 0, sz);
+            } else {
+                rst = new Matrix44(sx, 0, 0, 0,
+                    0, sy, 0, 0,
+                    0, 0, sz);
+            }
+
+            return rst;
+        }
+        public static createTranslationMatrix(tx: number, ty: number, tz: number, rst: Matrix44 = null): Matrix44 {
+            if (rst) {
+                rst.set44(1, 0, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    tx, ty, tz);
+            } else {
+                rst = new Matrix44(1, 0, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 1, 0,
+                    tx, ty, tz);
+            }
+
+            return rst;
+        }
+
+        public static createTRSMatrix(translation: Vector3, rotation: Quaternion, scale: Vector3, rst: Matrix44 = null): Matrix44 {
+            rst = rotation.toMatrix33(rst);
+            rst.m00 *= scale.x;
+            rst.m01 *= scale.x;
+            rst.m02 *= scale.x;
+            rst.m03 = 0;
+
+            rst.m10 *= scale.y;
+            rst.m11 *= scale.y;
+            rst.m12 *= scale.y;
+            rst.m13 = 0;
+
+            rst.m20 *= scale.z;
+            rst.m21 *= scale.z;
+            rst.m22 *= scale.z;
+            rst.m23 = 0;
+
+            rst.m30 = translation.x;
+            rst.m31 = translation.y;
+            rst.m32 = translation.z;
+            rst.m33 = 1;
 
             return rst;
         }
@@ -236,21 +444,21 @@ namespace MITOIA {
             this.m33 = 1;
         }
 
-        public transpose(rst: Matrix44): Matrix44 {
+        public transpose(rst: Matrix44 = null): Matrix44 {
             rst = rst || this;
 
-            let n01: number = this.m01;
-            let n02: number = this.m02;
-            let n03: number = this.m03;
-            let n10: number = this.m10;
-            let n12: number = this.m12;
-            let n13: number = this.m13;
-            let n20: number = this.m20;
-            let n21: number = this.m21;
-            let n23: number = this.m23;
-            let n30: number = this.m30;
-            let n31: number = this.m31;
-            let n32: number = this.m32;
+            let n01 = this.m01;
+            let n02 = this.m02;
+            let n03 = this.m03;
+            let n10 = this.m10;
+            let n12 = this.m12;
+            let n13 = this.m13;
+            let n20 = this.m20;
+            let n21 = this.m21;
+            let n23 = this.m23;
+            let n30 = this.m30;
+            let n31 = this.m31;
+            let n32 = this.m32;
 
             if (rst !== this) {
                 rst.m00 = this.m00;
@@ -283,7 +491,7 @@ namespace MITOIA {
             rstRot.m02 = this.m02;
             rstRot.m03 = 1;
 
-            let len: number = this.m00 * this.m00 + this.m01 * this.m01 + this.m02 * this.m02;
+            let len = this.m00 * this.m00 + this.m01 * this.m01 + this.m02 * this.m02;
             if (len != 1.0 && len != 0.0) {
                 len = Math.sqrt(len);
 
@@ -292,7 +500,7 @@ namespace MITOIA {
                 rstRot.m02 /= len;
             }
 
-            let dot: number = rstRot.m00 * this.m10 + rstRot.m01 * this.m11 + rstRot.m02 * this.m12;
+            let dot = rstRot.m00 * this.m10 + rstRot.m01 * this.m11 + rstRot.m02 * this.m12;
             rstRot.m10 = this.m10 - rstRot.m00 * dot;
             rstRot.m11 = this.m11 - rstRot.m01 * dot;
             rstRot.m12 = this.m12 - rstRot.m02 * dot;
@@ -354,7 +562,7 @@ namespace MITOIA {
         public toQuaternion(rst: Quaternion = null): Quaternion {
             rst = rst || new Quaternion();
             let s: number;
-            let tr: number = this.m00 + this.m11 + this.m22;
+            let tr = this.m00 + this.m11 + this.m22;
             if (tr > 0) {
                 s = Math.sqrt(tr + 1);
                 rst.w = s * 0.5;
@@ -416,27 +624,27 @@ namespace MITOIA {
         }
 
         public invert(rst: Matrix44 = null): boolean {
-            let tmp0: number = this.m22 * this.m33;
-            let tmp1: number = this.m32 * this.m23;
-            let tmp2: number = this.m12 * this.m33;
-            let tmp3: number = this.m32 * this.m13;
-            let tmp4: number = this.m12 * this.m23;
-            let tmp5: number = this.m22 * this.m13;
-            let tmp6: number = this.m02 * this.m33;
-            let tmp7: number = this.m32 * this.m03;
-            let tmp8: number = this.m02 * this.m23;
-            let tmp9: number = this.m22 * this.m03;
-            let tmp10: number = this.m02 * this.m13;
-            let tmp11: number = this.m12 * this.m03;
+            let tmp0 = this.m22 * this.m33;
+            let tmp1 = this.m32 * this.m23;
+            let tmp2 = this.m12 * this.m33;
+            let tmp3 = this.m32 * this.m13;
+            let tmp4 = this.m12 * this.m23;
+            let tmp5 = this.m22 * this.m13;
+            let tmp6 = this.m02 * this.m33;
+            let tmp7 = this.m32 * this.m03;
+            let tmp8 = this.m02 * this.m23;
+            let tmp9 = this.m22 * this.m03;
+            let tmp10 = this.m02 * this.m13;
+            let tmp11 = this.m12 * this.m03;
 
-            let dst0: number = tmp0 * this.m11 + tmp3 * this.m21 + tmp4 * this.m31 - (tmp1 * this.m11 + tmp2 * this.m21 + tmp5 * this.m31);
-            let dst1: number = tmp1 * this.m01 + tmp6 * this.m21 + tmp9 * this.m31 - (tmp0 * this.m01 + tmp7 * this.m21 + tmp8 * this.m31);
-            let dst2: number = tmp2 * this.m01 + tmp7 * this.m11 + tmp10 * this.m31 - (tmp3 * this.m01 + tmp6 * this.m11 + tmp11 * this.m31);
-            let dst3: number = tmp5 * this.m01 + tmp8 * this.m11 + tmp11 * this.m21 - (tmp4 * this.m01 + tmp9 * this.m11 + tmp10 * this.m21);
-            let dst4: number = tmp1 * this.m10 + tmp2 * this.m20 + tmp5 * this.m30 - (tmp0 * this.m10 + tmp3 * this.m20 + tmp4 * this.m30);
-            let dst5: number = tmp0 * this.m00 + tmp7 * this.m20 + tmp8 * this.m30 - (tmp1 * this.m00 + tmp6 * this.m20 + tmp9 * this.m30);
-            let dst6: number = tmp3 * this.m00 + tmp6 * this.m10 + tmp11 * this.m30 - (tmp2 * this.m00 + tmp7 * this.m10 + tmp10 * this.m30);
-            let dst7: number = tmp4 * this.m00 + tmp9 * this.m10 + tmp10 * this.m20 - (tmp5 * this.m00 + tmp8 * this.m10 + tmp11 * this.m20);
+            let dst0 = tmp0 * this.m11 + tmp3 * this.m21 + tmp4 * this.m31 - (tmp1 * this.m11 + tmp2 * this.m21 + tmp5 * this.m31);
+            let dst1 = tmp1 * this.m01 + tmp6 * this.m21 + tmp9 * this.m31 - (tmp0 * this.m01 + tmp7 * this.m21 + tmp8 * this.m31);
+            let dst2 = tmp2 * this.m01 + tmp7 * this.m11 + tmp10 * this.m31 - (tmp3 * this.m01 + tmp6 * this.m11 + tmp11 * this.m31);
+            let dst3 = tmp5 * this.m01 + tmp8 * this.m11 + tmp11 * this.m21 - (tmp4 * this.m01 + tmp9 * this.m11 + tmp10 * this.m21);
+            let dst4 = tmp1 * this.m10 + tmp2 * this.m20 + tmp5 * this.m30 - (tmp0 * this.m10 + tmp3 * this.m20 + tmp4 * this.m30);
+            let dst5 = tmp0 * this.m00 + tmp7 * this.m20 + tmp8 * this.m30 - (tmp1 * this.m00 + tmp6 * this.m20 + tmp9 * this.m30);
+            let dst6 = tmp3 * this.m00 + tmp6 * this.m10 + tmp11 * this.m30 - (tmp2 * this.m00 + tmp7 * this.m10 + tmp10 * this.m30);
+            let dst7 = tmp4 * this.m00 + tmp9 * this.m10 + tmp10 * this.m20 - (tmp5 * this.m00 + tmp8 * this.m10 + tmp11 * this.m20);
 
             tmp0 = this.m20 * this.m31;
             tmp1 = this.m30 * this.m21;
@@ -451,16 +659,16 @@ namespace MITOIA {
             tmp10 = this.m00 * this.m11;
             tmp11 = this.m10 * this.m01;
 
-            let dst8: number = tmp0 * this.m13 + tmp3 * this.m23 + tmp4 * this.m33 - (tmp1 * this.m13 + tmp2 * this.m23 + tmp5 * this.m33);
-            let dst9: number = tmp1 * this.m03 + tmp6 * this.m23 + tmp9 * this.m33 - (tmp0 * this.m03 + tmp7 * this.m23 + tmp8 * this.m33);
-            let dst10: number = tmp2 * this.m03 + tmp7 * this.m13 + tmp10 * this.m33 - (tmp3 * this.m03 + tmp6 * this.m13 + tmp11 * this.m33);
-            let dst11: number = tmp5 * this.m03 + tmp8 * this.m13 + tmp11 * this.m23 - (tmp4 * this.m03 + tmp9 * this.m13 + tmp10 * this.m23);
-            let dst12: number = tmp2 * this.m22 + tmp5 * this.m32 + tmp1 * this.m12 - (tmp4 * this.m32 + tmp0 * this.m12 + tmp3 * this.m22);
-            let dst13: number = tmp8 * this.m32 + tmp0 * this.m02 + tmp7 * this.m22 - (tmp6 * this.m22 + tmp9 * this.m32 + tmp1 * this.m02);
-            let dst14: number = tmp6 * this.m12 + tmp11 * this.m32 + tmp3 * this.m02 - (tmp10 * this.m32 + tmp2 * this.m02 + tmp7 * this.m12);
-            let dst15: number = tmp10 * this.m22 + tmp4 * this.m02 + tmp9 * this.m12 - (tmp8 * this.m12 + tmp11 * this.m22 + tmp5 * this.m02);
+            let dst8 = tmp0 * this.m13 + tmp3 * this.m23 + tmp4 * this.m33 - (tmp1 * this.m13 + tmp2 * this.m23 + tmp5 * this.m33);
+            let dst9 = tmp1 * this.m03 + tmp6 * this.m23 + tmp9 * this.m33 - (tmp0 * this.m03 + tmp7 * this.m23 + tmp8 * this.m33);
+            let dst10 = tmp2 * this.m03 + tmp7 * this.m13 + tmp10 * this.m33 - (tmp3 * this.m03 + tmp6 * this.m13 + tmp11 * this.m33);
+            let dst11 = tmp5 * this.m03 + tmp8 * this.m13 + tmp11 * this.m23 - (tmp4 * this.m03 + tmp9 * this.m13 + tmp10 * this.m23);
+            let dst12 = tmp2 * this.m22 + tmp5 * this.m32 + tmp1 * this.m12 - (tmp4 * this.m32 + tmp0 * this.m12 + tmp3 * this.m22);
+            let dst13 = tmp8 * this.m32 + tmp0 * this.m02 + tmp7 * this.m22 - (tmp6 * this.m22 + tmp9 * this.m32 + tmp1 * this.m02);
+            let dst14 = tmp6 * this.m12 + tmp11 * this.m32 + tmp3 * this.m02 - (tmp10 * this.m32 + tmp2 * this.m02 + tmp7 * this.m12);
+            let dst15 = tmp10 * this.m22 + tmp4 * this.m02 + tmp9 * this.m12 - (tmp8 * this.m12 + tmp11 * this.m22 + tmp5 * this.m02);
 
-            let det: number = this.m00 * dst0 + this.m10 * dst1 + this.m20 * dst2 + this.m30 * dst3;
+            let det = this.m00 * dst0 + this.m10 * dst1 + this.m20 * dst2 + this.m30 * dst3;
 
             if (det === 0.0) {
                 return false;
@@ -491,21 +699,21 @@ namespace MITOIA {
         }
 
         public append34(m: Matrix44, rst: Matrix44 = null): void {
-            let m00: number = this.m00 * m.m00 + this.m01 * m.m10 + this.m02 * m.m20;
-            let m01: number = this.m00 * m.m01 + this.m01 * m.m11 + this.m02 * m.m21;
-            let m02: number = this.m00 * m.m02 + this.m01 * m.m12 + this.m02 * m.m22;
+            let m00 = this.m00 * m.m00 + this.m01 * m.m10 + this.m02 * m.m20;
+            let m01 = this.m00 * m.m01 + this.m01 * m.m11 + this.m02 * m.m21;
+            let m02 = this.m00 * m.m02 + this.m01 * m.m12 + this.m02 * m.m22;
 
-            let m10: number = this.m10 * m.m00 + this.m11 * m.m10 + this.m12 * m.m20;
-            let m11: number = this.m10 * m.m01 + this.m11 * m.m11 + this.m12 * m.m21;
-            let m12: number = this.m10 * m.m02 + this.m11 * m.m12 + this.m12 * m.m22;
+            let m10 = this.m10 * m.m00 + this.m11 * m.m10 + this.m12 * m.m20;
+            let m11 = this.m10 * m.m01 + this.m11 * m.m11 + this.m12 * m.m21;
+            let m12 = this.m10 * m.m02 + this.m11 * m.m12 + this.m12 * m.m22;
 
-            let m20: number = this.m20 * m.m00 + this.m21 * m.m10 + this.m22 * m.m20;
-            let m21: number = this.m20 * m.m01 + this.m21 * m.m11 + this.m22 * m.m21;
-            let m22: number = this.m20 * m.m02 + this.m21 * m.m12 + this.m22 * m.m22;
+            let m20 = this.m20 * m.m00 + this.m21 * m.m10 + this.m22 * m.m20;
+            let m21 = this.m20 * m.m01 + this.m21 * m.m11 + this.m22 * m.m21;
+            let m22 = this.m20 * m.m02 + this.m21 * m.m12 + this.m22 * m.m22;
 
-            let m30: number = this.m30 * m.m00 + this.m31 * m.m10 + this.m32 * m.m20 + m.m30;
-            let m31: number = this.m30 * m.m01 + this.m31 * m.m11 + this.m32 * m.m21 + m.m31;
-            let m32: number = this.m30 * m.m02 + this.m31 * m.m12 + this.m32 * m.m22 + m.m32;
+            let m30 = this.m30 * m.m00 + this.m31 * m.m10 + this.m32 * m.m20 + m.m30;
+            let m31 = this.m30 * m.m01 + this.m31 * m.m11 + this.m32 * m.m21 + m.m31;
+            let m32 = this.m30 * m.m02 + this.m31 * m.m12 + this.m32 * m.m22 + m.m32;
 
             rst = rst || this;
             rst.m00 = m00;
@@ -526,25 +734,25 @@ namespace MITOIA {
         }
 
         public append44(m: Matrix44, rst: Matrix44 = null): Matrix44 {
-            let m00: number = this.m00 * m.m00 + this.m01 * m.m10 + this.m02 * m.m20 + this.m03 * m.m30;
-            let m01: number = this.m00 * m.m01 + this.m01 * m.m11 + this.m02 * m.m21 + this.m03 * m.m31;
-            let m02: number = this.m00 * m.m02 + this.m01 * m.m12 + this.m02 * m.m22 + this.m03 * m.m32;
-            let m03: number = this.m00 * m.m03 + this.m01 * m.m13 + this.m02 * m.m23 + this.m03 * m.m33;
+            let m00 = this.m00 * m.m00 + this.m01 * m.m10 + this.m02 * m.m20 + this.m03 * m.m30;
+            let m01 = this.m00 * m.m01 + this.m01 * m.m11 + this.m02 * m.m21 + this.m03 * m.m31;
+            let m02 = this.m00 * m.m02 + this.m01 * m.m12 + this.m02 * m.m22 + this.m03 * m.m32;
+            let m03 = this.m00 * m.m03 + this.m01 * m.m13 + this.m02 * m.m23 + this.m03 * m.m33;
 
-            let m10: number = this.m10 * m.m00 + this.m11 * m.m10 + this.m12 * m.m20 + this.m13 * m.m30;
-            let m11: number = this.m10 * m.m01 + this.m11 * m.m11 + this.m12 * m.m21 + this.m13 * m.m31;
-            let m12: number = this.m10 * m.m02 + this.m11 * m.m12 + this.m12 * m.m22 + this.m13 * m.m32;
-            let m13: number = this.m10 * m.m03 + this.m11 * m.m13 + this.m12 * m.m23 + this.m13 * m.m33;
+            let m10 = this.m10 * m.m00 + this.m11 * m.m10 + this.m12 * m.m20 + this.m13 * m.m30;
+            let m11 = this.m10 * m.m01 + this.m11 * m.m11 + this.m12 * m.m21 + this.m13 * m.m31;
+            let m12 = this.m10 * m.m02 + this.m11 * m.m12 + this.m12 * m.m22 + this.m13 * m.m32;
+            let m13 = this.m10 * m.m03 + this.m11 * m.m13 + this.m12 * m.m23 + this.m13 * m.m33;
 
-            let m20: number = this.m20 * m.m00 + this.m21 * m.m10 + this.m22 * m.m20 + this.m23 * m.m30;
-            let m21: number = this.m20 * m.m01 + this.m21 * m.m11 + this.m22 * m.m21 + this.m23 * m.m31;
-            let m22: number = this.m20 * m.m02 + this.m21 * m.m12 + this.m22 * m.m22 + this.m23 * m.m32;
-            let m23: number = this.m20 * m.m03 + this.m21 * m.m13 + this.m22 * m.m23 + this.m23 * m.m33;
+            let m20 = this.m20 * m.m00 + this.m21 * m.m10 + this.m22 * m.m20 + this.m23 * m.m30;
+            let m21 = this.m20 * m.m01 + this.m21 * m.m11 + this.m22 * m.m21 + this.m23 * m.m31;
+            let m22 = this.m20 * m.m02 + this.m21 * m.m12 + this.m22 * m.m22 + this.m23 * m.m32;
+            let m23 = this.m20 * m.m03 + this.m21 * m.m13 + this.m22 * m.m23 + this.m23 * m.m33;
 
-            let m30: number = this.m30 * m.m00 + this.m31 * m.m10 + this.m32 * m.m20 + this.m33 * m.m30;
-            let m31: number = this.m30 * m.m01 + this.m31 * m.m11 + this.m32 * m.m21 + this.m33 * m.m31;
-            let m32: number = this.m30 * m.m02 + this.m31 * m.m12 + this.m32 * m.m22 + this.m33 * m.m32;
-            let m33: number = this.m30 * m.m03 + this.m31 * m.m13 + this.m32 * m.m23 + this.m33 * m.m33;
+            let m30 = this.m30 * m.m00 + this.m31 * m.m10 + this.m32 * m.m20 + this.m33 * m.m30;
+            let m31 = this.m30 * m.m01 + this.m31 * m.m11 + this.m32 * m.m21 + this.m33 * m.m31;
+            let m32 = this.m30 * m.m02 + this.m31 * m.m12 + this.m32 * m.m22 + this.m33 * m.m32;
+            let m33 = this.m30 * m.m03 + this.m31 * m.m13 + this.m32 * m.m23 + this.m33 * m.m33;
 
             rst = rst || this;
             rst.m00 = m00;
@@ -625,9 +833,9 @@ namespace MITOIA {
         }
 
         public transform33XYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
-            let dstX: number = x * this.m00 + y * this.m10 + z * this.m20;
-            let dstY: number = x * this.m01 + y * this.m11 + z * this.m21;
-            let dstZ: number = x * this.m02 + y * this.m12 + z * this.m22;
+            let dstX = x * this.m00 + y * this.m10 + z * this.m20;
+            let dstY = x * this.m01 + y * this.m11 + z * this.m21;
+            let dstZ = x * this.m02 + y * this.m12 + z * this.m22;
 
             return rst ? rst.setFromXYZ(dstX, dstY, dstZ) : new Vector3(dstX, dstY, dstZ);
         }
@@ -637,9 +845,9 @@ namespace MITOIA {
         }
 
         public transform34XYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
-            let dstX: number = x * this.m00 + y * this.m10 + z * this.m20 + this.m30;
-            let dstY: number = x * this.m01 + y * this.m11 + z * this.m21 + this.m31;
-            let dstZ: number = x * this.m02 + y * this.m12 + z * this.m22 + this.m32;
+            let dstX = x * this.m00 + y * this.m10 + z * this.m20 + this.m30;
+            let dstY = x * this.m01 + y * this.m11 + z * this.m21 + this.m31;
+            let dstZ = x * this.m02 + y * this.m12 + z * this.m22 + this.m32;
 
             return rst ? rst.setFromXYZ(dstX, dstY, dstZ) : new Vector3(dstX, dstY, dstZ);
         }
@@ -653,11 +861,11 @@ namespace MITOIA {
         }
 
         public transform44XYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
-            var w: number = x * this.m03 + y * this.m13 + z * this.m23 + this.m33;
+            let w = x * this.m03 + y * this.m13 + z * this.m23 + this.m33;
 
-            let dstX: number = (x * this.m00 + y * this.m10 + z * this.m20 + this.m30) / w;
-            let dstY: number = (x * this.m01 + y * this.m11 + z * this.m21 + this.m31) / w;
-            let dstZ: number = (x * this.m02 + y * this.m12 + z * this.m22 + this.m32) / w;
+            let dstX = (x * this.m00 + y * this.m10 + z * this.m20 + this.m30) / w;
+            let dstY = (x * this.m01 + y * this.m11 + z * this.m21 + this.m31) / w;
+            let dstZ = (x * this.m02 + y * this.m12 + z * this.m22 + this.m32) / w;
 
             return rst ? rst.setFromXYZ(dstX, dstY, dstZ) : new Vector3(dstX, dstY, dstZ);
         }
@@ -667,10 +875,10 @@ namespace MITOIA {
         }
 
         public transform44XYZW(x: number = 0, y: number = 0, z: number = 0, w: number, rst: Vector4 = null): Vector4 {
-            let dstX: number = x * this.m00 + y * this.m10 + z * this.m20 + w * this.m30;
-            let dstY: number = x * this.m01 + y * this.m11 + z * this.m21 + w * this.m31;
-            let dstZ: number = x * this.m02 + y * this.m12 + z * this.m22 + w * this.m32;
-            let dstW: number = x * this.m03 + y * this.m13 + z * this.m23 + w * this.m33;
+            let dstX = x * this.m00 + y * this.m10 + z * this.m20 + w * this.m30;
+            let dstY = x * this.m01 + y * this.m11 + z * this.m21 + w * this.m31;
+            let dstZ = x * this.m02 + y * this.m12 + z * this.m22 + w * this.m32;
+            let dstW = x * this.m03 + y * this.m13 + z * this.m23 + w * this.m33;
 
             return rst ? rst.setFromXYZW(dstX, dstY, dstZ, dstW) : new Vector4(dstX, dstY, dstZ, dstW);
         }
@@ -683,7 +891,7 @@ namespace MITOIA {
 		 * transform axisY and axisZ
 		 */
         public transformLRH(): void {
-            let tmp: number = this.m10;
+            let tmp = this.m10;
             this.m10 = this.m20;
             this.m20 = tmp;
 

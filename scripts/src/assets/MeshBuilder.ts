@@ -23,12 +23,12 @@ namespace MITOIA {
             assetStore.vertexSources = vertexSources;
 
             let vertices: number[] = [];
-            assetStore.addVertexSource(new VertexSource(ShaderPredefined.a_Position, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT));
+            assetStore.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT));
 
             let texCoords: number[];
             if (generateTexCoords) {
                 texCoords = [];
-                assetStore.addVertexSource(new VertexSource(ShaderPredefined.a_TexCoord, texCoords, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT));
+                assetStore.addVertexSource(new VertexSource(ShaderPredefined.a_TexCoord0, texCoords, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT));
             }
 
             let drawIndexSource = new DrawIndexSource();
@@ -118,7 +118,7 @@ namespace MITOIA {
             let angleY = Math.PI * 2 / segments;
 
             let vertices: number[] = [];
-            assetStore.addVertexSource(new VertexSource(ShaderPredefined.a_Position, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT));
+            assetStore.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT));
 
             vertices.push(0, radius, 0);
 
@@ -126,7 +126,7 @@ namespace MITOIA {
             let texCoords: number[];
             if (generateTexCoords) {
                 texCoords = [];
-                assetStore.addVertexSource(new VertexSource(ShaderPredefined.a_TexCoord, texCoords, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT));
+                assetStore.addVertexSource(new VertexSource(ShaderPredefined.a_TexCoord0, texCoords, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT));
 
                 texCoords.push(0.5, 0);
                 uvMax = numV + 1;

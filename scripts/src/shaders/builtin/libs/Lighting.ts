@@ -90,13 +90,13 @@ float ${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, ve
         source: `
 #ifdef ${ShaderPredefined.LIGHTING}
 
-#include<${General.DECLARE_ATTRIB.name}>(vec3, ${ShaderPredefined.a_Normal})
+#include<${General.DECLARE_ATTRIB.name}>(vec3, ${ShaderPredefined.a_Normal0})
 #include<${General.DECLARE_UNIFORM.name}>(mat3, ${ShaderPredefined.u_M33_L2W})
-#include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_NormalW})
+#include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_WorldNormal0})
 
  #if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_POINT} || ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_SPOT} || defined(${ShaderPredefined.LIGHTING_SPECULAR})
     #include<${General.DECLARE_UNIFORM.name}>(mat4, ${ShaderPredefined.u_M44_L2W})
-    #include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_PosW})
+    #include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_WorldPos0})
 #endif
 
 #endif
@@ -107,17 +107,17 @@ float ${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, ve
         source: `
 #ifdef ${ShaderPredefined.LIGHTING}
 
-#ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_PosW}
-    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_PosW}
-        #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_PosW}
-        ${ShaderPredefined.v_PosW} = (${ShaderPredefined.u_M44_L2W} * vec4(${ShaderPredefined.a_Position}, 1.0)).xyz;
+#ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_WorldPos0}
+    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_WorldPos0}
+        #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_WorldPos0}
+        ${ShaderPredefined.v_WorldPos0} = (${ShaderPredefined.u_M44_L2W} * vec4(${ShaderPredefined.a_Position0}, 1.0)).xyz;
     #endif
 #endif
 
-#ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_NormalW}
-    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_NormalW}
-        #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_NormalW}
-        ${ShaderPredefined.v_NormalW} = ${ShaderPredefined.u_M33_L2W} * ${ShaderPredefined.a_Normal};
+#ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_WorldNormal0}
+    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_WorldNormal0}
+        #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_WorldNormal0}
+        ${ShaderPredefined.v_WorldNormal0} = ${ShaderPredefined.u_M33_L2W} * ${ShaderPredefined.a_Normal0};
     #endif
 #endif
 
@@ -137,10 +137,10 @@ struct _Light {
 };
 
 #include<${DIFFUSE_FACTOR_HEADER.name}>
-#include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_NormalW})
+#include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_WorldNormal0})
 
 #if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_POINT} || ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_SPOT} || defined(${ShaderPredefined.LIGHTING_SPECULAR})
-    #include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_PosW})
+    #include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_WorldPos0})
 #endif
 
 #ifdef ${ShaderPredefined.LIGHTING_SPECULAR}
@@ -192,19 +192,19 @@ vec3 _lightingDirW;
 _lightingInfo.ambientColor = ${ShaderPredefined.u_AmbientColor};
 _lightingInfo.diffuseColor = ${ShaderPredefined.u_LightColor0};
 
-#ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_NormalW}
-    #include<${General.DECLARE_TEMP_VAR.name}>(vec3, ${ShaderPredefined.var_NormalW})
+#ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_WorldNormal0}
+    #include<${General.DECLARE_TEMP_VAR.name}>(vec3, ${ShaderPredefined.var_WorldNormal0})
 #endif
 
 #ifdef ${ShaderPredefined.LIGHTING_SPECULAR}
-    #include<${General.DECLARE_TEMP_VAR.name}>(vec3, ${ShaderPredefined.var_ViewDirW})
+    #include<${General.DECLARE_TEMP_VAR.name}>(vec3, ${ShaderPredefined.var_WorldViewDir0})
 #endif
 
 #if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_DIRECTION}
     _lightingDirW = -${ShaderPredefined.u_LightDirW0};
     _lightingInfo.intensity = 1.0;
 #else
-    vec3 lightingDistance = ${ShaderPredefined.u_LightPosW0} - ${ShaderPredefined.v_PosW};
+    vec3 lightingDistance = ${ShaderPredefined.u_LightPosW0} - ${ShaderPredefined.v_WorldPos0};
     _lightingDirW = normalize(lightingDistance);
 
     float dis = length(lightingDistance);
@@ -224,25 +224,25 @@ if (_lightingInfo.intensity < 0.00392) {
     _lightingInfo.diffuseColor = vec3(0.0);
     _lightingInfo.specularColor = vec3(0.0);
 } else {
-    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_NormalW}
-        #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_NormalW}
-        ${ShaderPredefined.var_NormalW} = normalize(${ShaderPredefined.v_NormalW});
+    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_WorldNormal0}
+        #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_WorldNormal0}
+        ${ShaderPredefined.var_WorldNormal0} = normalize(${ShaderPredefined.v_WorldNormal0});
     #endif
 
-    _lightingInfo.diffuseColor *= ${DIFFUSE_FACTOR_FUNC.name}(${ShaderPredefined.var_NormalW}, _lightingDirW);
+    _lightingInfo.diffuseColor *= ${DIFFUSE_FACTOR_FUNC.name}(${ShaderPredefined.var_WorldNormal0}, _lightingDirW);
 
     #ifdef ${ShaderPredefined.LIGHTING_SPECULAR}
-        #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_ViewDirW}
-            #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_ViewDirW}
-            ${ShaderPredefined.var_ViewDirW} = normalize(${ShaderPredefined.u_CamPosW} - ${ShaderPredefined.v_PosW});
+        #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_WorldViewDir0}
+            #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_WorldViewDir0}
+            ${ShaderPredefined.var_WorldViewDir0} = normalize(${ShaderPredefined.u_CamPosW} - ${ShaderPredefined.v_WorldPos0});
         #endif
 
         #if ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_PHONE}
-            _lightingInfo.specularColor = vec3(${SPECULAR_PHONE_FACTOR_FUNC.name}(${ShaderPredefined.var_NormalW}, _lightingDirW, ${ShaderPredefined.var_ViewDirW}, _lightingInfo.diffuseFactor, ${ShaderPredefined.u_LighitngSpecularShininess}));
+            _lightingInfo.specularColor = vec3(${SPECULAR_PHONE_FACTOR_FUNC.name}(${ShaderPredefined.var_WorldNormal0}, _lightingDirW, ${ShaderPredefined.var_WorldViewDir0}, _lightingInfo.diffuseFactor, ${ShaderPredefined.u_LighitngSpecularShininess}));
         #elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_BANK_BRDF}
-            _lightingInfo.specularColor = vec3(${SPECULAR_BANK_BRDF_FACTOR_FUNC.name}(${ShaderPredefined.var_NormalW}, _lightingDirW, ${ShaderPredefined.var_ViewDirW}, ${ShaderPredefined.u_LighitngSpecularShininess}));
+            _lightingInfo.specularColor = vec3(${SPECULAR_BANK_BRDF_FACTOR_FUNC.name}(${ShaderPredefined.var_WorldNormal0}, _lightingDirW, ${ShaderPredefined.var_WorldViewDir0}, ${ShaderPredefined.u_LighitngSpecularShininess}));
         #elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE}
-            _lightingInfo.specularColor = vec3(${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(${ShaderPredefined.var_NormalW}, _lightingDirW, ${ShaderPredefined.var_ViewDirW}, ${ShaderPredefined.u_LighitngSpecularShininess}));
+            _lightingInfo.specularColor = vec3(${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(${ShaderPredefined.var_WorldNormal0}, _lightingDirW, ${ShaderPredefined.var_WorldViewDir0}, ${ShaderPredefined.u_LighitngSpecularShininess}));
         #else
             _lightingInfo.specularColor = vec3(0.0);
         #endif

@@ -229,7 +229,7 @@ namespace MITOIA {
                 }
             }
 
-            return new VertexSource(ShaderPredefined.a_Normal, normals, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT);
+            return new VertexSource(ShaderPredefined.a_Normal0, normals, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT);
         }
     }
 }

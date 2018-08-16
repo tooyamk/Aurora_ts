@@ -17,11 +17,11 @@ namespace MITOIA {
             let min = Number.POSITIVE_INFINITY;
 
             if (this.assetStore && this.assetStore.vertexSources && this.assetStore.drawIndexSource && this.assetStore.drawIndexSource.data) {
-                let vs = this.assetStore.vertexSources.get(ShaderPredefined.a_Position);
+                let vs = this.assetStore.vertexSources.get(ShaderPredefined.a_Position0);
                 if (vs) {
                     let vertices = vs.data;
                     if (vertices) {
-                        vs = this.assetStore.vertexSources.get(ShaderPredefined.a_Normal);
+                        vs = this.assetStore.vertexSources.get(ShaderPredefined.a_Normal0);
                         let normals = vs ? (vs.data ? vs.data : null) : null;
                         let indices = this.assetStore.drawIndexSource.data;
 

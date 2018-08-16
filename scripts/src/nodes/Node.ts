@@ -431,6 +431,11 @@ namespace MITOIA {
             this._localMatrix_worldMatrix_worldRot_Changed(notificationUpdate, 1);
         }
 
+        /**
+         ** (this node).setLocalRotation(return value)
+         ** (this node).worldRotation = Target world rotation
+         * @param quat Target world rotation
+         */
         public calcLocalRotationFromWorld(quat: Quaternion, rst: Quaternion = null): Quaternion {
             if (this._parent) {
                 this._parent.updateWorldRotation();

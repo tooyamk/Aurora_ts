@@ -17,9 +17,9 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     indexBuffer.upload([0, 1, 2], MITOIA.GLUsageType.STATIC_DRAW);
 
     let assetStore = new MITOIA.AssetStore();
-    assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_Position, vertexBuffer);
-    assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_TexCoord, uvBuffer);
-    assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_Color, colorBuffer);
+    assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_Position0, vertexBuffer);
+    assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_TexCoord0, uvBuffer);
+    assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_Color0, colorBuffer);
     assetStore.drawIndexBuffer = indexBuffer;
 
     assetStore = MITOIA.MeshBuilder.createSphere(100, 40, true, true);
@@ -199,6 +199,7 @@ window.addEventListener("DOMContentLoaded", () => {
     document.oncontextmenu = () => {
         return false;
     }
+
     let canvas = <HTMLCanvasElement>document.getElementById("renderCanvas");
     let options: MITOIA.GLOptions = {};
     options.preserveDrawingBuffer = true;
@@ -228,6 +229,12 @@ window.addEventListener("DOMContentLoaded", () => {
     worldNode.addChild(cameraNode);
     worldNode.addChild(lightNode);
 
+    worldNode.setLocalRotation(MITOIA.Quaternion.createFromEulerY(90 * Math.PI / 180));
+    let euler1 = worldNode.getLocalRotation().getEuler();
+    console.log(euler1.x * 180 / Math.PI, euler1.y * 180 / Math.PI, euler1.z * 180 / Math.PI);
+    lightNode.setLocalRotation(MITOIA.Quaternion.createFromEulerY(10 * Math.PI / 180));
+    let euler = lightNode.calcLocalRotationFromWorld(MITOIA.Quaternion.createFromEulerY(10 * Math.PI / 180)).getEuler();
+    console.log(euler.x * 180 / Math.PI, euler.y * 180 / Math.PI, euler.z * 180 / Math.PI);
     
 
     let t1 = MITOIA.Timer.utc;
@@ -298,7 +305,7 @@ window.addEventListener("DOMContentLoaded", () => {
     pp.material = new MITOIA.Material();
     //pp.material.depthWrite = false;
     //pp.material.cullFace = MITOIA.GLCullFace.NONE;
-    pp.material.uniforms.setTexture(MITOIA.ShaderPredefined.u_Sampler, colorTex);
+    pp.material.uniforms.setTexture(MITOIA.ShaderPredefined.u_Sampler0, colorTex);
 
     let fps = new MITOIA.FPSDetector();
     fps.show();
@@ -323,9 +330,15 @@ window.addEventListener("DOMContentLoaded", () => {
 
     let request = new XMLHttpRequest();
     request.addEventListener("loadend", () => {
-        //request.response;
-        //request.responseText;
+        request.response;
+        let dv = new DataView(request.response);
+        let n = dv.getInt32(0, true);
+        
+        
+
+        let a = 1;
     });
-    request.open("GET", getURL("tex1.png"), true);
+    request.open("GET", getURL("model.bin"), true);
+    request.responseType = "arraybuffer";
     request.send();
 });
