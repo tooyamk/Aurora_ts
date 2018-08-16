@@ -26,7 +26,53 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     //assetStore = MITOIA.MeshBuilder.createBox(100, 100, 100, 1, 1, 1, true, true);
 
     let mesh = node.addComponent(new MITOIA.RenderableMesh());
-    mesh.assetStore = assetStore;
+    mesh.assetStore = null;
+
+    let request = new XMLHttpRequest();
+    request.addEventListener("loadend", () => {
+        let assetStore = new MITOIA.AssetStore();
+
+        let offset = 0;
+        let dv = new DataView(request.response);
+
+        let n = dv.getInt32(offset, true);
+        offset += 4;
+        let vertices: number[] = [];
+        assetStore.addVertexSource(new MITOIA.VertexSource(MITOIA.ShaderPredefined.a_Position0, vertices));
+        for (let i = 0; i < n; ++i) {
+            vertices.push(dv.getFloat32(offset, true));
+            offset += 4;
+            vertices.push(dv.getFloat32(offset, true));
+            offset += 4;
+            vertices.push(dv.getFloat32(offset, true));
+            offset += 4;
+        }
+        
+        n = dv.getInt32(offset, true);
+        offset += 4;
+        let uv: number[] = [];
+        assetStore.addVertexSource(new MITOIA.VertexSource(MITOIA.ShaderPredefined.a_TexCoord0, uv, MITOIA.GLVertexBufferSize.TWO));
+        for (let i = 0; i < n; ++i) {
+            uv.push(dv.getFloat32(offset, true));
+            offset += 4;
+            uv.push(dv.getFloat32(offset, true));
+            offset += 4;
+        }
+
+        n = dv.getInt32(offset, true);
+        offset += 4;
+        let index: MITOIA.uint[] = [];
+        assetStore.drawIndexSource = new MITOIA.DrawIndexSource(index);
+        for (let i = 0; i < n; ++i) {
+            index.push(dv.getInt32(offset, true));
+            offset += 4;
+        }
+
+        mesh.assetStore = assetStore;
+    });
+    request.open("GET", getURL("model.bin"), true);
+    request.responseType = "arraybuffer";
+    request.send();
 
     //console.log(shaderStore.getShaderSource(vert, MITOIA.GLShaderType.VERTEX_SHADER).source);
     //console.log(shaderStore.getShaderSource(vert, MITOIA.GLShaderType.FRAGMENT_SHADER).source);
@@ -327,18 +373,4 @@ window.addEventListener("DOMContentLoaded", () => {
         fps.record();
         //console.log(fps.fps);
     }, true);
-
-    let request = new XMLHttpRequest();
-    request.addEventListener("loadend", () => {
-        request.response;
-        let dv = new DataView(request.response);
-        let n = dv.getInt32(0, true);
-        
-        
-
-        let a = 1;
-    });
-    request.open("GET", getURL("model.bin"), true);
-    request.responseType = "arraybuffer";
-    request.send();
 });

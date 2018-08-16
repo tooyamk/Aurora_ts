@@ -8,6 +8,7 @@ namespace MITOIA {
 
         protected _cachedNoDefineProgram: GLProgram = null;
         protected _cachedPrograms: { [key: string]: GLProgram} = {};
+        protected _numCachedPrograms = 0;
 
         protected _curProgram: GLProgram = null;
         protected _attributes: GLProgramAttribInfo[] = null;
@@ -40,15 +41,38 @@ namespace MITOIA {
             return this._uniforms;
         }
 
+        public get numCachedPrograms(): uint {
+            return this._numCachedPrograms;
+        }
+
         public hasUniform(name: string): boolean {
-            if (this._curProgram) {
-                return this._curProgram.hasUniform(name);
-            }
+            if (this._curProgram) return this._curProgram.hasUniform(name);
 
             return false;
         }
 
+        public precompile(defines: ShaderDefines = null): boolean {
+            let appendDefines = this._collectDefines(null, defines);
+            let p = this._getProgramFromCache(appendDefines);
+            if (p) {
+                return true;
+            } else {
+                return this._createProgram(appendDefines).status === GLProgramStatus.SUCCESSED;
+            }
+        }
+
         public ready(globalDefines: ShaderDefines, localDefines: ShaderDefines): boolean {
+            let appendDefines = this._collectDefines(globalDefines, localDefines);
+            this._curProgram = this._getProgramFromCache(appendDefines);
+            if (!this._curProgram) this._curProgram = this._createProgram(appendDefines);
+            
+            this._attributes = this._curProgram.attributes;
+            this._uniforms = this._curProgram.uniforms;
+
+            return this._curProgram.status === GLProgramStatus.SUCCESSED;
+        }
+
+        private _collectDefines(globalDefines: ShaderDefines, localDefines: ShaderDefines): string {
             let appendDefines = "";
             for (let i = 0, n = this._defines.length; i < n; ++i) {
                 let name = this._defines[i];
@@ -65,24 +89,21 @@ namespace MITOIA {
                     }
                 }
             }
+            return appendDefines;
+        }
 
-            this._curProgram = this._getProgramFromCache(appendDefines);
-            if (!this._curProgram) {
-                let finalAppendDefines = appendDefines.length > 0 ? appendDefines.replace(/\n/g, "\n#define ") + "\n" : "";
-                this._curProgram = new GLProgram(this._gl);
-                this._curProgram.compileAndLink(finalAppendDefines + this._vert.source, finalAppendDefines + this._frag.source);
-
-                if (appendDefines.length > 0) {
-                    this._cachedPrograms[appendDefines] = this._curProgram;
-                } else {
-                    this._cachedNoDefineProgram = this._curProgram;
-                }
+        private _createProgram(appendDefines: string): GLProgram {
+            let finalAppendDefines = appendDefines.length > 0 ? appendDefines.replace(/\n/g, "\n#define ") + "\n" : "";
+            let p = new GLProgram(this._gl);
+            p.compileAndLink(finalAppendDefines + this._vert.source, finalAppendDefines + this._frag.source);
+            if (appendDefines.length > 0) {
+                this._cachedPrograms[appendDefines] = p;
+            } else {
+                this._cachedNoDefineProgram = p;
             }
-
-            this._attributes = this._curProgram.attributes;
-            this._uniforms = this._curProgram.uniforms;
-
-            return this._curProgram.status === GLProgramStatus.SUCCESSED;
+            ++this._numCachedPrograms;
+            
+            return p;
         }
 
         public use(globalUniforms: ShaderUniforms, localUniforms: ShaderUniforms): GLProgram {

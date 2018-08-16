@@ -13,11 +13,13 @@ namespace MITOIA {
             this.vertexBuffers = vertexBuffers || new Map();
         }
 
-        public addVertexSource(source: VertexSource): void {
+        public addVertexSource(source: VertexSource): boolean {
             if (source && source.name && source.name.length > 0) {
                 if (!this.vertexSources) this.vertexSources = new Map();
                 this.vertexSources.set(source.name, source);
+                return true;
             }
+            return false;
         }
 
         public getVertexBuffer(gl: GL, info: GLProgramAttribInfo): GLVertexBuffer {
@@ -26,10 +28,19 @@ namespace MITOIA {
                 let src = this.vertexSources.get(info.name);
                 if (src) {
                     buffer = src.createBuffer(gl);
-                    if (buffer) {
-                        if (!this.vertexBuffers) this.vertexBuffers = new Map();
-                        this.vertexBuffers.set(info.name, buffer);
+                } else {
+                    if (info.name === ShaderPredefined.a_Normal0) {
+                        let vs = this.vertexSources.get(ShaderPredefined.a_Position0);
+                        if (vs && vs.data && this.drawIndexSource && this.drawIndexSource.data) {
+                            let ns = MeshAssetHelper.createNormals(this.drawIndexSource.data, vs.data);
+                            if (this.addVertexSource(ns)) buffer = ns.createBuffer(gl);
+                        }
                     }
+                }
+
+                if (buffer) {
+                    if (!this.vertexBuffers) this.vertexBuffers = new Map();
+                    this.vertexBuffers.set(info.name, buffer);
                 }
             }
 
