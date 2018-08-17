@@ -1,4 +1,5 @@
 namespace MITOIA {
+    export type AnimatorWrapType = (elapsed:number, duration:number) => number;
     export type byte = number;
     export type ubyte = number;
     export type short = number;

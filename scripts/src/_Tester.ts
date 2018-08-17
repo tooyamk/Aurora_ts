@@ -275,11 +275,6 @@ window.addEventListener("DOMContentLoaded", () => {
     worldNode.addChild(cameraNode);
     worldNode.addChild(lightNode);
 
-    for (let i = 0; i < 500; ++i) {
-       // worldNode.appendLocalTranslate(0, 0, 1);
-    }
-    let p = model1Node.getWorldPosition();
-
     worldNode.setLocalRotation(MITOIA.Quaternion.createFromEulerY(90 * Math.PI / 180));
     let euler1 = worldNode.getLocalRotation().getEuler();
     console.log(euler1.x * 180 / Math.PI, euler1.y * 180 / Math.PI, euler1.z * 180 / Math.PI);
