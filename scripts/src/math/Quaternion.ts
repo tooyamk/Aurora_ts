@@ -166,6 +166,15 @@ namespace MITOIA {
             return rst;
         }
 
+        public get isIdentity(): boolean {
+            return this.x === 0 && this.y === 0 && this.z === 0 && this.w === 1;
+        }
+
+        public identity(): void {
+            this.x = this.y = this.z = 0;
+            this.w = 1;
+        }
+
         public isEqual(toCompare: Quaternion, tolerance: number = 0.0): boolean {
             if (tolerance === 0.0) {
                 return this.x === toCompare.x && this.y === toCompare.y && this.z === toCompare.z && this.w === toCompare.w;

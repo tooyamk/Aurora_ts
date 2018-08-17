@@ -26,7 +26,7 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
     //assetStore = MITOIA.MeshBuilder.createBox(100, 100, 100, 1, 1, 1, true, true);
 
     let mesh = node.addComponent(new MITOIA.RenderableMesh());
-    mesh.assetStore = null;
+    mesh.assetStore = assetStore;
 
     let request = new XMLHttpRequest();
     request.addEventListener("loadend", () => {
@@ -68,7 +68,7 @@ function createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.Shade
             offset += 4;
         }
 
-        mesh.assetStore = assetStore;
+        //mesh.assetStore = assetStore;
     });
     request.open("GET", getURL("model.bin"), true);
     request.responseType = "arraybuffer";
@@ -275,6 +275,11 @@ window.addEventListener("DOMContentLoaded", () => {
     worldNode.addChild(cameraNode);
     worldNode.addChild(lightNode);
 
+    for (let i = 0; i < 500; ++i) {
+       // worldNode.appendLocalTranslate(0, 0, 1);
+    }
+    let p = model1Node.getWorldPosition();
+
     worldNode.setLocalRotation(MITOIA.Quaternion.createFromEulerY(90 * Math.PI / 180));
     let euler1 = worldNode.getLocalRotation().getEuler();
     console.log(euler1.x * 180 / Math.PI, euler1.y * 180 / Math.PI, euler1.z * 180 / Math.PI);
@@ -324,6 +329,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     model1Node.appendLocalTranslate(0, 0, 500);
+    //model1Node.setLocalScale(1000, 1000, 1000);
     //skyNode.appendLocalTranslate(0, 0, 500);
     lightNode.appendLocalTranslate(0, 0, 0);
     //lightNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI * 0.25));

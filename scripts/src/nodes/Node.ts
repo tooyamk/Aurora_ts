@@ -6,10 +6,21 @@ namespace MITOIA {
         protected static _tmpVec3: Vector3 = Vector3.Zero;
         protected static _tmpMat: Matrix44 = new Matrix44();
 
+        protected static readonly LOCAL_MATRIX_DIRTY: uint = 0b1;
+        protected static readonly WORLD_MATRIX_DIRTY: uint = 0b10;
+        protected static readonly INVERSE_WORLD_MATRIX_DIRTY: uint = 0b100;
+        protected static readonly WORLD_ROTATION_DIRTY: uint = 0b1000;
+        protected static readonly WORLD_MATRIX_AND_INVERSE_DIRTY: uint = Node.WORLD_MATRIX_DIRTY | Node.INVERSE_WORLD_MATRIX_DIRTY;
+        protected static readonly WORLD_ALL_DIRTY: uint = Node.WORLD_MATRIX_AND_INVERSE_DIRTY | Node.WORLD_ROTATION_DIRTY;
+        protected static readonly LOCAL_AND_WORLD_ALL_DIRTY: uint = Node.LOCAL_MATRIX_DIRTY | Node.WORLD_ALL_DIRTY;
+        protected static readonly LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY: uint = Node.LOCAL_AND_WORLD_ALL_DIRTY & (~Node.WORLD_ROTATION_DIRTY);
+        protected static readonly ALL_MATRIX_DIRTY: uint = Node.LOCAL_MATRIX_DIRTY | Node.WORLD_MATRIX_AND_INVERSE_DIRTY;
+
         public name: string = "";
         public layer: uint = 0xFFFFFFFF;
 
         protected _parent: Node = null;
+        protected _root: Node = null;
 
         public _prev: Node = null;
         public _next: Node = null;
@@ -24,47 +35,83 @@ namespace MITOIA {
         protected _localScale: Vector3 = Vector3.One;
 
         protected _localMatrix: Matrix44 = new Matrix44();
-        protected _localMatrixDirty = false;
 
         protected _worldRot: Quaternion = new Quaternion();
         protected _worldMatrix: Matrix44 = new Matrix44();
         protected _inverseWorldMatrix: Matrix44 = new Matrix44();
-        protected _worldMatrixDirty = false;
-        protected _inverseWorldMatrixDirty = false;
-        protected _worldRotDirty: number = 0;
-        protected _notificationDirty = false;
+        protected _dirty: uint = 0;
 
         constructor() {
+            this._root = this;
+        }
+
+        public get root(): Node {
+            return this._root;
         }
 
         public get parent(): Node {
             return this._parent;
         }
 
-        public addChild(c: Node, notificationUpdate: boolean = true): void {
-            if (c._parent !== this) {
-                if (c._parent) c._parent._removeNode(null);
+        public addChild(c: Node): boolean {
+            if (c && c._parent === null && c !== this._root) {
                 this._addNode(c);
-                c._parentChanged(notificationUpdate);
+                c._parentChanged(this._root);
+                return true;
             }
+            return false;
         }
 
-        public removeChild(c: Node, notificationUpdate: boolean = true): void {
-            if (c._parent === this) {
+        public insertChild(c: Node, before: Node): boolean {
+            if (c && c !== this._root) {
+                if (c === before) return true;
+
+                if (before) {
+                    if (before._parent === this) {
+                        if(c._parent === this) {
+                            this._removeNode(c);
+                            this._insertNode(c, before);
+                            return true;
+                        } else if (c._parent === null) {
+                            this._insertNode(c, before);
+                            return true;
+                        }
+                    }
+                } else {
+                    return this.addChild(c);
+                }
+            }
+
+            return false;
+        }
+
+        public removeChild(c: Node): boolean {
+            if (c && c._parent === this) {
                 this._removeNode(null);
-                c._parentChanged(notificationUpdate);
+                c._parentChanged(c);
+                return true;
             }
+            return false;
         }
 
-        protected _parentChanged(notificationUpdate: boolean): void {
-            this._worldRotDirty = 2;
-            this._worldMatrixDirty = true;
-            this._inverseWorldMatrixDirty = true;
-            this._doNofificationUpdate(notificationUpdate);
+        protected _parentChanged(root: Node): void {
+            this._root = root;
+
+            let old = this._dirty;
+            this._dirty |= Node.WORLD_ALL_DIRTY;
+            if (old !== this._dirty) this._notificationUpdate(true);
         }
 
-        public get numChildren(): number {
+        public get numChildren(): uint {
             return this._numChildren;
+        }
+
+        public get readonlyLocalRotation(): Quaternion {
+            return this._localRot;
+        }
+
+        public get readonlyLocalScale(): Vector3 {
+            return this._localScale;
         }
 
         public get readonlyLocalMatrix(): Matrix44 {
@@ -80,6 +127,11 @@ namespace MITOIA {
         public get readonlyInverseWorldMatrix(): Matrix44 {
             this.updateInverseWorldMatrix();
             return this._inverseWorldMatrix;
+        }
+
+        public get readonlyWorldRotation(): Quaternion {
+            this.updateWorldRotation();
+            return this._worldRot;
         }
 
         [Symbol.iterator]() {
@@ -102,7 +154,6 @@ namespace MITOIA {
             };
         }
 
-
         /**
          * @returns numChildren.
          */
@@ -118,7 +169,7 @@ namespace MITOIA {
             return rst;
         }
 
-        public removeAllChildren(notificationUpdate: boolean = true): void {
+        public removeAllChildren(): void {
             if (this._childHead) {
                 if (this._traversingStack) {
                     for (let i = 0, n = this._traversingStack.length; i < n; ++i) this._traversingStack[i] = null;
@@ -131,7 +182,7 @@ namespace MITOIA {
                     node._prev = null;
                     node._next = null;
                     node._parent = null;
-                    node._parentChanged(notificationUpdate);
+                    node._parentChanged(node);
 
                     node = next;
                 } while (node);
@@ -141,28 +192,21 @@ namespace MITOIA {
             }
         }
 
-        public foreachCheckBreak(callback: (child: Node) => boolean): void {
-            if (callback && this._childHead) {
-                let node = this._childHead;
-                if (!this._traversingStack) this._traversingStack = [];
-                let n = this._traversingStack.length;
-                while (node) {
-                    this._traversingStack[n] = node._next;
-                    if (callback(node)) break;
-                    node = this._traversingStack[n];
-                }
-                this._traversingStack.length = n;
-            }
+        public removeFromParent(): void {
+            if (this._parent) this._parent.removeChild(this);
         }
 
-        public foreach(callback: (child: Node) => void): void {
+        /**
+         * @param callback if return false, break.
+         */
+        public foreach(callback: (child: Node) => boolean): void {
             if (callback && this._childHead) {
                 let node = this._childHead;
                 if (!this._traversingStack) this._traversingStack = [];
                 let n = this._traversingStack.length;
                 while (node) {
                     this._traversingStack[n] = node._next;
-                    callback(node);
+                    if (!callback(node)) break;
                     node = this._traversingStack[n];
                 }
                 this._traversingStack.length = n;
@@ -180,6 +224,20 @@ namespace MITOIA {
                 this._childHead = node;
                 node._prev = node;
             }
+
+            node._parent = this;
+            ++this._numChildren;
+        }
+
+        protected _insertNode(node: Node, before: Node): void {
+            node._next = before;
+            node._prev = before._prev;
+            if (before === this._childHead) {
+                this._childHead = node;
+            } else {
+                before._prev._next = node;
+            }
+            before._prev = node;
 
             node._parent = this;
             ++this._numChildren;
@@ -263,67 +321,40 @@ namespace MITOIA {
             return null;
         }
 
-        public notificationUpdate(): void {
-            if (this._notificationDirty) this._nofificationUpdate();
-        }
-
-        protected _doNofificationUpdate(notificationUpdate: boolean): void {
-            if (notificationUpdate) {
-                this._nofificationUpdate();
-            } else {
-                this._notificationDirty = true;
-            }
-        }
-
-        protected _nofificationUpdate(): void {
-            this._notificationDirty = false;
-
-            var worldRotationDirty: boolean = this._worldRotDirty > 0;
-
+        protected _notificationUpdate(worldRotationDirty: boolean): void {
             let node = this._childHead;
             while (node) {
-                node._receiveNofificationUpdate(worldRotationDirty);
+                node._receiveNotificationUpdate(worldRotationDirty);
                 node = node._next;
             }
-
-            if (this._worldRotDirty === 1) this._worldRotDirty = 0;
         }
 
-        protected _receiveNofificationUpdate(worldRotationDirty: boolean): void {
-            if (worldRotationDirty) this._worldRotDirty = 2;
-            this._worldMatrixDirty = true;
-            this._inverseWorldMatrixDirty = true;
-
-            this._nofificationUpdate();
+        protected _receiveNotificationUpdate(worldRotationDirty: boolean): void {
+            let old = this._dirty;
+            this._dirty |= worldRotationDirty ? Node.WORLD_ALL_DIRTY : Node.WORLD_MATRIX_AND_INVERSE_DIRTY;
+            if (this._dirty !== old) this._notificationUpdate(worldRotationDirty);
         }
 
         public getLocalPositon(rst: Vector3 = null): Vector3 {
             return rst ? rst.setFromXYZ(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32) : new Vector3(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32);
         }
 
-        public setLocalPosition(x: number = 0, y: number = 0, z: number = 0, notificationUpdate: boolean = true): void {
+        public setLocalPosition(x: number = 0, y: number = 0, z: number = 0): void {
             this._localMatrix.m30 = x;
             this._localMatrix.m31 = y;
             this._localMatrix.m32 = z;
 
-            this._worldMatrixDirty = true;
-            this._inverseWorldMatrixDirty = true;
-            this._notificationDirty = true;
-
-            this._doNofificationUpdate(notificationUpdate);
+            let old = this._dirty;
+            this._dirty |= Node.WORLD_MATRIX_AND_INVERSE_DIRTY;
+            if (old !== this._dirty) this._notificationUpdate(false);
         }
 
-        public appendLocalTranslate(x: number = 0, y: number = 0, z: number = 0, notificationUpdate: boolean = true): void {
-            let vec3 = this._localRot.rotateXYZ(x, y, z, Node._tmpVec3);
+        public appendLocalTranslate(x: number = 0, y: number = 0, z: number = 0): void {
+            this.readonlyLocalMatrix.prependTranslate34XYZ(x, y, z);
 
-            this._localMatrix.m30 += vec3.x;
-            this._localMatrix.m31 += vec3.y;
-            this._localMatrix.m32 += vec3.z;
-
-            this._worldMatrixDirty = true;
-            this._inverseWorldMatrixDirty = true;
-
-            this._doNofificationUpdate(notificationUpdate);
+            let old = this._dirty;
+            this._dirty |= Node.WORLD_MATRIX_AND_INVERSE_DIRTY;
+            if (old !== this._dirty) this._notificationUpdate(false);
         }
 
         public getWorldPosition(rst: Vector3 = null): Vector3 {
@@ -332,27 +363,27 @@ namespace MITOIA {
             return rst ? rst.setFromXYZ(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32) : new Vector3(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32);
         }
 
-        public setWorldPosition(x: number = 0, y: number = 0, z: number = 0, notificationUpdate: boolean = true): void {
+        public setWorldPosition(x: number = 0, y: number = 0, z: number = 0): void {
+            let old = this._dirty;
             this.updateWorldMatrix();
 
             this._worldMatrix.m30 = x;
             this._worldMatrix.m31 = y;
             this._worldMatrix.m32 = z;
 
-            this._worldPositionChanged(notificationUpdate);
+            this._worldPositionChanged(old);
         }
 
-        public appendWorldTranslate(x: number = 0, y: number = 0, z: number = 0, notificationUpdate: boolean = true): void {
-            this.updateWorldMatrix();
+        public appendWorldTranslate(x: number = 0, y: number = 0, z: number = 0): void {
+            let old = this._dirty;
+            this.readonlyWorldMatrix.prependTranslate34XYZ(x, y, z);
 
-            this._worldMatrix.prependTranslate34XYZ(x, y, z);
-
-            this._worldPositionChanged(notificationUpdate);
+            this._worldPositionChanged(old);
         }
 
-        protected _worldPositionChanged(notificationUpdate: boolean): void {
+        protected _worldPositionChanged(oldDirty: uint): void {
             if (this._parent) {
-                let vec3 = this._parent.readonlyInverseWorldMatrix.transform34XYZ(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32, Node._tmpVec3);
+                let vec3 = this._parent.readonlyInverseWorldMatrix.transform34XYZ(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32, Node._tmpVec3);
                 
                 this._localMatrix.m30 = vec3.x;
                 this._localMatrix.m31 = vec3.y;
@@ -363,72 +394,65 @@ namespace MITOIA {
                 this._localMatrix.m32 = this._worldMatrix.m32;
             }
 
-            this._inverseWorldMatrixDirty = true;
-
-            this._doNofificationUpdate(notificationUpdate);
+            this._dirty |= Node.INVERSE_WORLD_MATRIX_DIRTY;
+            if (oldDirty !== this._dirty) this._notificationUpdate(false);
         }
 
         public getLocalRotation(rst: Quaternion = null): Quaternion {
             return rst ? rst.setFromQuaternion(this._localRot) : this._localRot.clone();
         }
 
-        public setLocalRotation(quat: Quaternion, notificationUpdate: boolean = true): void {
+        public setLocalRotation(quat: Quaternion): void {
             this._localRot.setFromQuaternion(quat);
 
-            this._localMatrix_worldMatrix_worldRot_Changed(notificationUpdate, 2);
+            let old = this._dirty;
+            this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
+            if (old !== this._dirty) this._notificationUpdate(true);
         }
 
-        public appendLocalRotation(quat: Quaternion, notificationUpdate: boolean = true): void {
+        public appendLocalRotation(quat: Quaternion): void {
             this._localRot.append(quat);
 
-            this._localMatrix_worldMatrix_worldRot_Changed(notificationUpdate, 2);
+            let old = this._dirty;
+            this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
+            if (old !== this._dirty) this._notificationUpdate(true);
         }
 
-        protected _localMatrix_worldMatrix_worldRot_Changed(notificationUpdate: boolean, worldRotDirty: number): void {
-            this._localMatrixDirty = true;
-            this._worldRotDirty = worldRotDirty;
-            this._worldMatrixDirty = true;
-            this._inverseWorldMatrixDirty = true;
-
-            this._doNofificationUpdate(notificationUpdate);
-        }
-
-        public appendParentRotation(quat: Quaternion, notificationUpdate: boolean = true): void {
+        public appendParentRotation(quat: Quaternion): void {
             this._localRot.prepend(quat);
 
-            this._localMatrix_worldMatrix_worldRot_Changed(notificationUpdate, 2);
+            let old = this._dirty;
+            this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
+            if (old !== this._dirty) this._notificationUpdate(true);
         }
 
         public getWorldRotation(rst: Quaternion = null): Quaternion {
-            this.updateWorldRotation();
-
-            return rst ? rst.setFromQuaternion(this._worldRot) : this._worldRot.clone();
+            return rst ? rst.setFromQuaternion(this.readonlyWorldRotation) : this.readonlyWorldRotation.clone();
         }
 
-        public setWorldRotation(quat: Quaternion, notificationUpdate: boolean = true): void {
+        public setWorldRotation(quat: Quaternion): void {
             this._worldRot.setFromQuaternion(quat);
 
-            this._worldRotationChanged(notificationUpdate);
+            this._worldRotationChanged(this._dirty);
         }
 
-        public appendWorldRotation(quat: Quaternion, notificationUpdate: boolean = true): void {
-            this.updateWorldRotation();
+        public appendWorldRotation(quat: Quaternion): void {
+            let old = this._dirty;
+            this.readonlyWorldRotation.append(quat);
 
-            this._worldRot.append(quat);
-
-            this._worldRotationChanged(notificationUpdate);
+            this._worldRotationChanged(old);
         }
 
-        protected _worldRotationChanged(notificationUpdate: boolean): void {
+        protected _worldRotationChanged(oldDirty: uint): void {
             if (this._parent) {
-                this._parent.updateWorldRotation();
-
-                this._parent._worldRot.append(this._worldRot, this._localRot);
+                this._parent.readonlyWorldRotation.append(this._worldRot, this._localRot);
             } else {
                 this._localRot.setFromQuaternion(this._worldRot);
             }
 
-            this._localMatrix_worldMatrix_worldRot_Changed(notificationUpdate, 1);
+            this._dirty &= ~Node.WORLD_ROTATION_DIRTY;
+            this._dirty |= Node.LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY;
+            if (oldDirty !== this._dirty) this._notificationUpdate(true);
         }
 
         /**
@@ -438,9 +462,7 @@ namespace MITOIA {
          */
         public calcLocalRotationFromWorld(quat: Quaternion, rst: Quaternion = null): Quaternion {
             if (this._parent) {
-                this._parent.updateWorldRotation();
-
-                rst = rst ? rst.setFromQuaternion(this._parent._worldRot) : this._parent._worldRot.clone();
+                rst = rst ? rst.setFromQuaternion(this._parent.readonlyWorldRotation) : this._parent.readonlyWorldRotation.clone();
                 rst.x = -rst.x;
                 rst.y = -rst.y;
                 rst.z = -rst.z;
@@ -457,46 +479,43 @@ namespace MITOIA {
             return rst ? rst.setFromVector3(this._localScale) : this._localScale.clone();
         }
 
-        public setLocalScale(x: number, y: number, z: number, notificationUpdate: boolean = true): void {
+        public setLocalScale(x: number, y: number, z: number): void {
             this._localScale.setFromXYZ(x, y, z);
 
-            this._localMatrixDirty = true;
-            this._worldMatrixDirty = true;
-            this._inverseWorldMatrixDirty = true;
-
-            this._doNofificationUpdate(notificationUpdate);
+            let old = this._dirty;
+            this._dirty |= Node.ALL_MATRIX_DIRTY;
+           if (old !== this._dirty)  this._notificationUpdate(false);
         }
 
         public getLocalMatrix(rst: Matrix44 = null): Matrix44 {
-            this.updateLocalMatrix();
-
-            return rst ? rst.set44FromMatrix(this._localMatrix) : this._localMatrix.clone();
+            return rst ? rst.set44FromMatrix(this.readonlyLocalMatrix) : this.readonlyLocalMatrix.clone();
         }
 
-        public setLocalMatrix(m: Matrix44, notificationUpdate: boolean = true): void {
+        public setLocalMatrix(m: Matrix44): void {
             this._localMatrix.set34FromMatrix(m);
 
             this._localMatrix.decomposition(Node._tmpMat, this._localScale);
             Node._tmpMat.toQuaternion(this._localRot);
 
-            this._localMatrix_worldMatrix_worldRot_Changed(notificationUpdate, 2);
+            let old = this._dirty;
+            this._dirty &= ~Node.LOCAL_MATRIX_DIRTY;
+            this._dirty |= Node.WORLD_ALL_DIRTY;
+            if (old !== this._dirty) this._notificationUpdate(true);
         }
 
         public getWorldMatrix(rst: Matrix44 = null): Matrix44 {
-            this.updateWorldMatrix();
-
-            return rst ? rst.set44FromMatrix(this._worldMatrix) : this._worldMatrix.clone();
+            return rst ? rst.set44FromMatrix(this.readonlyWorldMatrix) : this.readonlyWorldMatrix.clone();
         }
 
-        public setWorldMatrix(m: Matrix44, notificationUpdate: boolean = true): void {
+        public setWorldMatrix(m: Matrix44): void {
             this._worldMatrix.set34FromMatrix(m);
 
-            this._worldMatrixDirty = false;
-            this._inverseWorldMatrixDirty = true;
+            let old = this._dirty;
+            this._dirty &= ~Node.WORLD_MATRIX_DIRTY;
+            this._dirty |= Node.INVERSE_WORLD_MATRIX_DIRTY;
 
             if (this._parent) {
-                this.updateInverseWorldMatrix();
-                this._worldMatrix.append34(this._inverseWorldMatrix, this._localMatrix);
+                this._worldMatrix.append34(this.readonlyInverseWorldMatrix, this._localMatrix);
             } else {
                 this._localMatrix.set34FromMatrix(this._worldMatrix);
             }
@@ -504,31 +523,33 @@ namespace MITOIA {
             this._localMatrix.decomposition(Node._tmpMat, this._localScale);
             Node._tmpMat.toQuaternion(this._localRot);
 
-            this._localMatrix_worldMatrix_worldRot_Changed(notificationUpdate, 2);
+            this._dirty &= ~Node.LOCAL_MATRIX_DIRTY;
+            this._dirty |= Node.WORLD_ROTATION_DIRTY;
+            if (old !== this._dirty) this._notificationUpdate(true);
         }
 
         public getInverseWorldMatrix(rst: Matrix44 = null): Matrix44 {
-            this.updateInverseWorldMatrix();
-
-            return rst ? rst.set44FromMatrix(this._inverseWorldMatrix) : this._inverseWorldMatrix.clone();
+            return rst ? rst.set44FromMatrix(this.readonlyInverseWorldMatrix) : this.readonlyInverseWorldMatrix.clone();
         }
 
-        public identity(notificationUpdate: boolean = true): void {
-            this._localMatrix.identity();
-            this._localRot.setFromXYZW();
-            this._localScale.setFromVector3(Vector3.ConstOne);
+        public identity(): void {
+            if (!this._localRot.isIdentity || !this._localScale.isOne || this._localMatrix.m30 !== 0 || this._localMatrix.m31 !== 0 || this._localMatrix.m32 !== 0) {
+                this._localMatrix.identity();
+                this._localRot.identity();
+                this._localScale.setFromVector3(Vector3.ConstOne);
 
-            this._localMatrix_worldMatrix_worldRot_Changed(notificationUpdate, 2);
+                let old = this._dirty;
+                this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
+                if (old !== this._dirty) this._notificationUpdate(true);
+            }
         }
 
         public updateWorldRotation(): void {
-            if (this._worldRotDirty == 2) {
-                this._worldRotDirty = 0;
+            if (this._dirty & Node.WORLD_ROTATION_DIRTY) {
+                this._dirty &= ~Node.WORLD_ROTATION_DIRTY;
 
                 if (this._parent) {
-                    this._parent.updateWorldRotation();
-
-                    this._parent._worldRot.append(this._localRot, this._worldRot);
+                    this._parent.readonlyWorldRotation.append(this._localRot, this._worldRot);
                 } else {
                     this._worldRot.setFromQuaternion(this._localRot);
                 }
@@ -536,8 +557,8 @@ namespace MITOIA {
         }
 
         public updateLocalMatrix(): void {
-            if (this._localMatrixDirty) {
-                this._localMatrixDirty = false;
+            if (this._dirty & Node.LOCAL_MATRIX_DIRTY) {
+                this._dirty &= ~Node.LOCAL_MATRIX_DIRTY;
 
                 this._localRot.toMatrix33(this._localMatrix);
                 this._localMatrix.prependScale34Vector3(this._localScale);
@@ -545,28 +566,22 @@ namespace MITOIA {
         }
 
         public updateWorldMatrix(): void {
-            if (this._worldMatrixDirty) {
-                this._worldMatrixDirty = false;
-
-                this.updateLocalMatrix();
+            if (this._dirty & Node.WORLD_MATRIX_DIRTY) {
+                this._dirty &= ~Node.WORLD_MATRIX_DIRTY;
 
                 if (this._parent) {
-                    this._parent.updateWorldMatrix();
-
-                    this._localMatrix.append34(this._parent._worldMatrix, this._worldMatrix);
+                    this.readonlyLocalMatrix.append34(this._parent.readonlyWorldMatrix, this._worldMatrix);
                 } else {
-                    this._worldMatrix.set34FromMatrix(this._localMatrix);
+                    this._worldMatrix.set34FromMatrix(this.readonlyLocalMatrix);
                 }
             }
         }
 
         public updateInverseWorldMatrix(): void {
-            this.updateWorldMatrix();
+            if (this._dirty & Node.INVERSE_WORLD_MATRIX_DIRTY) {
+                this._dirty &= ~Node.INVERSE_WORLD_MATRIX_DIRTY;
 
-            if (this._inverseWorldMatrixDirty) {
-                this._inverseWorldMatrixDirty = false;
-
-                this._worldMatrix.invert(this._inverseWorldMatrix);
+                this.readonlyWorldMatrix.invert(this._inverseWorldMatrix);
             }
         }
 

@@ -81,10 +81,16 @@ namespace MITOIA {
             return new Vector3(0, 0, -1);
         }
 
+        public get isZero(): boolean {
+            return this.x === 0 && this.y === 0 && this.z === 0;
+        }
+
+        public get isOne(): boolean {
+            return this.x === 1 && this.y === 1 && this.z === 1;
+        }
+
         public setZero(): void {
-            this.x = 0;
-            this.y = 0;
-            this.z = 0;
+            this.x = this.y = this.z = 0;
         }
 
         public get length(): number {
@@ -146,8 +152,8 @@ namespace MITOIA {
         }
 
         public static angleBetween(p1: Vector3, p2: Vector3, clamp: boolean = false): number {
-            var len: number = p1.length * p2.length;
-            var val: number = p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
+            let len: number = p1.length * p2.length;
+            let val: number = p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
             if (len !== 1) val /= len;
 
             if (clamp) {
