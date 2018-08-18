@@ -1,12 +1,6 @@
 namespace MITOIA.AnimatorWrap {
     export const Clamp: AnimatorWrapType = (elapsed: number, duration: number) => {
-        if (elapsed < 0) {
-            return 0;
-        } else if (elapsed < duration) {
-            return duration;
-        } else {
-            return elapsed;
-        }
+        return elapsed < 0 ? 0 : (elapsed > duration ? duration : elapsed);
     }
 
     export const Loop: AnimatorWrapType = (elapsed: number, duration: number) => {
