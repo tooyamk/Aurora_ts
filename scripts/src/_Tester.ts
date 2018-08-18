@@ -356,8 +356,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
     let fps = new MITOIA.FPSDetector();
     fps.show();
-    
-    new MITOIA.Looper(16).run(() => {
+
+    let loop = (delta: number) => {
+        //console.log(delta);
         if (stretcher.execute()) {
             //cam.setProjectionMatrix(MITOIA.Matrix44.createOrthoLHMatrix(engine.canvasWidth, engine.canvasHeight, 10, 10000));
             cam.setProjectionMatrix(MITOIA.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
@@ -365,7 +366,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
         model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI / 180));
         //cameraNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerX(Math.PI / 180));
-//gl.context.bindTexture(MITOIA.GL.TEXTURE_2D, null);
+        //gl.context.bindTexture(MITOIA.GL.TEXTURE_2D, null);
         renderingManager.render(gl, cam, worldNode, [light]);
         renderingManager.postProcess(gl, [pp]);
         //gl.context.flush();
@@ -373,5 +374,45 @@ window.addEventListener("DOMContentLoaded", () => {
 
         fps.record();
         //console.log(fps.fps);
-    }, true);
+    }
+
+
+    (function () {
+        var timeouts: any = [];
+        var messageName = "zero-timeout-message";
+
+        function setZeroTimeout(fn: any) {
+            timeouts.push(fn);
+            window.postMessage(messageName, "*");
+        }
+
+        function handleMessage(event: any) {
+            if (event.source == window && event.data == messageName) {
+                event.stopPropagation();
+                if (timeouts.length > 0) {
+                    var fn = timeouts.shift();
+                    fn();
+                }
+            }
+        }
+
+        window.addEventListener("message", handleMessage, true);
+        let w: any = window;
+        w.setZeroTimeout = setZeroTimeout;
+    })();
+    let tt1 = MITOIA.Timer.utc;
+
+    let loop11 = () => {
+        let tt2 = MITOIA.Timer.utc;
+        console.log(tt2 - tt1);
+        tt1 = tt2;
+        let w: any = window;
+        w.setZeroTimeout(loop11);
+    };
+
+    let w: any = window;
+    w.setZeroTimeout(loop11);
+    
+    new MITOIA.Looper(1000/60).run(loop, true);
+    //requestAnimationFrame(loop);
 });

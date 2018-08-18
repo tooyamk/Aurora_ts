@@ -19,6 +19,12 @@ namespace MITOIA {
             return new Vector2(1, 1);
         }
 
+        public get length(): number {
+            let len = this.x * this.x + this.y * this.y;
+            if (len !== 1) len = Math.sqrt(len);
+            return len;
+        }
+
         public clone(): Vector2 {
             return new Vector2(this.x, this.y);
         }
@@ -32,6 +38,21 @@ namespace MITOIA {
 
         public setFromVector2(vec: Vector2): Vector2 {
             return this.setFromXY(vec.x, vec.y);
+        }
+
+        public static angleBetween(p1: Vector2, p2: Vector2, clamp: boolean = false): number {
+            let len = p1.length * p2.length;
+            let val = p1.x * p2.x + p1.y * p2.y;
+            if (len !== 1) val /= len;
+
+            if (clamp) {
+                if (val > 1) {
+                    val = 1;
+                } else if (val < -1) {
+                    val = -1;
+                }
+            }
+            return Math.acos(val);
         }
     }
 
@@ -145,15 +166,15 @@ namespace MITOIA {
         }
 
         public static cross(p1: Vector3, p2: Vector3, rst: Vector3 = null): Vector3 {
-            let x: number = p1.y * p2.z - p1.z * p2.y;
-            let y: number = p1.z * p2.x - p1.x * p2.z;
-            let z: number = p1.x * p2.y - p1.y * p2.x;
+            let x = p1.y * p2.z - p1.z * p2.y;
+            let y = p1.z * p2.x - p1.x * p2.z;
+            let z = p1.x * p2.y - p1.y * p2.x;
             return rst ? rst.setFromXYZ(x, y, z) : new Vector3(x, y, z);
         }
 
         public static angleBetween(p1: Vector3, p2: Vector3, clamp: boolean = false): number {
-            let len: number = p1.length * p2.length;
-            let val: number = p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
+            let len = p1.length * p2.length;
+            let val = p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
             if (len !== 1) val /= len;
 
             if (clamp) {

@@ -113,6 +113,11 @@ namespace MITOIA {
             return rst;
         }
 
+        public static createFromEulerVector3(angles: Vector3, rst: Quaternion = null): Quaternion {
+            return Quaternion.createFromEulerXYZ(angles.x, angles.y, angles.z, rst);
+        }
+    
+
         /**
 		 * @param axis the axis is a normalize vector.
 		 */

@@ -1,14 +1,14 @@
 namespace MITOIA {
     export class FPSDetector {
-        private _delay: number = 0;
+        private _delta: number = 0;
         private _time: number = 0;
         private _fps: number = 0;
         private _count: number = 0;
 
         private _dis: HTMLDivElement = null;
         
-        constructor(delay: number = 1000) {
-            this._delay = delay;
+        constructor(delta: number = 1000) {
+            this.delta = delta;
             this.reset();
         }
 
@@ -16,12 +16,12 @@ namespace MITOIA {
             return this._fps;
         }
 
-        public get delay(): number {
-            return this._delay;
+        public get delta(): number {
+            return this._delta;
         }
 
-        public set delay(value: number) {
-            this._delay = value;
+        public set delta(value: number) {
+            this._delta = value;
         }
 
         public reset(): void {
@@ -34,7 +34,7 @@ namespace MITOIA {
 
             ++this._count;
             let d = t - this._time;
-            if (d >= this._delay) {
+            if (d >= this._delta) {
                 this._fps = 1000.0 * this._count / d;
                 this._count = 0;
                 this._time = t;
