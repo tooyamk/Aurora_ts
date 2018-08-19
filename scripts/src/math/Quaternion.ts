@@ -37,12 +37,13 @@ namespace MITOIA {
         /**
          * @param rst values are radian.
          */
-        public getEuler(rst: Vector3 = null): Vector3 {
+        public toEuler(rst: Vector3 = null): Vector3 {
             rst = rst || new Vector3();
 
-            rst.x = Math.atan2(2 * (this.w * this.x + this.y * this.z), (1 - 2 * (this.x * this.x + this.y * this.y)));
+            let y2 = this.y * this.y;
+            rst.x = Math.atan2(2 * (this.w * this.x + this.y * this.z), (1 - 2 * (this.x * this.x + y2)));
             rst.y = Math.asin(2 * (this.w * this.y - this.z * this.x));
-            rst.z = Math.atan2(2 * (this.w * this.z + this.x * this.y), (1 - 2 * (this.y * this.y + this.z * this.z)));
+            rst.z = Math.atan2(2 * (this.w * this.z + this.x * this.y), (1 - 2 * (y2 + this.z * this.z)));
 
             return rst;
         }
