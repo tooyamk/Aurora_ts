@@ -5,7 +5,7 @@ namespace MITOIA {
         public clear: GLClear = new GLClear();
         public frameBuffer: GLFrameBuffer = null;
 
-        public cullingMask: uint = 0xFFFFFFFF;
+        public cullingMask: uint = 0x7FFFFFFF;
 
         protected _projectionMatrix: Matrix44 = new Matrix44();
         protected _zNear: number;
@@ -67,7 +67,7 @@ namespace MITOIA {
             let originX: number, originY: number, originZ: number;
             let dirX: number, dirY: number, dirZ: number;
 
-            if (this._projectionMatrix.m33 == 1) {
+            if (this._projectionMatrix.m33 === 1) {
                 let w: number = 2 / this._projectionMatrix.m00;
                 let h: number = 2 / this._projectionMatrix.m11;
 

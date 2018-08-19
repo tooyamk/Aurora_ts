@@ -32,7 +32,7 @@ class _SimpleWorld {
 
             let forwardRenderer = new MITOIA.ForwardRenderer();
 
-            let mat = new MITOIA.Material(shaderStore.createShader(gl, MITOIA.BuiltinShader.DefaultMesh.NAME, MITOIA.BuiltinShader.DefaultMesh.NAME));
+            let mat = new MITOIA.Material(shaderStore.createShader(gl, MITOIA.BuiltinShader.DefaultMesh.NAME));
             mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_COLOR, true);
             mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
 

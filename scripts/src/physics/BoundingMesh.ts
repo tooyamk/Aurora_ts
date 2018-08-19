@@ -1,6 +1,6 @@
 namespace MITOIA {
     export class BoundingMesh implements IBoundingShape {
-        private static readonly CRITICAL = Math.cos(Math.PI * 0.5);
+        public static readonly CRITICAL = Math.cos(Math.PI * 0.5);
 
         public assetStore: AssetStore = null;
 

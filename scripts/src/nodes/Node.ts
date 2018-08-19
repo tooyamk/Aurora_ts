@@ -17,7 +17,7 @@ namespace MITOIA {
         protected static readonly ALL_MATRIX_DIRTY: uint = Node.LOCAL_MATRIX_DIRTY | Node.WORLD_MATRIX_AND_INVERSE_DIRTY;
 
         public name: string = "";
-        public layer: uint = 0xFFFFFFFF;
+        public layer: uint = 0x7FFFFFFF;
 
         protected _parent: Node = null;
         protected _root: Node = null;
@@ -536,7 +536,7 @@ namespace MITOIA {
             if (!this._localRot.isIdentity || !this._localScale.isOne || this._localMatrix.m30 !== 0 || this._localMatrix.m31 !== 0 || this._localMatrix.m32 !== 0) {
                 this._localMatrix.identity();
                 this._localRot.identity();
-                this._localScale.setFromVector3(Vector3.ConstOne);
+                this._localScale.setFromVector3(Vector3.CONST_ONE);
 
                 let old = this._dirty;
                 this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;

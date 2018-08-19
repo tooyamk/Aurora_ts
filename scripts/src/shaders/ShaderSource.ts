@@ -108,7 +108,7 @@ namespace MITOIA {
                             let params = line.split(splitReg);
                             for (let j = 0, n = params.length; j < n; ++j) {
                                 let value = params[j].replace(replaceReg, "");
-                                if (value.search(noNumberReg) == 0) addDefine(value);
+                                if (value.search(noNumberReg) === 0) addDefine(value);
                             }
                         }
                     }

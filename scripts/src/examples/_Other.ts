@@ -87,7 +87,7 @@ class _Other {
            this.createSkyBox(skyNode, gl, shaderStore, MITOIA.BuiltinShader.DefaultSkyBox.NAME, MITOIA.BuiltinShader.DefaultSkyBox.NAME).renderer = forwardRenderer;
         
         
-            let hit = new MITOIA.Ray(new MITOIA.Vector3(0, 0, 490)).cast(worldNode, 0xFFFFFFFF, MITOIA.GLCullFace.NONE);
+            let hit = new MITOIA.Ray(new MITOIA.Vector3(0, 0, 490)).cast(worldNode, 0x7FFFFFFF, MITOIA.GLCullFace.NONE);
         
             //model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI));
         
@@ -291,7 +291,7 @@ class _Other {
     
             tex.upload(0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, img);
             mat.uniforms.setTexture(MITOIA.ShaderPredefined.u_DiffuseSampler, tex);
-            mesh.enabled = ++step == 2;
+            mesh.enabled = ++step === 2;
         }
         img.src = getURL("tex1.png");
     
@@ -299,9 +299,9 @@ class _Other {
         let count = 0;
     
         let checkFinish = () => {
-            if (++count == 6) {
+            if (++count === 6) {
                 mat.uniforms.setTexture(MITOIA.ShaderPredefined.u_ReflectionSampler, tex1);
-                mesh.enabled = ++step == 2;
+                mesh.enabled = ++step === 2;
             }
         }
     
@@ -343,7 +343,7 @@ class _Other {
         let count = 0;
     
         let checkFinish = () => {
-            if (++count == 6) {
+            if (++count === 6) {
                 mat.uniforms.setTexture(MITOIA.ShaderPredefined.u_DiffuseSampler, tex);
                 mesh.enabled = true;
             }

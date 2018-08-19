@@ -273,19 +273,19 @@ namespace MITOIA {
                         if (v > 0xFFFF) {
                             this._dataType = GLIndexDataType.UNSIGNED_INT;
                             break;
-                        } else if (this._dataType == GLIndexDataType.UNSIGNED_BYTE && v > 0xFF) {
+                        } else if (this._dataType === GLIndexDataType.UNSIGNED_BYTE && v > 0xFF) {
                             this._dataType = GLIndexDataType.UNSIGNED_SHORT;
                         }
                     }
 
-                    if (this._dataType == GLIndexDataType.UNSIGNED_INT) {
+                    if (this._dataType === GLIndexDataType.UNSIGNED_INT) {
                         if (this._gl.supprotUintIndexes) {
                             arrayBuffer = new Uint32Array(data);
                         } else {
                             arrayBuffer = new Uint16Array(data);
                             this._dataType = GLIndexDataType.UNSIGNED_SHORT;
                         }
-                    } else if (this._dataType == GLIndexDataType.UNSIGNED_SHORT) {
+                    } else if (this._dataType === GLIndexDataType.UNSIGNED_SHORT) {
                         arrayBuffer = new Uint16Array(data);
                     } else {
                         arrayBuffer = new Uint8Array(data);
@@ -305,9 +305,9 @@ namespace MITOIA {
 
                 if (data instanceof Array) {
                     let arrayBuffer;
-                    if (this._dataType == GLIndexDataType.UNSIGNED_BYTE) {
+                    if (this._dataType === GLIndexDataType.UNSIGNED_BYTE) {
                         arrayBuffer = new Uint8Array(data);
-                    } else if (this._dataLength == GLIndexDataType.UNSIGNED_SHORT) {
+                    } else if (this._dataLength === GLIndexDataType.UNSIGNED_SHORT) {
                         arrayBuffer = new Uint16Array(data);
                     } else {
                         arrayBuffer = new Uint32Array(data);
@@ -1075,7 +1075,7 @@ namespace MITOIA {
     
     export class GLStencil {
         /** In the WebGL, Front and Back must be consistent. */
-        public writeMask: uint = 0xFFFFFFFF;
+        public writeMask: uint = 0xFFFFFFF;
 
         //func
         public func: GLStencilFunc = GLStencilFunc.ALWAYS;

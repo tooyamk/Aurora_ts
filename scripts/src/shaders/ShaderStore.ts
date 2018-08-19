@@ -18,14 +18,14 @@ namespace MITOIA {
         public addLibrary(name: string, lib: ShaderLib): void;
 
         public addLibrary(...args: any[]): void {
-            if (args.length == 2) {
+            if (args.length === 2) {
                 let a: number;
                 if (typeof args[1] === "string") {
                     this._addLibrary(args[0], args[1]);
                 } else {
                     this._addLibrary(args[0], (<ShaderLib>args[1]).source);
                 }
-            } else if (args.length == 1) {
+            } else if (args.length === 1) {
                 if (args[0] instanceof Array) {
                     let libs = <ShaderLib[]>args[0];
                     for (let i = 0, n = libs.length; i < n; ++i) {
@@ -61,7 +61,7 @@ namespace MITOIA {
         }
 
         public getShaderSource(name: string, type: GLShaderType): ShaderSource {
-            let map = type == GLShaderType.VERTEX_SHADER ? this._verts : this._frags;
+            let map = type === GLShaderType.VERTEX_SHADER ? this._verts : this._frags;
             return map[name];
         }
 
@@ -69,14 +69,18 @@ namespace MITOIA {
             return new ShaderSource(this.doInclude(ShaderSource.deleteUnnecessaryContent(source)), excludeDefines, false);
         }
 
-        public createShader(gl: GL, vertName: string, fragName: string): Shader {
-            let vertSrc = this.getShaderSource(vertName, GLShaderType.VERTEX_SHADER);
+        public createShader(gl: GL, name: string): Shader;
+        public createShader(gl: GL, vertName: string, fragName: string): Shader;
+
+        public createShader(gl: GL, name1: string, ...args: any[]): Shader {
+            let fragName: string = args.length === 0 ? name1 : args[0];
+            let vertSrc = this.getShaderSource(name1, GLShaderType.VERTEX_SHADER);
             let fragSrc = this.getShaderSource(fragName, GLShaderType.FRAGMENT_SHADER);
             return vertSrc && fragSrc ? new Shader(gl, vertSrc, fragSrc) : null;
         }
 
         public addSource(name: string, source: string, type: GLShaderType, excludeDefines: string[] = null, forceUpdate: boolean = false): ShaderSource {
-            let map = type == GLShaderType.VERTEX_SHADER ? this._verts : this._frags;
+            let map = type === GLShaderType.VERTEX_SHADER ? this._verts : this._frags;
             let ss = map[name];
             if (ss && !forceUpdate) ss;
 

@@ -1,3 +1,6 @@
+///<reference path="BoundingMesh.ts" />
+///<reference path="RaycastHit.ts" />
+
 namespace MITOIA {
     export class Ray {
         public readonly origin: Vector3 = Vector3.Zero;
@@ -21,7 +24,36 @@ namespace MITOIA {
             return rst;
         }
 
-        public cast(root: Node, layerMask: uint = 0xFFFFFFFF, cullFace: GLCullFace = GLCullFace.BACK, rst: RaycastHit = null): RaycastHit {
+        /**
+         * @param normal normalized
+         */
+        public castPlane(planePoint: Vector3, planeNormal: Vector3, cullFace: GLCullFace = GLCullFace.BACK, rst: RaycastHit = null): RaycastHit {
+            if (rst) {
+                rst.clear();
+            } else {
+                rst = new RaycastHit();
+            }
+
+            let dot = Vector3.dot(this.direction, planeNormal);
+            if (cullFace !== GLCullFace.NONE) {
+                if (cullFace === GLCullFace.BACK) {
+                    if (dot > BoundingMesh.CRITICAL) return rst;
+                } else if (cullFace === GLCullFace.FRONT) {
+                    if (dot < BoundingMesh.CRITICAL) return rst;
+                }
+            }
+
+            let t = (Vector3.dot(planePoint, planeNormal) - Vector3.dot(this.origin, planeNormal)) / dot;
+            if (t >= 0) {
+                rst.distance = t;
+                rst.distanceSquared = t * t;
+                rst.normal.setFromVector3(planeNormal);
+            }
+
+            return rst;
+        }
+
+        public cast(root: Node, layerMask: uint = 0x7FFFFFFF, cullFace: GLCullFace = GLCullFace.BACK, rst: RaycastHit = null): RaycastHit {
             if (rst) {
                 rst.clear();
             } else {

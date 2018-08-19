@@ -573,19 +573,19 @@ namespace MITOIA {
             } else {
                 let quatIndex = 0;
                 if (this.m11 > this.m00) quatIndex = 1;
-                if (quatIndex == 0) {
+                if (quatIndex === 0) {
                     if (this.m22 > this.m00) quatIndex = 2;
                 } else {
                     if (this.m22 > this.m11) quatIndex = 2;
                 }
-                if (quatIndex == 0) {
+                if (quatIndex === 0) {
                     s = Math.sqrt((this.m00 - (this.m11 + this.m22)) + 1);
                     rst.x = s * 0.5;
                     if (s != 0) s = 0.5 / s;
                     rst.y = (this.m01 + this.m10) * s;
                     rst.z = (this.m02 + this.m20) * s;
                     rst.w = (this.m12 - this.m21) * s;
-                } else if (quatIndex == 1) {
+                } else if (quatIndex === 1) {
                     s = Math.sqrt((this.m11 - (this.m22 + this.m00)) + 1);
                     rst.y = s * 0.5;
                     if (s != 0) s = 0.5 / s;

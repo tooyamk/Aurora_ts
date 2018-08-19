@@ -1,7 +1,7 @@
 namespace MITOIA {
     export class Vector2 {
-        public static readonly ConstZero: Vector2 = new Vector2();
-        public static readonly ConstOne: Vector2 = new Vector2(1, 1);
+        public static readonly CONST_ZERO: Vector2 = new Vector2();
+        public static readonly CONST_ONE: Vector2 = new Vector2(1, 1);
 
         public x: number;
         public y: number;
@@ -57,8 +57,8 @@ namespace MITOIA {
     }
 
     export class Vector3 {
-        public static readonly ConstZero: Vector3 = new Vector3();
-        public static readonly ConstOne: Vector3 = new Vector3(1, 1, 1);
+        public static readonly CONST_ZERO: Vector3 = new Vector3();
+        public static readonly CONST_ONE: Vector3 = new Vector3(1, 1, 1);
 
         public x: number;
         public y: number;

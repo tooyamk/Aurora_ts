@@ -183,7 +183,7 @@ namespace MITOIA {
                 for (let i = 0, n = postProcesses.length; i < n; ++i) {
                     let pp = postProcesses[i];
                     if (pp && pp.enabled && pp.material) {
-                        let useDefaultShader = pp.material.shader == null;
+                        let useDefaultShader = pp.material.shader === null;
                         if (useDefaultShader) pp.material.shader = this._defaultPostProcessShader;
 
                         if (pp.material.ready(this._shaderDefines)) {
@@ -198,9 +198,9 @@ namespace MITOIA {
                                 let att = atts[i];
                                 let buffer = pp.assetStore ? pp.assetStore.getVertexBuffer(gl, att) : null;
                                 if (!buffer) {
-                                    if (att.name == ShaderPredefined.a_Position0) {
+                                    if (att.name === ShaderPredefined.a_Position0) {
                                         buffer = this._defaultPostProcessVertexBuffer;
-                                    } else if (att.name == ShaderPredefined.a_TexCoord0) {
+                                    } else if (att.name === ShaderPredefined.a_TexCoord0) {
                                         buffer = this._defaultPostProcessTexCoordBuffer;
                                     }
                                 }

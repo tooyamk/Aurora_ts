@@ -121,7 +121,7 @@ namespace MITOIA {
             if (!Timer._isTickInit) {
                 Timer._isTickInit = true;
                 window.addEventListener("message", (evt: MessageEvent) => {
-                    if (evt.source == window && evt.data === Timer.TICK_MSG) {
+                    if (evt.source === window && evt.data === Timer.TICK_MSG) {
                         evt.stopPropagation();
                         Timer._isTickProcessing = true;
                         for (let i = 0; i < Timer._numRunTicks; ++i) {

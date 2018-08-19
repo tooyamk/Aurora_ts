@@ -94,7 +94,7 @@ namespace MITOIA {
                     }
 
                     let sqr = Math.sqrt(nx * nx + ny * ny + nz * nz);
-                    if (sqr !== 0) {
+                    if (sqr > MathUtils.ZERO_TOLERANCE) {
                         nx /= sqr;
                         ny /= sqr;
                         nz /= sqr;
@@ -173,7 +173,7 @@ namespace MITOIA {
                 let nz = abX * acY - abY * acX;
 
                 let sqr = Math.sqrt(nx * nx + ny * ny + nz * nz);
-                if (sqr !== 0) {
+                if (sqr > MathUtils.ZERO_TOLERANCE) {
                     nx /= sqr;
                     ny /= sqr;
                     nz /= sqr;
@@ -221,7 +221,7 @@ namespace MITOIA {
                     let z = normals[idx + 2];
 
                     let sqr = Math.sqrt(x * x + y * y + z * z);
-                    if (sqr !== 0) {
+                    if (sqr > MathUtils.ZERO_TOLERANCE) {
                         normals[idx] = x / sqr;
                         normals[++idx] = y / sqr;
                         normals[++idx] = z / sqr;
