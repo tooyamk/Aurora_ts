@@ -1,6 +1,6 @@
 namespace MITOIA {
     export class Quaternion {
-        public static readonly ConstZero: Quaternion = new Quaternion();
+        public static readonly CONST_ZERO: Quaternion = new Quaternion();
 
         public x: number;
         public y: number;
@@ -160,8 +160,9 @@ namespace MITOIA {
             } else {
                 let omega = Math.acos(cosOmega);
                 let sinOmega = Math.sin(omega);
-                k0 = Math.sin((1 - t) * omega) / sinOmega;
-                k1 = Math.sin(t * omega) / sinOmega;
+                let to = t * omega;
+                k0 = Math.sin(omega - to) / sinOmega;
+                k1 = Math.sin(to) / sinOmega;
             }
 
             rst.x = from.x * k0 + x1 * k1;

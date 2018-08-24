@@ -3,7 +3,7 @@
 
 namespace MITOIA {
     export abstract class MathUtils {
-        public static readonly ZERO_TOLERANCE: number = 1E-6;
+        public static readonly ZERO_TOLERANCE: number = 1E-6;//Number.EPSILON;
         public static readonly RAD_2_DEG: number = 180 / Math.PI;
         public static readonly DEG_2_RAD: number = Math.PI / 180;
 
@@ -11,6 +11,10 @@ namespace MITOIA {
             return a + (b - a) * t;
         }
 
+        /**
+         * @param begin lineBeginPoint.
+         * @param end lineEndPoint.
+         */
         public static getFootOfPerpendicular(begin: Vector3, end: Vector3, pt: Vector3, rst: Vector3 = null): Vector3 {
             rst = rst || new Vector3();
 

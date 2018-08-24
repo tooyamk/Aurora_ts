@@ -190,8 +190,6 @@ namespace MITOIA {
                             this.begin(gl, pp);
 
                             let p = pp.material.use(this._shaderUniforms);
-                            //gl.setDepthWrite(true);
-                            //gl.setDepthWrite(false);
 
                             let atts = p.attributes;
                             for (let i = 0, n = atts.length; i < n; ++i) {

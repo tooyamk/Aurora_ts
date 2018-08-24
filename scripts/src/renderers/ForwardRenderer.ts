@@ -2,8 +2,17 @@ namespace MITOIA {
     export class ForwardRenderer extends AbstractRenderer {
         public enalbedBlendDepthSort: boolean = true;
 
+        protected _enalbedLighting = true;
         protected _light: AbstractLight = null;
         protected _renderingObject: RenderingObject = null;
+
+        public get enabledLighting(): boolean {
+            return this._enalbedLighting;
+        }
+
+        public set enabledLighting(value: boolean) {
+            this._enalbedLighting = value;
+        }
 
         public preRender(shaderDefines: ShaderDefines, shaderUniforms: ShaderUniforms, lights: AbstractLight[]): void {
             super.preRender(shaderDefines, shaderUniforms, lights);
@@ -20,7 +29,7 @@ namespace MITOIA {
         }
 
         public render(renderingObjects: RenderingObject[], start: int, end: int): void {
-            if (this._light) {
+            if (this._enalbedLighting && this._light) {
                 this._shaderDefines.setDefine(ShaderPredefined.LIGHTING, true);
                 this._light.ready(this._shaderDefines, this._shaderUniforms);
             } else {
