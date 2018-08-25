@@ -1,5 +1,7 @@
 ﻿{
   "compilerOptions": {
+    "composite": true,
+    "declaration": true,
     "noImplicitAny": true,
     "noEmitOnError": true,
     "noUnusedLocals": false,
@@ -11,7 +13,6 @@
     "preserveConstEnums": true,
     "listFiles": true,
     "listEmittedFiles": true,
-    "declaration": true,
     "outFile": "./build/mitoia.core.js"
   },
   "include": [ "./scripts/src/**/*.ts" ],

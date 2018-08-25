@@ -11,7 +11,7 @@
     "preserveConstEnums": true,
     "listFiles": true,
     "listEmittedFiles": true,
-    "outFile": "./wwwroot/app.js"
+    "outFile": "./output/app.js"
   },
   "include": [ "scripts/**/*.ts" ],
   "exclude": [],

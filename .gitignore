@@ -38,8 +38,8 @@ TestResult.xml
 [Dd]ebugPS/
 [Rr]eleasePS/
 dlldata.c
-wwwroot/app.js
-wwwroot/res/
+output/app.js
+output/res/
 
 *.js.map
 *_i.c
