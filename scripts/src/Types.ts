@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export type AnimatorWrapType = (elapsed:number, duration:number) => number;
     export type byte = number;
     export type ubyte = number;

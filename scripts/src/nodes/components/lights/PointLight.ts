@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class PointLight extends AbstractLight {
         
         protected _attenConstant: number;

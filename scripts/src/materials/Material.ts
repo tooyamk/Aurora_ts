@@ -1,8 +1,15 @@
-namespace MITOIA {
+namespace Aurora {
+    export const enum RenderingSort {
+        NEAR_TO_FAR,
+        KEEP,
+        FAR_TO_NEAR
+    }
+
     export class Material {
         public shader: Shader = null;
 
         public renderingPriority: int = 0;
+        public renderingSort: RenderingSort = RenderingSort.KEEP;
 
         public drawMode: GLDrawMode = GLDrawMode.TRIANGLES;
 

@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class CanvasAutoStretcher {
         private _gl: GL = null;
 

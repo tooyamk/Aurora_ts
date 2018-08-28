@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export abstract class AbstractLight extends AbstractNodeComponent {
         public readonly color: Color3 = Color3.WHITE;
         public intensity: number = 1.0;

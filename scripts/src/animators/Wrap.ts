@@ -1,4 +1,4 @@
-namespace MITOIA.AnimatorWrap {
+namespace Aurora.AnimatorWrap {
     export const Clamp: AnimatorWrapType = (elapsed: number, duration: number) => {
         return elapsed < 0 ? 0 : (elapsed > duration ? duration : elapsed);
     }

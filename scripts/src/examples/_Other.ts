@@ -6,62 +6,62 @@ class _Other {
             }
         
             let canvas = <HTMLCanvasElement>document.getElementById("renderCanvas");
-            let options: MITOIA.GLOptions = {};
+            let options: Aurora.GLOptions = {};
             options.preserveDrawingBuffer = true;
             options.depth = true;
             options.stencil = true;
             options.version = 1;
-            let gl = new MITOIA.GL(canvas, options);
+            let gl = new Aurora.GL(canvas, options);
         
-            let forwardRenderer = new MITOIA.ForwardRenderer();
+            let forwardRenderer = new Aurora.ForwardRenderer();
         
-            console.log(MITOIA.Version, gl.version, gl.versionFullInfo);
+            console.log(Aurora.Version, gl.version, gl.versionFullInfo);
         
-            let shaderStore = new MITOIA.ShaderStore();
+            let shaderStore = new Aurora.ShaderStore();
             shaderStore.addBuiltinLibraries();
             shaderStore.addBuiltinShaderSources();
             
-            let worldNode = new MITOIA.Node();
-            let skyNode = new MITOIA.Node();
-            let model1Node = new MITOIA.Node();
-            let model2Node = new MITOIA.Node();
-            let cameraNode = new MITOIA.Node();
-            let lightNode = new MITOIA.Node();
+            let worldNode = new Aurora.Node();
+            let skyNode = new Aurora.Node();
+            let model1Node = new Aurora.Node();
+            let model2Node = new Aurora.Node();
+            let cameraNode = new Aurora.Node();
+            let lightNode = new Aurora.Node();
             worldNode.addChild(skyNode);
             worldNode.addChild(model1Node);
             worldNode.addChild(model2Node);
             worldNode.addChild(cameraNode);
             worldNode.addChild(lightNode);
         
-            let light = lightNode.addComponent(new MITOIA.PointLight());
+            let light = lightNode.addComponent(new Aurora.PointLight());
             //light.spotAngle = 10 * Math.PI / 180;
             light.color.setFromRGB(1, 1, 1);
             light.setAttenuation(2500);
             light.intensity = 1.0;
         
-            let fbo = new MITOIA.GLFrameBuffer(gl, 1000, 1000);
+            let fbo = new Aurora.GLFrameBuffer(gl, 1000, 1000);
         
-            let depthRBO = new MITOIA.GLRenderBuffer(gl);
-            depthRBO.storage(MITOIA.GLRenderBufferInternalFormat.DEPTH_COMPONENT16, fbo.width, fbo.height);
+            let depthRBO = new Aurora.GLRenderBuffer(gl);
+            depthRBO.storage(Aurora.GLRenderBufferInternalFormat.DEPTH_COMPONENT16, fbo.width, fbo.height);
         
-            let stencilRBO = new MITOIA.GLRenderBuffer(gl);
-            stencilRBO.storage(MITOIA.GLRenderBufferInternalFormat.STENCIL_INDEX8, fbo.width, fbo.height);
+            let stencilRBO = new Aurora.GLRenderBuffer(gl);
+            stencilRBO.storage(Aurora.GLRenderBufferInternalFormat.STENCIL_INDEX8, fbo.width, fbo.height);
         
-            let depthAndStencilRBO = new MITOIA.GLRenderBuffer(gl);
-            depthAndStencilRBO.storage(MITOIA.GLRenderBufferInternalFormat.DEPTH_STENCIL, fbo.width, fbo.height);
+            let depthAndStencilRBO = new Aurora.GLRenderBuffer(gl);
+            depthAndStencilRBO.storage(Aurora.GLRenderBufferInternalFormat.DEPTH_STENCIL, fbo.width, fbo.height);
         
-            let colorTex = new MITOIA.GLTexture2D(gl);
-            colorTex.upload(0, MITOIA.GLTexInternalFormat.RGBA, fbo.width, fbo.height, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, <ArrayBufferView>null, 0);
+            let colorTex = new Aurora.GLTexture2D(gl);
+            colorTex.upload(0, Aurora.GLTexInternalFormat.RGBA, fbo.width, fbo.height, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, <ArrayBufferView>null, 0);
             
-            fbo.setAttachmentTexture2D(MITOIA.GLTex2DAttachment.COLOR_ATTACHMENT0, MITOIA.GLFrameBufferTexTarget.TEXTURE_2D, colorTex);
+            fbo.setAttachmentTexture2D(Aurora.GLTex2DAttachment.COLOR_ATTACHMENT0, Aurora.GLFrameBufferTexTarget.TEXTURE_2D, colorTex);
             //fbo.setAttachmentTexture2D(MITOIA.GLTex2DAttachment.COLOR_ATTACHMENT0, MITOIA.GLFrameBufferTexTarget.TEXTURE_2D, null);
-            fbo.setAttachmentRenderBuffer(MITOIA.GLRenderBufferAttachment.DEPTH_STENCIL_ATTACHMENT, depthAndStencilRBO);
+            fbo.setAttachmentRenderBuffer(Aurora.GLRenderBufferAttachment.DEPTH_STENCIL_ATTACHMENT, depthAndStencilRBO);
             //fbo.setAttachmentRenderBuffer(MITOIA.GLFrameBufferRenderBufferAttachment.STENCIL_ATTACHMENT, stencilRBO);
         
-            let cam = cameraNode.addComponent(new MITOIA.Camera());
+            let cam = cameraNode.addComponent(new Aurora.Camera());
             //cam.setProjectionMatrix(MITOIA.Matrix44.createOrthoLHMatrix(engine.canvasWidth, engine.canvasHeight, 10, 10000));
             //cam.setProjectionMatrix(MITOIA.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, engine.canvasWidth / engine.canvasHeight, 1, 10000));
-            cam.setProjectionMatrix(MITOIA.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, 1257 / 1308, 5, 10000));
+            cam.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, 1257 / 1308, 5, 10000));
             cam.clear.color.setFromRGBA(0.5, 0.5, 0.5, 1);
             //cam.clear.clearColor = false;
             //cam.clear.clearDepth = false;
@@ -73,45 +73,45 @@ class _Other {
             }
         
             model1Node.appendLocalTranslate(0, 0, 500);
-            //model1Node.setLocalScale(1000, 1000, 1000);
+            model1Node.setLocalScale(100, 100, 100);
             //skyNode.appendLocalTranslate(0, 0, 500);
             lightNode.appendLocalTranslate(0, 0, 0);
             //lightNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI * 0.25));
         
-            let mesh = this.createModel(model1Node, gl, shaderStore, MITOIA.BuiltinShader.DefaultMesh.NAME, MITOIA.BuiltinShader.DefaultMesh.NAME);
+            let mesh = this.createModel(model1Node, gl, shaderStore, Aurora.BuiltinShader.DefaultMesh.NAME, Aurora.BuiltinShader.DefaultMesh.NAME);
             mesh.renderer = forwardRenderer;
             //model1Node.addComponent(new MITOIA.Collider(new MITOIA.BoundingMesh(mesh.assetStore)));
-            model1Node.addComponent(new MITOIA.Collider(new MITOIA.BoundingSphere(null, 100)));
+            model1Node.addComponent(new Aurora.Collider(new Aurora.BoundingSphere(null, 100)));
            //model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerX(Math.PI / 180));
         
-           this.createSkyBox(skyNode, gl, shaderStore, MITOIA.BuiltinShader.DefaultSkyBox.NAME, MITOIA.BuiltinShader.DefaultSkyBox.NAME).renderer = forwardRenderer;
+           this.createSkyBox(skyNode, gl, shaderStore, Aurora.BuiltinShader.DefaultSkyBox.NAME, Aurora.BuiltinShader.DefaultSkyBox.NAME).renderer = forwardRenderer;
         
         
-            let hit = new MITOIA.Ray(new MITOIA.Vector3(0, 0, 490)).cast(worldNode, 0x7FFFFFFF, MITOIA.GLCullFace.NONE);
+            let hit = new Aurora.Ray(new Aurora.Vector3(0, 0, 490)).cast(worldNode, 0x7FFFFFFF, Aurora.GLCullFace.NONE);
         
             //model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI));
         
-            let renderingManager = new MITOIA.RenderingManager();
+            let renderingManager = new Aurora.RenderingManager();
         
-            let stretcher = new MITOIA.CanvasAutoStretcher(gl);
+            let stretcher = new Aurora.CanvasAutoStretcher(gl);
         
-            let pp = new MITOIA.PostProcess();
-            pp.material = new MITOIA.Material();
+            let pp = new Aurora.PostProcess();
+            pp.material = new Aurora.Material();
             //pp.material.depthWrite = false;
             //pp.material.cullFace = MITOIA.GLCullFace.NONE;
-            pp.material.uniforms.setTexture(MITOIA.ShaderPredefined.u_Sampler0, colorTex);
+            pp.material.uniforms.setTexture(Aurora.ShaderPredefined.u_Sampler0, colorTex);
         
-            let fps = new MITOIA.FPSDetector();
+            let fps = new Aurora.FPSDetector();
             fps.show();
         
             let loop = (delta: number) => {
                 //console.log(delta);
                 if (stretcher.execute()) {
                     //cam.setProjectionMatrix(MITOIA.Matrix44.createOrthoLHMatrix(engine.canvasWidth, engine.canvasHeight, 10, 10000));
-                    cam.setProjectionMatrix(MITOIA.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
+                    cam.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
                 }
         
-                model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI / 180));
+                model1Node.appendLocalRotation(Aurora.Quaternion.createFromEulerY(Math.PI / 180));
                 //cameraNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerX(Math.PI / 180));
                 //gl.context.bindTexture(MITOIA.GL.TEXTURE_2D, null);
                 renderingManager.render(gl, cam, worldNode, [light]);
@@ -124,40 +124,40 @@ class _Other {
             }
         
             //setInterval(loop, 16)
-            new MITOIA.FrameLooper(1000 / 60).start(loop);
+            new Aurora.FrameLooper(1000 / 60).start(loop);
             //requestAnimationFrame(loop);
         });
     }
 
-    public createModel(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.ShaderStore, vert: string, frag: string) {
-        let vertexBuffer = new MITOIA.GLVertexBuffer(gl);
-        vertexBuffer.upload([-150, -100, 0.0, -100.0, 100, 0.0, 100, -100, 0.0], MITOIA.GLVertexBufferSize.THREE, MITOIA.GLVertexBufferDataType.FLOAT, false, MITOIA.GLUsageType.STATIC_DRAW);
+    public createModel(node: Aurora.Node, gl: Aurora.GL, shaderStore: Aurora.ShaderStore, vert: string, frag: string) {
+        let vertexBuffer = new Aurora.GLVertexBuffer(gl);
+        vertexBuffer.upload([-150, -100, 0.0, -100.0, 100, 0.0, 100, -100, 0.0], Aurora.GLVertexBufferSize.THREE, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
         //vertexBuffer.upload([-0.5, -0.5, 0.0, -0.5, 0.5, 0.0, 0.5, -0.5, 0.0], MITOIA.GLVertexBufferSize.THREE, MITOIA.GLVertexBufferDataType.FLOAT, false, MITOIA.GLUsageType.STATIC_DRAW);
     
-        let colorBuffer = new MITOIA.GLVertexBuffer(gl);
-        colorBuffer.upload([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0], MITOIA.GLVertexBufferSize.THREE, MITOIA.GLVertexBufferDataType.FLOAT, false, MITOIA.GLUsageType.STATIC_DRAW);
+        let colorBuffer = new Aurora.GLVertexBuffer(gl);
+        colorBuffer.upload([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0], Aurora.GLVertexBufferSize.THREE, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
     
-        let uvBuffer = new MITOIA.GLVertexBuffer(gl);
-        uvBuffer.upload([0, 1, 0, 0, 1, 1], MITOIA.GLVertexBufferSize.TWO, MITOIA.GLVertexBufferDataType.FLOAT, false, MITOIA.GLUsageType.STATIC_DRAW);
+        let uvBuffer = new Aurora.GLVertexBuffer(gl);
+        uvBuffer.upload([0, 1, 0, 0, 1, 1], Aurora.GLVertexBufferSize.TWO, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
     
-        let indexBuffer = new MITOIA.GLIndexBuffer(gl);
-        indexBuffer.upload([0, 1, 2], MITOIA.GLUsageType.STATIC_DRAW);
+        let indexBuffer = new Aurora.GLIndexBuffer(gl);
+        indexBuffer.upload([0, 1, 2], Aurora.GLUsageType.STATIC_DRAW);
     
-        let assetStore = new MITOIA.AssetStore();
-        assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_Position0, vertexBuffer);
-        assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_TexCoord0, uvBuffer);
-        assetStore.vertexBuffers.set(MITOIA.ShaderPredefined.a_Color0, colorBuffer);
+        let assetStore = new Aurora.AssetStore();
+        assetStore.vertexBuffers.set(Aurora.ShaderPredefined.a_Position0, vertexBuffer);
+        assetStore.vertexBuffers.set(Aurora.ShaderPredefined.a_TexCoord0, uvBuffer);
+        assetStore.vertexBuffers.set(Aurora.ShaderPredefined.a_Color0, colorBuffer);
         assetStore.drawIndexBuffer = indexBuffer;
     
-        assetStore = MITOIA.MeshBuilder.createSphere(100, 40, true, true);
+        assetStore = Aurora.MeshBuilder.createSphere(100, 40, true, true);
         //assetStore = MITOIA.MeshBuilder.createBox(100, 100, 100, 1, 1, 1, true, true);
     
-        let mesh = node.addComponent(new MITOIA.RenderableMesh());
-        mesh.assetStore = assetStore;
+        let mesh = node.addComponent(new Aurora.RenderableMesh());
+        //mesh.assetStore = assetStore;
     
         let request = new XMLHttpRequest();
         request.addEventListener("loadend", () => {
-            let assetStore = new MITOIA.AssetStore();
+            let assetStore = new Aurora.AssetStore();
     
             let offset = 0;
             let dv = new DataView(request.response);
@@ -165,20 +165,33 @@ class _Other {
             let n = dv.getInt32(offset, true);
             offset += 4;
             let vertices: number[] = [];
-            assetStore.addVertexSource(new MITOIA.VertexSource(MITOIA.ShaderPredefined.a_Position0, vertices));
+            assetStore.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_Position0, vertices));
             for (let i = 0; i < n; ++i) {
                 vertices.push(dv.getFloat32(offset, true));
                 offset += 4;
                 vertices.push(dv.getFloat32(offset, true));
                 offset += 4;
                 vertices.push(dv.getFloat32(offset, true));
+                offset += 4;
+            }
+
+            n = dv.getInt32(offset, true);
+            offset += 4;
+            let normal: number[] = [];
+            assetStore.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_Normal0, normal, Aurora.GLVertexBufferSize.THREE));
+            for (let i = 0; i < n; ++i) {
+                normal.push(dv.getFloat32(offset, true));
+                offset += 4;
+                normal.push(dv.getFloat32(offset, true));
+                offset += 4;
+                normal.push(dv.getFloat32(offset, true));
                 offset += 4;
             }
             
             n = dv.getInt32(offset, true);
             offset += 4;
             let uv: number[] = [];
-            assetStore.addVertexSource(new MITOIA.VertexSource(MITOIA.ShaderPredefined.a_TexCoord0, uv, MITOIA.GLVertexBufferSize.TWO));
+            assetStore.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_TexCoord0, uv, Aurora.GLVertexBufferSize.TWO));
             for (let i = 0; i < n; ++i) {
                 uv.push(dv.getFloat32(offset, true));
                 offset += 4;
@@ -188,14 +201,14 @@ class _Other {
     
             n = dv.getInt32(offset, true);
             offset += 4;
-            let index: MITOIA.uint[] = [];
-            assetStore.drawIndexSource = new MITOIA.DrawIndexSource(index);
+            let index: Aurora.uint[] = [];
+            assetStore.drawIndexSource = new Aurora.DrawIndexSource(index);
             for (let i = 0; i < n; ++i) {
                 index.push(dv.getInt32(offset, true));
                 offset += 4;
             }
     
-            //mesh.assetStore = assetStore;
+            mesh.assetStore = assetStore;
         });
         request.open("GET", getURL("model.bin"), true);
         request.responseType = "arraybuffer";
@@ -204,7 +217,7 @@ class _Other {
         //console.log(shaderStore.getShaderSource(vert, MITOIA.GLShaderType.VERTEX_SHADER).source);
         //console.log(shaderStore.getShaderSource(vert, MITOIA.GLShaderType.FRAGMENT_SHADER).source);
     
-        let mat = new MITOIA.Material(shaderStore.createShader(gl, vert, frag));
+        let mat = new Aurora.Material(shaderStore.createShader(gl, vert, frag));
         /*
         let mat = new MITOIA.Material(new MITOIA.Shader(gl, 
             new MITOIA.ShaderSource(`
@@ -237,39 +250,39 @@ class _Other {
                 */
         //mat.uniforms.setFloat("u_color", -0.1, 1, 0, 0.2);
         //mat.uniforms.setNumberArray("u_color", new Int32Array([1, 1, 0, 1]));
-        let stencil = new MITOIA.GLStencil();
-        stencil.func = MITOIA.GLStencilFunc.NEVER;
+        let stencil = new Aurora.GLStencil();
+        stencil.func = Aurora.GLStencilFunc.NEVER;
         //stencil.ref = 2;
     
-        let stencil2 = new MITOIA.GLStencil();
-        stencil2.func = MITOIA.GLStencilFunc.ALWAYS;
+        let stencil2 = new Aurora.GLStencil();
+        stencil2.func = Aurora.GLStencilFunc.ALWAYS;
         //stencil2.ref = 2;
         
-        mat.cullFace = MITOIA.GLCullFace.BACK;
-        mat.depthTest = MITOIA.GLDepthTest.LESS;
+        mat.cullFace = Aurora.GLCullFace.BACK;
+        mat.depthTest = Aurora.GLDepthTest.LESS;
         //mat.blend = new MITOIA.GLBlend();
         //mat.blend.func.setSeparate(MITOIA.GLBlendFactorValue.SRC_ALPHA, MITOIA.GLBlendFactorValue.ONE_MINUS_SRC_ALPHA, MITOIA.GLBlendFactorValue.ONE, MITOIA.GLBlendFactorValue.ONE_MINUS_SRC_ALPHA);
         //mat.stencilFront = stencil;
         //mat.stencilBack = stencil2;
         mesh.materials[0] = mat;
         mesh.enabled = false;
-        mat.defines.setDefine(MITOIA.ShaderPredefined.LIGHTING, true);
-        mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_TEX, false);
-        mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_COLOR, true);
-        mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1.0);
+        mat.defines.setDefine(Aurora.ShaderPredefined.LIGHTING, true);
+        mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, false);
+        mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
+        mat.uniforms.setNumber(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1.0);
         //mat.defines.setDefine(MITOIA.ShaderPredefined.SPECULAR_COLOR, true);
         //mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_SpecularColor, 0.5, 0, 0);
-        mat.defines.setDefine(MITOIA.ShaderPredefined.LIGHTING_SPECULAR, MITOIA.ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
-        mat.defines.setDefine(MITOIA.ShaderPredefined.REFLECTION, false);
+        mat.defines.setDefine(Aurora.ShaderPredefined.LIGHTING_SPECULAR, Aurora.ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
+        mat.defines.setDefine(Aurora.ShaderPredefined.REFLECTION, false);
         
         //mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST, MITOIA.ShaderPredefined.ALPHA_TEST_LESS);
         //mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_AlphaTestCompareValue, 0.51);
         
-        mat.drawMode = MITOIA.GLDrawMode.TRIANGLES;
+        mat.drawMode = Aurora.GLDrawMode.TRIANGLES;
     
         let step = 0;
     
-        let tex = new MITOIA.GLTexture2D(gl);
+        let tex = new Aurora.GLTexture2D(gl);
     
         let img = new Image();
         img.onload = () => {
@@ -289,81 +302,81 @@ class _Other {
                 g.fillText("噶唔热好热哇和日历了", 256, 128);
             })(text.getContext("2d"))
     
-            tex.upload(0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, img);
-            mat.uniforms.setTexture(MITOIA.ShaderPredefined.u_DiffuseSampler, tex);
+            tex.upload(0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
+            mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
             mesh.enabled = ++step === 2;
         }
         img.src = getURL("tex1.png");
     
-        let tex1 = new MITOIA.GLTextureCube(gl);
+        let tex1 = new Aurora.GLTextureCube(gl);
         let count = 0;
     
         let checkFinish = () => {
             if (++count === 6) {
-                mat.uniforms.setTexture(MITOIA.ShaderPredefined.u_ReflectionSampler, tex1);
+                mat.uniforms.setTexture(Aurora.ShaderPredefined.u_ReflectionSampler, tex1);
                 mesh.enabled = ++step === 2;
             }
         }
     
-        let loadImg = (name: string, face: MITOIA.GLTexCubeFace) => {
+        let loadImg = (name: string, face: Aurora.GLTexCubeFace) => {
             let img = new Image();
             img.src = getURL("skybox/" + name + ".jpg");
             img.onload = () => {
-                tex1.upload(face, 0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, img);
+                tex1.upload(face, 0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
                 checkFinish();
             }
         }
     
-        loadImg("nx", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_X);
-        loadImg("ny", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_Y);
-        loadImg("nz", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_Z);
-        loadImg("px", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_X);
-        loadImg("py", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_Y);
-        loadImg("pz", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_Z);
+        loadImg("nx", Aurora.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_X);
+        loadImg("ny", Aurora.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_Y);
+        loadImg("nz", Aurora.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_Z);
+        loadImg("px", Aurora.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_X);
+        loadImg("py", Aurora.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_Y);
+        loadImg("pz", Aurora.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_Z);
     
         return mesh;
     }
     
-    public createSkyBox(node: MITOIA.Node, gl: MITOIA.GL, shaderStore: MITOIA.ShaderStore, vert: string, frag: string) {
-        let mesh = node.addComponent(new MITOIA.RenderableMesh());
+    public createSkyBox(node: Aurora.Node, gl: Aurora.GL, shaderStore: Aurora.ShaderStore, vert: string, frag: string) {
+        let mesh = node.addComponent(new Aurora.RenderableMesh());
         mesh.enabled = false;
-        mesh.assetStore = MITOIA.MeshBuilder.createBox(10000, 10000, 10000, 1, 1, 1, true, true);
+        mesh.assetStore = Aurora.MeshBuilder.createBox(10000, 10000, 10000, 1, 1, 1, true, true);
     
-        let mat = new MITOIA.Material(shaderStore.createShader(gl, vert, frag));
-        mat.cullFace = MITOIA.GLCullFace.FRONT;
+        let mat = new Aurora.Material(shaderStore.createShader(gl, vert, frag));
+        mat.cullFace = Aurora.GLCullFace.FRONT;
         mat.depthWrite = false;
-        mat.depthTest = MITOIA.GLDepthTest.NONE;
+        mat.depthTest = Aurora.GLDepthTest.NONE;
         mat.renderingPriority = -1;
     
-        mat.defines.setDefine(MITOIA.ShaderPredefined.DIFFUSE_TEX, true);
+        mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
     
         mesh.materials[0] = mat;
     
-        let tex = new MITOIA.GLTextureCube(gl);
+        let tex = new Aurora.GLTextureCube(gl);
         let count = 0;
     
         let checkFinish = () => {
             if (++count === 6) {
-                mat.uniforms.setTexture(MITOIA.ShaderPredefined.u_DiffuseSampler, tex);
+                mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
                 mesh.enabled = true;
             }
         }
     
-        let loadImg = (name: string, face: MITOIA.GLTexCubeFace) => {
+        let loadImg = (name: string, face: Aurora.GLTexCubeFace) => {
             let img = new Image();
             img.src = getURL("skybox/" + name + ".jpg");
             img.onload = () => {
-                tex.upload(face, 0, MITOIA.GLTexInternalFormat.RGBA, MITOIA.GLTexFormat.RGBA, MITOIA.GLTexDataType.UNSIGNED_BYTE, img);
+                tex.upload(face, 0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
                 checkFinish();
             }
         }
     
-        loadImg("nx", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_X);
-        loadImg("ny", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_Y);
-        loadImg("nz", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_Z);
-        loadImg("px", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_X);
-        loadImg("py", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_Y);
-        loadImg("pz", MITOIA.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_Z);
+        loadImg("nx", Aurora.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_X);
+        loadImg("ny", Aurora.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_Y);
+        loadImg("nz", Aurora.GLTexCubeFace.TEXTURE_CUBE_MAP_NEGATIVE_Z);
+        loadImg("px", Aurora.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_X);
+        loadImg("py", Aurora.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_Y);
+        loadImg("pz", Aurora.GLTexCubeFace.TEXTURE_CUBE_MAP_POSITIVE_Z);
     
         return mesh;
     }

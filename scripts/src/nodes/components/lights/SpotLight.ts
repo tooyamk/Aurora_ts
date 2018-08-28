@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class SpotLight extends PointLight {
         public spotAngle: number = Math.PI / 6.0;
 

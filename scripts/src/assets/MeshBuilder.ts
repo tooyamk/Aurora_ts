@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export abstract class MeshBuilder {
         public static createBox(length: number, width: number, height: number, lengthSegs: uint = 1, widthSegs: uint = 1, heightSegs: uint = 1, generateTexCoords: Boolean = true, generateNormals: boolean = false): AssetStore {
             if (lengthSegs < 1) lengthSegs = 1;

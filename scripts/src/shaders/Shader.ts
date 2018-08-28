@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class Shader {
         protected _gl: GL;
         protected _vert: ShaderSource;
@@ -47,18 +47,13 @@ namespace MITOIA {
 
         public hasUniform(name: string): boolean {
             if (this._curProgram) return this._curProgram.hasUniform(name);
-
             return false;
         }
 
         public precompile(defines: ShaderDefines = null): boolean {
             let appendDefines = this._collectDefines(null, defines);
             let p = this._getProgramFromCache(appendDefines);
-            if (p) {
-                return true;
-            } else {
-                return this._createProgram(appendDefines).status === GLProgramStatus.SUCCESSED;
-            }
+            return p ? true : this._createProgram(appendDefines).status === GLProgramStatus.SUCCESSED;
         }
 
         public ready(globalDefines: ShaderDefines, localDefines: ShaderDefines): boolean {

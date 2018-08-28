@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export abstract class AbstractRenderer {
         public isRendering: boolean = false;
 

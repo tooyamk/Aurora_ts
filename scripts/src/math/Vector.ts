@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class Vector2 {
         public static readonly CONST_ZERO: Vector2 = new Vector2();
         public static readonly CONST_ONE: Vector2 = new Vector2(1, 1);

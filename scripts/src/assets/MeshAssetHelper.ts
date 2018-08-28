@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export interface SortSameVerticesResult {
         indices: uint[];
         vertices: number[];

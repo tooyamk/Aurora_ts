@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export abstract class AbstractNodeComponent {
         protected _node: Node = null;
         protected _enabled: boolean = true;

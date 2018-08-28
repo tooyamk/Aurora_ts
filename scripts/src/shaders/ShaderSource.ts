@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class ShaderSource {
         private static SYS_DEFINES: Set<string> = null;
         private static EXCLUDE_DEFINES: RegExp = null;

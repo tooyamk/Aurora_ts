@@ -1,4 +1,4 @@
-namespace MITOIA.Sort {
+namespace Aurora.Sort {
     export abstract class Merge {
         /**
          * @param compareFn : If return true, a is before to b.

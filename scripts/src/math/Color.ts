@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class Color3 {
         public r: number;
         public g: number;

@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export interface ShaderLib {
         name: string;
         source: string;

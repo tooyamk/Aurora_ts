@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class RenderingManager {
         protected _renderingQueue: RenderingObject[] = [];
         protected _renderingQueueLength: uint = 0;
@@ -13,6 +13,9 @@ namespace MITOIA {
         protected _viewToProjMatrix: Matrix44 = new Matrix44();
         protected _worldToViewMatrix: Matrix44 = new Matrix44();
         protected _worldToProjMatrix: Matrix44 = new Matrix44();
+        protected _viewToProjM44Array: number[] = [];
+        protected _worldToViewM44Array: number[] = [];
+        protected _worldToProjM44Array: number[] = [];
 
         protected _defaultPostProcessVertexBuffer: GLVertexBuffer = null;
         protected _defaultPostProcessTexCoordBuffer: GLVertexBuffer = null;
@@ -83,9 +86,9 @@ namespace MITOIA {
 
             this._worldToViewMatrix.append44(this._viewToProjMatrix, this._worldToProjMatrix);
 
-            this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_V2P, this._viewToProjMatrix.toArray44());
-            this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_W2P, this._worldToProjMatrix.toArray44());
-            this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_W2V, this._worldToViewMatrix.toArray44());
+            this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_V2P, this._viewToProjMatrix.toArray44(false, this._viewToProjM44Array));
+            this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_W2P, this._worldToProjMatrix.toArray44(false, this._worldToProjM44Array));
+            this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_W2V, this._worldToViewMatrix.toArray44(false, this._worldToViewM44Array));
             this._shaderUniforms.setNumber(ShaderPredefined.u_CamPosW, this._cameraWorldMatrix.m30, this._cameraWorldMatrix.m31, this._cameraWorldMatrix.m32);
 
             this.begin(gl, camera);
@@ -94,7 +97,7 @@ namespace MITOIA {
 
             if (this._renderingQueueLength > 0) {
                 Sort.Merge.sort(this._renderingQueue, (a: RenderingObject, b: RenderingObject) => {
-                    return a.material.renderingPriority < b.material.renderingPriority;
+                    return a.material.renderingPriority <= b.material.renderingPriority;
                 }, 0, this._renderingQueueLength - 1);
             }
 

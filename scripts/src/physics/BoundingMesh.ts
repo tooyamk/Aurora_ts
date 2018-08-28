@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class BoundingMesh implements IBoundingShape {
         public static readonly CRITICAL = Math.cos(Math.PI * 0.5);
 

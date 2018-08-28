@@ -2,7 +2,7 @@
 /// <reference path="libs/Lighting.ts" />
 /// <reference path="libs/Reflection.ts" />
 
-namespace MITOIA.BuiltinShader.DefaultSkyBox {
+namespace Aurora.BuiltinShader.DefaultSkyBox {
     export const NAME = "_Built-in_DefaultSkyBox";
 
     export const VERTEX = `

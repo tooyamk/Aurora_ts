@@ -1,6 +1,6 @@
 /// <reference path="AbstractNodeComponent.ts" />
 
-namespace MITOIA {
+namespace Aurora {
     export class Camera extends AbstractNodeComponent implements IRenderPass {
         public clear: GLClear = new GLClear();
         public frameBuffer: GLFrameBuffer = null;

@@ -1,7 +1,7 @@
 /// <reference path="../math/Matrix44.ts" />
 /// <reference path="../math/Vector.ts" />
 
-namespace MITOIA {
+namespace Aurora {
     export class Node {
         protected static _tmpVec3: Vector3 = Vector3.Zero;
         protected static _tmpMat: Matrix44 = new Matrix44();
@@ -583,6 +583,16 @@ namespace MITOIA {
 
                 this.readonlyWorldMatrix.invert(this._inverseWorldMatrix);
             }
+        }
+
+        public getChildByName(name: string): Node {
+            let child = this._childHead;
+            while (child) {
+                if (child.name === name) return child;
+                child = child._next;
+            }
+
+            return null;
         }
 
         public isContains(node: Node, depth: uint = Number.MAX_SAFE_INTEGER): int {

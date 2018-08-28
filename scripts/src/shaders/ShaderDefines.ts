@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class ShaderDefineValue {
         public static readonly UNKNOW: int = 0;
         public static readonly BOOL: int = 1;

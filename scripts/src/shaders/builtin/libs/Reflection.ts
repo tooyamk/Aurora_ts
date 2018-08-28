@@ -1,6 +1,6 @@
 /// <reference path="../General.ts" />
 
-namespace MITOIA.BuiltinShader.Lib.Reflection {
+namespace Aurora.BuiltinShader.Lib.Reflection {
     const NAME: string = "_Reflection";
 
     /**

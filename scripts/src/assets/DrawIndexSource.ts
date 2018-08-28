@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class DrawIndexSource {
         public data: uint[] = null;
 

@@ -13,7 +13,7 @@
     "preserveConstEnums": true,
     "listFiles": true,
     "listEmittedFiles": true,
-    "outFile": "./build/mitoia.core.js"
+    "outFile": "./build/aurora.core.js"
   },
   "include": [ "./scripts/src/**/*.ts" ],
   "exclude": [ "./scripts/src/**/_*.ts" ],

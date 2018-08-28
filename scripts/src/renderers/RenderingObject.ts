@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class RenderingObject {
         public material: Material;
         public node: Node;

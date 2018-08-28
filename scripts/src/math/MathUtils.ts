@@ -1,7 +1,7 @@
 
 /// <reference path="Vector.ts" />
 
-namespace MITOIA {
+namespace Aurora {
     export abstract class MathUtils {
         public static readonly ZERO_TOLERANCE: number = 1E-6;//Number.EPSILON;
         public static readonly RAD_2_DEG: number = 180 / Math.PI;

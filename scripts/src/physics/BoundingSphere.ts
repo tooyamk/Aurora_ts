@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class BoundingSphere implements IBoundingShape {
         public readonly center: Vector3 = Vector3.Zero;
         protected _radius: number;

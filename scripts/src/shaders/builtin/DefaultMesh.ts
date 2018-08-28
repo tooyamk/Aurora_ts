@@ -2,7 +2,7 @@
 /// <reference path="libs/Lighting.ts" />
 /// <reference path="libs/Reflection.ts" />
 
-namespace MITOIA.BuiltinShader.DefaultMesh {
+namespace Aurora.BuiltinShader.DefaultMesh {
     export const NAME = "_Built-in_DefaultMesh";
 
     export const VERTEX = `

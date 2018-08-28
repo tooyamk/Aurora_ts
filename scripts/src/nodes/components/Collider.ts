@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class Collider extends AbstractNodeComponent {
         public shape: IBoundingShape = null;
 

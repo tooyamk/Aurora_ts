@@ -1,6 +1,6 @@
 /// <reference path="../General.ts" />
 
-namespace MITOIA.BuiltinShader.PostProcess.Default {
+namespace Aurora.BuiltinShader.PostProcess.Default {
     export const VERTEX: string = `
 attribute vec2 ${ShaderPredefined.a_Position0};
 attribute vec2 ${ShaderPredefined.a_TexCoord0};

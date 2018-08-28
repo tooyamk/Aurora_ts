@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class Quaternion {
         public static readonly CONST_ZERO: Quaternion = new Quaternion();
 

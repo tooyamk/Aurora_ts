@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     interface IInternalTimer {
         now(): number;
     }

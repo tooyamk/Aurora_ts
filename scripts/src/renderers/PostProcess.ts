@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class PostProcess implements IRenderPass {
         public clear: GLClear = new GLClear();
         public frameBuffer: GLFrameBuffer = null;

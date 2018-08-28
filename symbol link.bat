@@ -1,0 +1,1 @@
+mklink /J "./output/res" "./res"

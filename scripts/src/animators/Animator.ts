@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class Animator<T extends AbstractAnimatorClip> {
         protected _curClip: AbstractAnimatorClip = null;
         protected _elapsed: number = 0;

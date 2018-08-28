@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class RaycastHit {
         public distance: number;
         public distanceSquared: number;

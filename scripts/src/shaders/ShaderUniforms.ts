@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export const enum ShaderUniformType {
         NUMBER,
         SAMPLER

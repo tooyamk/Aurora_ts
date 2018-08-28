@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class Rect {
         public x: number;
         public y: number;

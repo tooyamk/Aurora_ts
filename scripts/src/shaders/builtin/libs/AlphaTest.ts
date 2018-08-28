@@ -1,6 +1,6 @@
 /// <reference path="../General.ts" />
 
-namespace MITOIA.BuiltinShader.Lib.AlphaTest {
+namespace Aurora.BuiltinShader.Lib.AlphaTest {
     export const NAME = "_AlphaTest";
 
     export const HEADER: ShaderLib = {

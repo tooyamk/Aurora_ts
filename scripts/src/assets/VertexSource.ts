@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class VertexSource {
         public name: string = null;
 

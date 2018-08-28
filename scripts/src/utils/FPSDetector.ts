@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class FPSDetector {
         private _delta: number = 0;
         private _time: number = 0;

@@ -1,6 +1,6 @@
 /// <reference path="../AbstractNodeComponent.ts" />
 
-namespace MITOIA {
+namespace Aurora {
     export abstract class AbstractRenderableObject extends AbstractNodeComponent {
         public renderer: AbstractRenderer = null;
         public materials: Material[] = [];

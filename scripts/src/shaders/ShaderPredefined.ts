@@ -1,4 +1,4 @@
-namespace MITOIA.ShaderPredefined {
+namespace Aurora.ShaderPredefined {
     export const ALPHA_TEST: string = "ALPHA_TEST";
     export const ALPHA_TEST_LESS: int = 1;
     export const ALPHA_TEST_EQUAL: int = 2;

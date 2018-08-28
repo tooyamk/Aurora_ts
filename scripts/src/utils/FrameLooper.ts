@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class FrameLooper {
         private _callback: (delta: number) => void = null;
         private _prevTime: number = null;

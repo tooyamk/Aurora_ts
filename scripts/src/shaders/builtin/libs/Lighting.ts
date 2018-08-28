@@ -1,6 +1,6 @@
 /// <reference path="../General.ts" />
 
-namespace MITOIA.BuiltinShader.Lib.Lighting {
+namespace Aurora.BuiltinShader.Lib.Lighting {
     export const NAME = "_Lighting";
 
     /**

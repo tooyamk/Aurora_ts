@@ -1,4 +1,4 @@
-namespace MITOIA {
+namespace Aurora {
     export class AssetStore {
         public vertexSources: Map<string, VertexSource> = null;
         public drawIndexSource: DrawIndexSource = null;

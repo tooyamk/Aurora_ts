@@ -10,7 +10,7 @@ interface WebGLRenderingContext {
     texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, offset: GLintptr): void;
 
     /** **WebGL Version:** 2.0 */
-    texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, source: MITOIA.GLImage): void;
+    texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, source: Aurora.GLImage): void;
 
     /** **WebGL Version:** 2.0 */
     texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, srcData: ArrayBufferView | null, srcOffset: number): void;
@@ -19,13 +19,13 @@ interface WebGLRenderingContext {
     texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, format: number, type: number, offset: GLintptr): void;
 
     /** **WebGL Version:** 2.0 */
-    texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, source: MITOIA.GLImage): void;
+    texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, source: Aurora.GLImage): void;
 
     /** **WebGL Version:** 2.0 */
     texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, srcData: ArrayBufferView | null, srcOffset: number): void;
 }
 
-namespace MITOIA {
+namespace Aurora {
     export class GLClear {
         public readonly color: Color4 = Color4.BLACK;
         public depth = 1.0;

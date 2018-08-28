@@ -1,6 +1,6 @@
 /// <reference path="AbstractRenderableObject.ts" />
 
-namespace MITOIA {
+namespace Aurora {
     export class RenderableMesh extends AbstractRenderableObject {
         public assetStore: AssetStore = null;
 

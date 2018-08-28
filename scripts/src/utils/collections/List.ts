@@ -1,4 +1,4 @@
-namespace MITOIA.Collections {
+namespace Aurora.Collections {
     export interface IListIterator<T> {
         [Symbol.iterator](): IListIterator<T>;
         prev(): IListIterator<T>;
