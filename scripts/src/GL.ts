@@ -2451,7 +2451,7 @@ namespace Aurora {
             this._blend.func.dstAlpha = this._gl.getParameter(GL.BLEND_DST_ALPHA);
 
             let blendColor = this._gl.getParameter(GL.BLEND_COLOR);
-            this._blend.constantColor.setFromRGBA(blendColor[0], blendColor[1], blendColor[2], blendColor[3]);
+            this._blend.constantColor.setFromRGBASeparate(blendColor[0], blendColor[1], blendColor[2], blendColor[3]);
         }
 
         private _initCullFace(): void {

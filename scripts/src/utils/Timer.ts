@@ -31,6 +31,11 @@ namespace Aurora {
         }
     }
 
+    export const enum TimerType {
+        STANDARD,
+        HIGH_PRECISION
+    }
+
     export class Timer {
         private static _timer: IInternalTimer = InternalPerformanceTimer.isSupport ? new InternalPerformanceTimer() : new InternalDateTimer();
         
@@ -49,49 +54,79 @@ namespace Aurora {
         private static readonly FLAG_IN_WAITTING_LIST: uint = Timer.FLAG_IN_ADDING_LIST | Timer.FLAG_IN_REMOVING_LIST;
 
         private _isRunning: boolean = false;
-        private _delta: number = 0;
+        private _delay: number = 0;
         private _beginTime: number = 0;
         private _flag: uint = 0;
+        private _type: TimerType = TimerType.STANDARD;
+        private _timeoutID: number = null;
+        private _count: uint = 0;
 
         public callback: () => void = null;
 
-        constructor(delta: number, callback: () => void = null) {
-            this._delta = delta;
+        constructor(delay: number, callback: () => void = null, type: TimerType = TimerType.STANDARD) {
+            this._delay = delay;
             this.callback = callback;
+            this._type = type;
         }
 
         public static get utc(): number {
             return Timer._timer.now();
         }
 
-        public get delta(): number {
-            return this._delta;
+        public get delay(): number {
+            return this._delay;
         }
 
-        public set delta(value: number) {
-            this._delta = value;
+        public set delay(value: number) {
+            this._delay = value;
         }
 
         public get isRunning(): boolean {
             return this._isRunning;
         }
 
-        public start(): void {
+        public start(count: uint = 0): void {
             if (!this._isRunning) {
                 this._isRunning = true;
-                Timer._addToTickList(this);
+                this._count = count === null || count === undefined || count <= 0 ? null : count;
+                
+                if (this._type === TimerType.STANDARD) {
+                    this._timeoutID = setTimeout(() => { this._standardTick() }, this._delay);
+                } else if (this._type === TimerType.HIGH_PRECISION) {
+                    Timer._addToTickList(this);
+                }
             }
         }
 
         public stop(): void {
             if (this._isRunning) {
                 this._isRunning = false;
-                Timer._removeFromTickList(this);
+
+                if (this._type === TimerType.STANDARD) {
+                    if (this._timeoutID !== null) {
+                        clearTimeout(this._timeoutID);
+                        this._timeoutID = null;
+                    }
+                } else if (this._type === TimerType.HIGH_PRECISION) {
+                    Timer._removeFromTickList(this);
+                }
             }
         }
 
-        private _tick(): void {
-            if (this.callback) this.callback();
+        private _standardTick(): void {
+            this._timeoutID = null;
+            if (this._isRunning) {
+                if (this._count !== null && --this._count <= 0) this.stop();
+                if (this.callback) this.callback();
+                if (this._timeoutID === null && this._isRunning) this._timeoutID = setTimeout(() => { this._standardTick() }, this._delay);
+            }
+        }
+
+        private _highPprecisionTick(): void {
+            if (this._isRunning) {
+                if (this._count !== null && --this._count <= 0) this.stop();
+                if (this.callback) this.callback();
+            }
         }
 
         private static _addToTickList(timer: Timer): void {
@@ -128,8 +163,8 @@ namespace Aurora {
                             let timer = Timer._runTickList[i];
                             if (timer._isRunning) {
                                 let t = Timer.utc - timer._beginTime;
-                                if (t >= timer._delta) {
-                                    timer._tick();
+                                if (t >= timer._delay) {
+                                    timer._highPprecisionTick();
                                     if (timer._isRunning) timer._beginTime = Timer.utc;
                                 }
                             }

@@ -23,6 +23,7 @@ namespace Aurora {
             this.y = y;
             this.z = z;
             this.w = w;
+
             return this;
         }
 
@@ -31,7 +32,22 @@ namespace Aurora {
             this.y = quat.y;
             this.z = quat.z;
             this.w = quat.w;
+
             return this;
+        }
+
+        public invert(rst: Quaternion = null): Quaternion {
+            rst = rst || this;
+
+            let dot = this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
+            let invDot = dot ? 1 / dot : 0;
+
+            rst.x = -this.x * invDot;
+            rst.y = -this.y * invDot;
+            rst.z = -this.z * invDot;
+            rst.w = this.w * invDot;
+
+            return rst;
         }
 
         /**
@@ -201,11 +217,11 @@ namespace Aurora {
             return new Quaternion(this.x, this.y, this.z, this.w);
         }
 
-        public prepend(quat: Quaternion, rst: Quaternion = null): void {
-            quat.append(this, rst || this);
+        public prepend(quat: Quaternion, rst: Quaternion = null): Quaternion {
+            return quat.append(this, rst || this);
         }
 
-        public append(quat: Quaternion, rst: Quaternion = null): void {
+        public append(quat: Quaternion, rst: Quaternion = null): Quaternion {
             let w1 = this.w * quat.w - this.x * quat.x - this.y * quat.y - this.z * quat.z;
             let x1 = this.w * quat.x + this.x * quat.w + this.y * quat.z - this.z * quat.y;
             let y1 = this.w * quat.y + this.y * quat.w + this.z * quat.x - this.x * quat.z;
@@ -216,6 +232,8 @@ namespace Aurora {
             rst.y = y1;
             rst.z = z1;
             rst.w = w1;
+
+            return rst;
         }
 
         public rotateXYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
@@ -283,6 +301,10 @@ namespace Aurora {
             rst.m33 = 1;
 
             return rst;
+        }
+
+        public toString(): string {
+            return "Quaternion(x=" + this.x + ", y=" + this.y + ", z=" + this.z + ", w=" + this.w + ")";
         }
     }
 }

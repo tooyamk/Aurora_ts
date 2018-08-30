@@ -37,7 +37,14 @@ namespace Aurora {
         }
 
         public setFromVector2(vec: Vector2): Vector2 {
-            return this.setFromXY(vec.x, vec.y);
+            this.x = vec.x;
+            this.y = vec.y;
+
+            return this;
+        }
+
+        public static dot(p1: Vector2, p2: Vector2): number {
+            return p1.x * p2.x + p1.y * p2.y;
         }
 
         public static angleBetween(p1: Vector2, p2: Vector2, clamp: boolean = false): number {
@@ -53,6 +60,16 @@ namespace Aurora {
                 }
             }
             return Math.acos(val);
+        }
+
+        public static distance(p1: Vector2, p2: Vector2): number {
+            let x = p1.x - p2.x;
+            let y = p1.y - p2.y;
+            return Math.sqrt(x * x + y * y);
+        }
+
+        public toString(): string {
+            return "Vector2(x=" + this.x + ", y=" + this.y + ")";
         }
     }
 
@@ -146,7 +163,11 @@ namespace Aurora {
         }
 
         public setFromVector3(vec: Vector3): Vector3 {
-            return this.setFromXYZ(vec.x, vec.y, vec.z);
+            this.x = vec.x;
+            this.y = vec.y;
+            this.z = vec.z;
+
+            return this;
         }
 
         public normalize(): Vector3 {
@@ -186,6 +207,17 @@ namespace Aurora {
             }
             return Math.acos(val);
         }
+
+        public static distance(p1: Vector3, p2: Vector3): number {
+            let x = p1.x - p2.x;
+            let y = p1.y - p2.y;
+            let z = p1.z - p2.z;
+            return Math.sqrt(x * x + y * y + z * z);
+        }
+
+        public toString(): string {
+            return "Vector3(x=" + this.x + ", y=" + this.y + ", z=" + this.z + ")";
+        }
     }
 
     export class Vector4 {
@@ -215,7 +247,16 @@ namespace Aurora {
         }
 
         public setFromVector4(vec: Vector4): Vector4 {
-            return this.setFromXYZW(vec.x, vec.y, vec.z, vec.w);
+            this.x = vec.x;
+            this.y = vec.y;
+            this.z = vec.z;
+            this.w = vec.w;
+
+            return this;
+        }
+
+        public toString(): string {
+            return "Vector4(x=" + this.x + ", y=" + this.y + ", z=" + this.z + ", w=" + this.w + ")";
         }
     }
 }

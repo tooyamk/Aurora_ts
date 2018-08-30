@@ -11,5 +11,9 @@ namespace Aurora {
             this.width = width;
             this.height = height;
         }
+
+        public toString(): string {
+            return "Rect(x=" + this.x + ", y=" + this.y + ", w=" + this.width + ", h=" + this.height + ")";
+        }
     }
 }
