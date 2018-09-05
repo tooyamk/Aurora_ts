@@ -19,6 +19,10 @@ namespace Aurora {
             return new Vector2(1, 1);
         }
 
+        public get lengthSquared(): number {
+            return this.x * this.x + this.y * this.y;
+        }
+
         public get length(): number {
             let len = this.x * this.x + this.y * this.y;
             if (len !== 1) len = Math.sqrt(len);
@@ -29,14 +33,14 @@ namespace Aurora {
             return new Vector2(this.x, this.y);
         }
 
-        public setFromXY(x: number = 0, y: number = 0): Vector2 {
+        public setSeparate(x: number = 0, y: number = 0): Vector2 {
             this.x = x;
             this.y = y;
 
             return this;
         }
 
-        public setFromVector2(vec: Vector2): Vector2 {
+        public set(vec: Vector2 | Vector3 | Vector4): Vector2 {
             this.x = vec.x;
             this.y = vec.y;
 
@@ -131,6 +135,10 @@ namespace Aurora {
             this.x = this.y = this.z = 0;
         }
 
+        public get lengthSquared(): number {
+            return this.x * this.x + this.y * this.y + this.z * this.z;
+        }
+
         public get length(): number {
             let len = this.x * this.x + this.y * this.y + this.z * this.z;
             if (len !== 1) len = Math.sqrt(len);
@@ -154,7 +162,7 @@ namespace Aurora {
             return rst;
         }
 
-        public setFromXYZ(x: number = 0, y: number = 0, z: number = 0): Vector3 {
+        public setSeparate(x: number = 0, y: number = 0, z: number = 0): Vector3 {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -162,7 +170,7 @@ namespace Aurora {
             return this;
         }
 
-        public setFromVector3(vec: Vector3): Vector3 {
+        public set(vec: Vector3 | Vector4): Vector3 {
             this.x = vec.x;
             this.y = vec.y;
             this.z = vec.z;
@@ -182,6 +190,62 @@ namespace Aurora {
             return this;
         }
 
+        public add(target: number | Vector3): Vector3 {
+            if (target instanceof Vector3) {
+                this.x += target.x;
+                this.y += target.y;
+                this.z += target.z;
+            } else {
+                this.x += target;
+                this.y += target;
+                this.z += target;
+            }
+
+            return this;
+        }
+
+        public sub(target: number | Vector3): Vector3 {
+            if (target instanceof Vector3) {
+                this.x -= target.x;
+                this.y -= target.y;
+                this.z -= target.z;
+            } else {
+                this.x -= target;
+                this.y -= target;
+                this.z -= target;
+            }
+
+            return this;
+        }
+
+        public mul(target: number | Vector3): Vector3 {
+            if (target instanceof Vector3) {
+                this.x *= target.x;
+                this.y *= target.y;
+                this.z *= target.z;
+            } else {
+                this.x *= target;
+                this.y *= target;
+                this.z *= target;
+            }
+
+            return this;
+        }
+
+        public div(target: number | Vector3): Vector3 {
+            if (target instanceof Vector3) {
+                this.x /= target.x;
+                this.y /= target.y;
+                this.z /= target.z;
+            } else {
+                this.x /= target;
+                this.y /= target;
+                this.z /= target;
+            }
+
+            return this;
+        }
+
         public static dot(p1: Vector3, p2: Vector3): number {
             return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
         }
@@ -190,7 +254,7 @@ namespace Aurora {
             let x = p1.y * p2.z - p1.z * p2.y;
             let y = p1.z * p2.x - p1.x * p2.z;
             let z = p1.x * p2.y - p1.y * p2.x;
-            return rst ? rst.setFromXYZ(x, y, z) : new Vector3(x, y, z);
+            return rst ? rst.setSeparate(x, y, z) : new Vector3(x, y, z);
         }
 
         public static angleBetween(p1: Vector3, p2: Vector3, clamp: boolean = false): number {
@@ -237,7 +301,19 @@ namespace Aurora {
             return new Vector4(this.x, this.y, this.z, this.w);
         }
 
-        public setFromXYZW(x: number = 0, y: number = 0, z: number = 0, w: number = 0): Vector4 {
+        public toVector3(rst: Vector3 = null): Vector3 {
+            if (rst) {
+                rst.x = this.x;
+                rst.y = this.y;
+                rst.z = this.z;
+            } else {
+                rst = new Vector3(this.x, this.y, this.z);
+            }
+
+            return rst;
+        }
+
+        public setSeparate(x: number = 0, y: number = 0, z: number = 0, w: number = 0): Vector4 {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -246,7 +322,7 @@ namespace Aurora {
             return this;
         }
 
-        public setFromVector4(vec: Vector4): Vector4 {
+        public set(vec: Vector4): Vector4 {
             this.x = vec.x;
             this.y = vec.y;
             this.z = vec.z;

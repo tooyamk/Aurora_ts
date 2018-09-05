@@ -25,11 +25,11 @@ namespace Aurora {
         }
 
         public getProjectionMatrix(rst: Matrix44 = null): Matrix44 {
-            return rst ? rst.set44FromMatrix(this._projectionMatrix) : this._projectionMatrix.clone();
+            return rst ? rst.set44(this._projectionMatrix) : this._projectionMatrix.clone();
         }
 
         public setProjectionMatrix(m: Matrix44): void {
-            this._projectionMatrix.set44FromMatrix(m);
+            this._projectionMatrix.set44(m);
 
             this._zNear = -this._projectionMatrix.m32 / this._projectionMatrix.m22;
 
@@ -107,8 +107,8 @@ namespace Aurora {
                 originZ = this._zNear;
             }
 
-            rst.origin.setFromXYZ(originX, originY, originZ);
-            rst.direction.setFromXYZ(dirX, dirY, dirZ);
+            rst.origin.setSeparate(originX, originY, originZ);
+            rst.direction.setSeparate(dirX, dirY, dirZ);
 
             return rst;
         }

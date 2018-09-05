@@ -1,15 +1,17 @@
 namespace Aurora {
     export const enum RenderingSort {
+        FOREMOST,
         NEAR_TO_FAR,
-        KEEP,
-        FAR_TO_NEAR
+        MIDDLE,
+        FAR_TO_NEAR,
+        FINALLY
     }
 
     export class Material {
         public shader: Shader = null;
 
         public renderingPriority: int = 0;
-        public renderingSort: RenderingSort = RenderingSort.KEEP;
+        public renderingSort: RenderingSort = RenderingSort.MIDDLE;
 
         public drawMode: GLDrawMode = GLDrawMode.TRIANGLES;
 

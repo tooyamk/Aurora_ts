@@ -1,4 +1,5 @@
 /// <reference path="../math/Matrix44.ts" />
+/// <reference path="../math/Quaternion.ts" />
 /// <reference path="../math/Vector.ts" />
 
 namespace Aurora {
@@ -53,28 +54,34 @@ namespace Aurora {
             return this._parent;
         }
 
-        public addChild(c: Node): boolean {
+        /**
+         * @returns If operate succeed, return child, else return null.
+         */
+        public addChild(c: Node): Node {
             if (c && c._parent === null && c !== this._root) {
                 this._addNode(c);
                 c._parentChanged(this._root);
-                return true;
+                return c;
             }
-            return false;
+            return null;
         }
 
-        public insertChild(c: Node, before: Node): boolean {
+        /**
+         * @returns If operate succeed, return child, else return null.
+         */
+        public insertChild(c: Node, before: Node): Node {
             if (c && c !== this._root) {
-                if (c === before) return true;
+                if (c === before) return c;
 
                 if (before) {
                     if (before._parent === this) {
                         if(c._parent === this) {
                             this._removeNode(c);
                             this._insertNode(c, before);
-                            return true;
+                            return c;
                         } else if (c._parent === null) {
                             this._insertNode(c, before);
-                            return true;
+                            return c;
                         }
                     }
                 } else {
@@ -82,7 +89,7 @@ namespace Aurora {
                 }
             }
 
-            return false;
+            return null;
         }
 
         public removeChild(c: Node): boolean {
@@ -336,7 +343,7 @@ namespace Aurora {
         }
 
         public getLocalPositon(rst: Vector3 = null): Vector3 {
-            return rst ? rst.setFromXYZ(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32) : new Vector3(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32);
+            return rst ? rst.setSeparate(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32) : new Vector3(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32);
         }
 
         public setLocalPosition(x: number = 0, y: number = 0, z: number = 0): void {
@@ -349,7 +356,7 @@ namespace Aurora {
             if (old !== this._dirty) this._notificationUpdate(false);
         }
 
-        public appendLocalTranslate(x: number = 0, y: number = 0, z: number = 0): void {
+        public localTranslate(x: number = 0, y: number = 0, z: number = 0): void {
             this.readonlyLocalMatrix.prependTranslate34XYZ(x, y, z);
 
             let old = this._dirty;
@@ -360,7 +367,7 @@ namespace Aurora {
         public getWorldPosition(rst: Vector3 = null): Vector3 {
             this.updateWorldMatrix();
 
-            return rst ? rst.setFromXYZ(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32) : new Vector3(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32);
+            return rst ? rst.setSeparate(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32) : new Vector3(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32);
         }
 
         public setWorldPosition(x: number = 0, y: number = 0, z: number = 0): void {
@@ -374,7 +381,7 @@ namespace Aurora {
             this._worldPositionChanged(old);
         }
 
-        public appendWorldTranslate(x: number = 0, y: number = 0, z: number = 0): void {
+        public worldTranslate(x: number = 0, y: number = 0, z: number = 0): void {
             let old = this._dirty;
             this.readonlyWorldMatrix.prependTranslate34XYZ(x, y, z);
 
@@ -399,26 +406,26 @@ namespace Aurora {
         }
 
         public getLocalRotation(rst: Quaternion = null): Quaternion {
-            return rst ? rst.setFromQuaternion(this._localRot) : this._localRot.clone();
+            return rst ? rst.set(this._localRot) : this._localRot.clone();
         }
 
         public setLocalRotation(quat: Quaternion): void {
-            this._localRot.setFromQuaternion(quat);
+            this._localRot.set(quat);
 
             let old = this._dirty;
             this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
             if (old !== this._dirty) this._notificationUpdate(true);
         }
 
-        public appendLocalRotation(quat: Quaternion): void {
-            this._localRot.append(quat);
+        public localRotate(quat: Quaternion): void {
+            this._localRot.prepend(quat);
 
             let old = this._dirty;
             this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
             if (old !== this._dirty) this._notificationUpdate(true);
         }
 
-        public appendParentRotation(quat: Quaternion): void {
+        public parentRotate(quat: Quaternion): void {
             this._localRot.prepend(quat);
 
             let old = this._dirty;
@@ -427,27 +434,28 @@ namespace Aurora {
         }
 
         public getWorldRotation(rst: Quaternion = null): Quaternion {
-            return rst ? rst.setFromQuaternion(this.readonlyWorldRotation) : this.readonlyWorldRotation.clone();
+            return rst ? rst.set(this.readonlyWorldRotation) : this.readonlyWorldRotation.clone();
         }
 
         public setWorldRotation(quat: Quaternion): void {
-            this._worldRot.setFromQuaternion(quat);
+            this._worldRot.set(quat);
 
             this._worldRotationChanged(this._dirty);
         }
 
-        public appendWorldRotation(quat: Quaternion): void {
+        public worldRotate(quat: Quaternion): void {
             let old = this._dirty;
-            this.readonlyWorldRotation.append(quat);
+            this.readonlyWorldRotation.prepend(quat);
 
             this._worldRotationChanged(old);
         }
 
         protected _worldRotationChanged(oldDirty: uint): void {
             if (this._parent) {
-                this._parent.readonlyWorldRotation.append(this._worldRot, this._localRot);
+                this._worldRot.append(this._parent.readonlyWorldRotation.invert(this._localRot), this._localRot);
+                //this._parent.readonlyWorldRotation.append(this._worldRot, this._localRot);
             } else {
-                this._localRot.setFromQuaternion(this._worldRot);
+                this._localRot.set(this._worldRot);
             }
 
             this._dirty &= ~Node.WORLD_ROTATION_DIRTY;
@@ -460,27 +468,27 @@ namespace Aurora {
          ** (this node).worldRotation = Target world rotation
          * @param quat Target world rotation
          */
-        public calcLocalRotationFromWorld(quat: Quaternion, rst: Quaternion = null): Quaternion {
+        public getLocalRotationFromWorld(quat: Quaternion, rst: Quaternion = null): Quaternion {
             if (this._parent) {
-                rst = rst ? rst.setFromQuaternion(this._parent.readonlyWorldRotation) : this._parent.readonlyWorldRotation.clone();
+                rst = rst ? rst.set(this._parent.readonlyWorldRotation) : this._parent.readonlyWorldRotation.clone();
                 rst.x = -rst.x;
                 rst.y = -rst.y;
                 rst.z = -rst.z;
 
-                rst.append(quat);
+                rst.prepend(quat);
             } else {
-                rst = rst ? rst.setFromQuaternion(quat) : quat.clone();
+                rst = rst ? rst.set(quat) : quat.clone();
             }
 
             return rst;
         }
 
         public getLocalScale(rst: Vector3 = null): Vector3 {
-            return rst ? rst.setFromVector3(this._localScale) : this._localScale.clone();
+            return rst ? rst.set(this._localScale) : this._localScale.clone();
         }
 
         public setLocalScale(x: number, y: number, z: number): void {
-            this._localScale.setFromXYZ(x, y, z);
+            this._localScale.setSeparate(x, y, z);
 
             let old = this._dirty;
             this._dirty |= Node.ALL_MATRIX_DIRTY;
@@ -488,11 +496,11 @@ namespace Aurora {
         }
 
         public getLocalMatrix(rst: Matrix44 = null): Matrix44 {
-            return rst ? rst.set44FromMatrix(this.readonlyLocalMatrix) : this.readonlyLocalMatrix.clone();
+            return rst ? rst.set44(this.readonlyLocalMatrix) : this.readonlyLocalMatrix.clone();
         }
 
         public setLocalMatrix(m: Matrix44): void {
-            this._localMatrix.set34FromMatrix(m);
+            this._localMatrix.set34(m);
 
             this._localMatrix.decomposition(Node._tmpMat, this._localScale);
             Node._tmpMat.toQuaternion(this._localRot);
@@ -504,11 +512,11 @@ namespace Aurora {
         }
 
         public getWorldMatrix(rst: Matrix44 = null): Matrix44 {
-            return rst ? rst.set44FromMatrix(this.readonlyWorldMatrix) : this.readonlyWorldMatrix.clone();
+            return rst ? rst.set44(this.readonlyWorldMatrix) : this.readonlyWorldMatrix.clone();
         }
 
         public setWorldMatrix(m: Matrix44): void {
-            this._worldMatrix.set34FromMatrix(m);
+            this._worldMatrix.set34(m);
 
             let old = this._dirty;
             this._dirty &= ~Node.WORLD_MATRIX_DIRTY;
@@ -517,7 +525,7 @@ namespace Aurora {
             if (this._parent) {
                 this._worldMatrix.append34(this.readonlyInverseWorldMatrix, this._localMatrix);
             } else {
-                this._localMatrix.set34FromMatrix(this._worldMatrix);
+                this._localMatrix.set34(this._worldMatrix);
             }
 
             this._localMatrix.decomposition(Node._tmpMat, this._localScale);
@@ -529,14 +537,14 @@ namespace Aurora {
         }
 
         public getInverseWorldMatrix(rst: Matrix44 = null): Matrix44 {
-            return rst ? rst.set44FromMatrix(this.readonlyInverseWorldMatrix) : this.readonlyInverseWorldMatrix.clone();
+            return rst ? rst.set44(this.readonlyInverseWorldMatrix) : this.readonlyInverseWorldMatrix.clone();
         }
 
         public identity(): void {
             if (!this._localRot.isIdentity || !this._localScale.isOne || this._localMatrix.m30 !== 0 || this._localMatrix.m31 !== 0 || this._localMatrix.m32 !== 0) {
                 this._localMatrix.identity();
                 this._localRot.identity();
-                this._localScale.setFromVector3(Vector3.CONST_ONE);
+                this._localScale.set(Vector3.CONST_ONE);
 
                 let old = this._dirty;
                 this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
@@ -549,9 +557,9 @@ namespace Aurora {
                 this._dirty &= ~Node.WORLD_ROTATION_DIRTY;
 
                 if (this._parent) {
-                    this._parent.readonlyWorldRotation.append(this._localRot, this._worldRot);
+                    this._localRot.append(this._parent.readonlyWorldRotation, this._worldRot);
                 } else {
-                    this._worldRot.setFromQuaternion(this._localRot);
+                    this._worldRot.set(this._localRot);
                 }
             }
         }
@@ -572,7 +580,7 @@ namespace Aurora {
                 if (this._parent) {
                     this.readonlyLocalMatrix.append34(this._parent.readonlyWorldMatrix, this._worldMatrix);
                 } else {
-                    this._worldMatrix.set34FromMatrix(this.readonlyLocalMatrix);
+                    this._worldMatrix.set34(this.readonlyLocalMatrix);
                 }
             }
         }

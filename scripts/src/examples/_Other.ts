@@ -35,7 +35,7 @@ class _Other {
         
             let light = lightNode.addComponent(new Aurora.PointLight());
             //light.spotAngle = 10 * Math.PI / 180;
-            light.color.setFromRGBSeparate(1, 1, 1);
+            light.color.setSeparate(1, 1, 1);
             light.setAttenuation(2500);
             light.intensity = 1.0;
         
@@ -62,7 +62,7 @@ class _Other {
             //cam.setProjectionMatrix(MITOIA.Matrix44.createOrthoLHMatrix(engine.canvasWidth, engine.canvasHeight, 10, 10000));
             //cam.setProjectionMatrix(MITOIA.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, engine.canvasWidth / engine.canvasHeight, 1, 10000));
             cam.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, 1257 / 1308, 5, 10000));
-            cam.clear.color.setFromRGBASeparate(0.5, 0.5, 0.5, 1);
+            cam.clear.color.setSeparate(0.5, 0.5, 0.5, 1);
             //cam.clear.clearColor = false;
             //cam.clear.clearDepth = false;
             cam.node.setLocalPosition(0, 0, -10);
@@ -72,16 +72,16 @@ class _Other {
                 let a = 1;
             }
         
-            model1Node.appendLocalTranslate(0, 0, 500);
+            model1Node.localTranslate(0, 0, 500);
             model1Node.setLocalScale(100, 100, 100);
             //skyNode.appendLocalTranslate(0, 0, 500);
-            lightNode.appendLocalTranslate(0, 0, 0);
+            lightNode.localTranslate(0, 0, 0);
             //lightNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI * 0.25));
         
             let mesh = this.createModel(model1Node, gl, shaderStore, Aurora.BuiltinShader.DefaultMesh.NAME, Aurora.BuiltinShader.DefaultMesh.NAME);
             mesh.renderer = forwardRenderer;
             //model1Node.addComponent(new MITOIA.Collider(new MITOIA.BoundingMesh(mesh.assetStore)));
-            model1Node.addComponent(new Aurora.Collider(new Aurora.BoundingSphere(null, 100)));
+            model1Node.addComponent(new Aurora.Collider(new Aurora.BoundSphere(null, 100)));
            //model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerX(Math.PI / 180));
         
            this.createSkyBox(skyNode, gl, shaderStore, Aurora.BuiltinShader.DefaultSkyBox.NAME, Aurora.BuiltinShader.DefaultSkyBox.NAME).renderer = forwardRenderer;
@@ -111,7 +111,7 @@ class _Other {
                     cam.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
                 }
         
-                model1Node.appendLocalRotation(Aurora.Quaternion.createFromEulerY(Math.PI / 180));
+                model1Node.localRotate(Aurora.Quaternion.createFromEulerY(Math.PI / 180));
                 //cameraNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerX(Math.PI / 180));
                 //gl.context.bindTexture(MITOIA.GL.TEXTURE_2D, null);
                 renderingManager.render(gl, cam, worldNode, [light]);

@@ -18,7 +18,11 @@ namespace Aurora {
             return new Quaternion();
         }
 
-        public setFromXYZW(x: number = 0, y: number = 0, z: number = 0, w: number = 1): Quaternion {
+        public get length(): number {
+            return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+        }
+
+        public setSeparate(x: number = 0, y: number = 0, z: number = 0, w: number = 1): Quaternion {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -27,7 +31,7 @@ namespace Aurora {
             return this;
         }
 
-        public setFromQuaternion(quat: Quaternion): Quaternion {
+        public set(quat: Quaternion): Quaternion {
             this.x = quat.x;
             this.y = quat.y;
             this.z = quat.z;
@@ -37,10 +41,12 @@ namespace Aurora {
         }
 
         public invert(rst: Quaternion = null): Quaternion {
+            return rst ? rst.setSeparate(-this.x, -this.y, -this.z, this.w) : new Quaternion(-this.x, -this.y, -this.z, this.w);
+            /*
             rst = rst || this;
 
             let dot = this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
-            let invDot = dot ? 1 / dot : 0;
+            let invDot = dot > MathUtils.ZERO_TOLERANCE ? 1 / dot : 0;
 
             rst.x = -this.x * invDot;
             rst.y = -this.y * invDot;
@@ -48,6 +54,7 @@ namespace Aurora {
             rst.w = this.w * invDot;
 
             return rst;
+            */
         }
 
         /**
@@ -62,6 +69,16 @@ namespace Aurora {
             rst.z = Math.atan2(2 * (this.w * this.z + this.x * this.y), (1 - 2 * (y2 + this.z * this.z)));
 
             return rst;
+        }
+
+        public normalize(): Quaternion {
+            let length = 1.0 / this.length;
+            this.x *= length;
+            this.y *= length;
+            this.z *= length;
+            this.w *= length;
+
+            return this;
         }
 
         public static createFromEulerX(radian: number, rst: Quaternion = null): Quaternion {
@@ -221,6 +238,7 @@ namespace Aurora {
             return quat.append(this, rst || this);
         }
 
+        /*
         public append(quat: Quaternion, rst: Quaternion = null): Quaternion {
             let w1 = this.w * quat.w - this.x * quat.x - this.y * quat.y - this.z * quat.z;
             let x1 = this.w * quat.x + this.x * quat.w + this.y * quat.z - this.z * quat.y;
@@ -235,11 +253,31 @@ namespace Aurora {
 
             return rst;
         }
+        */
+
+        public append(quat: Quaternion, rst: Quaternion = null): Quaternion {
+            let w1 = this.w * quat.w - this.x * quat.x - this.y * quat.y - this.z * quat.z;
+            let x1 = this.x * quat.w + this.w * quat.x + this.z * quat.y - this.y * quat.z;
+            let y1 = this.y * quat.w + this.w * quat.y + this.x * quat.z - this.z * quat.x;
+            let z1 = this.z * quat.w + this.w * quat.z + this.y * quat.x - this.x * quat.y;
+
+            rst = rst || this;
+            rst.x = x1;
+            rst.y = y1;
+            rst.z = z1;
+            rst.w = w1;
+
+            return rst;
+        }
 
         public rotateXYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
+            let m = this.toMatrix33();
+            return m.transform33XYZ(x, y, z, rst);
+            
+
             rst = rst || new Vector3();
 
-            let w1 = -this.x * x - this.y * y - this.z * z;
+            let w1 = -x * this.x - y * this.y - z * this.z;
             let x1 = this.w * x + this.y * z - this.z * y;
             let y1 = this.w * y - this.x * z + this.z * x;
             let z1 = this.w * z + this.x * y - this.y * x;

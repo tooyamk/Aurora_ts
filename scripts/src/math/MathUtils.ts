@@ -31,7 +31,7 @@ namespace Aurora {
             let dy = end.y - begin.y;
             let dz = end.z - begin.z;
             if (Math.abs(dx) < MathUtils.ZERO_TOLERANCE && Math.abs(dy) < MathUtils.ZERO_TOLERANCE && Math.abs(dz) < MathUtils.ZERO_TOLERANCE) {
-                rst.setFromXYZ(NaN, NaN, NaN);
+                rst.setSeparate(NaN, NaN, NaN);
                 return rst;
             }
 

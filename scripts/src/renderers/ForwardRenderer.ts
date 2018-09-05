@@ -1,6 +1,6 @@
 namespace Aurora {
     export class ForwardRenderer extends AbstractRenderer {
-        public enalbedBlendDepthSort: boolean = true;
+        public enalbedRenderingSort: boolean = true;
 
         protected _enalbedLighting = true;
         protected _light: AbstractLight = null;
@@ -41,7 +41,7 @@ namespace Aurora {
                 this._shaderDefines.setDefine(ShaderPredefined.LIGHTING, false);
             }
 
-            if (this.enalbedBlendDepthSort) this._sort(renderingObjects, start, end);
+            if (this.enalbedRenderingSort) this._sort(renderingObjects, start, end);
             this._renderByQueue(renderingObjects, start, end);
         }
 
@@ -76,11 +76,11 @@ namespace Aurora {
                 if (value === 0) {
                     switch (a.material.renderingSort) {
                         case RenderingSort.FAR_TO_NEAR: {
-                            return a.localToView.m32 > b.localToView.m32;
+                            return a.localToView.m32 >= b.localToView.m32;
                             break;
                         }
                         case RenderingSort.NEAR_TO_FAR: {
-                            return a.localToView.m32 < b.localToView.m32;
+                            return a.localToView.m32 <= b.localToView.m32;
                             break;
                         }
                         default:

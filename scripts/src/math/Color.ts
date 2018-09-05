@@ -22,7 +22,7 @@ namespace Aurora {
             return new Color3(this.r, this.g, this.b);
         }
 
-        public setFromRGB(rgb: uint): Color3 {
+        public setRGB(rgb: uint): Color3 {
             this.r = (rgb >> 16 & 0xFF) / 0xFF;
             this.g = (rgb >> 8 & 0xFF) / 0xFF;
             this.b = (rgb & 0xFF) / 0xFF;
@@ -30,7 +30,7 @@ namespace Aurora {
             return this;
         }
 
-        public setFromRGBSeparate(r: number = 0, g: number = 0, b: number = 0): Color3 {
+        public setSeparate(r: number = 0, g: number = 0, b: number = 0): Color3 {
             this.r = r;
             this.g = g;
             this.b = b;
@@ -38,15 +38,7 @@ namespace Aurora {
             return this;
         }
 
-        public setFromColor3(color: Color3): Color3 {
-            this.r = color.r;
-            this.g = color.g;
-            this.b = color.b;
-
-            return this;
-        }
-
-        public setFromColor4(color: Color4): Color3 {
+        public set(color: Color3 | Color4): Color3 {
             this.r = color.r;
             this.g = color.g;
             this.b = color.b;
@@ -93,10 +85,18 @@ namespace Aurora {
         }
 
         public toColor3(rst: Color3): Color3 {
-            return rst ? rst.setFromRGBSeparate(this.r, this.g, this.b) : new Color3(this.r, this.g, this.b);
+            return rst ? rst.setSeparate(this.r, this.g, this.b) : new Color3(this.r, this.g, this.b);
         }
 
-        public setFromARGB(argb: uint): Color4 {
+        public setRGB(rgb: uint): Color4 {
+            this.r = (rgb >> 16 & 0xFF) / 0xFF;
+            this.g = (rgb >> 8 & 0xFF) / 0xFF;
+            this.b = (rgb & 0xFF) / 0xFF;
+
+            return this;
+        }
+
+        public setARGB(argb: uint): Color4 {
             this.a = (argb >> 24 & 0xFF) / 0xFF;
             this.r = (argb >> 16 & 0xFF) / 0xFF;
             this.g = (argb >> 8 & 0xFF) / 0xFF;
@@ -105,7 +105,7 @@ namespace Aurora {
             return this;
         }
 
-        public setFromRGBA(rgba: uint): Color4 {
+        public setRGBA(rgba: uint): Color4 {
             this.r = (rgba >> 24 & 0xFF) / 0xFF;
             this.g = (rgba >> 16 & 0xFF) / 0xFF;
             this.b = (rgba >> 8 & 0xFF) / 0xFF;
@@ -114,7 +114,7 @@ namespace Aurora {
             return this;
         }
 
-        public setFromRGBASeparate(r: number = 0, g: number = 0, b: number = 0, a: number = 1): Color4 {
+        public setSeparate(r: number = 0, g: number = 0, b: number = 0, a: number = 1): Color4 {
             this.r = r;
             this.g = g;
             this.b = b;
@@ -123,15 +123,7 @@ namespace Aurora {
             return this;
         }
 
-        public setFromColor3(color: Color3): Color4 {
-            this.r = color.r;
-            this.g = color.g;
-            this.b = color.b;
-
-            return this;
-        }
-
-        public setFromColor4(color: Color4): Color4 {
+        public set(color: Color4): Color4 {
             this.r = color.r;
             this.g = color.g;
             this.b = color.b;

@@ -27,8 +27,8 @@ class _SimpleWorld {
 
             let cam = cameraNode.addComponent(new Aurora.Camera());
 
-            modelNode.appendLocalTranslate(0, 0, 500);
-            lightNode.appendLocalTranslate(-500, 0, 0);
+            modelNode.localTranslate(0, 0, 500);
+            lightNode.localTranslate(-500, 0, 0);
 
             let forwardRenderer = new Aurora.ForwardRenderer();
 
@@ -51,7 +51,7 @@ class _SimpleWorld {
             }
             resetSize();
 
-            modelNode.appendLocalRotation(Aurora.Quaternion.createFromEulerX(-Math.PI / 6));
+            modelNode.localRotate(Aurora.Quaternion.createFromEulerX(-Math.PI / 6));
 
             let fps = new Aurora.FPSDetector();
             fps.show();
@@ -59,7 +59,7 @@ class _SimpleWorld {
             new Aurora.FrameLooper(1000 / 60).start((delta: number) => {
                 if (stretcher.execute()) resetSize();
 
-                modelNode.appendLocalRotation(Aurora.Quaternion.createFromEulerY(0.001 * delta * Math.PI));
+                modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.001 * delta * Math.PI));
 
                 renderingManager.render(gl, cam, worldNode, [light]);
                 fps.record();

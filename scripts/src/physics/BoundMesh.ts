@@ -1,5 +1,5 @@
 namespace Aurora {
-    export class BoundingMesh implements IBoundingShape {
+    export class BoundMesh implements IBoundShape {
         public static readonly CRITICAL = Math.cos(Math.PI * 0.5);
 
         public assetStore: AssetStore = null;
@@ -111,14 +111,14 @@ namespace Aurora {
                                                 if (cullFace !== GLCullFace.NONE) {
                                                     let dot = rayDir.x * nx + rayDir.y * ny + rayDir.z * nz;
                                                     if (cullFace === GLCullFace.BACK) {
-                                                        if (dot > BoundingMesh.CRITICAL) continue;
+                                                        if (dot > BoundMesh.CRITICAL) continue;
                                                     } else if (cullFace === GLCullFace.FRONT) {
-                                                        if (dot < BoundingMesh.CRITICAL) continue;
+                                                        if (dot < BoundMesh.CRITICAL) continue;
                                                     }
                                                 }
 
                                                 min = t;
-                                                rst.normal.setFromXYZ(nx, ny, nz);
+                                                rst.normal.setSeparate(nx, ny, nz);
                                             }
                                         }
                                     }

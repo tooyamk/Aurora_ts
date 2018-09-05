@@ -1,12 +1,12 @@
 namespace Aurora {
-    export class BoundingSphere implements IBoundingShape {
+    export class BoundSphere implements IBoundShape {
         public readonly center: Vector3 = Vector3.Zero;
         protected _radius: number;
 
         protected _radiusSquared: number;
 
         constructor(center: Vector3 = Vector3.Zero, radius: number = 1.0) {
-            if (center) this.center.setFromVector3(center);
+            if (center) this.center.set(center);
             this._radius = radius;
             this._radiusSquared = radius * radius;
         }
@@ -67,7 +67,7 @@ namespace Aurora {
                     let y = rayOrigin.y + rayDir.y * rst.distance - this.center.y;
                     let z = rayOrigin.z + rayDir.z * rst.distance - this.center.z;
 
-                    rst.normal.setFromXYZ(x, y, z);
+                    rst.normal.setSeparate(x, y, z);
                 }
             }
 

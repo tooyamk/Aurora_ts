@@ -13,8 +13,7 @@ namespace Aurora {
             this._lights = lights;
         }
 
-        public render(renderingObjects: RenderingObject[], start: int, end: int): void {
-        }
+        public render(renderingObjects: RenderingObject[], start: int, end: int): void {}
 
         public postRender(): void {
             this._shaderDefines = null;
@@ -30,7 +29,6 @@ namespace Aurora {
             return this._shaderUniforms;
         }
 
-        public onShaderPreUse(): void {
-        }
+        public onShaderPreUse(): void {}
     }
 }

@@ -104,12 +104,7 @@ namespace Aurora {
             this._renderByQueue(lights);
 
             //clean
-            for (let i = 0; i < this._renderingQueueLength; ++i) {
-                let obj = this._renderingQueue[i];
-                obj.material = null;
-                obj.node = null;
-                obj.renderable = null;
-            }
+            for (let i = 0; i < this._renderingQueueLength; ++i) this._renderingQueue[i].clean();
             this._renderingQueueLength = 0;
         }
 
@@ -168,7 +163,7 @@ namespace Aurora {
                     }
                 }
 
-                renderer.render(this._renderingQueue, start, this._renderingQueueLength - 1);
+                if (renderer) renderer.render(this._renderingQueue, start, this._renderingQueueLength - 1);
 
                 for (let i = 0, n = this._renderers.length; i < n; ++i) {
                     let renderer = this._renderers[i];

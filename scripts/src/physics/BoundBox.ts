@@ -1,11 +1,11 @@
 namespace Aurora {
-    export class BoundingBox implements IBoundingShape {
+    export class BoundBox implements IBoundShape {
         public readonly center: Vector3 = Vector3.Zero;
         public readonly size: Vector3 = Vector3.One;
 
         constructor(center: Vector3 = Vector3.Zero, size: Vector3 = Vector3.One) {
-            if (center) this.center.setFromVector3(center);
-            if (size) this.size.setFromVector3(size);
+            if (center) this.center.set(center);
+            if (size) this.size.set(size);
         }
 
         public intersectRay(ray: Ray, cullFace: GLCullFace = GLCullFace.BACK, rst: RaycastHit = null): RaycastHit {
@@ -40,7 +40,7 @@ namespace Aurora {
                             iz = rayOrigin.z + rayDir.z * t;
                             if (iz >= minZ && iz <= maxZ) {
                                 min = t;
-                                rst.normal.setFromXYZ(-1);
+                                rst.normal.setSeparate(-1);
                             }
                         }
                     }
@@ -54,7 +54,7 @@ namespace Aurora {
                             iz = rayOrigin.z + rayDir.z * t;
                             if (iz >= minZ && iz <= maxZ) {
                                 min = t;
-                                rst.normal.setFromXYZ(1);
+                                rst.normal.setSeparate(1);
                             }
                         }
                     }
@@ -68,7 +68,7 @@ namespace Aurora {
                             iz = rayOrigin.z + rayDir.z * t;
                             if (iz >= minZ && iz <= maxZ) {
                                 min = t;
-                                rst.normal.setFromXYZ(0, -1);
+                                rst.normal.setSeparate(0, -1);
                             }
                         }
                     }
@@ -82,7 +82,7 @@ namespace Aurora {
                             iz = rayOrigin.z + rayDir.z * t;
                             if (iz >= minZ && iz <= maxZ) {
                                 min = t;
-                                rst.normal.setFromXYZ(0, 1);
+                                rst.normal.setSeparate(0, 1);
                             }
                         }
                     }
@@ -96,7 +96,7 @@ namespace Aurora {
                             iy = rayOrigin.y + rayDir.y * t;
                             if (iy >= minY && iy <= maxY) {
                                 min = t;
-                                rst.normal.setFromXYZ(0, 0, -1);
+                                rst.normal.setSeparate(0, 0, -1);
                             }
                         }
                     }
@@ -110,7 +110,7 @@ namespace Aurora {
                             iy = rayOrigin.y + rayDir.y * t;
                             if (iy >= minY && iy <= maxY) {
                                 min = t;
-                                rst.normal.setFromXYZ(0, 0, 1);
+                                rst.normal.setSeparate(0, 0, 1);
                             }
                         }
                     }
@@ -128,7 +128,7 @@ namespace Aurora {
                             iz = rayOrigin.z + rayDir.z * t;
                             if (iz >= minZ && iz <= maxZ) {
                                 min = t;
-                                rst.normal.setFromXYZ(-1);
+                                rst.normal.setSeparate(-1);
                             }
                         }
                     }
@@ -142,7 +142,7 @@ namespace Aurora {
                             iz = rayOrigin.z + rayDir.z * t;
                             if (iz >= minZ && iz <= maxZ) {
                                 min = t;
-                                rst.normal.setFromXYZ(1);
+                                rst.normal.setSeparate(1);
                             }
                         }
                     }
@@ -156,7 +156,7 @@ namespace Aurora {
                             iz = rayOrigin.z + rayDir.z * t;
                             if (iz >= minZ && iz <= maxZ) {
                                 min = t;
-                                rst.normal.setFromXYZ(0, -1);
+                                rst.normal.setSeparate(0, -1);
                             }
                         }
                     }
@@ -170,7 +170,7 @@ namespace Aurora {
                             iz = rayOrigin.z + rayDir.z * t;
                             if (iz >= minZ && iz <= maxZ) {
                                 min = t;
-                                rst.normal.setFromXYZ(0, 1);
+                                rst.normal.setSeparate(0, 1);
                             }
                         }
                     }
@@ -184,7 +184,7 @@ namespace Aurora {
                             iy = rayOrigin.y + rayDir.y * t;
                             if (iy >= minY && iy <= maxY) {
                                 min = t;
-                                rst.normal.setFromXYZ(0, 0, -1);
+                                rst.normal.setSeparate(0, 0, -1);
                             }
                         }
                     }
@@ -198,7 +198,7 @@ namespace Aurora {
                             iy = rayOrigin.y + rayDir.y * t;
                             if (iy >= minY && iy <= maxY) {
                                 min = t;
-                                rst.normal.setFromXYZ(0, 0, 1);
+                                rst.normal.setSeparate(0, 0, 1);
                             }
                         }
                     }

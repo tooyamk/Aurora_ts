@@ -1,4 +1,4 @@
-///<reference path="BoundingMesh.ts" />
+///<reference path="BoundMesh.ts" />
 ///<reference path="RaycastHit.ts" />
 
 namespace Aurora {
@@ -7,8 +7,8 @@ namespace Aurora {
         public readonly direction: Vector3 = Vector3.Front;
 
         constructor(origin: Vector3 = Vector3.Zero, direction: Vector3 = Vector3.Front) {
-            if (origin) this.origin.setFromVector3(origin);
-            if (direction) this.direction.setFromVector3(direction);
+            if (origin) this.origin.set(origin);
+            if (direction) this.direction.set(direction);
         }
 
         public clone(): Ray {
@@ -37,9 +37,9 @@ namespace Aurora {
             let dot = Vector3.dot(this.direction, planeNormal);
             if (cullFace !== GLCullFace.NONE) {
                 if (cullFace === GLCullFace.BACK) {
-                    if (dot > BoundingMesh.CRITICAL) return rst;
+                    if (dot > BoundMesh.CRITICAL) return rst;
                 } else if (cullFace === GLCullFace.FRONT) {
-                    if (dot < BoundingMesh.CRITICAL) return rst;
+                    if (dot < BoundMesh.CRITICAL) return rst;
                 }
             }
 
@@ -47,7 +47,7 @@ namespace Aurora {
             if (t >= 0) {
                 rst.distance = t;
                 rst.distanceSquared = t * t;
-                rst.normal.setFromVector3(planeNormal);
+                rst.normal.set(planeNormal);
             }
 
             return rst;
@@ -97,7 +97,7 @@ namespace Aurora {
                         if (!rstHit.node || rstHit.distanceSquared > disSqr) {
                             rstHit.node = node;
                             rstHit.distanceSquared = disSqr;
-                            rstHit.normal.setFromVector3(tmpHit.normal);
+                            rstHit.normal.set(tmpHit.normal);
                         }
                     }
                 }
