@@ -30,7 +30,7 @@ namespace Aurora {
             return this;
         }
 
-        public setSeparate(r: number = 0, g: number = 0, b: number = 0): Color3 {
+        public setFromNumbers(r: number = 0, g: number = 0, b: number = 0): Color3 {
             this.r = r;
             this.g = g;
             this.b = b;
@@ -51,7 +51,7 @@ namespace Aurora {
         }
 
         public toString(): string {
-            return "Color3(r=" + this.r + ", g=" + this.g + ", bz=" + this.b + ")";
+            return "Color3(r=" + this.r + ", g=" + this.g + ", b=" + this.b + ")";
         }
     }
 
@@ -85,7 +85,7 @@ namespace Aurora {
         }
 
         public toColor3(rst: Color3): Color3 {
-            return rst ? rst.setSeparate(this.r, this.g, this.b) : new Color3(this.r, this.g, this.b);
+            return rst ? rst.setFromNumbers(this.r, this.g, this.b) : new Color3(this.r, this.g, this.b);
         }
 
         public setRGB(rgb: uint): Color4 {
@@ -114,7 +114,7 @@ namespace Aurora {
             return this;
         }
 
-        public setSeparate(r: number = 0, g: number = 0, b: number = 0, a: number = 1): Color4 {
+        public setFromNumbers(r: number = 0, g: number = 0, b: number = 0, a: number = 1): Color4 {
             this.r = r;
             this.g = g;
             this.b = b;

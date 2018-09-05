@@ -343,7 +343,7 @@ namespace Aurora {
         }
 
         public getLocalPositon(rst: Vector3 = null): Vector3 {
-            return rst ? rst.setSeparate(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32) : new Vector3(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32);
+            return rst ? rst.setFromNumbers(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32) : new Vector3(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32);
         }
 
         public setLocalPosition(x: number = 0, y: number = 0, z: number = 0): void {
@@ -367,7 +367,7 @@ namespace Aurora {
         public getWorldPosition(rst: Vector3 = null): Vector3 {
             this.updateWorldMatrix();
 
-            return rst ? rst.setSeparate(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32) : new Vector3(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32);
+            return rst ? rst.setFromNumbers(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32) : new Vector3(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32);
         }
 
         public setWorldPosition(x: number = 0, y: number = 0, z: number = 0): void {
@@ -488,7 +488,7 @@ namespace Aurora {
         }
 
         public setLocalScale(x: number, y: number, z: number): void {
-            this._localScale.setSeparate(x, y, z);
+            this._localScale.setFromNumbers(x, y, z);
 
             let old = this._dirty;
             this._dirty |= Node.ALL_MATRIX_DIRTY;

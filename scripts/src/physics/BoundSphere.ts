@@ -2,7 +2,6 @@ namespace Aurora {
     export class BoundSphere implements IBoundShape {
         public readonly center: Vector3 = Vector3.Zero;
         protected _radius: number;
-
         protected _radiusSquared: number;
 
         constructor(center: Vector3 = Vector3.Zero, radius: number = 1.0) {
@@ -67,7 +66,7 @@ namespace Aurora {
                     let y = rayOrigin.y + rayDir.y * rst.distance - this.center.y;
                     let z = rayOrigin.z + rayDir.z * rst.distance - this.center.z;
 
-                    rst.normal.setSeparate(x, y, z);
+                    rst.normal.setFromNumbers(x, y, z);
                 }
             }
 

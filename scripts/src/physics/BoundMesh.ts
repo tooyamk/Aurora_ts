@@ -118,7 +118,7 @@ namespace Aurora {
                                                 }
 
                                                 min = t;
-                                                rst.normal.setSeparate(nx, ny, nz);
+                                                rst.normal.setFromNumbers(nx, ny, nz);
                                             }
                                         }
                                     }

@@ -1,6 +1,6 @@
 namespace Aurora {
     export class Quaternion {
-        public static readonly CONST_ZERO: Quaternion = new Quaternion();
+        public static readonly CONST_IDENTITY: Quaternion = new Quaternion();
 
         public x: number;
         public y: number;
@@ -14,15 +14,11 @@ namespace Aurora {
             this.w = w;
         }
 
-        public static get Zero(): Quaternion {
-            return new Quaternion();
-        }
-
         public get length(): number {
             return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
         }
 
-        public setSeparate(x: number = 0, y: number = 0, z: number = 0, w: number = 1): Quaternion {
+        public setFromNumbers(x: number = 0, y: number = 0, z: number = 0, w: number = 1): Quaternion {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -41,7 +37,7 @@ namespace Aurora {
         }
 
         public invert(rst: Quaternion = null): Quaternion {
-            return rst ? rst.setSeparate(-this.x, -this.y, -this.z, this.w) : new Quaternion(-this.x, -this.y, -this.z, this.w);
+            return rst ? rst.setFromNumbers(-this.x, -this.y, -this.z, this.w) : new Quaternion(-this.x, -this.y, -this.z, this.w);
             /*
             rst = rst || this;
 

@@ -33,7 +33,7 @@ namespace Aurora {
             return new Vector2(this.x, this.y);
         }
 
-        public setSeparate(x: number = 0, y: number = 0): Vector2 {
+        public setFromNumbers(x: number = 0, y: number = 0): Vector2 {
             this.x = x;
             this.y = y;
 
@@ -162,7 +162,7 @@ namespace Aurora {
             return rst;
         }
 
-        public setSeparate(x: number = 0, y: number = 0, z: number = 0): Vector3 {
+        public setFromNumbers(x: number = 0, y: number = 0, z: number = 0): Vector3 {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -254,7 +254,7 @@ namespace Aurora {
             let x = p1.y * p2.z - p1.z * p2.y;
             let y = p1.z * p2.x - p1.x * p2.z;
             let z = p1.x * p2.y - p1.y * p2.x;
-            return rst ? rst.setSeparate(x, y, z) : new Vector3(x, y, z);
+            return rst ? rst.setFromNumbers(x, y, z) : new Vector3(x, y, z);
         }
 
         public static angleBetween(p1: Vector3, p2: Vector3, clamp: boolean = false): number {
@@ -313,7 +313,7 @@ namespace Aurora {
             return rst;
         }
 
-        public setSeparate(x: number = 0, y: number = 0, z: number = 0, w: number = 0): Vector4 {
+        public setFromNumbers(x: number = 0, y: number = 0, z: number = 0, w: number = 0): Vector4 {
             this.x = x;
             this.y = y;
             this.z = z;

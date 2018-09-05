@@ -107,8 +107,8 @@ namespace Aurora {
                 originZ = this._zNear;
             }
 
-            rst.origin.setSeparate(originX, originY, originZ);
-            rst.direction.setSeparate(dirX, dirY, dirZ);
+            rst.origin.setFromNumbers(originX, originY, originZ);
+            rst.direction.setFromNumbers(dirX, dirY, dirZ);
 
             return rst;
         }

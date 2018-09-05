@@ -57,7 +57,7 @@ namespace Aurora {
 
         public static createOrthoLHMatrix(width: number, height: number, zNear: number, zFar: number, rst: Matrix44 = null): Matrix44 {
             rst = rst || new Matrix44();
-            rst.set44Separate(
+            rst.set44FromNumbers(
                 2 / width, 0, 0, 0,
                 0, 2 / height, 0, 0,
                 0, 0, 1 / (zFar - zNear), 0,
@@ -77,7 +77,7 @@ namespace Aurora {
             let xScale = yScale / aspectRatio;
 
             rst = rst || new Matrix44();
-            rst.set44Separate(
+            rst.set44FromNumbers(
                 xScale, 0, 0, 0,
                 0, yScale, 0, 0,
                 0, 0, zFar / (zFar - zNear), 1,
@@ -89,7 +89,7 @@ namespace Aurora {
         public static createPerspectiveLHMatrix(width: number, height: number, zNear: number, zFar: number, rst: Matrix44 = null): Matrix44 {
             rst = rst || new Matrix44();
             let zNear2 = zNear * 2;
-            rst.set44Separate(
+            rst.set44FromNumbers(
                 zNear2 / width, 0, 0, 0,
                 0, zNear2 / height, 0, 0,
                 0, 0, zFar / (zFar - zNear), 1,
@@ -104,7 +104,7 @@ namespace Aurora {
         public static createPerspectiveOffCenterLHMatrix(left: number, right: number, bottom: number, top: number, zNear: number, zFar: number, rst: Matrix44 = null): Matrix44 {
             rst = rst || new Matrix44();
             let zNear2 = zNear * 2;
-            rst.set44Separate(
+            rst.set44FromNumbers(
                 zNear2 / (right - left), 0, 0, 0,
                 0, zNear2 / (top - bottom), 0, 0,
                 (left + right) / (left - right), (top + bottom) / (bottom - top), zFar / (zFar - zNear), 1,
@@ -219,7 +219,7 @@ namespace Aurora {
             let cos = Math.cos(radian);
 
             if (rst) {
-                rst.set44Separate(1, 0, 0, 0,
+                rst.set44FromNumbers(1, 0, 0, 0,
                     0, cos, sin, 0,
                     0, -sin, cos); 
             } else {
@@ -238,7 +238,7 @@ namespace Aurora {
             let cos = Math.cos(radian);
 
             if (rst) {
-                rst.set44Separate(cos, 0, -sin, 0,
+                rst.set44FromNumbers(cos, 0, -sin, 0,
                     0, 1, 0, 0,
                     sin, 0, cos);
             } else {
@@ -257,7 +257,7 @@ namespace Aurora {
             let cos = Math.cos(radian);
 
             if (rst) {
-                rst.set44Separate(cos, sin, 0, 0,
+                rst.set44FromNumbers(cos, sin, 0, 0,
                     -sin, cos);
             } else {
                 rst = new Matrix44(cos, sin, 0, 0,
@@ -269,7 +269,7 @@ namespace Aurora {
 
         public static createScaleMatrix(sx: number, sy: number, sz: number, rst: Matrix44 = null): Matrix44 {
             if (rst) {
-                rst.set44Separate(sx, 0, 0, 0,
+                rst.set44FromNumbers(sx, 0, 0, 0,
                     0, sy, 0, 0,
                     0, 0, sz);
             } else {
@@ -282,7 +282,7 @@ namespace Aurora {
         }
         public static createTranslationMatrix(tx: number, ty: number, tz: number, rst: Matrix44 = null): Matrix44 {
             if (rst) {
-                rst.set44Separate(1, 0, 0, 0,
+                rst.set44FromNumbers(1, 0, 0, 0,
                     0, 1, 0, 0,
                     0, 0, 1, 0,
                     tx, ty, tz);
@@ -322,7 +322,7 @@ namespace Aurora {
             return rst;
         }
 
-        public set34Separate(m00: number = 1, m01: number = 0, m02: number = 0,
+        public set34FromNumbers(m00: number = 1, m01: number = 0, m02: number = 0,
             m10: number = 0, m11: number = 1, m12: number = 0,
             m20: number = 0, m21: number = 0, m22: number = 1,
             m30: number = 0, m31: number = 0, m32: number = 0): Matrix44 {
@@ -345,7 +345,7 @@ namespace Aurora {
             return this;
         }
 
-        public set44Separate(m00: number = 1, m01: number = 0, m02: number = 0, m03: number = 0,
+        public set44FromNumbers(m00: number = 1, m01: number = 0, m02: number = 0, m03: number = 0,
             m10: number = 0, m11: number = 1, m12: number = 0, m13: number = 0,
             m20: number = 0, m21: number = 0, m22: number = 1, m23: number = 0,
             m30: number = 0, m31: number = 0, m32: number = 0, m33: number = 1): Matrix44 {
@@ -507,7 +507,7 @@ namespace Aurora {
             rstRot.m12 = this.m12 - rstRot.m02 * dot;
 
             len = rstRot.m10 * rstRot.m10 + rstRot.m11 * rstRot.m11 + rstRot.m12 * rstRot.m12;
-            if (len != 1.0 && len != 0.0) {
+            if (len != 1 && len != 0) {
                 len = Math.sqrt(len);
 
                 rstRot.m10 /= len;
@@ -562,44 +562,45 @@ namespace Aurora {
 
         public toQuaternion(rst: Quaternion = null): Quaternion {
             rst = rst || new Quaternion();
-            let s: number;
             let tr = this.m00 + this.m11 + this.m22;
             if (tr > 0) {
-                s = Math.sqrt(tr + 1);
+                let s = Math.sqrt(tr + 1);
                 rst.w = s * 0.5;
                 s = 0.5 / s;
                 rst.x = (this.m12 - this.m21) * s;
                 rst.y = (this.m20 - this.m02) * s;
                 rst.z = (this.m01 - this.m10) * s;
             } else {
-                let quatIndex = 0;
-                if (this.m11 > this.m00) quatIndex = 1;
-                if (quatIndex === 0) {
-                    if (this.m22 > this.m00) quatIndex = 2;
-                } else {
-                    if (this.m22 > this.m11) quatIndex = 2;
-                }
-                if (quatIndex === 0) {
-                    s = Math.sqrt((this.m00 - (this.m11 + this.m22)) + 1);
-                    rst.x = s * 0.5;
-                    if (s != 0) s = 0.5 / s;
-                    rst.y = (this.m01 + this.m10) * s;
-                    rst.z = (this.m02 + this.m20) * s;
-                    rst.w = (this.m12 - this.m21) * s;
-                } else if (quatIndex === 1) {
-                    s = Math.sqrt((this.m11 - (this.m22 + this.m00)) + 1);
-                    rst.y = s * 0.5;
-                    if (s != 0) s = 0.5 / s;
-                    rst.z = (this.m12 + this.m21) * s;
-                    rst.x = (this.m10 + this.m01) * s;
-                    rst.w = (this.m20 - this.m02) * s;
-                } else {
-                    s = Math.sqrt((this.m22 - (this.m00 + this.m11)) + 1);
+                if (this.m11 > this.m00) {
+                    if (this.m22 > this.m11) {//2
+                        let s = Math.sqrt((this.m22 - (this.m00 + this.m11)) + 1);
+                        rst.z = s * 0.5;
+                        s = 0.5 / s;
+                        rst.x = (this.m20 + this.m02) * s;
+                        rst.y = (this.m21 + this.m12) * s;
+                        rst.w = (this.m01 - this.m10) * s;
+                    } else {//1
+                        let s = Math.sqrt((this.m11 - (this.m22 + this.m00)) + 1);
+                        rst.y = s * 0.5;
+                        s = 0.5 / s;
+                        rst.x = (this.m10 + this.m01) * s;
+                        rst.z = (this.m12 + this.m21) * s;
+                        rst.w = (this.m20 - this.m02) * s;
+                    }
+                } else if (this.m22 > this.m00) {//2
+                    let s = Math.sqrt((this.m22 - (this.m00 + this.m11)) + 1);
                     rst.z = s * 0.5;
-                    if (s != 0) s = 0.5 / s;
+                    s = 0.5 / s;
                     rst.x = (this.m20 + this.m02) * s;
                     rst.y = (this.m21 + this.m12) * s;
                     rst.w = (this.m01 - this.m10) * s;
+                } else {//0
+                    let s = Math.sqrt((this.m00 - (this.m11 + this.m22)) + 1);
+                    rst.x = s * 0.5;
+                    s = 0.5 / s;
+                    rst.y = (this.m01 + this.m10) * s;
+                    rst.z = (this.m02 + this.m20) * s;
+                    rst.w = (this.m12 - this.m21) * s;
                 }
             }
 
@@ -672,7 +673,7 @@ namespace Aurora {
             let det = this.m00 * dst0 + this.m10 * dst1 + this.m20 * dst2 + this.m30 * dst3;
 
             if (det > MathUtils.ZERO_TOLERANCE || det < -MathUtils.ZERO_TOLERANCE) {
-                det = 1.0 / det;
+                det = 1 / det;
 
                 rst = rst || this;
 
@@ -838,7 +839,7 @@ namespace Aurora {
             let dstY = x * this.m01 + y * this.m11 + z * this.m21;
             let dstZ = x * this.m02 + y * this.m12 + z * this.m22;
 
-            return rst ? rst.setSeparate(dstX, dstY, dstZ) : new Vector3(dstX, dstY, dstZ);
+            return rst ? rst.setFromNumbers(dstX, dstY, dstZ) : new Vector3(dstX, dstY, dstZ);
         }
 
         public transform33Vector3(vec3: Vector3, rst: Vector3 = null): Vector3 {
@@ -850,7 +851,7 @@ namespace Aurora {
             let dstY = x * this.m01 + y * this.m11 + z * this.m21 + this.m31;
             let dstZ = x * this.m02 + y * this.m12 + z * this.m22 + this.m32;
 
-            return rst ? rst.setSeparate(dstX, dstY, dstZ) : new Vector3(dstX, dstY, dstZ);
+            return rst ? rst.setFromNumbers(dstX, dstY, dstZ) : new Vector3(dstX, dstY, dstZ);
         }
 
         public transform34Z(x: number = 0, y: number = 0, z: number = 0): number {
@@ -868,7 +869,7 @@ namespace Aurora {
             let dstY = (x * this.m01 + y * this.m11 + z * this.m21 + this.m31) / w;
             let dstZ = (x * this.m02 + y * this.m12 + z * this.m22 + this.m32) / w;
 
-            return rst ? rst.setSeparate(dstX, dstY, dstZ) : new Vector3(dstX, dstY, dstZ);
+            return rst ? rst.setFromNumbers(dstX, dstY, dstZ) : new Vector3(dstX, dstY, dstZ);
         }
 
         public transform44Vector3(vec3: Vector3, rst: Vector3 = null): Vector3 {
@@ -881,7 +882,7 @@ namespace Aurora {
             let dstZ = x * this.m02 + y * this.m12 + z * this.m22 + w * this.m32;
             let dstW = x * this.m03 + y * this.m13 + z * this.m23 + w * this.m33;
 
-            return rst ? rst.setSeparate(dstX, dstY, dstZ, dstW) : new Vector4(dstX, dstY, dstZ, dstW);
+            return rst ? rst.setFromNumbers(dstX, dstY, dstZ, dstW) : new Vector4(dstX, dstY, dstZ, dstW);
         }
 
         public transform44Vector4(vec4: Vector4, rst: Vector4 = null): Vector4 {

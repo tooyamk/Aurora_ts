@@ -35,7 +35,7 @@ class _Other {
         
             let light = lightNode.addComponent(new Aurora.PointLight());
             //light.spotAngle = 10 * Math.PI / 180;
-            light.color.setSeparate(1, 1, 1);
+            light.color.setFromNumbers(1, 1, 1);
             light.setAttenuation(2500);
             light.intensity = 1.0;
         
@@ -62,7 +62,7 @@ class _Other {
             //cam.setProjectionMatrix(MITOIA.Matrix44.createOrthoLHMatrix(engine.canvasWidth, engine.canvasHeight, 10, 10000));
             //cam.setProjectionMatrix(MITOIA.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, engine.canvasWidth / engine.canvasHeight, 1, 10000));
             cam.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, 1257 / 1308, 5, 10000));
-            cam.clear.color.setSeparate(0.5, 0.5, 0.5, 1);
+            cam.clear.color.setFromNumbers(0.5, 0.5, 0.5, 1);
             //cam.clear.clearColor = false;
             //cam.clear.clearDepth = false;
             cam.node.setLocalPosition(0, 0, -10);
