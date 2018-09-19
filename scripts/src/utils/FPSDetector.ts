@@ -1,5 +1,6 @@
 namespace Aurora {
     export class FPSDetector {
+        private _platform: IPlatform;
         private _delta: number = 0;
         private _time: number = 0;
         private _fps: number = 0;
@@ -7,7 +8,8 @@ namespace Aurora {
 
         private _dis: HTMLDivElement = null;
         
-        constructor(delta: number = 1000) {
+        constructor(platform: IPlatform, delta: number = 1000) {
+            this._platform = platform;
             this.delta = delta;
             this.reset();
         }
@@ -25,12 +27,12 @@ namespace Aurora {
         }
 
         public reset(): void {
-            this._time = Timer.utc;
+            this._time = this._platform.duration();
             this._count = 0;
         }
 
         public record(): void {
-            let t = Timer.utc;
+            let t = this._platform.duration();
 
             ++this._count;
             let d = t - this._time;

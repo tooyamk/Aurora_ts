@@ -189,59 +189,67 @@ namespace Aurora {
 
             return this;
         }
-
-        public add(target: number | Vector3): Vector3 {
-            if (target instanceof Vector3) {
-                this.x += target.x;
-                this.y += target.y;
-                this.z += target.z;
-            } else {
-                this.x += target;
-                this.y += target;
-                this.z += target;
-            }
+        
+        public addNumber(target: number): Vector3 {
+            this.x += target;
+            this.y += target;
+            this.z += target;
 
             return this;
         }
 
-        public sub(target: number | Vector3): Vector3 {
-            if (target instanceof Vector3) {
-                this.x -= target.x;
-                this.y -= target.y;
-                this.z -= target.z;
-            } else {
-                this.x -= target;
-                this.y -= target;
-                this.z -= target;
-            }
+        public add(target: Vector3): Vector3 {
+            this.x += target.x;
+            this.y += target.y;
+            this.z += target.z;
 
             return this;
         }
 
-        public mul(target: number | Vector3): Vector3 {
-            if (target instanceof Vector3) {
-                this.x *= target.x;
-                this.y *= target.y;
-                this.z *= target.z;
-            } else {
-                this.x *= target;
-                this.y *= target;
-                this.z *= target;
-            }
+        public subNumber(target: number): Vector3 {
+            this.x -= target;
+            this.y -= target;
+            this.z -= target;
 
             return this;
         }
 
-        public div(target: number | Vector3): Vector3 {
-            if (target instanceof Vector3) {
-                this.x /= target.x;
-                this.y /= target.y;
-                this.z /= target.z;
-            } else {
-                this.x /= target;
-                this.y /= target;
-                this.z /= target;
-            }
+        public sub(target: Vector3): Vector3 {
+            this.x -= target.x;
+            this.y -= target.y;
+            this.z -= target.z;
+
+            return this;
+        }
+
+        public mulNumber(target: number): Vector3 {
+            this.x *= target;
+            this.y *= target;
+            this.z *= target;
+
+            return this;
+        }
+
+        public mul(target: Vector3): Vector3 {
+            this.x *= target.x;
+            this.y *= target.y;
+            this.z *= target.z;
+
+            return this;
+        }
+
+        public divNumber(target: number): Vector3 {
+            this.x /= target;
+            this.y /= target;
+            this.z /= target;
+
+            return this;
+        }
+
+        public div(target: Vector3): Vector3 {
+            this.x /= target.x;
+            this.y /= target.y;
+            this.z /= target.z;
 
             return this;
         }

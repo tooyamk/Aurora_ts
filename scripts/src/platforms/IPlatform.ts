@@ -1,0 +1,3 @@
+interface IPlatform {
+    duration(): number;
+}
