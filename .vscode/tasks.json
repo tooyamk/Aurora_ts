@@ -2,34 +2,28 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "rebuild",
-            "type": "typescript",
-            "tsconfig": "tsconfig.json",
-            "problemMatcher": [
-                "$tsc"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
+            "label": "build-core",
+            "type": "shell",
+            "command": "gulp build-core"
         },
         {
-            "label": "build",
-            "type": "typescript",
-            "tsconfig": "tsconfig.json",
-            "option": "watch",
-            "problemMatcher": [
-                "$tsc-watch"
-            ]
+            "label": "build-core-watch",
+            "type": "shell",
+            "command": "gulp build-core-watch",
+            "isBackground": true,
+            "problemMatcher": "$tsc-watch"
         },
         {
-            "label": "rebuild-lib",
-            "type": "typescript",
-            "tsconfig": "tsconfig-build-lib.json",
-            "problemMatcher": [
-                "$tsc"
-            ],
-            "group": "build"
+            "label": "build-examples",
+            "type": "shell",
+            "command": "gulp build-examples"
+        },
+        {
+            "label": "build-examples-watch",
+            "type": "shell",
+            "command": "gulp build-examples-watch",
+            "isBackground": true,
+            "problemMatcher": "$tsc-watch"
         },
     ]
 }

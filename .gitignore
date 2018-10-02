@@ -22,6 +22,10 @@ bld/
 .vs/
 bin/
 .tempChromeProfileForDebug/
+dist/*.js
+dist/*.js.map
+dist/*.d.ts
+package-lock.json
 
 # Roslyn cache directories
 *.ide/

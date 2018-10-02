@@ -1,0 +1,25 @@
+﻿{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "noImplicitReturns": true,
+    "noEmitOnError": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "sourceMap": true,
+    "module": "amd",
+    "target": "es6",
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "listFiles": true,
+    "listEmittedFiles": true,
+    "noResolve": true,
+    "outFile": "../../dist/test.js"
+  },
+  "include": [ "./**/*.ts" ],
+  "exclude": [],
+  "compileOnSave": true,
+  "references": [
+    { "path": "../core" }
+  ]
+}

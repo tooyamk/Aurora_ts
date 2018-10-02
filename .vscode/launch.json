@@ -2,14 +2,15 @@
     "version": "2.0.0",
     "configurations": [
         {
-            "name": "Launch Browser",
+            "name": "Build & Run (Examples)",
             "type": "chrome",
             "request": "launch",
+            //"url": "",
             //"url": "http://127.0.0.1/Aurora/index.html",
-            "file": "${workspaceFolder}/output/index.html",
+            "file": "${workspaceFolder}/dist/index.html",
             "sourceMaps": true,
             "userDataDir": "${workspaceRoot}/.tempChromeProfileForDebug",
-            "preLaunchTask": "build",
+            "preLaunchTask": "build-examples-watch",
             "cwd": "${workspaceRoot}",
             "webRoot": "${workspaceRoot}",
             "runtimeArgs": [
