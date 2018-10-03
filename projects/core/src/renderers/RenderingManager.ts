@@ -64,16 +64,30 @@ namespace Aurora {
         }
 
         public begin(gl: GL, pass: IRenderPass): void {
+            let vp = pass.viewport;
             if (pass.frameBuffer) {
                 pass.frameBuffer.bind();
-                gl.setViewport(0, 0, pass.frameBuffer.width, pass.frameBuffer.height);
+                if (vp && vp.width >= 0 && vp.height >= 0) {
+                    gl.setViewport(vp.x, vp.y, vp.width, vp.height);
+                } else {
+                    gl.setViewport(0, 0, pass.frameBuffer.width, pass.frameBuffer.height);
+                }
             } else {
                 gl.restoreBackBuffer();
                 gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+                if (vp && vp.width >= 0 && vp.height >= 0) {
+                    gl.setViewport(vp.x, vp.y, vp.width, vp.height);
+                } else {
+                    gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+                }
             }
 
             gl.setDepthWrite(true);
             gl.clear(pass.clear);
+        }
+
+        public setViewport(rect: Rect): void {
+
         }
 
         public render(gl: GL, camera: Camera, node: Node3D, lights: AbstractLight[] = null, replaceMaterials: Material[] = null): void {
@@ -112,7 +126,7 @@ namespace Aurora {
         }
 
         private _collectNode(node: Node3D, cullingMask: uint, replaceMaterials: Material[]): void {
-            let renderable = node.getComponentByType(AbstractRenderableObject, true);
+            let renderable = node.getComponentByType(AbstractRenderable, true);
             if (renderable && renderable.renderer && (node.layer & cullingMask) && renderable.isReady()) {
                 let materials = replaceMaterials ? replaceMaterials : renderable.materials;
                 if (materials) {

@@ -1,7 +1,7 @@
-///<reference path="AbstractRenderableObject.ts" />
+///<reference path="AbstractRenderable.ts" />
 
 namespace Aurora {
-    export class RenderableMesh extends AbstractRenderableObject {
+    export class RenderableMesh extends AbstractRenderable {
         public assetStore: AssetStore = null;
 
         public isReady(): boolean {

@@ -27,11 +27,11 @@ namespace Aurora {
         }
 
         protected _nodeChanged(old: Node3D): void {
-            //todo
+            //override
         }
 
         protected _enabledChanged(): void {
-            //todo
+            //override
         }
     }
 }

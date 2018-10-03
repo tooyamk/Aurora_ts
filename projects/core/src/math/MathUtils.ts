@@ -13,9 +13,18 @@ namespace Aurora {
 
         public static clamp(value: number, min: number, max: number): number {
             if (value < min) {
-                value = min;
+                return min;
             } else if (value > max) {
-                value = max;
+                return max;
+            }
+            return value;
+        }
+
+        public static clamp01(value: number): number {
+            if (value < 0) {
+                return 0;
+            } else if (value > 1) {
+                return 1;
             }
             return value;
         }

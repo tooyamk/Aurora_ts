@@ -2433,10 +2433,7 @@ namespace Aurora {
 
         private _initViewport(): void {
             let vp = this._gl.getParameter(GL.VIEWPORT);
-            this._viewport.x = vp[0];
-            this._viewport.y = vp[1];
-            this._viewport.width = vp[2];
-            this._viewport.height = vp[3];
+            this._viewport.set(vp[0], vp[1], vp[2], vp[3]);
         }
 
         private _initClear(): void {
@@ -2593,10 +2590,7 @@ namespace Aurora {
 
         public setViewport(x: int, y: int, width: int, height: int): void {
             if (this._viewport.x !== x || this._viewport.y !== y || this._viewport.width !== width || this._viewport.height !== height) {
-                this._viewport.x = x;
-                this._viewport.y = y;
-                this._viewport.width = width;
-                this._viewport.height = height;
+                this._viewport.set(x, y, width, height);
 
                 this._gl.viewport(x, y, width, height);
             }

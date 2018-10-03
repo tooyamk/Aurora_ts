@@ -2,7 +2,7 @@
 ///<reference path="../../../renderers/AbstractRenderer.ts" />
 
 namespace Aurora {
-    export abstract class AbstractRenderableObject extends AbstractNodeComponent {
+    export abstract class AbstractRenderable extends AbstractNodeComponent {
         public renderer: AbstractRenderer = null;
         public materials: Material[] = [];
 

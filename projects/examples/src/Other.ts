@@ -1,6 +1,4 @@
-//import Aurora from "../../../dist/aurora.core.js";
 ///<reference path="Tools.ts" />
-//<reference path="../../core/src/Includes.ts" />
 
 class Other {
     constructor() {

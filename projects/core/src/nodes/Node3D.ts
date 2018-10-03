@@ -101,12 +101,16 @@ namespace Aurora {
             return false;
         }
 
+        public removeFromParent(): boolean {
+            return this._parent ? this._parent.removeChild(this) : false;
+        }
+
         protected _parentChanged(root: Node3D): void {
             this._root = root;
 
             let old = this._dirty;
             this._dirty |= Node3D.WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._notificationUpdate(true);
+            if (old !== this._dirty) this._noticeUpdate(true);
         }
 
         public get numChildren(): uint {
@@ -197,10 +201,6 @@ namespace Aurora {
                 this._childHead = null;
                 this._numChildren = 0;
             }
-        }
-
-        public removeFromParent(): void {
-            if (this._parent) this._parent.removeChild(this);
         }
 
         /**
@@ -314,7 +314,7 @@ namespace Aurora {
             }
         }
 
-        public getComponentByType<T extends AbstractNodeComponent>(c: {prototype: T}, checkEnabled: boolean = false): T {
+        public getComponentByType<T extends AbstractNodeComponent>(c: {prototype: T}, checkEnabled: boolean = true): T {
             if (this._components) {
                 let type = <any>c;
 
@@ -328,18 +328,18 @@ namespace Aurora {
             return null;
         }
 
-        protected _notificationUpdate(worldRotationDirty: boolean): void {
+        protected _noticeUpdate(worldRotationDirty: boolean): void {
             let node = this._childHead;
             while (node) {
-                node._receiveNotificationUpdate(worldRotationDirty);
+                node._receiveNoticeUpdate(worldRotationDirty);
                 node = node._next;
             }
         }
 
-        protected _receiveNotificationUpdate(worldRotationDirty: boolean): void {
+        protected _receiveNoticeUpdate(worldRotationDirty: boolean): void {
             let old = this._dirty;
             this._dirty |= worldRotationDirty ? Node3D.WORLD_ALL_DIRTY : Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
-            if (this._dirty !== old) this._notificationUpdate(worldRotationDirty);
+            if (this._dirty !== old) this._noticeUpdate(worldRotationDirty);
         }
 
         public getLocalPositon(rst: Vector3 = null): Vector3 {
@@ -353,7 +353,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
-            if (old !== this._dirty) this._notificationUpdate(false);
+            if (old !== this._dirty) this._noticeUpdate(false);
         }
 
         public localTranslate(x: number = 0, y: number = 0, z: number = 0): void {
@@ -361,7 +361,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
-            if (old !== this._dirty) this._notificationUpdate(false);
+            if (old !== this._dirty) this._noticeUpdate(false);
         }
 
         public getWorldPosition(rst: Vector3 = null): Vector3 {
@@ -402,7 +402,7 @@ namespace Aurora {
             }
 
             this._dirty |= Node3D.INVERSE_WORLD_MATRIX_DIRTY;
-            if (oldDirty !== this._dirty) this._notificationUpdate(false);
+            if (oldDirty !== this._dirty) this._noticeUpdate(false);
         }
 
         public getLocalRotation(rst: Quaternion = null): Quaternion {
@@ -414,7 +414,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._notificationUpdate(true);
+            if (old !== this._dirty) this._noticeUpdate(true);
         }
 
         public localRotate(quat: Quaternion): void {
@@ -422,7 +422,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._notificationUpdate(true);
+            if (old !== this._dirty) this._noticeUpdate(true);
         }
 
         public parentRotate(quat: Quaternion): void {
@@ -430,7 +430,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._notificationUpdate(true);
+            if (old !== this._dirty) this._noticeUpdate(true);
         }
 
         public getWorldRotation(rst: Quaternion = null): Quaternion {
@@ -460,7 +460,7 @@ namespace Aurora {
 
             this._dirty &= ~Node3D.WORLD_ROTATION_DIRTY;
             this._dirty |= Node3D.LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY;
-            if (oldDirty !== this._dirty) this._notificationUpdate(true);
+            if (oldDirty !== this._dirty) this._noticeUpdate(true);
         }
 
         /**
@@ -492,7 +492,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.ALL_MATRIX_DIRTY;
-           if (old !== this._dirty)  this._notificationUpdate(false);
+           if (old !== this._dirty)  this._noticeUpdate(false);
         }
 
         public getLocalMatrix(rst: Matrix44 = null): Matrix44 {
@@ -508,7 +508,7 @@ namespace Aurora {
             let old = this._dirty;
             this._dirty &= ~Node3D.LOCAL_MATRIX_DIRTY;
             this._dirty |= Node3D.WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._notificationUpdate(true);
+            if (old !== this._dirty) this._noticeUpdate(true);
         }
 
         public getWorldMatrix(rst: Matrix44 = null): Matrix44 {
@@ -533,7 +533,7 @@ namespace Aurora {
 
             this._dirty &= ~Node3D.LOCAL_MATRIX_DIRTY;
             this._dirty |= Node3D.WORLD_ROTATION_DIRTY;
-            if (old !== this._dirty) this._notificationUpdate(true);
+            if (old !== this._dirty) this._noticeUpdate(true);
         }
 
         public getInverseWorldMatrix(rst: Matrix44 = null): Matrix44 {
@@ -548,7 +548,7 @@ namespace Aurora {
 
                 let old = this._dirty;
                 this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-                if (old !== this._dirty) this._notificationUpdate(true);
+                if (old !== this._dirty) this._noticeUpdate(true);
             }
         }
 
@@ -593,11 +593,37 @@ namespace Aurora {
             }
         }
 
-        public getChildByName(name: string): Node3D {
-            let child = this._childHead;
-            while (child) {
-                if (child.name === name) return child;
-                child = child._next;
+        public getChildByName(name: string, depth: uint = 0): Node3D {
+            if (depth === 0) {
+                let child = this._childHead;
+                while (child) {
+                    if (child.name === name) return child;
+                    child = child._next;
+                }
+            } else if(depth > 0) {
+                let arr1: Node3D[] = [this], arr2: Node3D[] = [];
+                let len1 = 0, len2 = 0;
+
+                do {
+                    for (let i = 0; i < len1; ++i) {
+                        let cur = arr1[i];
+                        let c = cur._childHead;
+                        while (c) {
+                            if (c.name === name) return c;
+                            arr2[len2++] = c;
+                            c = c._next;
+                        }
+                    }
+
+                    if (len2 === 0 && --depth <= 0) return null;
+
+                    let tmpArr = arr1;
+                    arr1 = arr2;
+                    arr2 = tmpArr;
+
+                    len1 = len2;
+                    len2 = 0;
+                } while(true);
             }
 
             return null;

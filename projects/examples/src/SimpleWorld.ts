@@ -1,5 +1,3 @@
-//<reference path="../../core/src/Includes.ts" />
-
 class SimpleWorld {
     constructor() {
         let platform = new Aurora.StandardHTMLPlatform();
@@ -27,6 +25,7 @@ class SimpleWorld {
         light.setAttenuation(2500);
 
         let cam = cameraNode.addComponent(new Aurora.Camera());
+        cam.clear.color.setFromNumbers(1, 0, 0, 1);
 
         modelNode.localTranslate(0, 0, 500);
         lightNode.localTranslate(-500, 0, 0);
@@ -48,8 +47,9 @@ class SimpleWorld {
         let stretcher = new Aurora.CanvasAutoStretcher(gl.canvas);
 
         let resetSize = () => {
-            gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            cam.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
+            cam.viewport.set(0, 0, 300, 300);
+            //gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+            cam.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, cam.viewport.width / cam.viewport.height, 5, 10000));
         }
         resetSize();
 

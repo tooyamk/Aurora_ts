@@ -19,24 +19,6 @@
                 "--disable-gpu-shader-disk-cache",
                 "--disk-cache-size=1"
             ]
-        },
-
-        {
-            "name": "Build Lib",
-            "type": "chrome",
-            "request": "launch",
-            "url": "",
-            "sourceMaps": true,
-            "userDataDir": "${workspaceRoot}/.tempChromeProfileForDebug",
-            "preLaunchTask": "rebuild-lib",
-            "cwd": "${workspaceRoot}",
-            "webRoot": "${workspaceRoot}",
-            "runtimeArgs": [
-                "--enable-unsafe-es3-apis",
-                "--disable-gpu-program-cache",
-                "--disable-gpu-shader-disk-cache",
-                "--disk-cache-size=1"
-            ]
         }
     ]
 }

@@ -4,8 +4,9 @@
 
 namespace Aurora {
     export class Camera extends AbstractNodeComponent implements IRenderPass {
-        public clear: GLClear = new GLClear();
+        public clear = new GLClear();
         public frameBuffer: GLFrameBuffer = null;
+        public viewport = new Rect(0, 0, -1, -1);
 
         public cullingMask: uint = 0x7FFFFFFF;
 
