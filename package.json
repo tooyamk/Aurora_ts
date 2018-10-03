@@ -1,0 +1,24 @@
+{
+  "name": "aurora",
+  "version": "1.0.0",
+  "description": "",
+  "main": "gulpfile.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tooyamk/Aurora/issues"
+  },
+  "homepage": "https://github.com/tooyamk/Aurora#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "split": "^1.0.1",
+    "typescript": "^3.1.1"
+  }
+}
