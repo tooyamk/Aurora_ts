@@ -14,6 +14,7 @@
             "cwd": "${workspaceRoot}",
             "webRoot": "${workspaceRoot}",
             "runtimeArgs": [
+                "--disable-web-security",
                 "--enable-unsafe-es3-apis",
                 "--disable-gpu-program-cache",
                 "--disable-gpu-shader-disk-cache",

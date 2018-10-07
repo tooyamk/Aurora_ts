@@ -4,16 +4,17 @@
 
 namespace Aurora {
     export class ForwardRenderer extends AbstractRenderer {
-        public enalbedRenderingSort: boolean = true;
-
         protected _enalbedLighting = true;
         protected _light: AbstractLight = null;
-        protected _renderingObject: RenderingObject = null;
 
         protected _localToWorldM33Array: number[] = [];
         protected _localToWorldM44Array: number[] = [];
         protected _localToProjM44Array: number[] = [];
         protected _localToViewM44Array: number[] = [];
+
+        constructor() {
+            super();
+        }
 
         public get enabledLighting(): boolean {
             return this._enalbedLighting;
@@ -21,6 +22,10 @@ namespace Aurora {
 
         public set enabledLighting(value: boolean) {
             this._enalbedLighting = value;
+        }
+
+        public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[]): void {
+            //override
         }
 
         public preRender(shaderDefines: ShaderDefines, shaderUniforms: ShaderUniforms, lights: AbstractLight[]): void {
@@ -45,7 +50,6 @@ namespace Aurora {
                 this._shaderDefines.setDefine(ShaderPredefined.LIGHTING, false);
             }
 
-            if (this.enalbedRenderingSort) this._sort(renderingObjects, start, end);
             this._renderByQueue(renderingObjects, start, end);
         }
 
@@ -55,65 +59,19 @@ namespace Aurora {
             this._light = null;
         }
 
-        private _sort(renderingObjects: RenderingObject[], start: uint, end: uint): void {
-            let obj = renderingObjects[start];
-            let renderingPriority: number = obj.material.renderingPriority;
-            let sortStart: number = start;
-
-            for (let i = start + 1; i <= end; ++i) {
-                obj = renderingObjects[i];
-                let mat = obj.material;
-
-                if (renderingPriority !== mat.renderingPriority) {
-                    this._doSort(renderingObjects, sortStart, i - 1);
-                    sortStart = i;
-                    renderingPriority = mat.renderingPriority;
-                }
-            }
-
-            this._doSort(renderingObjects, sortStart, end);
-        }
-
-        private _doSort(renderingObjects: RenderingObject[], start: uint, end: uint): void {
-            Sort.Merge.sort(renderingObjects, (a: RenderingObject, b: RenderingObject) => {
-                let value = a.material.renderingSort - b.material.renderingSort;
-                if (value === 0) {
-                    switch (a.material.renderingSort) {
-                        case RenderingSort.FAR_TO_NEAR: {
-                            return a.localToView.m32 >= b.localToView.m32;
-                            break;
-                        }
-                        case RenderingSort.NEAR_TO_FAR: {
-                            return a.localToView.m32 <= b.localToView.m32;
-                            break;
-                        }
-                        default:
-                            return true;
-                            break;
-                    }
-                } else {
-                    return value < 0;
-                }
-            }, start, end);
-        }
-
         private _renderByQueue(renderingObjects: RenderingObject[], start: int, end: int): void {
             for (let i = start; i <= end; ++i) {
                 let obj = renderingObjects[i];
-                this._renderingObject = obj;
-                obj.renderable.draw(this, obj.material);
+                let as = obj.renderable.visit(obj);
+                if (as) this.draw(as, obj.material, () => {
+                    let shader = obj.material.shader;
+
+                    if (shader.hasUniform(ShaderPredefined.u_M33_L2W)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M33_L2W, obj.localToWorld.toArray33(false, this._localToWorldM33Array));
+                    if (shader.hasUniform(ShaderPredefined.u_M44_L2P)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2P, obj.localToProj.toArray44(false, this._localToProjM44Array));
+                    if (shader.hasUniform(ShaderPredefined.u_M44_L2V)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2V, obj.localToView.toArray44(false, this._localToViewM44Array));
+                    if (shader.hasUniform(ShaderPredefined.u_M44_L2W)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2W, obj.localToWorld.toArray44(false, this._localToWorldM44Array));
+                });
             }
-
-            this._renderingObject = null;
-        }
-
-        public onShaderPreUse(): void {
-            let shader = this._renderingObject.material.shader;
-
-            if (shader.hasUniform(ShaderPredefined.u_M33_L2W)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M33_L2W, this._renderingObject.localToWorld.toArray33(false, this._localToWorldM33Array));
-            if (shader.hasUniform(ShaderPredefined.u_M44_L2P)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2P, this._renderingObject.localToProj.toArray44(false, this._localToProjM44Array));
-            if (shader.hasUniform(ShaderPredefined.u_M44_L2V)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2V, this._renderingObject.localToView.toArray44(false, this._localToViewM44Array));
-            if (shader.hasUniform(ShaderPredefined.u_M44_L2W)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2W, this._renderingObject.localToWorld.toArray44(false, this._localToWorldM44Array));
         }
     }
 }

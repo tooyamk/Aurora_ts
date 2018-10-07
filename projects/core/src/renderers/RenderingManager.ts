@@ -41,16 +41,16 @@ namespace Aurora {
 
         public dispose(): void {
             if (this._defaultPostProcessVertexBuffer) {
-                this._defaultPostProcessVertexBuffer.dispose();
+                this._defaultPostProcessVertexBuffer.destroy();
                 this._defaultPostProcessVertexBuffer = null;
 
-                this._defaultPostProcessTexCoordBuffer.dispose();
+                this._defaultPostProcessTexCoordBuffer.destroy();
                 this._defaultPostProcessTexCoordBuffer = null;
 
-                this._defaultPostProcessIndexBuffer.dispose();
+                this._defaultPostProcessIndexBuffer.destroy();
                 this._defaultPostProcessIndexBuffer = null;
 
-                this._defaultPostProcessShader.dispose();
+                this._defaultPostProcessShader.destroy();
                 this._defaultPostProcessShader = null;
             }
         }
@@ -86,10 +86,6 @@ namespace Aurora {
             gl.clear(pass.clear);
         }
 
-        public setViewport(rect: Rect): void {
-
-        }
-
         public render(gl: GL, camera: Camera, node: Node3D, lights: AbstractLight[] = null, replaceMaterials: Material[] = null): void {
             if (camera.node) {
                 camera.node.getWorldMatrix(this._cameraWorldMatrix);
@@ -114,7 +110,28 @@ namespace Aurora {
 
             if (this._renderingQueueLength > 0) {
                 Sort.Merge.sort(this._renderingQueue, (a: RenderingObject, b: RenderingObject) => {
-                    return a.material.renderingPriority <= b.material.renderingPriority;
+                    let sub = a.material.renderingPriority - b.material.renderingPriority;
+                    if (sub < 0) {
+                        return true;
+                    } else if (sub === 0) {
+                        let value = a.material.renderingSort - b.material.renderingSort;
+                        if (value === 0) {
+                            switch (a.material.renderingSort) {
+                                case RenderingSort.FAR_TO_NEAR: {
+                                    return a.localToView.m32 >= b.localToView.m32;
+                                }
+                                case RenderingSort.NEAR_TO_FAR: {
+                                    return a.localToView.m32 <= b.localToView.m32;
+                                }
+                                default:
+                                    return true;
+                            }
+                        } else {
+                            return value < 0;
+                        }
+                    } else {
+                        return false;
+                    }
                 }, 0, this._renderingQueueLength - 1);
             }
 
@@ -123,6 +140,30 @@ namespace Aurora {
             //clean
             for (let i = 0; i < this._renderingQueueLength; ++i) this._renderingQueue[i].clean();
             this._renderingQueueLength = 0;
+        }
+
+        public appendRenderingObject(renderable: AbstractRenderable, material: Material, alternativeMaterial: Material): void {
+            if (material.shader) {
+                if (!renderable.renderer.isRendering) {
+                    renderable.renderer.isRendering = true;
+                    this._renderers.push(renderable.renderer);
+                }
+
+                let queueNode: RenderingObject;
+                if (this._renderingQueueLength === this._renderingQueueCapacity) {
+                    queueNode = new RenderingObject();
+                    this._renderingQueue[this._renderingQueueCapacity++] = queueNode;
+                    ++this._renderingQueueLength;
+                } else {
+                    queueNode = this._renderingQueue[this._renderingQueueLength++];
+                }
+
+                queueNode.material = material;
+                queueNode.renderable = renderable;
+                renderable.node.getWorldMatrix(queueNode.localToWorld);
+                queueNode.localToWorld.append34(this._worldToViewMatrix, queueNode.localToView);
+                queueNode.localToWorld.append44(this._worldToProjMatrix, queueNode.localToProj);
+            }
         }
 
         private _collectNode(node: Node3D, cullingMask: uint, replaceMaterials: Material[]): void {
@@ -148,7 +189,6 @@ namespace Aurora {
                             }
 
                             queueNode.material = m;
-                            queueNode.node = node;
                             queueNode.renderable = renderable;
                             node.getWorldMatrix(queueNode.localToWorld);
                             queueNode.localToWorld.append34(this._worldToViewMatrix, queueNode.localToView);
@@ -240,7 +280,7 @@ namespace Aurora {
                 this._defaultPostProcessTexCoordBuffer.upload([0, 0, 0, 1, 1, 1, 1, 0], GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW);
 
                 this._defaultPostProcessIndexBuffer = new GLIndexBuffer(gl);
-                this._defaultPostProcessIndexBuffer.upload([0, 1, 2, 0, 2, 3], GLUsageType.STATIC_DRAW);
+                this._defaultPostProcessIndexBuffer.upload([0, 1, 2, 0, 2, 3], GLIndexDataType.UNSIGNED_BYTE, GLUsageType.STATIC_DRAW);
 
                 this._defaultPostProcessShader = new Shader(gl, new ShaderSource(BuiltinShader.PostProcess.Default.VERTEX), new ShaderSource(BuiltinShader.PostProcess.Default.FRAGMENT));
             }

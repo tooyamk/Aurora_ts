@@ -8,6 +8,8 @@ namespace Aurora {
     }
 
     export class ShaderDefines {
+        public next: ShaderDefines = null;
+
         private _defines: { [key: string] : ShaderDefineValue } = {};
         private _count: uint = 0;
 

@@ -34,15 +34,45 @@ namespace Aurora {
             this.shader = shader;
         }
 
-        public ready(globalDefines: ShaderDefines): boolean {
+        public static canCombine(value0: Material, value1: Material, info: GLProgramUniformInfo[] = null): boolean {
+            if (value0 === value1) return true;
+            if (value0) {
+                if (value1) {
+                    if (value0.shader !== value1.shader ||
+                        value0.drawMode !== value1.drawMode ||
+                        value0.cullFace !== value1.cullFace ||
+                        value0.depthTest !== value1.depthTest ||
+                        value0.depthWrite !== value1.depthWrite) return false;
+                    if (!GLBlend.isEqual(value0.blend, value1.blend)) return false;
+                    if (!GLColorWrite.isEqual(value0.colorWrite, value1.colorWrite)) return false;
+                    if (!GLStencil.isEqual(value0.stencilFront, value1.stencilBack)) return false;
+                    if (!GLStencil.isEqual(value0.stencilBack, value1.stencilBack)) return false;
+                    if (!ShaderUniforms.isEqual(value0.uniforms, value1.uniforms, info)) return false;
+                } else {
+                    return false;
+                }
+            } else if (value1) {
+                return false;
+            }
+            return true;
+        }
+
+        public ready(defines: ShaderDefines): boolean {
             if (this.shader) {
-                return this.shader.ready(globalDefines, this.defines);
+                if (this.defines) {
+                    this.defines.next = defines;
+                    let rst = this.shader.ready(this.defines);
+                    this.defines.next = null;
+                    return rst;
+                } else {
+                    return this.shader.ready(defines);
+                }
             }
 
             return false;
         }
 
-        public use(globalUniforms: ShaderUniforms): GLProgram {
+        public use(uniforms: ShaderUniforms): GLProgram {
             let gl = this.shader.gl;
             gl.setBlend(this.blend);
             gl.setCullFace(this.cullFace);
@@ -51,7 +81,28 @@ namespace Aurora {
             gl.setColorWrite(this.colorWrite);
             gl.setStencil(this.stencilFront, this.stencilBack);
 
-            return this.shader.use(globalUniforms, this.uniforms);
+            if (this.uniforms) {
+                this.uniforms.next = uniforms;
+                let rst = this.shader.use(this.uniforms);
+                this.uniforms.next = null;
+                return rst;
+            } else {
+                return this.shader.use(uniforms);
+            }
+        }
+
+        public destroy(destroyShader: boolean): void {
+            if (destroyShader && this.shader) {
+                this.shader.destroy();
+            }
+
+            this.shader = null;
+            this.blend = null;
+            this.colorWrite = null;
+            this.stencilFront = null;
+            this.stencilBack = null;
+            this.defines = null;
+            this.uniforms = null;
         }
     }
 }

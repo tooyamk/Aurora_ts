@@ -7,11 +7,13 @@ namespace Aurora {
         public materials: Material[] = [];
 
         public isReady(): boolean {
+            //override
             return false;
         }
 
-        public draw(renderer: AbstractRenderer, material: Material): void {
-            //todo
+        public visit(renderingObject: RenderingObject): AssetStore {
+            //override
+            return null;
         }
     }
 }

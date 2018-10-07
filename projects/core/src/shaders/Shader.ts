@@ -34,6 +34,10 @@ namespace Aurora {
         public get gl(): GL {
             return this._gl;
         }
+        
+        public get currentProgram(): GLProgram {
+            return this._curProgram;
+        }
 
         public get attributes(): GLProgramAttribInfo[] {
             return this._attributes;
@@ -52,14 +56,14 @@ namespace Aurora {
             return false;
         }
 
-        public precompile(defines: ShaderDefines = null): boolean {
-            let appendDefines = this._collectDefines(null, defines);
+        public precompile(defines: ShaderDefines): boolean {
+            let appendDefines = this._collectDefines(defines);
             let p = this._getProgramFromCache(appendDefines);
             return p ? true : this._createProgram(appendDefines).status === GLProgramStatus.SUCCESSED;
         }
 
-        public ready(globalDefines: ShaderDefines, localDefines: ShaderDefines): boolean {
-            let appendDefines = this._collectDefines(globalDefines, localDefines);
+        public ready(defines: ShaderDefines): boolean {
+            let appendDefines = this._collectDefines(defines);
             this._curProgram = this._getProgramFromCache(appendDefines);
             if (!this._curProgram) this._curProgram = this._createProgram(appendDefines);
             
@@ -69,23 +73,34 @@ namespace Aurora {
             return this._curProgram.status === GLProgramStatus.SUCCESSED;
         }
 
-        private _collectDefines(globalDefines: ShaderDefines, localDefines: ShaderDefines): string {
+        private _collectDefines(defines: ShaderDefines): string {
             let appendDefines = "";
-            for (let i = 0, n = this._defines.length; i < n; ++i) {
-                let name = this._defines[i];
 
-                let v: ShaderDefineValue = null;
-                if (localDefines) v = localDefines.getDefine(name);
-                if (!v && globalDefines) v = globalDefines.getDefine(name);
+            if (defines) {
+                for (let i = 0, n = this._defines.length; i < n; ++i) {
+                    let name = this._defines[i];
 
-                if (v) {
-                    if (v.type === ShaderDefineValue.BOOL) {
-                        if (v.value) appendDefines += "\n" + name;
-                    } else if (v.type === ShaderDefineValue.INT) {
-                        appendDefines += "\n" + name + " " + v.value;
+                    let v: ShaderDefineValue = null;
+                    let d = defines;
+                    do {
+                        v = d.getDefine(name);
+                        if (v) {
+                            break;
+                        } else {
+                            d = d.next;
+                        }
+                    } while (d);
+
+                    if (v) {
+                        if (v.type === ShaderDefineValue.BOOL) {
+                            if (v.value) appendDefines += "\n" + name;
+                        } else if (v.type === ShaderDefineValue.INT) {
+                            appendDefines += "\n" + name + " " + v.value;
+                        }
                     }
                 }
             }
+
             return appendDefines;
         }
 
@@ -103,18 +118,27 @@ namespace Aurora {
             return p;
         }
 
-        public use(globalUniforms: ShaderUniforms, localUniforms: ShaderUniforms): GLProgram {
+        public use(uniforms: ShaderUniforms): GLProgram {
             if (this._curProgram) {
                 this._curProgram.use();
 
-                if (this._curProgram.uniforms) {
-                    let uniforms = this._curProgram.uniforms;
+                if (this._curProgram.uniforms && uniforms) {
+                    let curUniforms = this._curProgram.uniforms;
                     let gl = this._gl.context;
                     let samplerIndex = 0;
-                    for (let i = 0, n = uniforms.length; i < n; ++i) {
-                        let info = uniforms[i];
-                        let v = localUniforms ? localUniforms._uniforms[info.name] : null;
-                        if (!v) v = globalUniforms ? globalUniforms._uniforms[info.name] : null;
+                    for (let i = 0, n = curUniforms.length; i < n; ++i) {
+                        let info = curUniforms[i];
+                        let v: ShaderUniformValue =  null;
+                        let u = uniforms;
+                        do {
+                            v = u._uniforms[info.name];
+                            if (v) {
+                                break;
+                            } else {
+                                u = u.next;
+                            }
+                        } while (u);
+                        
                         switch (info.type) {
                             case GLUniformType.FLOAT:
                                 {
@@ -338,13 +362,13 @@ namespace Aurora {
             return this._curProgram;
         }
 
-        public dispose(): void {
+        public destroy(): void {
             if (this._cachedNoDefineProgram) {
-                this._cachedNoDefineProgram.dispose();
+                this._cachedNoDefineProgram.destroy();
                 this._cachedNoDefineProgram = null;
             }
 
-            for (let key in this._cachedPrograms) this._cachedPrograms[key].dispose();
+            for (let key in this._cachedPrograms) this._cachedPrograms[key].destroy();
             this._cachedPrograms = {};
 
             this._curProgram = null;

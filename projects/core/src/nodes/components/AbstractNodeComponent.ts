@@ -26,6 +26,12 @@ namespace Aurora {
             }
         }
 
+        public destroy(): void {
+            if (this._node) {
+                this._node.removeComponent(this);
+            }
+        }
+
         protected _nodeChanged(old: Node3D): void {
             //override
         }

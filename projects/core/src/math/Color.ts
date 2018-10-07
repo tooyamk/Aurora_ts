@@ -136,6 +136,20 @@ namespace Aurora {
             return this.r === color.r && this.g === color.g && this.b === color.b && this.a === color.a;
         }
 
+        public static isEqual(value0: Color4, value1: Color4): boolean {
+            if (value0 === value1) return true;
+            if (value0) {
+                if (value1) {
+                    return value0.r === value1.r && value0.g === value1.g && value0.b === value1.b && value0.a === value1.a;
+                } else {
+                    return false;
+                }
+            } else if (value1) {
+                return false;
+            }
+            return true;
+        }
+
         public toString(): string {
             return "Color4(r=" + this.r + ", g=" + this.g + ", b=" + this.b + ", a=" + this.a + ")";
         }

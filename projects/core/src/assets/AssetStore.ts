@@ -11,8 +11,10 @@ namespace Aurora {
         public customGetVertexBufferFn: (assetStore: AssetStore, info: GLProgramAttribInfo) => GLVertexBuffer = null;
         public customGetDrawIndexBufferFn: (assetStore: AssetStore) => GLIndexBuffer = null;
 
-        constructor(vertexBuffers: Map<string, GLVertexBuffer> = null) {
-            this.vertexBuffers = vertexBuffers || new Map();
+        public shaderUniforms: ShaderUniforms = null;
+
+        public getVertexSource(name: string): VertexSource {
+            return this.vertexSources ? this.vertexSources.get(name) : null;
         }
 
         public addVertexSource(source: VertexSource): boolean {
@@ -58,6 +60,26 @@ namespace Aurora {
             }
             if (!buffer && this.customGetDrawIndexBufferFn) buffer = this.customGetDrawIndexBufferFn(this);
             return buffer;
+        }
+
+        public destroy(): void {
+            this.vertexSources = null;
+            this.drawIndexSource = null;
+
+            if (this.vertexBuffers) {
+                for (let itr of this.vertexBuffers) {
+                    itr[1].destroy();
+                }
+                this.vertexBuffers = null;
+            }
+
+            if (this.drawIndexBuffer) {
+                this.drawIndexBuffer.destroy();
+                this.drawIndexBuffer = null;
+            }
+
+            this.customGetVertexBufferFn = null;
+            this.customGetDrawIndexBufferFn = null;
         }
     }
 }

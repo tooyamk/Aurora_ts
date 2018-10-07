@@ -140,7 +140,7 @@ class Other {
         uvBuffer.upload([0, 1, 0, 0, 1, 1], Aurora.GLVertexBufferSize.TWO, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
     
         let indexBuffer = new Aurora.GLIndexBuffer(gl);
-        indexBuffer.upload([0, 1, 2], Aurora.GLUsageType.STATIC_DRAW);
+        indexBuffer.upload([0, 1, 2], Aurora.GLIndexDataType.UNSIGNED_BYTE, Aurora.GLUsageType.STATIC_DRAW);
     
         let assetStore = new Aurora.AssetStore();
         assetStore.vertexBuffers.set(Aurora.ShaderPredefined.a_Position0, vertexBuffer);

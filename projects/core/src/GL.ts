@@ -112,6 +112,10 @@ namespace Aurora {
         protected _bufferType: GLBufferType;
         protected _usage: GLUsageType = GLUsageType.STATIC_DRAW;
 
+        protected _numElements: uint = 0;
+        protected _sizePerElement: uint = 0;
+        protected _memSize: uint = 0;
+
         constructor(gl: GL, type: GLBufferType) {
             super(gl);
 
@@ -131,7 +135,19 @@ namespace Aurora {
             return this._usage;
         }
 
-        public dispose(): void {
+        public get numElements(): uint {
+            return this._numElements;
+        }
+
+        public get memSize(): uint {
+            return this._memSize;
+        }
+
+        public get sizePerElement(): uint {
+            return this._sizePerElement;
+        }
+
+        public destroy(): void {
             if (this._buffer) {
                 this._gl.unbindBuffer(this);
                 this._gl.context.deleteBuffer(this._buffer);
@@ -139,6 +155,12 @@ namespace Aurora {
 
                 this._gl = null;
             }
+        }
+
+        public reCreate(): void {
+            this._gl.unbindBuffer(this);
+            this._gl.context.deleteBuffer(this._buffer);
+            this._buffer = this._gl.context.createBuffer();
         }
 
         public bind(): boolean {
@@ -155,8 +177,6 @@ namespace Aurora {
         private _size: GLVertexBufferSize = GLVertexBufferSize.FOUR;
         private _dataType: GLVertexBufferDataType = GLVertexBufferDataType.FLOAT;
         private _normalized: boolean = false;
-
-        private _location: number = -1;
 
         constructor(gl: GL) {
             super(gl, GLBufferType.ARRAY_BUFFER);
@@ -196,6 +216,40 @@ namespace Aurora {
             return this._uploadCount;
         }
 
+        public allocate(numElements: uint, size: GLVertexBufferSize = GLVertexBufferSize.FOUR, type: GLVertexBufferDataType = GLVertexBufferDataType.FLOAT, normalized: boolean = false, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
+            if (this._buffer) {
+                ++this._uploadCount;
+                this._numElements = numElements;
+                this._size = size;
+                this._dataType = type;
+                this._normalized = normalized;
+                this._usage = usage;
+
+                let gl = this._gl.context;
+
+                this.bind();
+
+                switch (type) {
+                    case GLVertexBufferDataType.BYTE, GLVertexBufferDataType.UNSIGNED_BYTE:
+                        this._sizePerElement = 1;
+                        break;
+                    case GLVertexBufferDataType.SHORT, GLVertexBufferDataType.UNSIGNED_SHORT:
+                        this._sizePerElement = 2;
+                        break;
+                    case GLVertexBufferDataType.INT, GLVertexBufferDataType.UNSIGNED_INT:
+                        this._sizePerElement = 4;
+                        break;
+                    default:
+                        this._sizePerElement = 0;
+                        break;
+                }
+
+                this._memSize = numElements * this._sizePerElement;
+
+                gl.bufferData(GL.ARRAY_BUFFER, this._memSize, usage);
+            }
+        }
+
         public upload(data: GLVertexBufferData, size: GLVertexBufferSize = GLVertexBufferSize.FOUR, type: GLVertexBufferDataType = GLVertexBufferDataType.FLOAT, normalized: boolean = false, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
             if (this._buffer) {
                 ++this._uploadCount;
@@ -209,14 +263,92 @@ namespace Aurora {
                 this.bind();
 
                 if (data instanceof Array) {
-                    gl.bufferData(GL.ARRAY_BUFFER, new Float32Array(data), usage);
+                    let src: ArrayBufferView;
+                    switch (type) {
+                        case GLVertexBufferDataType.BYTE:
+                        {
+                            this._sizePerElement = 1;
+                            src = new Int8Array(data);
+
+                            break;
+                        }
+                        case GLVertexBufferDataType.UNSIGNED_BYTE:
+                        {
+                            this._sizePerElement = 1;
+                            src = new Uint8Array(data);
+
+                            break;
+                        }
+                        case GLVertexBufferDataType.SHORT:
+                        {
+                            this._sizePerElement = 2;
+                            src = new Int16Array(data);
+
+                            break;
+                        }
+                        case GLVertexBufferDataType.UNSIGNED_SHORT:
+                        {
+                            this._sizePerElement = 2;
+                            src = new Uint16Array(data);
+
+                            break;
+                        }
+                        case GLVertexBufferDataType.INT:
+                        {
+                            this._sizePerElement = 4;
+                            src = new Uint32Array(data);
+
+                            break;
+                        }
+                        case GLVertexBufferDataType.UNSIGNED_INT:
+                        {
+                            this._sizePerElement = 4;
+                            src = new Uint32Array(data);
+
+                            break;
+                        }
+                        case GLVertexBufferDataType.FLOAT:
+                        {
+                            this._sizePerElement = 4;
+                            src = new Float32Array(data);
+
+                            break;
+                        }
+                        default:
+                            this._sizePerElement = 0;
+                            break;
+                    }
+
+                    this._numElements = data.length;
+                    this._memSize = this._numElements * this._sizePerElement;
+
+                    gl.bufferData(GL.ARRAY_BUFFER, src, usage);
                 } else {
+                    this._memSize = data.byteLength;
+
+                    switch (this._dataType) {
+                        case GLVertexBufferDataType.BYTE, GLVertexBufferDataType.UNSIGNED_BYTE:
+                            this._sizePerElement = 1;
+                            break;
+                        case GLVertexBufferDataType.SHORT, GLVertexBufferDataType.UNSIGNED_SHORT:
+                            this._sizePerElement = 2;
+                            break;
+                        case GLVertexBufferDataType.INT, GLVertexBufferDataType.UNSIGNED_INT, GLVertexBufferDataType.FLOAT:
+                            this._sizePerElement = 4;
+                            break;
+                        default:
+                            this._sizePerElement = 0;
+                            break;
+                    }
+
+                    this._numElements = (data.byteLength / this._sizePerElement) | 0;
+
                     gl.bufferData(GL.ARRAY_BUFFER, <ArrayBuffer>data, usage);
                 }
             }
         }
 
-        public uploadSub(data: GLVertexBufferData, offset: int): void {
+        public uploadSub(data: GLVertexBufferData, offsetElements: int): void {
             if (this._buffer) {
                 ++this._uploadCount;
                 let gl = this._gl.context;
@@ -224,9 +356,36 @@ namespace Aurora {
                 this.bind();
 
                 if (data instanceof Array) {
-                    gl.bufferSubData(GL.ARRAY_BUFFER, offset, new Float32Array(data));
+                    let src: ArrayBufferView;
+                    switch (this._dataType) {
+                        case GLVertexBufferDataType.BYTE:
+                            src = new Int8Array(data);
+                            break;
+                        case GLVertexBufferDataType.UNSIGNED_BYTE:
+                            src = new Uint8Array(data);
+                            break;
+                        case GLVertexBufferDataType.SHORT:
+                            src = new Int16Array(data);
+                            break;
+                        case GLVertexBufferDataType.UNSIGNED_SHORT:
+                            src = new Uint16Array(data);
+                            break;
+                        case GLVertexBufferDataType.INT:
+                            src = new Uint32Array(data);
+                            break;
+                        case GLVertexBufferDataType.UNSIGNED_INT:
+                            src = new Uint32Array(data);
+                            break;
+                        case GLVertexBufferDataType.FLOAT:
+                            src = new Float32Array(data);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    gl.bufferSubData(GL.ARRAY_BUFFER, offsetElements * this._sizePerElement, src);
                 } else {
-                    gl.bufferSubData(GL.ARRAY_BUFFER, offset, <ArrayBuffer>data);
+                    gl.bufferSubData(GL.ARRAY_BUFFER, offsetElements * this._sizePerElement, <ArrayBuffer>data);
                 }
             }
         }
@@ -238,7 +397,6 @@ namespace Aurora {
 
     export class GLIndexBuffer extends AbstractGLBuffer {
         private _dataType: GLIndexDataType = GLIndexDataType.UNSIGNED_SHORT;
-        private _dataLength: uint = 0;
 
         constructor(gl: GL) {
             super(gl, GLBufferType.ELEMENT_ARRAY_BUFFER);
@@ -252,7 +410,42 @@ namespace Aurora {
             this._dataType = type;
         }
 
-        public upload(data: uint[] | Uint32Array | Uint16Array | Uint8Array, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
+        public allocate(numElements: uint, type: GLIndexDataType = GLIndexDataType.UNSIGNED_SHORT, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
+            if (this._buffer) {
+                this._numElements = numElements;
+                this._dataType = type;
+                this._usage = usage;
+
+                let gl = this._gl.context;
+
+                this.bind();
+
+                switch (type) {
+                    case GLIndexDataType.UNSIGNED_BYTE:
+                        this._sizePerElement = 1;
+                        break;
+                    case GLIndexDataType.UNSIGNED_SHORT:
+                        this._sizePerElement = 2;
+                        break;
+                    case GLIndexDataType.UNSIGNED_INT:
+                        this._sizePerElement = 4;
+                        break;
+                    case GLIndexDataType.AUTO:
+                        throw new Error("type cannot set AUTO");
+                        break;
+                    default:
+                        throw new Error("invalid type");
+                        break;
+                }
+
+                
+                this._memSize = numElements * this._sizePerElement;
+
+                gl.bufferData(GL.ELEMENT_ARRAY_BUFFER, this._memSize, usage);
+            }
+        }
+
+        public upload(data: uint[] | Uint32Array | Uint16Array | Uint8Array | ArrayBuffer, type: GLIndexDataType = GLIndexDataType.AUTO, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
             if (this._buffer) {
                 this._usage = usage;
 
@@ -260,54 +453,121 @@ namespace Aurora {
 
                 this.bind();
 
-                let arrayBuffer;
+                if (data instanceof ArrayBuffer) {
+                    this._dataType = type;
 
-                if (data instanceof Uint8Array) {
-                    arrayBuffer = data;
-                    this._dataType = GLIndexDataType.UNSIGNED_BYTE;
-                } else if (data instanceof Uint16Array) {
-                    arrayBuffer = data;
-                    this._dataType = GLIndexDataType.UNSIGNED_SHORT;
-                } else if (data instanceof Uint32Array) {
-                    if (this._gl.supprotUintIndexes) {
-                        arrayBuffer = data;
-                        this._dataType = GLIndexDataType.UNSIGNED_INT;
-                    } else {
-                        arrayBuffer = new Uint16Array(data);
-                        this._dataType = GLIndexDataType.UNSIGNED_SHORT;
-                    }
-                } else {
-                    this._dataType = GLIndexDataType.UNSIGNED_BYTE;
-                    for (let i = data.length - 1; i >= 0; --i) {
-                        let v = data[i];
-                        if (v > 0xFFFF) {
-                            this._dataType = GLIndexDataType.UNSIGNED_INT;
+                    switch (this._dataType) {
+                        case GLIndexDataType.UNSIGNED_BYTE:
+                            this._sizePerElement = 1;
                             break;
-                        } else if (this._dataType === GLIndexDataType.UNSIGNED_BYTE && v > 0xFF) {
-                            this._dataType = GLIndexDataType.UNSIGNED_SHORT;
-                        }
+                        case GLIndexDataType.UNSIGNED_SHORT:
+                            this._sizePerElement = 2;
+                            break;
+                        case GLIndexDataType.UNSIGNED_INT:
+                            this._sizePerElement = 4;
+                            break;
+                        default:
+                            throw new Error("type cannot set AUTO");
+                            break;
                     }
 
-                    if (this._dataType === GLIndexDataType.UNSIGNED_INT) {
+                    this._numElements = (data.byteLength / this._sizePerElement) | 0;
+                    this._memSize = data.byteLength;
+                    
+                    gl.bufferData(GL.ELEMENT_ARRAY_BUFFER, data, usage);
+                } else {
+                    let src;
+
+                    if (data instanceof Uint8Array) {
+                        src = data;
+                        this._dataType = GLIndexDataType.UNSIGNED_BYTE;
+                    } else if (data instanceof Uint16Array) {
+                        src = data;
+                        this._dataType = GLIndexDataType.UNSIGNED_SHORT;
+                    } else if (data instanceof Uint32Array) {
                         if (this._gl.supprotUintIndexes) {
-                            arrayBuffer = new Uint32Array(data);
+                            src = data;
+                            this._dataType = GLIndexDataType.UNSIGNED_INT;
                         } else {
-                            arrayBuffer = new Uint16Array(data);
+                            src = new Uint16Array(data);
                             this._dataType = GLIndexDataType.UNSIGNED_SHORT;
                         }
-                    } else if (this._dataType === GLIndexDataType.UNSIGNED_SHORT) {
-                        arrayBuffer = new Uint16Array(data);
                     } else {
-                        arrayBuffer = new Uint8Array(data);
-                    }
-                }
+                        if (type == GLIndexDataType.AUTO) {
+                            this._dataType = GLIndexDataType.UNSIGNED_BYTE;
+                            for (let i = data.length - 1; i >= 0; --i) {
+                                let v = data[i];
+                                if (v > 0xFFFF) {
+                                    this._dataType = GLIndexDataType.UNSIGNED_INT;
+                                    break;
+                                } else if (this._dataType === GLIndexDataType.UNSIGNED_BYTE && v > 0xFF) {
+                                    this._dataType = GLIndexDataType.UNSIGNED_SHORT;
+                                }
+                            }
 
-                this._dataLength = arrayBuffer.length;
-                gl.bufferData(GL.ELEMENT_ARRAY_BUFFER, arrayBuffer, usage);
+                            if (this._dataType === GLIndexDataType.UNSIGNED_INT) {
+                                if (this._gl.supprotUintIndexes) {
+                                    src = new Uint32Array(data);
+                                } else {
+                                    src = new Uint16Array(data);
+                                    this._dataType = GLIndexDataType.UNSIGNED_SHORT;
+                                }
+                            } else if (this._dataType === GLIndexDataType.UNSIGNED_SHORT) {
+                                src = new Uint16Array(data);
+                            } else {
+                                src = new Uint8Array(data);
+                            }
+                        } else {
+                            this._dataType = type;
+                            switch (this._dataType) {
+                                case GLIndexDataType.UNSIGNED_BYTE:
+                                    src = new Uint8Array(data);
+                                    break;
+                                case GLIndexDataType.UNSIGNED_SHORT:
+                                    src = new Uint16Array(data);
+                                    break;
+                                case GLIndexDataType.UNSIGNED_INT:
+                                {
+                                    if (this._gl.supprotUintIndexes) {
+                                        src = new Uint32Array(data);
+                                    } else {
+                                        this._dataType = GLIndexDataType.UNSIGNED_SHORT;
+                                        src = new Uint16Array(data);
+                                    }
+                                    
+                                    break;
+                                }
+                                default:
+                                    throw new Error("invalid type");
+                                    break;
+                            }
+                        }
+                    }
+
+                    switch (this._dataType) {
+                        case GLIndexDataType.UNSIGNED_BYTE:
+                            this._sizePerElement = 1;
+                            break;
+                        case GLIndexDataType.UNSIGNED_SHORT:
+                            this._sizePerElement = 2;
+                            break;
+                        case GLIndexDataType.UNSIGNED_INT:
+                            this._sizePerElement = 4;
+                            break;
+                        default:
+                            throw new Error("invalid type");
+                            break;
+                    }
+
+                    this._numElements = src.length;
+                    this._memSize = this._numElements * this._sizePerElement;
+                    
+                    gl.bufferData(GL.ELEMENT_ARRAY_BUFFER, src, usage);
+                }
             }
         }
 
-        public uploadSub(data: number[] | Uint32Array | Uint16Array | Uint8Array, offset: int = 0): void {
+        public uploadSub(data: number[] | Uint32Array | Uint16Array | Uint8Array, offsetElements: int = 0): void {
             if (this._buffer) {
                 let gl = this._gl.context;
 
@@ -317,14 +577,14 @@ namespace Aurora {
                     let arrayBuffer;
                     if (this._dataType === GLIndexDataType.UNSIGNED_BYTE) {
                         arrayBuffer = new Uint8Array(data);
-                    } else if (this._dataLength === GLIndexDataType.UNSIGNED_SHORT) {
+                    } else if (this._dataType === GLIndexDataType.UNSIGNED_SHORT) {
                         arrayBuffer = new Uint16Array(data);
                     } else {
                         arrayBuffer = new Uint32Array(data);
                     }
-                    gl.bufferSubData(GL.ARRAY_BUFFER, offset, arrayBuffer);
+                    gl.bufferSubData(GL.ARRAY_BUFFER, offsetElements * this._sizePerElement, arrayBuffer);
                 } else {
-                    gl.bufferSubData(GL.ARRAY_BUFFER, offset, data);
+                    gl.bufferSubData(GL.ARRAY_BUFFER, offsetElements * this._sizePerElement, data);
                 }
             }
         }
@@ -333,7 +593,7 @@ namespace Aurora {
             this.bind();
 
             if (mode === null) mode = GL.TRIANGLES;
-            if (count === null) count = this._dataLength;
+            if (count === null) count = this._numElements;
             this._gl.context.drawElements(mode, count, this._dataType, offset);
             let err = this._gl.context.getError();
             if (err !== GL.NO_ERROR) {
@@ -357,7 +617,7 @@ namespace Aurora {
             return this._shader;
         }
 
-        public dispose(): void {
+        public destroy(): void {
             if (this._shader) {
                 this._gl.context.deleteShader(this._shader);
                 this._shader = null;
@@ -491,7 +751,7 @@ namespace Aurora {
             return false;
         }
 
-        public dispose(): void {
+        public destroy(): void {
             if (this._program) {
                 this._gl.nonuseProgram(this);
 
@@ -588,7 +848,7 @@ namespace Aurora {
             return this._tex;
         }
 
-        public dispose(): void {
+        public destroy(): void {
             if (this._tex) {
                 this._gl.unbindTexture(this);
 
@@ -632,7 +892,7 @@ namespace Aurora {
                 this._gl.bindTexture(this, force);
                 return true;
             } else {
-                console.log("can not call bind method, tex is disposed");
+                console.log("can not call bind method, tex is destroyed");
                 return false;
             }
         }
@@ -644,7 +904,7 @@ namespace Aurora {
                     return true;
                 }
             } else {
-                console.log("can not call use method, tex is disposed");
+                console.log("can not call use method, tex is destroyed");
             }
             return false;
         }
@@ -892,7 +1152,7 @@ namespace Aurora {
             return this._buffer;
         }
 
-        public dispose(): void {
+        public destroy(): void {
             if (this._buffer) {
                 this._gl.unbindFrameBuffer(0, this);
 
@@ -968,7 +1228,7 @@ namespace Aurora {
             return this._buffer;
         }
 
-        public dispose(): void {
+        public destroy(): void {
             if (this._buffer) {
                 this._gl.unbindRenderBuffer(this);
 
@@ -1036,11 +1296,43 @@ namespace Aurora {
         public isEqual(target: GLBlendFunc): boolean {
             return this.srcRGB === target.srcRGB && this.srcAlpha === target.srcAlpha && this.dstRGB === target.dstRGB && this.dstAlpha === target.dstAlpha;
         }
+
+        public static isEqual(value0: GLBlendFunc, value1: GLBlendFunc): boolean {
+            if (value0 === value1) return true;
+            if (value0) {
+                if (value1) {
+                    return value0.srcRGB === value1.srcRGB && value0.srcAlpha === value1.srcAlpha && value0.dstRGB === value1.dstRGB && value0.dstAlpha === value1.dstAlpha;
+                } else {
+                    return false;
+                }
+            } else if (value1) {
+                return false;
+            }
+            return true;
+        }
     }
 
     export class GLBlendEquation {
         public rgb: GLBlendEquationType = GLBlendEquationType.FUNC_ADD;
         public alpha: GLBlendEquationType = GLBlendEquationType.FUNC_ADD;
+
+        public isEqual(target: GLBlendEquation): boolean {
+            return this.rgb === target.rgb && this.alpha === target.alpha;
+        }
+
+        public static isEqual(value0: GLBlendEquation, value1: GLBlendEquation): boolean {
+            if (value0 === value1) return true;
+            if (value0) {
+                if (value1) {
+                    return value0.rgb === value1.rgb && value0.alpha === value1.alpha;
+                } else {
+                    return false;
+                }
+            } else if (value1) {
+                return false;
+            }
+            return true;
+        }
 
         public set(mode: GLBlendEquationType): void {
             this.rgb = mode;
@@ -1063,6 +1355,22 @@ namespace Aurora {
             this.func = func || new GLBlendFunc();
             this.constantColor = color || Color4.TRANSPARENT_BLACK;
         }
+
+        public static isEqual(value0: GLBlend, value1: GLBlend): boolean {
+            if (value0 === value1) return true;
+            if (value0) {
+                if (value1) {
+                    return GLBlendEquation.isEqual(value0.equation, value1.equation) &&
+                    GLBlendFunc.isEqual(value0.func, value1.func) &&
+                    Color4.isEqual(value0.constantColor, value1.constantColor);
+                } else {
+                    return false;
+                }
+            } else if (value1) {
+                return false;
+            }
+            return true;
+        }
     }
 
     export class GLColorWrite {
@@ -1073,6 +1381,20 @@ namespace Aurora {
 
         public isEqual(target: GLColorWrite): boolean {
             return this.r === target.r && this.g === target.g && this.b === target.b && this.a === target.a;
+        }
+
+        public static isEqual(value0: GLColorWrite, value1: GLColorWrite): boolean {
+            if (value0 === value1) return true;
+            if (value0) {
+                if (value1) {
+                    return value0.r === value1.r && value0.g === value1.g && value0.b === value1.b && value0.a === value1.a;
+                } else {
+                    return false;
+                }
+            } else if (value1) {
+                return false;
+            }
+            return true;
         }
 
         public set(target: GLColorWrite): void {
@@ -1113,6 +1435,20 @@ namespace Aurora {
 
         public isEqual(target: GLStencil): boolean {
             return this.writeMask === target.writeMask && this.isFuncEqual(target) && this.isOpEqual(target);
+        }
+
+        public static isEqual(value0: GLStencil, value1: GLStencil): boolean {
+            if (value0 === value1) return true;
+            if (value0) {
+                if (value1) {
+                    return value0.writeMask === value1.writeMask && value0.isFuncEqual(value1) && value0.isOpEqual(value1);
+                } else {
+                    return false;
+                }
+            } else if (value1) {
+                return false;
+            }
+            return true;
         }
 
         public isFuncEqual(target: GLStencil): boolean {
@@ -3195,6 +3531,7 @@ namespace Aurora {
     }
 
     export enum GLIndexDataType {
+        AUTO = 0,
         UNSIGNED_BYTE = GL.UNSIGNED_BYTE,
         UNSIGNED_SHORT = GL.UNSIGNED_SHORT,
         UNSIGNED_INT = GL.UNSIGNED_INT
