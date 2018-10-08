@@ -2,54 +2,29 @@
 
 class Other {
     constructor() {
-        let platform = new Aurora.StandardHTMLPlatform();
+        let env = new Env();
         
-        let canvas = <HTMLCanvasElement>document.getElementById("renderCanvas");
-        let options: Aurora.GLOptions = {};
-        options.preserveDrawingBuffer = true;
-        options.depth = true;
-        options.stencil = true;
-        options.version = 1;
-        let gl = new Aurora.GL(canvas, options);
-    
-        let forwardRenderer = new Aurora.ForwardRenderer();
-    
-        console.log(Aurora.Version, gl.version, gl.versionFullInfo);
-    
-        let shaderStore = new Aurora.ShaderStore();
-        shaderStore.addBuiltinLibraries();
-        shaderStore.addBuiltinShaderSources();
-        
-        let worldNode = new Aurora.Node3D();
-        let skyNode = new Aurora.Node3D();
-        let model1Node = new Aurora.Node3D();
-        let model2Node = new Aurora.Node3D();
-        let cameraNode = new Aurora.Node3D();
-        let lightNode = new Aurora.Node3D();
-        worldNode.addChild(skyNode);
-        worldNode.addChild(model1Node);
-        worldNode.addChild(model2Node);
-        worldNode.addChild(cameraNode);
-        worldNode.addChild(lightNode);
-    
-        let light = lightNode.addComponent(new Aurora.PointLight());
+        let skyNode = env.world.addChild(new Aurora.Node3D());
+        let model1Node = env.world.addChild(new Aurora.Node3D());
+        let model2Node = env.world.addChild(new Aurora.Node3D());
+        let light = env.world.addChild(new Aurora.Node3D()).addComponent(new Aurora.PointLight());
         //light.spotAngle = 10 * Math.PI / 180;
         light.color.setFromNumbers(1, 1, 1);
         light.setAttenuation(2500);
         light.intensity = 1.0;
     
-        let fbo = new Aurora.GLFrameBuffer(gl, 1000, 1000);
+        let fbo = new Aurora.GLFrameBuffer(env.gl, 1000, 1000);
     
-        let depthRBO = new Aurora.GLRenderBuffer(gl);
+        let depthRBO = new Aurora.GLRenderBuffer(env.gl);
         depthRBO.storage(Aurora.GLRenderBufferInternalFormat.DEPTH_COMPONENT16, fbo.width, fbo.height);
     
-        let stencilRBO = new Aurora.GLRenderBuffer(gl);
+        let stencilRBO = new Aurora.GLRenderBuffer(env.gl);
         stencilRBO.storage(Aurora.GLRenderBufferInternalFormat.STENCIL_INDEX8, fbo.width, fbo.height);
     
-        let depthAndStencilRBO = new Aurora.GLRenderBuffer(gl);
+        let depthAndStencilRBO = new Aurora.GLRenderBuffer(env.gl);
         depthAndStencilRBO.storage(Aurora.GLRenderBufferInternalFormat.DEPTH_STENCIL, fbo.width, fbo.height);
     
-        let colorTex = new Aurora.GLTexture2D(gl);
+        let colorTex = new Aurora.GLTexture2D(env.gl);
         colorTex.upload(0, Aurora.GLTexInternalFormat.RGBA, fbo.width, fbo.height, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, <ArrayBufferView>null, 0);
         
         fbo.setAttachmentTexture2D(Aurora.GLTex2DAttachment.COLOR_ATTACHMENT0, Aurora.GLFrameBufferTexTarget.TEXTURE_2D, colorTex);
@@ -57,16 +32,12 @@ class Other {
         fbo.setAttachmentRenderBuffer(Aurora.GLRenderBufferAttachment.DEPTH_STENCIL_ATTACHMENT, depthAndStencilRBO);
         //fbo.setAttachmentRenderBuffer(MITOIA.GLFrameBufferRenderBufferAttachment.STENCIL_ATTACHMENT, stencilRBO);
     
-        let cam = cameraNode.addComponent(new Aurora.Camera());
-        //cam.setProjectionMatrix(MITOIA.Matrix44.createOrthoLHMatrix(engine.canvasWidth, engine.canvasHeight, 10, 10000));
-        //cam.setProjectionMatrix(MITOIA.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, engine.canvasWidth / engine.canvasHeight, 1, 10000));
-        cam.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, 1257 / 1308, 5, 10000));
-        cam.clear.color.setFromNumbers(0.5, 0.5, 0.5, 1);
+        env.camera.clear.color.setFromNumbers(0.5, 0.5, 0.5, 1);
         //cam.clear.clearColor = false;
         //cam.clear.clearDepth = false;
-        cam.node.setLocalPosition(0, 0, -10);
+        env.camera.node.setLocalPosition(0, 0, -10);
         if (fbo.checkStatus()) {
-            cam.frameBuffer = fbo;
+            env.camera.frameBuffer = fbo;
         } else {
             let a = 1;
         }
@@ -74,58 +45,42 @@ class Other {
         model1Node.localTranslate(0, 0, 500);
         model1Node.setLocalScale(100, 100, 100);
         //skyNode.appendLocalTranslate(0, 0, 500);
-        lightNode.localTranslate(0, 0, 0);
+        light.node.localTranslate(0, 0, 0);
         //lightNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI * 0.25));
     
-        let mesh = this.createModel(model1Node, gl, shaderStore, Aurora.BuiltinShader.DefaultMesh.NAME, Aurora.BuiltinShader.DefaultMesh.NAME);
-        mesh.renderer = forwardRenderer;
+        let mesh = this.createModel(model1Node, env.gl, env.shaderStore, Aurora.BuiltinShader.DefaultMesh.NAME, Aurora.BuiltinShader.DefaultMesh.NAME);
+        mesh.renderer = env.forwardRenderer;
         //model1Node.addComponent(new MITOIA.Collider(new MITOIA.BoundingMesh(mesh.assetStore)));
         model1Node.addComponent(new Aurora.Collider(new Aurora.BoundSphere(null, 100)));
         //model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerX(Math.PI / 180));
     
-        this.createSkyBox(skyNode, gl, shaderStore, Aurora.BuiltinShader.DefaultSkyBox.NAME, Aurora.BuiltinShader.DefaultSkyBox.NAME).renderer = forwardRenderer;
+        this.createSkyBox(skyNode, env.gl, env.shaderStore, Aurora.BuiltinShader.DefaultSkyBox.NAME, Aurora.BuiltinShader.DefaultSkyBox.NAME).renderer = env.forwardRenderer;
     
     
-        let hit = new Aurora.Ray(new Aurora.Vector3(0, 0, 490)).cast(worldNode, 0x7FFFFFFF, Aurora.GLCullFace.NONE);
+        let hit = new Aurora.Ray(new Aurora.Vector3(0, 0, 490)).cast(env.world, 0x7FFFFFFF, Aurora.GLCullFace.NONE);
     
         //model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI));
-    
-        let renderingManager = new Aurora.RenderingManager();
-    
-        let stretcher = new Aurora.CanvasAutoStretcher(gl.canvas);
     
         let pp = new Aurora.PostProcess();
         pp.material = new Aurora.Material();
         //pp.material.depthWrite = false;
         //pp.material.cullFace = MITOIA.GLCullFace.NONE;
         pp.material.uniforms.setTexture(Aurora.ShaderPredefined.u_Sampler0, colorTex);
-    
-        let stats = new Aurora.Stats(platform, gl);
-        stats.show();
-    
-        let loop = (delta: number) => {
-            //console.log(delta);
-            if (stretcher.execute()) {
-                gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-                //cam.setProjectionMatrix(MITOIA.Matrix44.createOrthoLHMatrix(engine.canvasWidth, engine.canvasHeight, 10, 10000));
-                cam.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
-            }
-    
+
+        env.start(() => {
+            let gl = env.gl;
+            gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+            env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
+        },
+        (delta: number) => {
             model1Node.localRotate(Aurora.Quaternion.createFromEulerY(Math.PI / 180));
             //cameraNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerX(Math.PI / 180));
             //gl.context.bindTexture(MITOIA.GL.TEXTURE_2D, null);
-            renderingManager.render(gl, cam, worldNode, [light]);
-            renderingManager.postProcess(gl, [pp]);
+            env.renderingManager.render(env.gl, env.camera, env.world, [light]);
+            env.renderingManager.postProcess(env.gl, [pp]);
             //gl.context.flush();
             //gl.clear(null);
-    
-            stats.update();
-            gl.resetStats();
-        }
-    
-        //setInterval(loop, 16)
-        new Aurora.FrameLooper(platform, 1000 / 60).start(loop);
-        //requestAnimationFrame(loop);
+        });
     }
 
     public createModel(node: Aurora.Node3D, gl: Aurora.GL, shaderStore: Aurora.ShaderStore, vert: string, frag: string) {
@@ -143,6 +98,7 @@ class Other {
         indexBuffer.upload([0, 1, 2], Aurora.GLIndexDataType.UNSIGNED_BYTE, Aurora.GLUsageType.STATIC_DRAW);
     
         let assetStore = new Aurora.AssetStore();
+        assetStore.vertexBuffers = new Map();
         assetStore.vertexBuffers.set(Aurora.ShaderPredefined.a_Position0, vertexBuffer);
         assetStore.vertexBuffers.set(Aurora.ShaderPredefined.a_TexCoord0, uvBuffer);
         assetStore.vertexBuffers.set(Aurora.ShaderPredefined.a_Color0, colorBuffer);
@@ -151,7 +107,7 @@ class Other {
         assetStore = Aurora.MeshBuilder.createSphere(100, 40, true, true);
         //assetStore = MITOIA.MeshBuilder.createBox(100, 100, 100, 1, 1, 1, true, true);
     
-        let mesh = node.addComponent(new Aurora.RenderableMesh());
+        let mesh = node.addComponent(new Aurora.Mesh());
         //mesh.assetStore = assetStore;
     
         let request = new XMLHttpRequest();
@@ -209,7 +165,7 @@ class Other {
     
             mesh.assetStore = assetStore;
         });
-        request.open("GET", getURL("model.bin"), true);
+        request.open("GET", Helper.getURL("model.bin"), true);
         request.responseType = "arraybuffer";
         request.send();
     
@@ -263,7 +219,7 @@ class Other {
         //mat.blend.func.setSeparate(MITOIA.GLBlendFactorValue.SRC_ALPHA, MITOIA.GLBlendFactorValue.ONE_MINUS_SRC_ALPHA, MITOIA.GLBlendFactorValue.ONE, MITOIA.GLBlendFactorValue.ONE_MINUS_SRC_ALPHA);
         //mat.stencilFront = stencil;
         //mat.stencilBack = stencil2;
-        mesh.materials[0] = mat;
+        mesh.materials = [mat];
         mesh.enabled = false;
         mat.defines.setDefine(Aurora.ShaderPredefined.LIGHTING, true);
         mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, false);
@@ -305,7 +261,7 @@ class Other {
             mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
             mesh.enabled = ++step === 2;
         }
-        img.src = getURL("tex1.png");
+        img.src = Helper.getURL("tex1.png");
     
         let tex1 = new Aurora.GLTextureCube(gl);
         let count = 0;
@@ -319,7 +275,7 @@ class Other {
     
         let loadImg = (name: string, face: Aurora.GLTexCubeFace) => {
             let img = new Image();
-            img.src = getURL("skybox/" + name + ".jpg");
+            img.src = Helper.getURL("skybox/" + name + ".jpg");
             img.onload = () => {
                 tex1.upload(face, 0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
                 checkFinish();
@@ -337,7 +293,7 @@ class Other {
     }
     
     public createSkyBox(node: Aurora.Node3D, gl: Aurora.GL, shaderStore: Aurora.ShaderStore, vert: string, frag: string) {
-        let mesh = node.addComponent(new Aurora.RenderableMesh());
+        let mesh = node.addComponent(new Aurora.Mesh());
         mesh.enabled = false;
         mesh.assetStore = Aurora.MeshBuilder.createBox(10000, 10000, 10000, 1, 1, 1, true, true);
     
@@ -349,7 +305,7 @@ class Other {
     
         mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
     
-        mesh.materials[0] = mat;
+        mesh.materials = [mat];
     
         let tex = new Aurora.GLTextureCube(gl);
         let count = 0;
@@ -363,7 +319,7 @@ class Other {
     
         let loadImg = (name: string, face: Aurora.GLTexCubeFace) => {
             let img = new Image();
-            img.src = getURL("skybox/" + name + ".jpg");
+            img.src = Helper.getURL("skybox/" + name + ".jpg");
             img.onload = () => {
                 tex.upload(face, 0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
                 checkFinish();

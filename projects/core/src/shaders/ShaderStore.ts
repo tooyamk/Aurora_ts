@@ -57,6 +57,9 @@ namespace Aurora {
             this.addSource(BuiltinShader.DefaultMesh.NAME, BuiltinShader.DefaultMesh.VERTEX, GLShaderType.VERTEX_SHADER);
             this.addSource(BuiltinShader.DefaultMesh.NAME, BuiltinShader.DefaultMesh.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
 
+            this.addSource(BuiltinShader.DefaultSprite.NAME, BuiltinShader.DefaultSprite.VERTEX, GLShaderType.VERTEX_SHADER);
+            this.addSource(BuiltinShader.DefaultSprite.NAME, BuiltinShader.DefaultSprite.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
+
             this.addSource(BuiltinShader.DefaultSkyBox.NAME, BuiltinShader.DefaultSkyBox.VERTEX, GLShaderType.VERTEX_SHADER);
             this.addSource(BuiltinShader.DefaultSkyBox.NAME, BuiltinShader.DefaultSkyBox.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
         }

@@ -5,9 +5,7 @@
 document.oncontextmenu = () => { return false; }
 
 window.addEventListener("DOMContentLoaded", () => {
-    console.log(Aurora.Version);
-
-    //new _Other();
+    //new Other();
     //new SimpleWorld();
     new SpriteAtlasTest();
 });

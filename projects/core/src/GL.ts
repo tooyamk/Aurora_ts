@@ -236,7 +236,7 @@ namespace Aurora {
                     case GLVertexBufferDataType.SHORT, GLVertexBufferDataType.UNSIGNED_SHORT:
                         this._sizePerElement = 2;
                         break;
-                    case GLVertexBufferDataType.INT, GLVertexBufferDataType.UNSIGNED_INT:
+                    case GLVertexBufferDataType.INT, GLVertexBufferDataType.UNSIGNED_INT, GLVertexBufferDataType.FLOAT:
                         this._sizePerElement = 4;
                         break;
                     default:
@@ -594,10 +594,23 @@ namespace Aurora {
 
             if (mode === null) mode = GL.TRIANGLES;
             if (count === null) count = this._numElements;
-            this._gl.drawElements(mode, count, this._dataType, offset);
-            let err = this._gl.context.getError();
-            if (err !== GL.NO_ERROR) {
-                this._gl.printConstant("draw error : ", err);
+            let last = this._numElements - offset;
+            if (last > 0) {
+                if (count > last) count = last;
+                this._gl.drawElements(mode, count, this._dataType, offset);
+
+                let stats = this._gl.stats;
+                if (stats) {
+                    stats.drawCalls++;
+                    if (mode === GLDrawMode.TRIANGLES) {
+                        stats.drawTris += (count / 3) | 0;
+                    }
+                }
+
+                let err = this._gl.context.getError();
+                if (err !== GL.NO_ERROR) {
+                    this._gl.printConstant("draw error : ", err);
+                }
             }
         }
     }
@@ -1308,25 +1321,28 @@ namespace Aurora {
         public dstRGB: GLBlendFactorValue = GLBlendFactorValue.ZERO;
         public dstAlpha: GLBlendFactorValue = GLBlendFactorValue.ZERO;
 
-        public set(sfactor: GLBlendFactorValue, dfactor: GLBlendFactorValue): void {
+        public set(sfactor: GLBlendFactorValue, dfactor: GLBlendFactorValue): GLBlendFunc {
             this.srcRGB = sfactor;
             this.srcAlpha = sfactor;
             this.dstRGB = dfactor;
             this.dstAlpha = dfactor;
+            return this;
         }
 
-        public setSeparate(sRGB: GLBlendFactorValue, dRGB: GLBlendFactorValue, sA: GLBlendFactorValue, dA: GLBlendFactorValue): void {
+        public setSeparate(sRGB: GLBlendFactorValue, dRGB: GLBlendFactorValue, sA: GLBlendFactorValue, dA: GLBlendFactorValue): GLBlendFunc {
             this.srcRGB = sRGB;
             this.srcAlpha = sA;
             this.dstRGB = dRGB;
             this.dstAlpha = dA;
+            return this;
         }
 
-        public copy(target: GLBlendFunc): void {
+        public copy(target: GLBlendFunc): GLBlendFunc {
             this.srcRGB = target.srcRGB;
             this.srcAlpha = target.srcAlpha;
             this.dstRGB = target.dstRGB;
             this.dstAlpha = target.dstAlpha;
+            return this;
         }
 
         public isEqual(target: GLBlendFunc): boolean {
@@ -2667,6 +2683,8 @@ namespace Aurora {
         public static readonly GPU_DISJOINT_EXT = 0x8FBB;
 
 
+        public stats: Stats = null;
+
         private _canvas: HTMLCanvasElement = null;
         private _gl: WebGLRenderingContext = null;
 
@@ -2724,9 +2742,6 @@ namespace Aurora {
         private _activingTextureIndex: uint = 0;
 
         private _usedVertexAttribs: UsedVertexAttribInfo[] = [];
-
-        //stats
-        private _drawCalls: uint = 0;
 
         constructor(canvasOrContext: HTMLCanvasElement | WebGLRenderingContext, options: GLOptions = null) {
             this._acquireGL(canvasOrContext, options);
@@ -3233,17 +3248,8 @@ namespace Aurora {
             }
         }
 
-        public get drawCalls(): uint {
-            return this._drawCalls;
-        }
-
-        public resetStats(): void {
-            this._drawCalls = 0;
-        }
-
-        public drawElements(mode: GLenum, count: GLsizei, type: GLenum, offset: GLintptr): void {
+        public drawElements(mode: GLDrawMode, count: GLsizei, type: GLIndexDataType, offset: GLintptr): void {
             this._gl.drawElements(mode, count, type, offset);
-            ++this._drawCalls;
         }
 
         public bindBuffer(buffer: AbstractGLBuffer): boolean {

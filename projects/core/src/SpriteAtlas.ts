@@ -52,8 +52,8 @@ namespace Aurora {
                 sf.rotated = data.roteted ? 1 : 0;
 
                 this.addFrame(ns + key, sf);
-                console.log(key);
-                console.log(data);
+                //console.log(key);
+                //console.log(data);
             }
         }
 

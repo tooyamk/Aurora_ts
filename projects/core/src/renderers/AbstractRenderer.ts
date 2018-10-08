@@ -73,8 +73,8 @@ namespace Aurora {
 
         protected _draw(assetStore: AssetStore, material: Material, program: GLProgram): void {
             let gl = program.gl;
-            let db = assetStore.getDrawIndexBuffer(gl);
-            if (db) {
+            let ib = assetStore.getDrawIndexBuffer(gl);
+            if (ib) {
                 let valid = true;
                 let atts = program.attributes;
                 for (let i = 0, n = atts.length; i < n; ++i) {
@@ -88,7 +88,7 @@ namespace Aurora {
                     }
                 }
 
-                if (valid) db.draw(material.drawMode);
+                if (valid) ib.draw(material.drawMode);
             }
         }
 

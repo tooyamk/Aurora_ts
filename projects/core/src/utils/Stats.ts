@@ -1,7 +1,9 @@
 namespace Aurora {
     export class Stats {
+        public drawCalls: uint = 0;
+        public drawTris: uint = 0;
+
         private _platform: IPlatform;
-        private _gl: GL;
         private _color: string;
         private _delta: number = 0;
         private _time: number = 0;
@@ -10,13 +12,12 @@ namespace Aurora {
 
         private _dis: HTMLDivElement = null;
         
-        constructor(platform: IPlatform, gl: GL, color: string = "#808080", delta: number = 1000) {
+        constructor(platform: IPlatform, color: string = "#808080", delta: number = 1000) {
             this._platform = platform;
-            this._gl = gl;
             this._color = color;
             this.delta = delta;
 
-            this.reset();
+            this.reset(true);
         }
 
         public get fps(): number {
@@ -42,9 +43,16 @@ namespace Aurora {
             }
         }
 
-        public reset(): void {
-            this._time = this._platform.duration();
-            this._count = 0;
+        public reset(fps: boolean = false, eachFrameData: boolean = true): void {
+            if (fps) {
+                this._time = this._platform.duration();
+                this._count = 0;
+            }
+
+            if (eachFrameData) {
+                this.drawCalls = 0;
+                this.drawTris = 0;
+            }
         }
 
         public update(): void {
@@ -88,7 +96,8 @@ namespace Aurora {
 
         private _getShowData(): string {
             return `FPS : ${this._fps.toFixed(3)}
-                    DrawCalls : ${this._gl.drawCalls}`;
+                    DrawCalls : ${this.drawCalls}
+                    DrawTris: ${this.drawTris}`;
         }
     }
 }

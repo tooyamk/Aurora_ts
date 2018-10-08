@@ -1,3 +1,5 @@
-interface IPlatform {
-    duration(): number;
+namespace Aurora {
+    export interface IPlatform {
+        duration(): number;
+    }
 }

@@ -2,8 +2,10 @@
 
 namespace Aurora {
     export class Sprite extends AbstractRenderable {
+        protected static _tmpVec3: Vector3 = new Vector3();
         protected static _sharedQuadAssetStore: AssetStore = null;
         protected static _sharedQuadVertices: number[] = null;
+        protected static _sharedQuadTexCoords: number[] = null;
         protected static _sharedQuadColors: number[] = null;
 
         protected _frame: SpriteFrame = null;
@@ -23,18 +25,24 @@ namespace Aurora {
         protected static _initSharedQuadAssetStore(): void {
             if (!Sprite._sharedQuadAssetStore) {
                 let as = new AssetStore();
+
                 let vertices: number[] = [];
                 vertices.length = 12;
                 as.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
 
+                let texCoords: number[] = [];
+                texCoords.length = 8;
+                as.addVertexSource(new VertexSource(ShaderPredefined.a_TexCoord0, texCoords, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
+
                 let colors: number[] = [];
                 colors.length = 16;
-                as.addVertexSource(new VertexSource(ShaderPredefined.a_Color0, colors, GLVertexBufferSize.FOUR, GLVertexBufferDataType.UNSIGNED_BYTE, false, GLUsageType.DYNAMIC_DRAW));
+                as.addVertexSource(new VertexSource(ShaderPredefined.a_Color0, colors, GLVertexBufferSize.FOUR, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
 
                 as.drawIndexSource = new DrawIndexSource([0, 1, 2, 0, 2, 3], GLIndexDataType.UNSIGNED_SHORT, GLUsageType.DYNAMIC_DRAW);
 
                 Sprite._sharedQuadAssetStore = as;
                 Sprite._sharedQuadVertices = vertices;
+                Sprite._sharedQuadTexCoords = texCoords;
                 Sprite._sharedQuadColors = colors;
             }
         }
@@ -111,16 +119,69 @@ namespace Aurora {
         }
 
         public isReady(): boolean {
-            return true;
+            return this._texture && this._texture.width > 0 && this._texture.height > 0;
         }
 
         public visit(renderingData: RenderingData): void {
-            if (this._frame) {
+            if (false && this._frame) {
                 if (this._texture) {
 
                 }
             } else if (this._texture) {
                 Sprite._initSharedQuadAssetStore();
+
+                let w = this._texture.width;
+                let h = this._texture.height;
+
+                let lx = -w * this._anchor.x;
+                let dy = -h * this._anchor.y;
+                let rx = lx + w;
+                let uy = dy + h;
+
+                let vertices = Sprite._sharedQuadVertices;
+
+                let m = renderingData.in.renderingObject.localToProj;
+                let v = Sprite._tmpVec3;
+                m.transform44XYZ(lx, dy, 0, v);
+                vertices[0] = v.x;
+                vertices[1] = v.y;
+                vertices[2] = v.z;
+
+                m.transform44XYZ(lx, uy, 0, v);
+                vertices[3] = v.x;
+                vertices[4] = v.y;
+                vertices[5] = v.z;
+
+                m.transform44XYZ(rx, uy, 0, v);
+                vertices[6] = v.x;
+                vertices[7] = v.y;
+                vertices[8] = v.z;
+
+                m.transform44XYZ(rx, dy, 0, v);
+                vertices[9] = v.x;
+                vertices[10] = v.y;
+                vertices[11] = v.z;
+
+                let texCoords = Sprite._sharedQuadTexCoords;
+                texCoords[0] = 0;
+                texCoords[1] = 1;
+
+                texCoords[2] = 0;
+                texCoords[3] = 0;
+
+                texCoords[4] = 1;
+                texCoords[5] = 0;
+
+                texCoords[6] = 1;
+                texCoords[7] = 1;
+
+                let colors = Sprite._sharedQuadColors;
+                for (let i = 0; i < 16; ++i) {
+                    colors[i] = 1;
+                }
+
+                renderingData.out.assetStore = Sprite._sharedQuadAssetStore;
+                renderingData.out.uniforms = this._uniforms;
             }
         }
 
