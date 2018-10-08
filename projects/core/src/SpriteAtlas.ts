@@ -75,5 +75,9 @@ namespace Aurora {
                 }
             }
         }
+
+        public getFrame(name: string): SpriteFrame {
+            return this._frames[name];
+        }
     }
 }

@@ -8,8 +8,8 @@ namespace Aurora {
             return Boolean(this.assetStore);
         }
 
-        public visit(renderingObject: RenderingObject): AssetStore {
-            return this.assetStore;
+        public visit(renderingData: RenderingData): void {
+            renderingData.out.assetStore = this.assetStore;
         }
     }
 }

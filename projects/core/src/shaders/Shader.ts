@@ -62,7 +62,7 @@ namespace Aurora {
             return p ? true : this._createProgram(appendDefines).status === GLProgramStatus.SUCCESSED;
         }
 
-        public ready(defines: ShaderDefines): boolean {
+        public ready(defines: ShaderDefines): GLProgram {
             let appendDefines = this._collectDefines(defines);
             this._curProgram = this._getProgramFromCache(appendDefines);
             if (!this._curProgram) this._curProgram = this._createProgram(appendDefines);
@@ -70,7 +70,7 @@ namespace Aurora {
             this._attributes = this._curProgram.attributes;
             this._uniforms = this._curProgram.uniforms;
 
-            return this._curProgram.status === GLProgramStatus.SUCCESSED;
+            return this._curProgram.status === GLProgramStatus.SUCCESSED ? this._curProgram : null;
         }
 
         private _collectDefines(defines: ShaderDefines): string {
@@ -119,7 +119,7 @@ namespace Aurora {
         }
 
         public use(uniforms: ShaderUniforms): GLProgram {
-            if (this._curProgram) {
+            if (this._curProgram && this._curProgram.status === GLProgramStatus.SUCCESSED) {
                 this._curProgram.use();
 
                 if (this._curProgram.uniforms && uniforms) {

@@ -11,8 +11,6 @@ namespace Aurora {
         public customGetVertexBufferFn: (assetStore: AssetStore, info: GLProgramAttribInfo) => GLVertexBuffer = null;
         public customGetDrawIndexBufferFn: (assetStore: AssetStore) => GLIndexBuffer = null;
 
-        public shaderUniforms: ShaderUniforms = null;
-
         public getVertexSource(name: string): VertexSource {
             return this.vertexSources ? this.vertexSources.get(name) : null;
         }

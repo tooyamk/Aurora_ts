@@ -12,6 +12,9 @@ namespace Aurora {
         protected _numAllicatedIndex = 0;
         protected _curMaterial: Material = null;
 
+        protected _defaultMaterial: Material;
+        protected _defaultShader: Shader;
+
         constructor(gl: GL) {
             super();
             
@@ -26,45 +29,86 @@ namespace Aurora {
             let ib = new GLIndexBuffer(gl);
             ib.allocate(this._numAllicatedIndex, GLIndexDataType.UNSIGNED_SHORT);
             this._assetStore.drawIndexBuffer = ib;
+
+            this._defaultShader = new Shader(gl, null, null);
+            this._defaultMaterial = new Material(this._defaultShader);
         }
 
-        public render(renderingObjects: RenderingObject[], start: int, end: int): void {
+        public get defaultMaterial(): Material {
+            return this._defaultMaterial;
+        }
+
+        public get defaultShader(): Shader {
+            return this._defaultShader;
+        }
+
+        public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], createFn: (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms) => void): void {
+            let mats = renderable.materials;
+            let len = mats ? mats.length : 1;
+            if (len === 0) len = 1;
+
+            if (replaceMaterials) {
+                let len1 = replaceMaterials.length;
+                if (len >= len1) {
+                    for (let i = 0; i < len1; ++i) {
+                        let m = mats[i];
+                        createFn(renderable, replaceMaterials[i], m ? m.uniforms : this._defaultMaterial.uniforms);
+                    }
+                } else if (len === 1) {
+                    let m = mats[0];
+                    let u = m ? m.uniforms : this._defaultMaterial.uniforms;
+                    for (let i = 0; i < len1; ++i) {
+                        createFn(renderable, replaceMaterials[i], u);
+                    }
+                } else {
+                    for (let i = 0; i < len; ++i) {
+                        let m = mats[i];
+                        createFn(renderable, replaceMaterials[i], m ? m.uniforms : this._defaultMaterial.uniforms);
+                    }
+                }
+            } else {
+                for (let i = 0; i < len; ++i) {
+                    let m = mats[i];
+                    createFn(renderable, m ? m : this._defaultMaterial, this._defaultMaterial.uniforms);
+                }
+            }
+        }
+
+        public render(renderingData: RenderingData, renderingObjects: RenderingObject[], start: int, end: int): void {
             this._curMaterial = null;
             let atts: GLProgramAttribInfo[] = null;
             let curShaderUniforms: ShaderUniforms = null;
 
-            let activeMaterialFn = (material: Material, shaderUniforms: ShaderUniforms) => {
-                if (material.ready(this._shaderDefines)) {
-                    let su: ShaderUniforms;
-                    let oldNext: ShaderUniforms = null;
-                    if (shaderUniforms) {
-                        su = shaderUniforms;
-                        oldNext = su.next;
-                        su.next = this._shaderUniforms;
-                    } else {
-                        su = this._shaderUniforms;
-                    }
-                    let p = material.use(this._shaderUniforms);
-                    if (shaderUniforms) {
-                        su.next = oldNext;
-                    }
-                    if (p) {
-                        this._curMaterial = material;
-                        atts = p.attributes;
-                        curShaderUniforms = shaderUniforms;
-                    }
+            let activeMaterialFn = (material: Material, u0: ShaderUniforms, u1: ShaderUniforms) => {
+                let su: ShaderUniforms;
+                let tail: ShaderUniforms = null;
+                if (u0) {
+                    su = u0;
+                    tail = su.tail;
+                    tail.next = u1;
+                } else {
+                    su = u1;
+                }
+                let p = this.useShader(material, su);
+                if (tail) tail.next = null;
+                if (p) {
+                    this._curMaterial = material;
+                    atts = p.attributes;
+                    curShaderUniforms = u0;
                 }
             };
 
             for (let i = start; i <= end; ++i) {
                 let obj = renderingObjects[i];
-
-                let as = obj.renderable.visit(obj);
+                renderingData.in.renderingObject = obj;
+                obj.renderable.visit(renderingData);
+                let as = renderingData.out.assetStore;
                 if (as && as.drawIndexSource) {
                     let mat = obj.material;
+                    let uniforms = renderingData.out.uniforms;
 
                     if (!atts) {
-                        activeMaterialFn(mat, as.shaderUniforms);
+                        activeMaterialFn(mat, uniforms, obj.alternativeUniforms);
                     }
                     
                     let len = -1;
@@ -90,10 +134,10 @@ namespace Aurora {
                     }
 
                     if (len > 0 && len <= this._maxVertexSize) {
-                        if (!Material.canCombine(this._curMaterial, mat) || !ShaderUniforms.isEqual(curShaderUniforms, as.shaderUniforms)) {
+                        if (!Material.canCombine(this._curMaterial, mat) || !ShaderUniforms.isEqual(curShaderUniforms, uniforms)) {
                             this.flush();
 
-                            activeMaterialFn(mat, as.shaderUniforms);
+                            activeMaterialFn(mat, uniforms, obj.alternativeUniforms);
                         } else if (this._numCombinedVertex + len > this._maxVertexSize) {
                             this.flush();
                         }
@@ -105,6 +149,7 @@ namespace Aurora {
                         }
                     }
                 }
+                renderingData.out.clear();
             }
 
             this.flush();
@@ -172,6 +217,16 @@ namespace Aurora {
             this._vertexSources = null;
             this._curMaterial = null;
             this._gl = null;
+
+            if (this._defaultMaterial) {
+                this._defaultMaterial.destroy(false);
+                this._defaultMaterial = null;
+            }
+
+            if (this._defaultShader) {
+                this._defaultShader.destroy();
+                this._defaultShader = null;
+            }
         }
 
         private _getOrCreateVertexSource(name: string): VertexSource {

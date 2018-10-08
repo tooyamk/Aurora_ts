@@ -4,16 +4,15 @@
 namespace Aurora {
     export abstract class AbstractRenderable extends AbstractNodeComponent {
         public renderer: AbstractRenderer = null;
-        public materials: Material[] = [];
+        public materials: Material[] = null;
 
         public isReady(): boolean {
             //override
             return false;
         }
 
-        public visit(renderingObject: RenderingObject): AssetStore {
+        public visit(renderingData: RenderingData): void {
             //override
-            return null;
         }
     }
 }

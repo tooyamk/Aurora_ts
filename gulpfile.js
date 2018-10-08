@@ -4,6 +4,7 @@ const spawn = require('child_process');
 const split = require('split');
 
 const coreTsConfig = "projects/core/tsconfig.json";
+const wxplatformTsConfig = "projects/wxplatform/tsconfig.json";
 const examplesTsConfig = "projects/examples/tsconfig.json";
 
 function build(tsConfig, isWatch = false) {
@@ -33,6 +34,14 @@ gulp.task("build-core", () => {
 
 gulp.task("build-core-watch", () => {
     build(coreTsConfig, true);
+});
+
+gulp.task("build-wxplatform", () => {
+    build(wxplatformTsConfig);
+});
+
+gulp.task("build-wxplatform-watch", () => {
+    build(wxplatformTsConfig, true);
 });
 
 gulp.task("build-examples", () => {

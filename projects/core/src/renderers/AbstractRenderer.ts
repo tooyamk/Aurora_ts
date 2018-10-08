@@ -18,7 +18,7 @@ namespace Aurora {
             this._lights = lights;
         }
 
-        public render(renderingObjects: RenderingObject[], start: int, end: int): void {
+        public render(renderingData: RenderingData, renderingObjects: RenderingObject[], start: int, end: int): void {
             //override
         }
 
@@ -36,33 +36,59 @@ namespace Aurora {
             return this._shaderUniforms;
         }
 
-        public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[]): void {
+        public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], createFn: (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms) => void): void {
             //override
         }
 
-        public draw(assetStore: AssetStore, material: Material, onShaderPreUse: () => void = null): void {
+        public useShader(material: Material, alternativeUniforms: ShaderUniforms, onShaderPreUse: () => void = null): GLProgram {
             if (material.ready(this._shaderDefines)) {
                 if (onShaderPreUse) onShaderPreUse();
 
-                let p = material.use(this._shaderUniforms);
-
-                let db = assetStore.getDrawIndexBuffer(p.gl);
-                if (db) {
-                    let valid = true;
-                    let atts = p.attributes;
-                    for (let i = 0, n = atts.length; i < n; ++i) {
-                        let att = atts[i];
-                        let vb = assetStore.getVertexBuffer(p.gl, att);
-                        if (vb) {
-                            vb.use(att.location);
-                        } else {
-                            valid = false;
-                            //p.gl.deactiveVertexAttrib(att.location);
-                        }
-                    }
-
-                    if (valid) db.draw(material.drawMode);
+                let su: ShaderUniforms;
+                let tail: ShaderUniforms = null;
+                if (alternativeUniforms) {
+                    su = alternativeUniforms;
+                    tail = su.tail;
+                    tail.next = this._shaderUniforms;
+                } else {
+                    su = this._shaderUniforms;
                 }
+                let p = material.use(su);
+                if (tail) tail.next = null;
+                return p;
+            }
+            return null;
+        }
+
+        public draw(assetStore: AssetStore, material: Material): void {
+            this._draw(assetStore, material, material.shader.currentProgram);
+        }
+
+        public useAndDraw(assetStore: AssetStore, material: Material, alternativeUniforms: ShaderUniforms, onShaderPreUse: () => void = null): void {
+            let p = this.useShader(material, alternativeUniforms, onShaderPreUse);
+            if (p) {
+                this._draw(assetStore, material, p);
+            }
+        }
+
+        protected _draw(assetStore: AssetStore, material: Material, program: GLProgram): void {
+            let gl = program.gl;
+            let db = assetStore.getDrawIndexBuffer(gl);
+            if (db) {
+                let valid = true;
+                let atts = program.attributes;
+                for (let i = 0, n = atts.length; i < n; ++i) {
+                    let att = atts[i];
+                    let vb = assetStore.getVertexBuffer(gl, att);
+                    if (vb) {
+                        vb.use(att.location);
+                    } else {
+                        valid = false;
+                        //p.gl.deactiveVertexAttrib(att.location);
+                    }
+                }
+
+                if (valid) db.draw(material.drawMode);
             }
         }
 

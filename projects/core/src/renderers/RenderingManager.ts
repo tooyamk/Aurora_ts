@@ -25,6 +25,10 @@ namespace Aurora {
         protected _defaultPostProcessIndexBuffer: GLIndexBuffer = null;
         protected _defaultPostProcessShader: Shader = null;
 
+        protected _renderingData: RenderingData;
+
+        protected _appendRenderingObjectFn: (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms) => void = null;
+
         constructor () {
             this._shaderDefines.setDefine(ShaderPredefined.LIGHTING_SPECULAR, ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
 
@@ -35,8 +39,12 @@ namespace Aurora {
             this._shaderUniforms.setNumber(ShaderPredefined.u_AmbientColor, 0.1, 0.1, 0.1);
             this._shaderUniforms.setNumber(ShaderPredefined.u_ReflectionColor, 1, 1, 1, 1);
 
+            this._renderingData = new RenderingData();
+
             this._renderingQueueCapacity = 100;
             for (let i = 0; i < this._renderingQueueCapacity; ++i) this._renderingQueue[i] = new RenderingObject();
+
+            this._appendRenderingObjectFn = this.appendRenderingObject.bind(this);
         }
 
         public dispose(): void {
@@ -53,6 +61,8 @@ namespace Aurora {
                 this._defaultPostProcessShader.destroy();
                 this._defaultPostProcessShader = null;
             }
+
+            this._appendRenderingObjectFn = null;
         }
 
         public get shaderDefines(): ShaderDefines {
@@ -94,6 +104,8 @@ namespace Aurora {
                 this._cameraWorldMatrix.identity();
                 this._worldToViewMatrix.identity();
             }
+
+            this._renderingData.in.camera = camera;
 
             camera.getProjectionMatrix(this._viewToProjMatrix);
 
@@ -140,10 +152,12 @@ namespace Aurora {
             //clean
             for (let i = 0; i < this._renderingQueueLength; ++i) this._renderingQueue[i].clean();
             this._renderingQueueLength = 0;
+
+            this._renderingData.clear();
         }
 
-        public appendRenderingObject(renderable: AbstractRenderable, material: Material, alternativeMaterial: Material): void {
-            if (material.shader) {
+        public appendRenderingObject(renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms): void {
+            if (material && material.shader) {
                 if (!renderable.renderer.isRendering) {
                     renderable.renderer.isRendering = true;
                     this._renderers.push(renderable.renderer);
@@ -160,6 +174,7 @@ namespace Aurora {
 
                 queueNode.material = material;
                 queueNode.renderable = renderable;
+                queueNode.alternativeUniforms = alternativeUniforms;
                 renderable.node.getWorldMatrix(queueNode.localToWorld);
                 queueNode.localToWorld.append34(this._worldToViewMatrix, queueNode.localToView);
                 queueNode.localToWorld.append44(this._worldToProjMatrix, queueNode.localToProj);
@@ -169,33 +184,7 @@ namespace Aurora {
         private _collectNode(node: Node3D, cullingMask: uint, replaceMaterials: Material[]): void {
             let renderable = node.getComponentByType(AbstractRenderable, true);
             if (renderable && renderable.renderer && (node.layer & cullingMask) && renderable.isReady()) {
-                let materials = replaceMaterials ? replaceMaterials : renderable.materials;
-                if (materials) {
-                    for (let i = 0, n = materials.length; i < n; ++i) {
-                        let m = materials[i];
-                        if (m && m.shader) {
-                            if (!renderable.renderer.isRendering) {
-                                renderable.renderer.isRendering = true;
-                                this._renderers.push(renderable.renderer);
-                            }
-
-                            let queueNode: RenderingObject;
-                            if (this._renderingQueueLength === this._renderingQueueCapacity) {
-                                queueNode = new RenderingObject();
-                                this._renderingQueue[this._renderingQueueCapacity++] = queueNode;
-                                ++this._renderingQueueLength;
-                            } else {
-                                queueNode = this._renderingQueue[this._renderingQueueLength++];
-                            }
-
-                            queueNode.material = m;
-                            queueNode.renderable = renderable;
-                            node.getWorldMatrix(queueNode.localToWorld);
-                            queueNode.localToWorld.append34(this._worldToViewMatrix, queueNode.localToView);
-                            queueNode.localToWorld.append44(this._worldToProjMatrix, queueNode.localToProj);
-                        }
-                    }
-                }
+                renderable.renderer.collectRenderingObjects(renderable, replaceMaterials, this._appendRenderingObjectFn);
             }
 
             let child = node._childHead;
@@ -215,12 +204,12 @@ namespace Aurora {
                     let obj = this._renderingQueue[i];
 
                     if (obj.renderable.renderer !== renderer) {
-                        if (renderer) renderer.render(this._renderingQueue, start, i - 1);
+                        if (renderer) renderer.render(this._renderingData, this._renderingQueue, start, i - 1);
                         start = i;
                     }
                 }
 
-                if (renderer) renderer.render(this._renderingQueue, start, this._renderingQueueLength - 1);
+                if (renderer) renderer.render(this._renderingData, this._renderingQueue, start, this._renderingQueueLength - 1);
 
                 for (let i = 0, n = this._renderers.length; i < n; ++i) {
                     let renderer = this._renderers[i];

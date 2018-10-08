@@ -25,7 +25,7 @@ class SimpleWorld {
         light.setAttenuation(2500);
 
         let cam = cameraNode.addComponent(new Aurora.Camera());
-        cam.clear.color.setFromNumbers(1, 0, 0, 1);
+        cam.clear.color.setFromNumbers(0, 0, 0, 1);
 
         modelNode.localTranslate(0, 0, 500);
         lightNode.localTranslate(-500, 0, 0);
@@ -40,14 +40,14 @@ class SimpleWorld {
         renderable.renderer = forwardRenderer;
         //renderable.assetStore = MITOIA.MeshBuilder.createSphere(100, 100, true, true);
         renderable.assetStore = Aurora.MeshBuilder.createBox(100, 100, 100, 1, 1, 1, true, true);
-        renderable.materials.push(mat);
+        renderable.materials = [mat];
 
         let renderingManager = new Aurora.RenderingManager();
 
         let stretcher = new Aurora.CanvasAutoStretcher(gl.canvas);
 
         let resetSize = () => {
-            cam.viewport.set(0, 0, 300, 300);
+            //cam.viewport.set(0, 0, 300, 300);
             //gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
             cam.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, cam.viewport.width / cam.viewport.height, 5, 10000));
         }
@@ -55,8 +55,8 @@ class SimpleWorld {
 
         modelNode.localRotate(Aurora.Quaternion.createFromEulerX(-Math.PI / 6));
 
-        let fps = new Aurora.FPSDetector(platform);
-        fps.show();
+        let stats = new Aurora.Stats(platform, gl);
+        stats.show();
 
         new Aurora.FrameLooper(platform, 1000 / 60).start((delta: number) => {
             if (stretcher.execute()) resetSize();
@@ -64,7 +64,8 @@ class SimpleWorld {
             modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.001 * delta * Math.PI));
 
             renderingManager.render(gl, cam, worldNode, [light]);
-            fps.record();
+            stats.update();
+            gl.resetStats();
         });
     }
 }

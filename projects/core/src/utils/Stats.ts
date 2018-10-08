@@ -1,6 +1,8 @@
 namespace Aurora {
-    export class FPSDetector {
+    export class Stats {
         private _platform: IPlatform;
+        private _gl: GL;
+        private _color: string;
         private _delta: number = 0;
         private _time: number = 0;
         private _fps: number = 0;
@@ -8,9 +10,12 @@ namespace Aurora {
 
         private _dis: HTMLDivElement = null;
         
-        constructor(platform: IPlatform, delta: number = 1000) {
+        constructor(platform: IPlatform, gl: GL, color: string = "#808080", delta: number = 1000) {
             this._platform = platform;
+            this._gl = gl;
+            this._color = color;
             this.delta = delta;
+
             this.reset();
         }
 
@@ -26,12 +31,23 @@ namespace Aurora {
             this._delta = value;
         }
 
+        public get color(): string {
+            return this._color;
+        }
+
+        public set color(c: string) {
+            if (this._color !== c) {
+                this._color = c;
+                if (this._dis) this._dis.style.color = this._color;
+            }
+        }
+
         public reset(): void {
             this._time = this._platform.duration();
             this._count = 0;
         }
 
-        public record(): void {
+        public update(): void {
             let t = this._platform.duration();
 
             ++this._count;
@@ -41,14 +57,14 @@ namespace Aurora {
                 this._count = 0;
                 this._time = t;
 
-                if (this._dis && this._dis.parentNode) this._dis.innerText = this._fps.toString();
+                if (this._dis && this._dis.parentNode) this._dis.innerText = this._getShowData();
             }
         }
 
         public show(): void {
             this._createDisplay();
             if (!this._dis.parentNode) {
-                this._dis.innerText = "";
+                this._dis.innerText = this._getShowData();
                 document.body.appendChild(this._dis);
             }
         }
@@ -63,9 +79,16 @@ namespace Aurora {
                 this._dis.style.position = "absolute";
                 this._dis.style.left = "0px";
                 this._dis.style.top = "0px";
-                this._dis.style.backgroundColor = "#ffffcc";
+                this._dis.style.color = this._color;
+                //this._dis.style.opacity = "1";
+                //this._dis.style.backgroundColor = "#ffffcc";
                 this._dis.innerText = "";
             }
+        }
+
+        private _getShowData(): string {
+            return `FPS : ${this._fps.toFixed(3)}
+                    DrawCalls : ${this._gl.drawCalls}`;
         }
     }
 }

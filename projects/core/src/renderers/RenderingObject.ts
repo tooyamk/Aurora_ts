@@ -3,7 +3,7 @@
 namespace Aurora {
     export class RenderingObject {
         public material: Material = null;
-        public alternativeMaterial: Material = null;
+        public alternativeUniforms: ShaderUniforms = null;
         public renderable: AbstractRenderable = null;
         public localToWorld: Matrix44 = new Matrix44();
         public localToView: Matrix44 = new Matrix44();
@@ -11,7 +11,7 @@ namespace Aurora {
 
         public clean(): void {
             this.material = null;
-            this.alternativeMaterial = null;
+            this.alternativeUniforms = null;
             this.renderable = null;
         }
     }

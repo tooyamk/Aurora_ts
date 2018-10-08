@@ -14,6 +14,18 @@
             "problemMatcher": "$tsc-watch"
         },
         {
+            "label": "build-wxplatform",
+            "type": "shell",
+            "command": "gulp build-wxplatform"
+        },
+        {
+            "label": "build-wxplatform-watch",
+            "type": "shell",
+            "command": "gulp build-wxplatform-watch",
+            "isBackground": true,
+            "problemMatcher": "$tsc-watch"
+        },
+        {
             "label": "build-examples",
             "type": "shell",
             "command": "gulp build-examples"
@@ -24,6 +36,6 @@
             "command": "gulp build-examples-watch",
             "isBackground": true,
             "problemMatcher": "$tsc-watch"
-        },
+        }
     ]
 }

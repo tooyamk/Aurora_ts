@@ -17,6 +17,16 @@ namespace Aurora {
             return this._count;
         }
 
+        public get tail(): ShaderDefines {
+            let rst: ShaderDefines = this;
+
+            while (rst.next) {
+                rst = rst.next;
+            }
+
+            return rst;
+        }
+
         public clear(): void {
             if (this._count > 0) {
                 this._defines = {};

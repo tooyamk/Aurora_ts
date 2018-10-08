@@ -11,6 +11,13 @@ namespace Aurora {
         public array: number[] | Float32Array | Int32Array = null;
         public sampler: AbstractGLTexture = null;
 
+        public clear(): void {
+            this.type = ShaderUniformType.NONE;
+            this.vec4 = null;
+            this.array = null;
+            this.sampler = null;
+        }
+
         public static isEqual(v0: ShaderUniformValue, v1: ShaderUniformValue): boolean {
             let t0 = v0 ? v0.type : ShaderUniformType.NONE;
             let t1 = v1 ? v1.type : ShaderUniformType.NONE;
@@ -52,6 +59,16 @@ namespace Aurora {
         
         public _uniforms: { [key: string]: ShaderUniformValue } = {};
         protected _numUniforms: uint = 0;
+
+        public get tail(): ShaderUniforms {
+            let rst: ShaderUniforms = this;
+
+            while (rst.next) {
+                rst = rst.next;
+            }
+
+            return rst;
+        }
 
         public static isEqual(value0: ShaderUniforms, value1: ShaderUniforms, info: GLProgramUniformInfo[] = null): boolean {
             if (value0 === value1) return true;
@@ -122,6 +139,15 @@ namespace Aurora {
                     v.sampler = null;
                     --this._numUniforms;
                 }
+            }
+        }
+
+        public destroy(): void {
+            if (this._uniforms) {
+                for (let name in this._uniforms) {
+                    this._uniforms[name].clear();
+                }
+                this._uniforms = null;
             }
         }
 

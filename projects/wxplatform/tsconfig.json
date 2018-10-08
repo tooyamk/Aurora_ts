@@ -1,5 +1,7 @@
 ﻿{
   "compilerOptions": {
+    "composite": true,
+    "declaration": true,
     "noImplicitAny": true,
     "suppressImplicitAnyIndexErrors": true,
     "noImplicitReturns": true,
@@ -9,18 +11,16 @@
     "sourceMap": true,
     "module": "amd",
     "target": "es6",
-    "removeComments": true,
+    "removeComments": false,
     "preserveConstEnums": true,
     "listFiles": true,
     "listEmittedFiles": true,
-    "noResolve": true,
-    "outFile": "../../dist/test.js"
+    "outFile": "../../dist/wxplatform.js"
   },
   "include": [ "./**/*.ts" ],
   "exclude": [],
   "compileOnSave": true,
   "references": [
-    { "path": "../core" },
-    { "path": "../wxplatform" }
+    { "path": "../core" }
   ]
 }

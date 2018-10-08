@@ -57,19 +57,20 @@ namespace Aurora {
             return true;
         }
 
-        public ready(defines: ShaderDefines): boolean {
+        public ready(defines: ShaderDefines): GLProgram {
             if (this.shader) {
                 if (this.defines) {
-                    this.defines.next = defines;
+                    let tail = this.defines.tail;
+                    tail.next = defines;
                     let rst = this.shader.ready(this.defines);
-                    this.defines.next = null;
+                    tail.next = null;
                     return rst;
                 } else {
                     return this.shader.ready(defines);
                 }
             }
 
-            return false;
+            return null;
         }
 
         public use(uniforms: ShaderUniforms): GLProgram {
@@ -82,9 +83,10 @@ namespace Aurora {
             gl.setStencil(this.stencilFront, this.stencilBack);
 
             if (this.uniforms) {
-                this.uniforms.next = uniforms;
+                let tail = this.uniforms.tail;
+                tail.next = uniforms;
                 let rst = this.shader.use(this.uniforms);
-                this.uniforms.next = null;
+                tail.next = null;
                 return rst;
             } else {
                 return this.shader.use(uniforms);

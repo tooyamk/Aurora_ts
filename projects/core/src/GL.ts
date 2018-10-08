@@ -594,7 +594,7 @@ namespace Aurora {
 
             if (mode === null) mode = GL.TRIANGLES;
             if (count === null) count = this._numElements;
-            this._gl.context.drawElements(mode, count, this._dataType, offset);
+            this._gl.drawElements(mode, count, this._dataType, offset);
             let err = this._gl.context.getError();
             if (err !== GL.NO_ERROR) {
                 this._gl.printConstant("draw error : ", err);
@@ -829,6 +829,8 @@ namespace Aurora {
     export abstract class AbstractGLTexture extends AbstractGLObject {
         protected _tex: WebGLTexture;
         protected _textureType: GLTexType;
+        protected _width: uint = 0;
+        protected _height: uint = 0;
 
         constructor(gl: GL, type: GLTexType) {
             super(gl);
@@ -838,6 +840,14 @@ namespace Aurora {
 
             this.setWraps(GLTexWrapValue.CLAMP_TO_EDGE);
             this.setFilters(GLTexFilterValue.LINEAR);
+        }
+
+        public get width(): uint {
+            return this._width;
+        }
+
+        public get height(): uint {
+            return this._height;
         }
 
         public get textureType(): GLTexType {
@@ -915,6 +925,10 @@ namespace Aurora {
 
                 if (this._gl.version >= 2) {
                     if (args.length > 5) {
+                        if (level === 0) {
+                            this._width = args[0];
+                            this._height = args[1];
+                        }
                         if (args[4] instanceof AbstractGLBuffer) {
                             args[4].bind();
                             this._gl.context.texImage2D(target, level, internalformat, <uint>args[0], <uint>args[1], 0, <GLTexFormat>args[2], <GLTexDataType>args[3], <GLintptr>args[5]);
@@ -927,9 +941,17 @@ namespace Aurora {
                             }
                         }
                     } else if (args.length > 4) {
+                        if (level === 0) {
+                            this._width = args[0];
+                            this._height = args[1];
+                        }
                         this._gl.context.texImage2D(target, level, internalformat, <uint>args[0], <uint>args[1], 0, <GLTexFormat>args[2], <GLTexDataType>args[3], <GLImage>args[4]);
                     } else {
                         let img = <GLImage>args[2];
+                        if (level === 0) {
+                            this._width = img.width;
+                            this._height = img.height;
+                        }
                         this._gl.context.texImage2D(target, level, internalformat, img.width, img.height, 0, <GLTexFormat>args[0], <GLTexDataType>args[1], img);
                     }
                 } else {
@@ -937,12 +959,26 @@ namespace Aurora {
                         if (args[4] instanceof AbstractGLBuffer) {
                             //not supproted
                         } else {
+                            if (level === 0) {
+                                this._width = args[0];
+                                this._height = args[1];
+                            }
                             this._gl.context.texImage2D(target, level, internalformat, <uint>args[0], <uint>args[1], 0, <GLTexFormat>args[2], <GLTexDataType>args[3], <ArrayBufferView>args[4]);
                         }
                     } else if (args.length > 4) {
-                        this._gl.context.texImage2D(target, level, internalformat, <GLTexFormat>args[2], <GLTexDataType>args[3], <GLImage>args[4]);
+                        let img = <GLImage>args[4];
+                        if (level === 0) {
+                            this._width = img.width;
+                            this._height = img.height;
+                        }
+                        this._gl.context.texImage2D(target, level, internalformat, <GLTexFormat>args[2], <GLTexDataType>args[3], img);
                     } else {
-                        this._gl.context.texImage2D(target, level, internalformat, <GLTexFormat>args[0], <GLTexDataType>args[1], <GLImage>args[2]);
+                        let img = <GLImage>args[2];
+                        if (level === 0) {
+                            this._width = img.width;
+                            this._height = img.height;
+                        }
+                        this._gl.context.texImage2D(target, level, internalformat, <GLTexFormat>args[0], <GLTexDataType>args[1], img);
                     }
                 }
             }
@@ -2689,6 +2725,9 @@ namespace Aurora {
 
         private _usedVertexAttribs: UsedVertexAttribInfo[] = [];
 
+        //stats
+        private _drawCalls: uint = 0;
+
         constructor(canvasOrContext: HTMLCanvasElement | WebGLRenderingContext, options: GLOptions = null) {
             this._acquireGL(canvasOrContext, options);
 
@@ -3192,6 +3231,19 @@ namespace Aurora {
                 this._usedProgram = null;
                 this._gl.useProgram(null);
             }
+        }
+
+        public get drawCalls(): uint {
+            return this._drawCalls;
+        }
+
+        public resetStats(): void {
+            this._drawCalls = 0;
+        }
+
+        public drawElements(mode: GLenum, count: GLsizei, type: GLenum, offset: GLintptr): void {
+            this._gl.drawElements(mode, count, type, offset);
+            ++this._drawCalls;
         }
 
         public bindBuffer(buffer: AbstractGLBuffer): boolean {

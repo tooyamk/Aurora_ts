@@ -100,8 +100,8 @@ class Other {
         //pp.material.cullFace = MITOIA.GLCullFace.NONE;
         pp.material.uniforms.setTexture(Aurora.ShaderPredefined.u_Sampler0, colorTex);
     
-        let fps = new Aurora.FPSDetector(platform);
-        fps.show();
+        let stats = new Aurora.Stats(platform, gl);
+        stats.show();
     
         let loop = (delta: number) => {
             //console.log(delta);
@@ -119,8 +119,8 @@ class Other {
             //gl.context.flush();
             //gl.clear(null);
     
-            fps.record();
-            //console.log(fps.fps);
+            stats.update();
+            gl.resetStats();
         }
     
         //setInterval(loop, 16)
