@@ -17,6 +17,8 @@ namespace Aurora {
         protected static readonly LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY: uint = Node3D.LOCAL_AND_WORLD_ALL_DIRTY & (~Node3D.WORLD_ROTATION_DIRTY);
         protected static readonly ALL_MATRIX_DIRTY: uint = Node3D.LOCAL_MATRIX_DIRTY | Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
 
+        protected static readonly COLOR_DIRTY: uint = 0b10000;
+
         public name: string = "";
         public layer: uint = 0x7FFFFFFF;
         public active: boolean = true;
@@ -41,6 +43,10 @@ namespace Aurora {
         protected _worldRot: Quaternion = new Quaternion();
         protected _worldMatrix: Matrix44 = new Matrix44();
         protected _inverseWorldMatrix: Matrix44 = new Matrix44();
+
+        protected _color: Color4 = null;
+        protected _multipliedColor: Color4 = null;
+
         protected _dirty: uint = 0;
 
         constructor() {
@@ -201,6 +207,28 @@ namespace Aurora {
 
                 this._childHead = null;
                 this._numChildren = 0;
+            }
+        }
+
+        public setColor(c: Color4): void {
+            if (this._color) {
+                this._color.set(c);
+            } else {
+                this._color = c.clone();
+                this._multipliedColor = new Color4();
+            }
+
+            this._dirty |= Node3D.COLOR_DIRTY;
+        }
+
+        public updateMultipliedColor(): void {
+            if (this._dirty & Node3D.COLOR_DIRTY) {
+                this._dirty &= ~Node3D.COLOR_DIRTY;
+
+                if (this._parent) {
+                } else {
+                    if (this._color) this._multipliedColor.set(this._color);
+                }
             }
         }
 
