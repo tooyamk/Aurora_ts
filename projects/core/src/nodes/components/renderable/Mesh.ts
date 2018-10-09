@@ -4,7 +4,7 @@ namespace Aurora {
     export class Mesh extends AbstractRenderable {
         public assetStore: AssetStore = null;
 
-        public isReady(): boolean {
+        public checkRenderable(): boolean {
             return Boolean(this.assetStore);
         }
 

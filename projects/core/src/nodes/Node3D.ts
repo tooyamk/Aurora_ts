@@ -17,7 +17,7 @@ namespace Aurora {
         protected static readonly LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY: uint = Node3D.LOCAL_AND_WORLD_ALL_DIRTY & (~Node3D.WORLD_ROTATION_DIRTY);
         protected static readonly ALL_MATRIX_DIRTY: uint = Node3D.LOCAL_MATRIX_DIRTY | Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
 
-        protected static readonly COLOR_DIRTY: uint = 0b10000;
+        protected static readonly MULTIPLIED_COLOR_DIRTY: uint = 0b10000;
 
         public name: string = "";
         public layer: uint = 0x7FFFFFFF;
@@ -115,9 +115,31 @@ namespace Aurora {
         protected _parentChanged(root: Node3D): void {
             this._root = root;
 
+            let sendDirty = Node3D.WORLD_ALL_DIRTY;
+
+            let p = this._parent;
+            if (p) {
+                p.updateMultipliedColor();
+                if (p._multipliedColor) {
+                    if (this._multipliedColor) {
+                        if (!this._multipliedColor.isEqual(p._multipliedColor)) sendDirty |= Node3D.MULTIPLIED_COLOR_DIRTY;
+                    } else {
+                        if (!p._multipliedColor.isWhite) sendDirty |= Node3D.MULTIPLIED_COLOR_DIRTY;
+                    }
+                } else {
+                    if (this._multipliedColor) {
+                        if (!this._multipliedColor.isWhite) sendDirty |= Node3D.MULTIPLIED_COLOR_DIRTY;
+                    }
+                }
+            } else {
+                if (this._multipliedColor) {
+                    if (!this._multipliedColor.isWhite) sendDirty |= Node3D.MULTIPLIED_COLOR_DIRTY;
+                }
+            }
+
             let old = this._dirty;
-            this._dirty |= Node3D.WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(true);
+            this._dirty |= sendDirty;
+            if (old !== this._dirty) this._noticeUpdate(sendDirty);
         }
 
         public get numChildren(): uint {
@@ -150,6 +172,15 @@ namespace Aurora {
         public get readonlyWorldRotation(): Quaternion {
             this.updateWorldRotation();
             return this._worldRot;
+        }
+
+        public get readonlyColor(): Color4 {
+            return this._color ? this._color : Color4.CONST_WHITE;
+        }
+
+        public get readonlyMultipliedColor(): Color4 {
+            this.updateMultipliedColor();
+            return this._multipliedColor ? this._multipliedColor : (this._color ? this._color : Color4.CONST_WHITE);
         }
 
         [Symbol.iterator]() {
@@ -210,24 +241,56 @@ namespace Aurora {
             }
         }
 
+        public getColor(rst: Color4 = null): Color4 {
+            if (this._color) {
+                return rst ? rst.set(this._color) : this._color.clone();
+            } else {
+                return rst ? rst.setFromNumbers(1, 1, 1, 1) : Color4.WHITE;
+            }
+        }
+
         public setColor(c: Color4): void {
             if (this._color) {
-                this._color.set(c);
+                if (!this._color.isEqual(c)) {
+                    this._color.set(c);
+                    this._colorChanged();
+                }
             } else {
-                this._color = c.clone();
-                this._multipliedColor = new Color4();
+                if (!c.isWhite) {
+                    this._color = c.clone();
+                    this._colorChanged();
+                }
             }
+        }
 
-            this._dirty |= Node3D.COLOR_DIRTY;
+        protected _colorChanged(): void {
+            let old = this._dirty;
+            this._dirty |= Node3D.MULTIPLIED_COLOR_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node3D.MULTIPLIED_COLOR_DIRTY);
+        }
+
+        public getMultipliedColor(rst: Color4 = null): Color4 {
+            this.updateMultipliedColor();
+            if (this._multipliedColor) {
+                return rst ? rst.set(this._multipliedColor) : this._multipliedColor.clone();
+            } else {
+                return this.getColor(rst);
+            }
         }
 
         public updateMultipliedColor(): void {
-            if (this._dirty & Node3D.COLOR_DIRTY) {
-                this._dirty &= ~Node3D.COLOR_DIRTY;
+            if (this._dirty & Node3D.MULTIPLIED_COLOR_DIRTY) {
+                this._dirty &= ~Node3D.MULTIPLIED_COLOR_DIRTY;
 
                 if (this._parent) {
+                    let c = this._parent.readonlyMultipliedColor;
+                    if (this._color) {
+                        this._multipliedColor = Color4.mul(this._color, c, this._multipliedColor);
+                    } else {
+                        this._multipliedColor = this._multipliedColor ? this._multipliedColor.set(c) : c.clone();
+                    }
                 } else {
-                    if (this._color) this._multipliedColor.set(this._color);
+                    if (this._color && this._multipliedColor) this._multipliedColor.set(this._color);
                 }
             }
         }
@@ -375,18 +438,18 @@ namespace Aurora {
             return num;
         }
 
-        protected _noticeUpdate(worldRotationDirty: boolean): void {
+        protected _noticeUpdate(dirty: uint): void {
             let node = this._childHead;
             while (node) {
-                node._receiveNoticeUpdate(worldRotationDirty);
+                node._receiveNoticeUpdate(dirty);
                 node = node._next;
             }
         }
 
-        protected _receiveNoticeUpdate(worldRotationDirty: boolean): void {
+        protected _receiveNoticeUpdate(dirty: uint): void {
             let old = this._dirty;
-            this._dirty |= worldRotationDirty ? Node3D.WORLD_ALL_DIRTY : Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
-            if (this._dirty !== old) this._noticeUpdate(worldRotationDirty);
+            this._dirty |= dirty;
+            if (this._dirty !== old) this._noticeUpdate(dirty);
         }
 
         public getLocalToLocalMatrix(to: Node3D, rst: Matrix44 = null): Matrix44 {
@@ -416,7 +479,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(false);
+            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY);
         }
 
         public localTranslate(x: number = 0, y: number = 0, z: number = 0): void {
@@ -424,7 +487,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(false);
+            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY);
         }
 
         public getWorldPosition(rst: Vector3 = null): Vector3 {
@@ -465,7 +528,7 @@ namespace Aurora {
             }
 
             this._dirty |= Node3D.INVERSE_WORLD_MATRIX_DIRTY;
-            if (oldDirty !== this._dirty) this._noticeUpdate(false);
+            if (oldDirty !== this._dirty) this._noticeUpdate(Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY);
         }
 
         public getLocalRotation(rst: Quaternion = null): Quaternion {
@@ -477,7 +540,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(true);
+            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
         }
 
         public localRotate(quat: Quaternion): void {
@@ -485,7 +548,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(true);
+            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
         }
 
         public parentRotate(quat: Quaternion): void {
@@ -493,7 +556,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(true);
+            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
         }
 
         public getWorldRotation(rst: Quaternion = null): Quaternion {
@@ -523,7 +586,7 @@ namespace Aurora {
 
             this._dirty &= ~Node3D.WORLD_ROTATION_DIRTY;
             this._dirty |= Node3D.LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY;
-            if (oldDirty !== this._dirty) this._noticeUpdate(true);
+            if (oldDirty !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
         }
 
         /**
@@ -555,7 +618,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.ALL_MATRIX_DIRTY;
-           if (old !== this._dirty)  this._noticeUpdate(false);
+           if (old !== this._dirty)  this._noticeUpdate(Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY);
         }
 
         public getLocalMatrix(rst: Matrix44 = null): Matrix44 {
@@ -571,7 +634,7 @@ namespace Aurora {
             let old = this._dirty;
             this._dirty &= ~Node3D.LOCAL_MATRIX_DIRTY;
             this._dirty |= Node3D.WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(true);
+            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
         }
 
         public getWorldMatrix(rst: Matrix44 = null): Matrix44 {
@@ -596,7 +659,7 @@ namespace Aurora {
 
             this._dirty &= ~Node3D.LOCAL_MATRIX_DIRTY;
             this._dirty |= Node3D.WORLD_ROTATION_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(true);
+            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
         }
 
         public getInverseWorldMatrix(rst: Matrix44 = null): Matrix44 {
@@ -611,7 +674,7 @@ namespace Aurora {
 
                 let old = this._dirty;
                 this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-                if (old !== this._dirty) this._noticeUpdate(true);
+                if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
             }
         }
 

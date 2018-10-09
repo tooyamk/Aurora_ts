@@ -14,11 +14,13 @@ namespace Aurora {
         protected _uniforms: ShaderUniforms;
 
         protected _anchor: Vector2;
+        protected _color: Color4;
 
         constructor() {
             super();
 
             this._anchor = new Vector2(0.5, 0.5);
+            this._color = Color4.WHITE;
             this._uniforms = new ShaderUniforms();
         }
 
@@ -45,6 +47,14 @@ namespace Aurora {
                 Sprite._sharedQuadTexCoords = texCoords;
                 Sprite._sharedQuadColors = colors;
             }
+        }
+
+        public get color(): Color4 {
+            return this._color;
+        }
+
+        public set color(c: Color4) {
+            this._color.set(c);
         }
 
         public get frame(): SpriteFrame {
@@ -118,8 +128,8 @@ namespace Aurora {
             this._anchor.setFromNumbers(x, y);
         }
 
-        public isReady(): boolean {
-            return this._texture && this._texture.width > 0 && this._texture.height > 0;
+        public checkRenderable(): boolean {
+            return this._texture && this._texture.width > 0 && this._texture.height > 0 && this._color.a > 0 && this._node.readonlyMultipliedColor.a > 0;
         }
 
         public visit(renderingData: RenderingData): void {
@@ -205,13 +215,7 @@ namespace Aurora {
                         texCoords[7] = bv;
                     }
 
-                    let colors = Sprite._sharedQuadColors;
-                    for (let i = 0; i < 16; ++i) {
-                        colors[i] = 1;
-                        colors[++i] = 1;
-                        colors[++i] = 1;
-                        colors[++i] = 1;
-                    }
+                    this._updateColors(Sprite._sharedQuadColors, 16);
 
                     renderingData.out.assetStore = Sprite._sharedQuadAssetStore;
                     renderingData.out.uniforms = this._uniforms;
@@ -260,16 +264,23 @@ namespace Aurora {
                 texCoords[6] = 1;
                 texCoords[7] = 1;
 
-                let colors = Sprite._sharedQuadColors;
-                for (let i = 0; i < 16; ++i) {
-                    colors[i] = 1;
-                    colors[++i] = 1;
-                    colors[++i] = 1;
-                    colors[++i] = 1;
-                }
+                this._updateColors(Sprite._sharedQuadColors, 16);
 
                 renderingData.out.assetStore = Sprite._sharedQuadAssetStore;
                 renderingData.out.uniforms = this._uniforms;
+            }
+        }
+
+        protected _updateColors(colors: number[], n: uint): void {
+            let c0 = this.node.readonlyMultipliedColor;
+            let c1 = this._color;
+            let r = c0.r * c1.r, g = c0.g * c1.g, b = c0.b * c1.b, a = c0.a * c1.a;
+
+            for (let i = 0; i < n; ++i) {
+                colors[i] = r;
+                colors[++i] = g;
+                colors[++i] = b;
+                colors[++i] = a;
             }
         }
 

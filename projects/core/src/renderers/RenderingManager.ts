@@ -197,7 +197,7 @@ namespace Aurora {
                     let num = node.getComponentsByType(AbstractRenderable, true, this._renderables);
                     for (let i = 0; i < num; ++i) {
                         let renderable = this._renderables[i];
-                        if (renderable.renderer && renderable.isReady()) {
+                        if (renderable.renderer && renderable.checkRenderable()) {
                             renderable.renderer.collectRenderingObjects(renderable, replaceMaterials, this._appendRenderingObjectFn);
                         }
                     }

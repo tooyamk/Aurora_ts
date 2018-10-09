@@ -6,7 +6,7 @@ namespace Aurora {
         public renderer: AbstractRenderer = null;
         public materials: Material[] = null;
 
-        public isReady(): boolean {
+        public checkRenderable(): boolean {
             //override
             return false;
         }

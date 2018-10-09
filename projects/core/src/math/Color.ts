@@ -56,6 +56,8 @@ namespace Aurora {
     }
 
     export class Color4 {
+        public static readonly CONST_WHITE: Color4 = new Color4(1, 1, 1, 1);
+
         public r: number;
         public g: number;
         public b: number;
@@ -78,6 +80,10 @@ namespace Aurora {
 
         public static get TRANSPARENT_BLACK(): Color4 {
             return new Color4(0, 0, 0, 0);
+        }
+
+        public get isWhite(): boolean {
+            return this.r === 1 && this.g === 1 && this.b === 1 && this.a === 1;
         }
 
         public clone(): Color4 {
@@ -148,6 +154,24 @@ namespace Aurora {
                 return false;
             }
             return true;
+        }
+
+        public mul(c: Color4): Color4 {
+            this.r *= c.r;
+            this.g *= c.g;
+            this.b *= c.b;
+            this.a *= c.a;
+
+            return this;
+        }
+
+        public static mul(c1: Color4, c2: Color4, rst: Color4 = null): Color4 {
+            let r = c1.r * c2.r;
+            let g = c1.g * c2.g;
+            let b = c1.b * c2.b;
+            let a = c1.a * c2.a;
+
+            return rst ? rst.setFromNumbers(r, g, b, a) : new Color4(r, g, b, a);
         }
 
         public toString(): string {
