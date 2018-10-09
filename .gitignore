@@ -21,7 +21,7 @@ bld/
 [Rr]elease*.win32/
 .vs/
 bin/
-.tempChromeProfileForDebug/
+.temp*/
 dist/*.js
 dist/*.js.map
 dist/*.d.ts

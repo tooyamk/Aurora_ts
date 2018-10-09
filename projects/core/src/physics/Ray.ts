@@ -65,40 +65,44 @@ namespace Aurora {
                 let ray = this.clone();
                 let hit = new RaycastHit();
                 let vec3 = new Vector3();
-                this._castNode(root, layerMask, ray, cullFace, rst, hit, vec3);
+                let arr: Collider[] = [];
+                this._castNode(root, layerMask, ray, cullFace, rst, hit, vec3, arr);
 
-                if (rst.node) {
+                if (rst.collider) {
                     rst.distance = Math.sqrt(rst.distanceSquared);
                     rst.normal.normalize();
-                    rst.node.readonlyWorldMatrix.transform33Vector3(rst.normal, rst.normal);
+                    rst.collider.node.readonlyWorldMatrix.transform33Vector3(rst.normal, rst.normal);
                 }
             }
 
             return rst;
         }
 
-        private _castNode(node: Node3D, layerMask: uint, ray: Ray, cullFace: GLCullFace, rstHit: RaycastHit, tmpHit: RaycastHit, tmpVec3: Vector3): void {
-            if (node.layer & layerMask) {
-                let collider = node.getComponentByType(Collider, true);
-                if (collider && collider.shape) {
-                    this.transform34(node.readonlyInverseWorldMatrix, ray);
-                    collider.shape.intersectRay(ray, cullFace, tmpHit);
-                    if (tmpHit.distance >= 0) {
-                        let x = ray.direction.x * tmpHit.distance;
-                        let y = ray.direction.y * tmpHit.distance;
-                        let z = ray.direction.z * tmpHit.distance;
+        private _castNode(node: Node3D, layerMask: uint, ray: Ray, cullFace: GLCullFace, rstHit: RaycastHit, tmpHit: RaycastHit, tmpVec3: Vector3, tmpArr: Collider[]): void {
+            if (node.active && node.layer & layerMask) {
+                let num = node.getComponentsByType(Collider, true, tmpArr);
+                for (let i = 0; i < num; ++i) {
+                    let collider = tmpArr[i];
+                    if (collider.shape) {
+                        this.transform34(node.readonlyInverseWorldMatrix, ray);
+                        collider.shape.intersectRay(ray, cullFace, tmpHit);
+                        if (tmpHit.distance >= 0) {
+                            let x = ray.direction.x * tmpHit.distance;
+                            let y = ray.direction.y * tmpHit.distance;
+                            let z = ray.direction.z * tmpHit.distance;
 
-                        node.readonlyWorldMatrix.transform34XYZ(x, y, z, tmpVec3);
+                            node.readonlyWorldMatrix.transform34XYZ(x, y, z, tmpVec3);
 
-                        x = tmpVec3.x - this.origin.x;
-                        y = tmpVec3.y - this.origin.y;
-                        z = tmpVec3.z - this.origin.z;
-                        let disSqr = x * x + y * y + z * z;
+                            x = tmpVec3.x - this.origin.x;
+                            y = tmpVec3.y - this.origin.y;
+                            z = tmpVec3.z - this.origin.z;
+                            let disSqr = x * x + y * y + z * z;
 
-                        if (!rstHit.node || rstHit.distanceSquared > disSqr) {
-                            rstHit.node = node;
-                            rstHit.distanceSquared = disSqr;
-                            rstHit.normal.set(tmpHit.normal);
+                            if (!rstHit.collider || rstHit.distanceSquared > disSqr) {
+                                rstHit.collider = collider;
+                                rstHit.distanceSquared = disSqr;
+                                rstHit.normal.set(tmpHit.normal);
+                            }
                         }
                     }
                 }
@@ -106,7 +110,7 @@ namespace Aurora {
 
             let child = node._childHead;
             while (child) {
-                this._castNode(child, layerMask, ray, cullFace, rstHit, tmpHit, tmpVec3);
+                this._castNode(child, layerMask, ray, cullFace, rstHit, tmpHit, tmpVec3, tmpArr);
                 child = child._next;
             }
         }

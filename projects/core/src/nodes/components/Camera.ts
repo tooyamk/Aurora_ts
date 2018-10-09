@@ -27,6 +27,10 @@ namespace Aurora {
             return this._zNear;
         }
 
+        public get readonlyProjectionMatrix(): Matrix44 {
+            return this._projectionMatrix;
+        }
+
         public getProjectionMatrix(rst: Matrix44 = null): Matrix44 {
             return rst ? rst.set44(this._projectionMatrix) : this._projectionMatrix.clone();
         }

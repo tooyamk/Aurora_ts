@@ -2,7 +2,7 @@ namespace Aurora {
     export class RaycastHit {
         public distance: number;
         public distanceSquared: number;
-        public node: Node3D;
+        public collider: Collider;
         public readonly normal: Vector3 = Vector3.Zero;
 
         constructor() {
@@ -12,7 +12,7 @@ namespace Aurora {
         public clear(): void {
             this.distance = -1;
             this.distanceSquared = -1;
-            this.node = null;
+            this.collider = null;
             this.normal.setZero();
         }
     }

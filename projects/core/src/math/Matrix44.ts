@@ -425,7 +425,7 @@ namespace Aurora {
                 this.m30, this.m31, this.m32, this.m33);
         }
 
-        public identity(): void {
+        public identity(): Matrix44 {
             this.m00 = 1;
             this.m01 = 0;
             this.m02 = 0;
@@ -445,6 +445,8 @@ namespace Aurora {
             this.m31 = 0;
             this.m32 = 0;
             this.m33 = 1;
+
+            return this;
         }
 
         public transpose(rst: Matrix44 = null): Matrix44 {
@@ -702,7 +704,7 @@ namespace Aurora {
             }
         }
 
-        public append34(m: Matrix44, rst: Matrix44 = null): void {
+        public append34(m: Matrix44, rst: Matrix44 = null): Matrix44 {
             let m00 = this.m00 * m.m00 + this.m01 * m.m10 + this.m02 * m.m20;
             let m01 = this.m00 * m.m01 + this.m01 * m.m11 + this.m02 * m.m21;
             let m02 = this.m00 * m.m02 + this.m01 * m.m12 + this.m02 * m.m22;
@@ -735,6 +737,8 @@ namespace Aurora {
             rst.m30 = m30;
             rst.m31 = m31;
             rst.m32 = m32;
+
+            return rst;
         }
 
         public append44(m: Matrix44, rst: Matrix44 = null): Matrix44 {
@@ -862,6 +866,15 @@ namespace Aurora {
 
         public transform34Vector3(vec3: Vector3, rst: Vector3 = null): Vector3 {
             return this.transform34XYZ(vec3.x, vec3.y, vec3.z, rst);
+        }
+
+        public transform44XY(x: number = 0, y: number = 0, rst: Vector2 = null): Vector2 {
+            let w = x * this.m03 + y * this.m13 + this.m33;
+
+            let dstX = (x * this.m00 + y * this.m10 + this.m30) / w;
+            let dstY = (x * this.m01 + y * this.m11 + this.m31) / w;
+
+            return rst ? rst.setFromNumbers(dstX, dstY) : new Vector2(dstX, dstY);
         }
 
         public transform44XYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {

@@ -60,18 +60,18 @@ namespace Aurora {
             return null;
         }
 
-        public draw(assetStore: AssetStore, material: Material): void {
-            this._draw(assetStore, material, material.shader.currentProgram);
+        public draw(assetStore: AssetStore, material: Material, count: uint = null, offset: uint = 0): void {
+            this._draw(assetStore, material, material.shader.currentProgram, count, offset);
         }
 
-        public useAndDraw(assetStore: AssetStore, material: Material, alternativeUniforms: ShaderUniforms, onShaderPreUse: () => void = null): void {
+        public useAndDraw(assetStore: AssetStore, material: Material, alternativeUniforms: ShaderUniforms, onShaderPreUse: () => void = null, count: uint = null, offset: uint = 0): void {
             let p = this.useShader(material, alternativeUniforms, onShaderPreUse);
             if (p) {
-                this._draw(assetStore, material, p);
+                this._draw(assetStore, material, p, count, offset);
             }
         }
 
-        protected _draw(assetStore: AssetStore, material: Material, program: GLProgram): void {
+        protected _draw(assetStore: AssetStore, material: Material, program: GLProgram, count: uint = null, offset: uint = 0): void {
             let gl = program.gl;
             let ib = assetStore.getDrawIndexBuffer(gl);
             if (ib) {
@@ -84,11 +84,12 @@ namespace Aurora {
                         vb.use(att.location);
                     } else {
                         valid = false;
+                        console.log("draw not found attribute : " + att.name);
                         //p.gl.deactiveVertexAttrib(att.location);
                     }
                 }
 
-                if (valid) ib.draw(material.drawMode);
+                if (valid) ib.draw(material.drawMode, count, offset);
             }
         }
 

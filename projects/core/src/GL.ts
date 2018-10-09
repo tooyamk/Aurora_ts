@@ -184,6 +184,19 @@ namespace Aurora {
             this._id = ++GLVertexBuffer._idGenerator;
         }
 
+        public static calcSizePerElement(type: GLVertexBufferDataType): uint {
+            switch (type) {
+                case GLVertexBufferDataType.BYTE, GLVertexBufferDataType.UNSIGNED_BYTE:
+                    return 1;
+                case GLVertexBufferDataType.SHORT, GLVertexBufferDataType.UNSIGNED_SHORT:
+                    return 2;
+                case GLVertexBufferDataType.INT, GLVertexBufferDataType.UNSIGNED_INT, GLVertexBufferDataType.FLOAT:
+                    return 4
+                default:
+                    return 0;
+            }
+        }
+
         public get id(): number {
             return this._id;
         }
@@ -196,7 +209,7 @@ namespace Aurora {
             this._size = size;
         }
 
-        public get datatTpe(): GLVertexBufferDataType {
+        public get dataType(): GLVertexBufferDataType {
             return this._dataType;
         }
 
@@ -216,6 +229,21 @@ namespace Aurora {
             return this._uploadCount;
         }
 
+        /**
+         * Need keep memSize accord.
+         */
+        public resetDataAttrib(size: GLVertexBufferSize = GLVertexBufferSize.FOUR, type: GLVertexBufferDataType = GLVertexBufferDataType.FLOAT, normalized: boolean = false): void {
+            if (this._size !== size || this._dataType !== type) {
+                this._size = size;
+                this._dataType = type;
+
+                this._sizePerElement = GLVertexBuffer.calcSizePerElement(this._dataType);
+                this._numElements = (this._memSize / this._sizePerElement) | 0;
+            }
+            
+            this._normalized = normalized;
+        }
+
         public allocate(numElements: uint, size: GLVertexBufferSize = GLVertexBufferSize.FOUR, type: GLVertexBufferDataType = GLVertexBufferDataType.FLOAT, normalized: boolean = false, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
             if (this._buffer) {
                 ++this._uploadCount;
@@ -229,21 +257,7 @@ namespace Aurora {
 
                 this.bind();
 
-                switch (type) {
-                    case GLVertexBufferDataType.BYTE, GLVertexBufferDataType.UNSIGNED_BYTE:
-                        this._sizePerElement = 1;
-                        break;
-                    case GLVertexBufferDataType.SHORT, GLVertexBufferDataType.UNSIGNED_SHORT:
-                        this._sizePerElement = 2;
-                        break;
-                    case GLVertexBufferDataType.INT, GLVertexBufferDataType.UNSIGNED_INT, GLVertexBufferDataType.FLOAT:
-                        this._sizePerElement = 4;
-                        break;
-                    default:
-                        this._sizePerElement = 0;
-                        break;
-                }
-
+                this._sizePerElement = GLVertexBuffer.calcSizePerElement(this._dataType);
                 this._memSize = numElements * this._sizePerElement;
 
                 gl.bufferData(GL.ARRAY_BUFFER, this._memSize, usage);
@@ -325,30 +339,15 @@ namespace Aurora {
                     gl.bufferData(GL.ARRAY_BUFFER, src, usage);
                 } else {
                     this._memSize = data.byteLength;
-
-                    switch (this._dataType) {
-                        case GLVertexBufferDataType.BYTE, GLVertexBufferDataType.UNSIGNED_BYTE:
-                            this._sizePerElement = 1;
-                            break;
-                        case GLVertexBufferDataType.SHORT, GLVertexBufferDataType.UNSIGNED_SHORT:
-                            this._sizePerElement = 2;
-                            break;
-                        case GLVertexBufferDataType.INT, GLVertexBufferDataType.UNSIGNED_INT, GLVertexBufferDataType.FLOAT:
-                            this._sizePerElement = 4;
-                            break;
-                        default:
-                            this._sizePerElement = 0;
-                            break;
-                    }
-
-                    this._numElements = (data.byteLength / this._sizePerElement) | 0;
+                    this._sizePerElement = GLVertexBuffer.calcSizePerElement(this._dataType);
+                    this._numElements = (this._memSize / this._sizePerElement) | 0;
 
                     gl.bufferData(GL.ARRAY_BUFFER, <ArrayBuffer>data, usage);
                 }
             }
         }
 
-        public uploadSub(data: GLVertexBufferData, offsetElements: int): void {
+        public uploadSub(data: GLVertexBufferData, offsetElements: int = 0): void {
             if (this._buffer) {
                 ++this._uploadCount;
                 let gl = this._gl.context;
@@ -582,9 +581,9 @@ namespace Aurora {
                     } else {
                         arrayBuffer = new Uint32Array(data);
                     }
-                    gl.bufferSubData(GL.ARRAY_BUFFER, offsetElements * this._sizePerElement, arrayBuffer);
+                    gl.bufferSubData(GL.ELEMENT_ARRAY_BUFFER, offsetElements * this._sizePerElement, arrayBuffer);
                 } else {
-                    gl.bufferSubData(GL.ARRAY_BUFFER, offsetElements * this._sizePerElement, data);
+                    gl.bufferSubData(GL.ELEMENT_ARRAY_BUFFER, offsetElements * this._sizePerElement, data);
                 }
             }
         }

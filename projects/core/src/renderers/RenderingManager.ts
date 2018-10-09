@@ -7,6 +7,8 @@ namespace Aurora {
         protected _renderingQueueLength: uint = 0;
         protected _renderingQueueCapacity: uint = 0;
 
+        protected _renderables: AbstractRenderable[] = [];
+
         protected _renderers: AbstractRenderer[] = [];
 
         protected _shaderDefines: ShaderDefines = new ShaderDefines();
@@ -119,6 +121,14 @@ namespace Aurora {
             this.begin(gl, camera);
 
             this._collectNode(node, camera.cullingMask, replaceMaterials);
+            for (let i = 0, n = this._renderables.length; i < n; ++i) {
+                let r = this._renderables[i];
+                if (r) {
+                    this._renderables[i] = null;
+                } else {
+                    break;
+                }
+            }
 
             if (this._renderingQueueLength > 0) {
                 Sort.Merge.sort(this._renderingQueue, (a: RenderingObject, b: RenderingObject) => {
@@ -182,15 +192,22 @@ namespace Aurora {
         }
 
         private _collectNode(node: Node3D, cullingMask: uint, replaceMaterials: Material[]): void {
-            let renderable = node.getComponentByType(AbstractRenderable, true);
-            if (renderable && renderable.renderer && (node.layer & cullingMask) && renderable.isReady()) {
-                renderable.renderer.collectRenderingObjects(renderable, replaceMaterials, this._appendRenderingObjectFn);
-            }
+            if (node.active) {
+                if (node.layer & cullingMask) {
+                    let num = node.getComponentsByType(AbstractRenderable, true, this._renderables);
+                    for (let i = 0; i < num; ++i) {
+                        let renderable = this._renderables[i];
+                        if (renderable.renderer && renderable.isReady()) {
+                            renderable.renderer.collectRenderingObjects(renderable, replaceMaterials, this._appendRenderingObjectFn);
+                        }
+                    }
+                }
 
-            let child = node._childHead;
-            while (child) {
-                this._collectNode(child, cullingMask, replaceMaterials);
-                child = child._next;
+                let child = node._childHead;
+                while (child) {
+                    this._collectNode(child, cullingMask, replaceMaterials);
+                    child = child._next;
+                }
             }
         }
 

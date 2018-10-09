@@ -4,6 +4,7 @@ class SpriteAtlasTest {
     constructor() {
         let env = new Env();
         this._env = env;
+        //env.camera.clear.color.setFromNumbers(1, 0, 0, 1);
 
         env.start(() => {
             let gl = env.gl;

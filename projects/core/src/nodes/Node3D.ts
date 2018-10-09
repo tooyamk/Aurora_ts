@@ -19,6 +19,7 @@ namespace Aurora {
 
         public name: string = "";
         public layer: uint = 0x7FFFFFFF;
+        public active: boolean = true;
 
         protected _parent: Node3D = null;
         protected _root: Node3D = null;
@@ -328,6 +329,24 @@ namespace Aurora {
             return null;
         }
 
+        public getComponentsByType<T extends AbstractNodeComponent>(c: { prototype: T }, checkEnabled: boolean = true, rst: T[] = null, rstOffset: uint = 0): uint {
+            let num = 0;
+
+            if (this._components) {
+                let type = <any>c;
+
+                for (let i = 0, n = this._components.length; i < n; ++i) {
+                    let com = this._components[i];
+                    if (checkEnabled && !com.enabled) continue;
+                    if (com instanceof type) {
+                        rst[rstOffset + num++] = <T>com;
+                    }
+                }
+            }
+
+            return num;
+        }
+
         protected _noticeUpdate(worldRotationDirty: boolean): void {
             let node = this._childHead;
             while (node) {
@@ -340,6 +359,22 @@ namespace Aurora {
             let old = this._dirty;
             this._dirty |= worldRotationDirty ? Node3D.WORLD_ALL_DIRTY : Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
             if (this._dirty !== old) this._noticeUpdate(worldRotationDirty);
+        }
+
+        public getLocalToLocalMatrix(to: Node3D, rst: Matrix44 = null): Matrix44 {
+            if (to && this._root === to._root) {
+                return this.readonlyWorldMatrix.append34(to.readonlyInverseWorldMatrix, rst);
+            } else {
+                return rst ? rst.identity() : new Matrix44();
+            }
+        }
+
+        public getLocalToProjectionMatrix(camera: Camera, rst: Matrix44 = null): Matrix44 {
+            if (camera) {
+                return this.getLocalToLocalMatrix(camera.node, rst).append44(camera.readonlyProjectionMatrix, rst);
+            } else {
+                return rst ? rst.identity() : new Matrix44();
+            }
         }
 
         public getLocalPositon(rst: Vector3 = null): Vector3 {

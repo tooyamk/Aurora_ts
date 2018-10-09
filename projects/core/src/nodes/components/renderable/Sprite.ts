@@ -2,7 +2,7 @@
 
 namespace Aurora {
     export class Sprite extends AbstractRenderable {
-        protected static _tmpVec3: Vector3 = new Vector3();
+        protected static _tmpVec2: Vector2 = new Vector2();
         protected static _sharedQuadAssetStore: AssetStore = null;
         protected static _sharedQuadVertices: number[] = null;
         protected static _sharedQuadTexCoords: number[] = null;
@@ -27,8 +27,8 @@ namespace Aurora {
                 let as = new AssetStore();
 
                 let vertices: number[] = [];
-                vertices.length = 12;
-                as.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
+                vertices.length = 8;
+                as.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
 
                 let texCoords: number[] = [];
                 texCoords.length = 8;
@@ -123,9 +123,98 @@ namespace Aurora {
         }
 
         public visit(renderingData: RenderingData): void {
-            if (false && this._frame) {
+            if (this._frame) {
                 if (this._texture) {
+                    Sprite._initSharedQuadAssetStore();
 
+                    let f = this._frame;
+
+                    let w = f.sourceWidth;
+                    let h = f.sourceHeight;
+
+                    let lx = -w * this._anchor.x + f.offsetX;
+                    let ty = -h * this._anchor.y + h - f.offsetY;
+                    let rx = lx + f.width;
+                    let by = ty - f.height;
+
+                    let vertices = Sprite._sharedQuadVertices;
+
+                    let m = renderingData.in.renderingObject.localToProj;
+                    let v = Sprite._tmpVec2;
+                    m.transform44XY(lx, by, v);
+                    vertices[0] = v.x;
+                    vertices[1] = v.y;
+
+                    m.transform44XY(lx, ty, v);
+                    vertices[2] = v.x;
+                    vertices[3] = v.y;
+
+                    m.transform44XY(rx, ty, v);
+                    vertices[4] = v.x;
+                    vertices[5] = v.y;
+
+                    m.transform44XY(rx, by, v);
+                    vertices[6] = v.x;
+                    vertices[7] = v.y;
+
+                    let texCoords = Sprite._sharedQuadTexCoords;
+
+                    let texW = f.texWidth < 0 ? this._texture.width : f.texWidth;
+                    let texH = f.texHeight < 0 ? this._texture.height : f.texHeight;
+
+                    let lu = f.x / texW;
+                    let tv = f.y / texH;
+                    let ru = lu + f.width / texW;
+                    let bv = tv + f.height / texH;
+
+                    if (f.rotated === 0) {
+                        texCoords[0] = lu;
+                        texCoords[1] = bv;
+
+                        texCoords[2] = lu;
+                        texCoords[3] = tv;
+
+                        texCoords[4] = ru;
+                        texCoords[5] = tv;
+
+                        texCoords[6] = ru;
+                        texCoords[7] = bv;
+                    } else if (f.rotated < 0) {
+                        texCoords[0] = ru;
+                        texCoords[1] = bv;
+
+                        texCoords[2] = lu;
+                        texCoords[3] = bv;
+
+                        texCoords[4] = lu;
+                        texCoords[5] = tv;
+
+                        texCoords[6] = ru;
+                        texCoords[7] = tv;
+                    } else {
+                        texCoords[0] = lu;
+                        texCoords[1] = tv;
+
+                        texCoords[2] = ru;
+                        texCoords[3] = tv;
+
+                        texCoords[4] = ru;
+                        texCoords[5] = bv;
+
+                        texCoords[6] = lu;
+                        texCoords[7] = bv;
+                    }
+
+                    let colors = Sprite._sharedQuadColors;
+                    for (let i = 0; i < 16; ++i) {
+                        colors[i] = 1;
+                        colors[++i] = 1;
+                        colors[++i] = 1;
+                        colors[++i] = 1;
+                    }
+
+                    renderingData.out.assetStore = Sprite._sharedQuadAssetStore;
+                    renderingData.out.uniforms = this._uniforms;
                 }
             } else if (this._texture) {
                 Sprite._initSharedQuadAssetStore();
@@ -134,33 +223,29 @@ namespace Aurora {
                 let h = this._texture.height;
 
                 let lx = -w * this._anchor.x;
-                let dy = -h * this._anchor.y;
+                let by = -h * this._anchor.y;
                 let rx = lx + w;
-                let uy = dy + h;
+                let ty = by + h;
 
                 let vertices = Sprite._sharedQuadVertices;
 
                 let m = renderingData.in.renderingObject.localToProj;
-                let v = Sprite._tmpVec3;
-                m.transform44XYZ(lx, dy, 0, v);
+                let v = Sprite._tmpVec2;
+                m.transform44XY(lx, by, v);
                 vertices[0] = v.x;
                 vertices[1] = v.y;
-                vertices[2] = v.z;
 
-                m.transform44XYZ(lx, uy, 0, v);
-                vertices[3] = v.x;
-                vertices[4] = v.y;
-                vertices[5] = v.z;
+                m.transform44XY(lx, ty, v);
+                vertices[2] = v.x;
+                vertices[3] = v.y;
 
-                m.transform44XYZ(rx, uy, 0, v);
+                m.transform44XY(rx, ty, v);
+                vertices[4] = v.x;
+                vertices[5] = v.y;
+
+                m.transform44XY(rx, by, v);
                 vertices[6] = v.x;
                 vertices[7] = v.y;
-                vertices[8] = v.z;
-
-                m.transform44XYZ(rx, dy, 0, v);
-                vertices[9] = v.x;
-                vertices[10] = v.y;
-                vertices[11] = v.z;
 
                 let texCoords = Sprite._sharedQuadTexCoords;
                 texCoords[0] = 0;
@@ -178,6 +263,9 @@ namespace Aurora {
                 let colors = Sprite._sharedQuadColors;
                 for (let i = 0; i < 16; ++i) {
                     colors[i] = 1;
+                    colors[++i] = 1;
+                    colors[++i] = 1;
+                    colors[++i] = 1;
                 }
 
                 renderingData.out.assetStore = Sprite._sharedQuadAssetStore;
