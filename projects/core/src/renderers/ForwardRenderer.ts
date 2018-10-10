@@ -39,9 +39,7 @@ namespace Aurora {
                         } else if (len === 1) {
                             let m = mats[0];
                             let u = m ? m.uniforms : null;
-                            for (let i = 0; i < len1; ++i) {
-                                createFn(renderable, replaceMaterials[i], u);
-                            }
+                            for (let i = 0; i < len1; ++i) createFn(renderable, replaceMaterials[i], u);
                         } else {
                             for (let i = 0; i < len; ++i) {
                                 let m = mats[i];
@@ -49,9 +47,7 @@ namespace Aurora {
                             }
                         }
                     } else {
-                        for (let i = 0; i < len; ++i) {
-                            createFn(renderable, mats[i], null);
-                        }
+                        for (let i = 0; i < len; ++i) createFn(renderable, mats[i], null);
                     }
                 }
             }

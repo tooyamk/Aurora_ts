@@ -339,6 +339,14 @@ namespace Aurora {
             return this;
         }
 
+        public dotVector3(p: Vector3): number {
+            return this.x * p.x + this.y * p.y + this.z * p.z + this.w;
+        }
+
+        public static dot(p1: Vector4, p2: Vector4): number {
+            return p1.x * p2.x + p1.y * p2.y + p1.z * p2.z + p1.w * p2.w;
+        }
+
         public toString(): string {
             return "Vector4(x=" + this.x + ", y=" + this.y + ", z=" + this.z + ", w=" + this.w + ")";
         }

@@ -62,11 +62,7 @@ namespace Aurora {
 
         public get tail(): ShaderUniforms {
             let rst: ShaderUniforms = this;
-
-            while (rst.next) {
-                rst = rst.next;
-            }
-
+            while (rst.next) rst = rst.next;
             return rst;
         }
 
@@ -144,9 +140,7 @@ namespace Aurora {
 
         public destroy(): void {
             if (this._uniforms) {
-                for (let name in this._uniforms) {
-                    this._uniforms[name].clear();
-                }
+                for (let name in this._uniforms) this._uniforms[name].clear();
                 this._uniforms = null;
             }
         }
@@ -155,9 +149,7 @@ namespace Aurora {
             let v = this._uniforms[name];
             if (v) {
                 v.array = null;
-                if (v.type === ShaderUniformType.NONE) {
-                    ++this._numUniforms;
-                }
+                if (v.type === ShaderUniformType.NONE) ++this._numUniforms;
             } else {
                 v = new ShaderUniformValue();
                 this._uniforms[name] = v;

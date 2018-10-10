@@ -66,9 +66,7 @@ namespace Aurora {
                 let oldTex = this._frame ? this._frame.texture : null;
                 this._frame = f;
 
-                if (oldTex === this._texture) {
-                    this._setTex(f ? f.texture : null);
-                }
+                if (oldTex === this._texture) this._setTex(f ? f.texture : null);
             }
         }
 
@@ -129,7 +127,7 @@ namespace Aurora {
         }
 
         public checkRenderable(): boolean {
-            return this._texture && this._texture.width > 0 && this._texture.height > 0 && this._color.a > 0 && this._node.readonlyMultipliedColor.a > 0;
+            return this._texture && this._texture.width > 0 && this._texture.height > 0 && this._color.a > 0 && this._node.readonlyCascadeColor.a > 0;
         }
 
         public visit(renderingData: RenderingData): void {
@@ -147,28 +145,6 @@ namespace Aurora {
                     let rx = lx + f.width;
                     let by = ty - f.height;
 
-                    let vertices = Sprite._sharedQuadVertices;
-
-                    let m = renderingData.in.renderingObject.localToProj;
-                    let v = Sprite._tmpVec2;
-                    m.transform44XY(lx, by, v);
-                    vertices[0] = v.x;
-                    vertices[1] = v.y;
-
-                    m.transform44XY(lx, ty, v);
-                    vertices[2] = v.x;
-                    vertices[3] = v.y;
-
-                    m.transform44XY(rx, ty, v);
-                    vertices[4] = v.x;
-                    vertices[5] = v.y;
-
-                    m.transform44XY(rx, by, v);
-                    vertices[6] = v.x;
-                    vertices[7] = v.y;
-
-                    let texCoords = Sprite._sharedQuadTexCoords;
-
                     let texW = f.texWidth < 0 ? this._texture.width : f.texWidth;
                     let texH = f.texHeight < 0 ? this._texture.height : f.texHeight;
 
@@ -177,48 +153,14 @@ namespace Aurora {
                     let ru = lu + f.width / texW;
                     let bv = tv + f.height / texH;
 
-                    if (f.rotated === 0) {
-                        texCoords[0] = lu;
-                        texCoords[1] = bv;
+                    Sprite._updateQuadVertices(Sprite._sharedQuadVertices, lx, rx, by, ty, renderingData.in.renderingObject.localToProj);
+                    if (Sprite.isInViewport(Sprite._sharedQuadVertices)) {
+                        Sprite._updateQuadTexCoords(Sprite._sharedQuadTexCoords, lu, ru, bv, tv, f.rotated);
+                        this._updateColors(Sprite._sharedQuadColors, 16);
 
-                        texCoords[2] = lu;
-                        texCoords[3] = tv;
-
-                        texCoords[4] = ru;
-                        texCoords[5] = tv;
-
-                        texCoords[6] = ru;
-                        texCoords[7] = bv;
-                    } else if (f.rotated < 0) {
-                        texCoords[0] = ru;
-                        texCoords[1] = bv;
-
-                        texCoords[2] = lu;
-                        texCoords[3] = bv;
-
-                        texCoords[4] = lu;
-                        texCoords[5] = tv;
-
-                        texCoords[6] = ru;
-                        texCoords[7] = tv;
-                    } else {
-                        texCoords[0] = lu;
-                        texCoords[1] = tv;
-
-                        texCoords[2] = ru;
-                        texCoords[3] = tv;
-
-                        texCoords[4] = ru;
-                        texCoords[5] = bv;
-
-                        texCoords[6] = lu;
-                        texCoords[7] = bv;
+                        renderingData.out.assetStore = Sprite._sharedQuadAssetStore;
+                        renderingData.out.uniforms = this._uniforms;
                     }
-
-                    this._updateColors(Sprite._sharedQuadColors, 16);
-
-                    renderingData.out.assetStore = Sprite._sharedQuadAssetStore;
-                    renderingData.out.uniforms = this._uniforms;
                 }
             } else if (this._texture) {
                 Sprite._initSharedQuadAssetStore();
@@ -231,48 +173,107 @@ namespace Aurora {
                 let rx = lx + w;
                 let ty = by + h;
 
-                let vertices = Sprite._sharedQuadVertices;
+                Sprite._updateQuadVertices(Sprite._sharedQuadVertices, lx, rx, by, ty, renderingData.in.renderingObject.localToProj);
+                if (Sprite.isInViewport(Sprite._sharedQuadVertices)) {
+                    Sprite._updateQuadTexCoords(Sprite._sharedQuadTexCoords, 0, 1, 1, 0, 0);
+                    this._updateColors(Sprite._sharedQuadColors, 16);
 
-                let m = renderingData.in.renderingObject.localToProj;
-                let v = Sprite._tmpVec2;
-                m.transform44XY(lx, by, v);
-                vertices[0] = v.x;
-                vertices[1] = v.y;
-
-                m.transform44XY(lx, ty, v);
-                vertices[2] = v.x;
-                vertices[3] = v.y;
-
-                m.transform44XY(rx, ty, v);
-                vertices[4] = v.x;
-                vertices[5] = v.y;
-
-                m.transform44XY(rx, by, v);
-                vertices[6] = v.x;
-                vertices[7] = v.y;
-
-                let texCoords = Sprite._sharedQuadTexCoords;
-                texCoords[0] = 0;
-                texCoords[1] = 1;
-
-                texCoords[2] = 0;
-                texCoords[3] = 0;
-
-                texCoords[4] = 1;
-                texCoords[5] = 0;
-
-                texCoords[6] = 1;
-                texCoords[7] = 1;
-
-                this._updateColors(Sprite._sharedQuadColors, 16);
-
-                renderingData.out.assetStore = Sprite._sharedQuadAssetStore;
-                renderingData.out.uniforms = this._uniforms;
+                    renderingData.out.assetStore = Sprite._sharedQuadAssetStore;
+                    renderingData.out.uniforms = this._uniforms;
+                }
             }
         }
 
+        protected static _updateQuadVertices(vertices: number[], lx: number, rx: number, by: number, ty: number, m: Matrix44): void {
+            let v = Sprite._tmpVec2;
+            m.transform44XY(lx, by, v);
+            vertices[0] = v.x;
+            vertices[1] = v.y;
+
+            m.transform44XY(lx, ty, v);
+            vertices[2] = v.x;
+            vertices[3] = v.y;
+
+            m.transform44XY(rx, ty, v);
+            vertices[4] = v.x;
+            vertices[5] = v.y;
+
+            m.transform44XY(rx, by, v);
+            vertices[6] = v.x;
+            vertices[7] = v.y;
+        }
+
+        protected static _updateQuadTexCoords(texCoords: number[], lu: number, ru: number, bv: number, tv: number, rotated: int): void {
+            if (rotated === 0) {
+                texCoords[0] = lu;
+                texCoords[1] = bv;
+
+                texCoords[2] = lu;
+                texCoords[3] = tv;
+
+                texCoords[4] = ru;
+                texCoords[5] = tv;
+
+                texCoords[6] = ru;
+                texCoords[7] = bv;
+            } else if (rotated > 0) {
+                texCoords[0] = lu;
+                texCoords[1] = tv;
+
+                texCoords[2] = ru;
+                texCoords[3] = tv;
+
+                texCoords[4] = ru;
+                texCoords[5] = bv;
+
+                texCoords[6] = lu;
+                texCoords[7] = bv;
+            } else {
+                texCoords[0] = ru;
+                texCoords[1] = bv;
+
+                texCoords[2] = lu;
+                texCoords[3] = bv;
+
+                texCoords[4] = lu;
+                texCoords[5] = tv;
+
+                texCoords[6] = ru;
+                texCoords[7] = tv;
+            }
+        }
+
+        public static isInViewport(vertices: number[]): boolean {
+            let len = vertices.length;
+            if (len > 0) {
+                let x = vertices[0];
+                let y = vertices[1];
+                let minX = x, minY = y, maxX = x, maxY = y;
+                for (let i = 2; i <len; ++i) {
+                    x = vertices[i++];
+                    y = vertices[i];
+                    if (minX > x) {
+                        minX = x;
+                    } else if (maxX < x) {
+                        maxX = x;
+                    }
+                    if (minY > y) {
+                        minY = y;
+                    } else if (maxY < y) {
+                        maxY = y;
+                    }
+                }
+
+                if (minX > 1 || maxX < -1 || minY > 1 || maxY < -1) return false;
+            } else {
+                return false;
+            }
+
+            return true;
+        }
+
         protected _updateColors(colors: number[], n: uint): void {
-            let c0 = this.node.readonlyMultipliedColor;
+            let c0 = this.node.readonlyCascadeColor;
             let c1 = this._color;
             let r = c0.r * c1.r, g = c0.g * c1.g, b = c0.b * c1.b, a = c0.a * c1.a;
 

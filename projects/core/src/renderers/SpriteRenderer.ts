@@ -69,9 +69,7 @@ namespace Aurora {
                     } else {
                         u = this._defaultMaterial.uniforms;
                     }
-                    for (let i = 0; i < len1; ++i) {
-                        createFn(renderable, replaceMaterials[i], u);
-                    }
+                    for (let i = 0; i < len1; ++i) createFn(renderable, replaceMaterials[i], u);
                 } else {
                     for (let i = 0; i < len; ++i) {
                         let m = mats ? mats[i] : null;
@@ -119,9 +117,7 @@ namespace Aurora {
                     let mat = obj.material;
                     let uniforms = renderingData.out.uniforms;
 
-                    if (!atts) {
-                        activeMaterialFn(mat, uniforms, obj.alternativeUniforms);
-                    }
+                    if (!atts) activeMaterialFn(mat, uniforms, obj.alternativeUniforms);
                     
                     let len = -1;
                     let needFlush = false;
@@ -171,12 +167,8 @@ namespace Aurora {
                         this._combine(as.drawIndexSource);
                         this._numCombinedVertex += len;
                         this._numCombinedIndex += as.drawIndexSource.data.length;
-                        while (this._numCombinedVertex > this._numAllicatedVertex) {
-                            this._numAllicatedVertex <<= 2;
-                        }
-                        while (this._numCombinedIndex > this._numAllicatedIndex) {
-                            this._numAllicatedIndex <<= 2;
-                        }
+                        while (this._numCombinedVertex > this._numAllicatedVertex) this._numAllicatedVertex <<= 2;
+                        while (this._numCombinedIndex > this._numAllicatedIndex) this._numAllicatedIndex <<= 2;
                     }
                 }
                 renderingData.out.clear();
@@ -293,17 +285,13 @@ namespace Aurora {
                 let dst = this._vertexSources[i + 1].data;
 
                 let offset = idx * vs.size;
-                for (let j = 0, n = src.length; j < n; ++j) {
-                    dst[idx + j] = src[j];
-                }
+                for (let j = 0, n = src.length; j < n; ++j) dst[idx + j] = src[j];
             }
 
             let idx2 = this._numCombinedIndex;
             let src = drawIndexSource.data;
             let dst = this._assetStore.drawIndexSource.data;
-            for (let i = 0, n = src.length; i < n; ++i) {
-                dst[idx2 + i] = src[idx + i];
-            }
+            for (let i = 0, n = src.length; i < n; ++i) dst[idx2 + i] = src[idx + i];
         }
     }
 }

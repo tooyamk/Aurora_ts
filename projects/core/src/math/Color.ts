@@ -1,5 +1,7 @@
 namespace Aurora {
     export class Color3 {
+        public static readonly CONST_WHITE: Color3 = new Color3(1, 1, 1);
+
         public r: number;
         public g: number;
         public b: number;
@@ -16,6 +18,10 @@ namespace Aurora {
 
         public static get BLACK(): Color3 {
             return new Color3(0, 0, 0);
+        }
+
+        public get isWhite(): boolean {
+            return this.r === 1 && this.g === 1 && this.b === 1;
         }
 
         public clone(): Color3 {
@@ -90,7 +96,7 @@ namespace Aurora {
             return new Color4(this.r, this.g, this.b, this.a);
         }
 
-        public toColor3(rst: Color3): Color3 {
+        public toColor3(rst: Color3 = null): Color3 {
             return rst ? rst.setFromNumbers(this.r, this.g, this.b) : new Color3(this.r, this.g, this.b);
         }
 
@@ -138,7 +144,19 @@ namespace Aurora {
             return this;
         }
 
-        public isEqual(color: Color4): boolean {
+        public setFromColor3(color: Color3): Color4 {
+            this.r = color.r;
+            this.g = color.g;
+            this.b = color.b;
+
+            return this;
+        }
+
+        public isEqualColor3(color: Color3 | Color4): boolean {
+            return this.r === color.r && this.g === color.g && this.b === color.b;
+        }
+
+        public isEqualColor4(color: Color4): boolean {
             return this.r === color.r && this.g === color.g && this.b === color.b && this.a === color.a;
         }
 

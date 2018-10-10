@@ -19,11 +19,7 @@ namespace Aurora {
 
         public get tail(): ShaderDefines {
             let rst: ShaderDefines = this;
-
-            while (rst.next) {
-                rst = rst.next;
-            }
-
+            while (rst.next) rst = rst.next;
             return rst;
         }
 

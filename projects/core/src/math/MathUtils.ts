@@ -29,6 +29,18 @@ namespace Aurora {
             return value;
         }
 
+        public static powerOfTow(value: uint, toLarger: boolean = true): uint {
+            let pot: uint;
+            if ((value & (value - 1)) === 0) {
+                pot = value;
+            } else {
+                pot = Math.pow(2, (Math.log(value) / Math.LN2) | 0);
+                if (toLarger) pot <<= 2;
+            }
+
+            return pot;
+        }
+
         /**
          * @param begin lineBeginPoint.
          * @param end lineEndPoint.

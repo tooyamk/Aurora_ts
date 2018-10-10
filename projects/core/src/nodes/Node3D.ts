@@ -17,7 +17,7 @@ namespace Aurora {
         protected static readonly LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY: uint = Node3D.LOCAL_AND_WORLD_ALL_DIRTY & (~Node3D.WORLD_ROTATION_DIRTY);
         protected static readonly ALL_MATRIX_DIRTY: uint = Node3D.LOCAL_MATRIX_DIRTY | Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
 
-        protected static readonly MULTIPLIED_COLOR_DIRTY: uint = 0b10000;
+        protected static readonly CASCADE_COLOR_DIRTY: uint = 0b10000;
 
         public name: string = "";
         public layer: uint = 0x7FFFFFFF;
@@ -45,7 +45,7 @@ namespace Aurora {
         protected _inverseWorldMatrix: Matrix44 = new Matrix44();
 
         protected _color: Color4 = null;
-        protected _multipliedColor: Color4 = null;
+        protected _cascadeColor: Color4 = null;
 
         protected _dirty: uint = 0;
 
@@ -119,22 +119,18 @@ namespace Aurora {
 
             let p = this._parent;
             if (p) {
-                p.updateMultipliedColor();
-                if (p._multipliedColor) {
-                    if (this._multipliedColor) {
-                        if (!this._multipliedColor.isEqual(p._multipliedColor)) sendDirty |= Node3D.MULTIPLIED_COLOR_DIRTY;
+                p.updateMCascadeColor();
+                if (p._cascadeColor) {
+                    if (this._cascadeColor) {
+                        if (!this._cascadeColor.isEqualColor4(p._cascadeColor)) sendDirty |= Node3D.CASCADE_COLOR_DIRTY;
                     } else {
-                        if (!p._multipliedColor.isWhite) sendDirty |= Node3D.MULTIPLIED_COLOR_DIRTY;
+                        if (!p._cascadeColor.isWhite) sendDirty |= Node3D.CASCADE_COLOR_DIRTY;
                     }
                 } else {
-                    if (this._multipliedColor) {
-                        if (!this._multipliedColor.isWhite) sendDirty |= Node3D.MULTIPLIED_COLOR_DIRTY;
-                    }
+                    if (this._cascadeColor && !this._cascadeColor.isWhite) sendDirty |= Node3D.CASCADE_COLOR_DIRTY;
                 }
             } else {
-                if (this._multipliedColor) {
-                    if (!this._multipliedColor.isWhite) sendDirty |= Node3D.MULTIPLIED_COLOR_DIRTY;
-                }
+                if (this._cascadeColor && !this._cascadeColor.isWhite) sendDirty |= Node3D.CASCADE_COLOR_DIRTY;
             }
 
             let old = this._dirty;
@@ -174,13 +170,13 @@ namespace Aurora {
             return this._worldRot;
         }
 
-        public get readonlyColor(): Color4 {
+        public get readonlyColor4(): Color4 {
             return this._color ? this._color : Color4.CONST_WHITE;
         }
 
-        public get readonlyMultipliedColor(): Color4 {
-            this.updateMultipliedColor();
-            return this._multipliedColor ? this._multipliedColor : (this._color ? this._color : Color4.CONST_WHITE);
+        public get readonlyCascadeColor(): Color4 {
+            this.updateMCascadeColor();
+            return this._cascadeColor ? this._cascadeColor : (this._color ? this._color : Color4.CONST_WHITE);
         }
 
         [Symbol.iterator]() {
@@ -241,17 +237,55 @@ namespace Aurora {
             }
         }
 
-        public getColor(rst: Color4 = null): Color4 {
+        public get alpha(): number {
+            return this._color ? this._color.a : 1;
+        }
+
+        public set alpha(a: number) {
             if (this._color) {
-                return rst ? rst.set(this._color) : this._color.clone();
-            } else {
-                return rst ? rst.setFromNumbers(1, 1, 1, 1) : Color4.WHITE;
+                if (this._color.a !== a) {
+                    this._color.a = a;
+                    this._colorChanged();
+                }
+            } else if (a !== 1) {
+                this._color = new Color4(1, 1, 1, a);
+                this._colorChanged();
             }
         }
 
-        public setColor(c: Color4): void {
+        public getColor3(rst: Color3 = null): Color3 {
             if (this._color) {
-                if (!this._color.isEqual(c)) {
+                return this._color.toColor3(rst);
+            } else {
+                return rst ? rst.set(Color3.CONST_WHITE) : Color3.WHITE;
+            }
+        }
+
+        public setColor3(c: Color3): void {
+            if (this._color) {
+                if (!this._color.isEqualColor3(c)) {
+                    this._color.setFromColor3(c);
+                    this._colorChanged();
+                }
+            } else {
+                if (!c.isWhite) {
+                    this._color = new Color4(c.r, c.g, c.b, 1);
+                    this._colorChanged();
+                }
+            }
+        }
+
+        public getColor4(rst: Color4 = null): Color4 {
+            if (this._color) {
+                return rst ? rst.set(this._color) : this._color.clone();
+            } else {
+                return rst ? rst.set(Color4.CONST_WHITE) : Color4.WHITE;
+            }
+        }
+
+        public setColor4(c: Color4): void {
+            if (this._color) {
+                if (!this._color.isEqualColor4(c)) {
                     this._color.set(c);
                     this._colorChanged();
                 }
@@ -265,32 +299,32 @@ namespace Aurora {
 
         protected _colorChanged(): void {
             let old = this._dirty;
-            this._dirty |= Node3D.MULTIPLIED_COLOR_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(Node3D.MULTIPLIED_COLOR_DIRTY);
+            this._dirty |= Node3D.CASCADE_COLOR_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node3D.CASCADE_COLOR_DIRTY);
         }
 
         public getMultipliedColor(rst: Color4 = null): Color4 {
-            this.updateMultipliedColor();
-            if (this._multipliedColor) {
-                return rst ? rst.set(this._multipliedColor) : this._multipliedColor.clone();
+            this.updateMCascadeColor();
+            if (this._cascadeColor) {
+                return rst ? rst.set(this._cascadeColor) : this._cascadeColor.clone();
             } else {
-                return this.getColor(rst);
+                return this.getColor4(rst);
             }
         }
 
-        public updateMultipliedColor(): void {
-            if (this._dirty & Node3D.MULTIPLIED_COLOR_DIRTY) {
-                this._dirty &= ~Node3D.MULTIPLIED_COLOR_DIRTY;
+        public updateMCascadeColor(): void {
+            if (this._dirty & Node3D.CASCADE_COLOR_DIRTY) {
+                this._dirty &= ~Node3D.CASCADE_COLOR_DIRTY;
 
                 if (this._parent) {
-                    let c = this._parent.readonlyMultipliedColor;
+                    let c = this._parent.readonlyCascadeColor;
                     if (this._color) {
-                        this._multipliedColor = Color4.mul(this._color, c, this._multipliedColor);
+                        this._cascadeColor = Color4.mul(this._color, c, this._cascadeColor);
                     } else {
-                        this._multipliedColor = this._multipliedColor ? this._multipliedColor.set(c) : c.clone();
+                        this._cascadeColor = this._cascadeColor ? this._cascadeColor.set(c) : c.clone();
                     }
                 } else {
-                    if (this._color && this._multipliedColor) this._multipliedColor.set(this._color);
+                    if (this._color && this._cascadeColor) this._cascadeColor.set(this._color);
                 }
             }
         }
@@ -429,9 +463,7 @@ namespace Aurora {
                 for (let i = 0, n = this._components.length; i < n; ++i) {
                     let com = this._components[i];
                     if (checkEnabled && !com.enabled) continue;
-                    if (com instanceof type) {
-                        rst[rstOffset + num++] = <T>com;
-                    }
+                    if (com instanceof type) rst[rstOffset + num++] = <T>com;
                 }
             }
 
@@ -726,7 +758,7 @@ namespace Aurora {
                     if (child.name === name) return child;
                     child = child._next;
                 }
-            } else if(depth > 0) {
+            } else if (depth > 0) {
                 let arr1: Node3D[] = [this], arr2: Node3D[] = [];
                 let len1 = 0, len2 = 0;
 

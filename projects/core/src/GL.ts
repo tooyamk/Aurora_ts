@@ -3001,7 +3001,7 @@ namespace Aurora {
         public clear(data: GLClear): void {
             data = data || this._defaultClear;
 
-            if (!this._clear.color.isEqual(data.color)) {
+            if (!this._clear.color.isEqualColor4(data.color)) {
                 this._clear.color.set(data.color);
                 this._gl.clearColor(data.color.r, data.color.g, data.color.b, data.color.a);
             }
@@ -3047,7 +3047,7 @@ namespace Aurora {
 
         public setBlendColor(color: Color4): void {
             color = color || this._defaultBlend.constantColor;
-            if (!this._blend.constantColor.isEqual(color)) {
+            if (!this._blend.constantColor.isEqualColor4(color)) {
                 this._blend.constantColor.set(color);
 
                 this._gl.blendColor(color.r, color.g, color.b, color.a);

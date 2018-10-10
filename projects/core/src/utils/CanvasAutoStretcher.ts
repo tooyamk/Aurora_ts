@@ -1,12 +1,12 @@
 namespace Aurora {
     export class CanvasAutoStretcher {
-        private _size: Aurora.Vector2;
+        private _size: Vector2;
         private _canvas: HTMLCanvasElement;
         private _hasClientSize: boolean;
 
         constructor(canvas: HTMLCanvasElement) {
             this._canvas = canvas;
-            this._size = new Aurora.Vector2(this._canvas.width, this._canvas.height);
+            this._size = new Vector2(this._canvas.width, this._canvas.height);
             this._hasClientSize = Boolean(this._canvas.clientWidth);
         }
 
