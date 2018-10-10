@@ -167,8 +167,8 @@ namespace Aurora {
                         this._combine(as.drawIndexSource);
                         this._numCombinedVertex += len;
                         this._numCombinedIndex += as.drawIndexSource.data.length;
-                        while (this._numCombinedVertex > this._numAllicatedVertex) this._numAllicatedVertex <<= 2;
-                        while (this._numCombinedIndex > this._numAllicatedIndex) this._numAllicatedIndex <<= 2;
+                        while (this._numCombinedVertex > this._numAllicatedVertex) this._numAllicatedVertex <<= 1;
+                        while (this._numCombinedIndex > this._numAllicatedIndex) this._numAllicatedIndex <<= 1;
                     }
                 }
                 renderingData.out.clear();

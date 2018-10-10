@@ -35,7 +35,7 @@ namespace Aurora {
                 pot = value;
             } else {
                 pot = Math.pow(2, (Math.log(value) / Math.LN2) | 0);
-                if (toLarger) pot <<= 2;
+                if (toLarger) pot <<= 1;
             }
 
             return pot;
