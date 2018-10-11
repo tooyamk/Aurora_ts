@@ -3,7 +3,7 @@
 namespace Aurora {
     export class Sprite extends AbstractRenderable {
         protected static _tmpVec2: Vector2 = new Vector2();
-        protected static _sharedQuadAssetStore: AssetStore = null;
+        protected static _sharedQuadAssetStore: AssetsStore = null;
         protected static _sharedQuadVertices: number[] = null;
         protected static _sharedQuadTexCoords: number[] = null;
         protected static _sharedQuadColors: number[] = null;
@@ -14,19 +14,21 @@ namespace Aurora {
         protected _uniforms: ShaderUniforms;
 
         protected _anchor: Vector2;
+        protected _scale: Vector2;
         protected _color: Color4;
 
         constructor() {
             super();
 
             this._anchor = new Vector2(0.5, 0.5);
+            this._scale = Vector2.One;
             this._color = Color4.WHITE;
             this._uniforms = new ShaderUniforms();
         }
 
         protected static _initSharedQuadAssetStore(): void {
             if (!Sprite._sharedQuadAssetStore) {
-                let as = new AssetStore();
+                let as = new AssetsStore();
 
                 let vertices: number[] = [];
                 vertices.length = 8;
@@ -114,6 +116,30 @@ namespace Aurora {
             this._anchor.y = y;
         }
 
+        public get scaleX(): number {
+            return this._scale.x;
+        }
+
+        public set scaleX(x: number) {
+            this._scale.x = x;
+        }
+
+        public get scaleY(): number {
+            return this._scale.y;
+        }
+
+        public set scaleY(y: number) {
+            this._scale.y;
+        }
+
+        public getScale(): Vector2 {
+            return this._scale;
+        }
+
+        public setScale(s: Vector2 | Vector3 | Vector4) {
+            this._scale.set(s);
+        }
+
         public getAnchor(rst: Vector2 = null): Vector2 {
             return rst ? rst.set(this._anchor) : this._anchor.clone();
         }
@@ -137,48 +163,45 @@ namespace Aurora {
 
                     let f = this._frame;
 
-                    let w = f.sourceWidth;
-                    let h = f.sourceHeight;
+                    let w = f.sourceWidth, h = f.sourceHeight;
 
-                    let lx = -w * this._anchor.x + f.offsetX;
-                    let ty = -h * this._anchor.y + h - f.offsetY;
-                    let rx = lx + f.width;
-                    let by = ty - f.height;
+                    let lx = -w * this._anchor.x + f.offsetX, ty = -h * this._anchor.y + h - f.offsetY;
+                    let rx = lx + f.width, by = ty = f.height;
 
-                    let texW = f.texWidth < 0 ? this._texture.width : f.texWidth;
-                    let texH = f.texHeight < 0 ? this._texture.height : f.texHeight;
+                    let sx = this._scale.x, sy = this._scale.y;
 
-                    let lu = f.x / texW;
-                    let tv = f.y / texH;
-                    let ru = lu + f.width / texW;
-                    let bv = tv + f.height / texH;
-
-                    Sprite._updateQuadVertices(Sprite._sharedQuadVertices, lx, rx, by, ty, renderingData.in.renderingObject.localToProj);
+                    Sprite._updateQuadVertices(Sprite._sharedQuadVertices, lx * sx, rx * sx, by * sy, ty * sy, renderingData.in.renderingObject.localToProj);
                     if (Sprite.isInViewport(Sprite._sharedQuadVertices)) {
+                        let texW = f.texWidth < 0 ? this._texture.width : f.texWidth, texH = f.texHeight < 0 ? this._texture.height : f.texHeight;
+
+                        let lu = f.x / texW;
+                        let tv = f.y / texH;
+                        let ru = lu + f.width / texW;
+                        let bv = tv + f.height / texH;
+
                         Sprite._updateQuadTexCoords(Sprite._sharedQuadTexCoords, lu, ru, bv, tv, f.rotated);
                         this._updateColors(Sprite._sharedQuadColors, 16);
 
-                        renderingData.out.assetStore = Sprite._sharedQuadAssetStore;
+                        renderingData.out.assets = Sprite._sharedQuadAssetStore;
                         renderingData.out.uniforms = this._uniforms;
                     }
                 }
             } else if (this._texture) {
                 Sprite._initSharedQuadAssetStore();
 
-                let w = this._texture.width;
-                let h = this._texture.height;
+                let w = this._texture.width, h = this._texture.height;
 
-                let lx = -w * this._anchor.x;
-                let by = -h * this._anchor.y;
-                let rx = lx + w;
-                let ty = by + h;
+                let lx = -w * this._anchor.x, by = -h * this._anchor.y;
+                let rx = lx + w, ty = by + h;
 
-                Sprite._updateQuadVertices(Sprite._sharedQuadVertices, lx, rx, by, ty, renderingData.in.renderingObject.localToProj);
+                let sx = this._scale.x, sy = this._scale.y;
+
+                Sprite._updateQuadVertices(Sprite._sharedQuadVertices, lx * sx, rx * sx, by * sy, ty * sy, renderingData.in.renderingObject.localToProj);
                 if (Sprite.isInViewport(Sprite._sharedQuadVertices)) {
                     Sprite._updateQuadTexCoords(Sprite._sharedQuadTexCoords, 0, 1, 1, 0, 0);
                     this._updateColors(Sprite._sharedQuadColors, 16);
 
-                    renderingData.out.assetStore = Sprite._sharedQuadAssetStore;
+                    renderingData.out.assets = Sprite._sharedQuadAssetStore;
                     renderingData.out.uniforms = this._uniforms;
                 }
             }

@@ -11,14 +11,26 @@ namespace Aurora {
         private _raw: DataView;
         private _little: boolean = true;
 
-        constructor(data: ArrayBuffer | uint | null = null, offset: uint = 0, length: uint = null) {
+        constructor(data: ArrayBuffer | uint | null = null, offset: uint = 0, logicLength: uint = null, rawLength: uint = null) {
             if (data instanceof ArrayBuffer) {
-                this._raw = new DataView(data, offset, length);
-                this._rawLen = this._raw.byteLength;
+                let len = data.byteLength;
+                if (offset > len) offset = len;
+                if (rawLength === null || rawLength === undefined) {
+                    rawLength = len - offset;
+                } else if (offset + rawLength > len) {
+                    rawLength = len - offset;
+                }
+
+                this._raw = new DataView(data, offset, rawLength);
+                this._rawLen = rawLength;
+
+                this._logicLen = logicLength === null || logicLength === undefined || logicLength > rawLength ? rawLength : logicLength;
             } else {
                 if (data === null || data === undefined) data = 32;
                 this._raw = new DataView(new ArrayBuffer(data));
                 this._rawLen = data;
+
+                if (logicLength !== null && logicLength !== undefined) this._logicLen = logicLength > data ? data : logicLength;
             }
         }
 

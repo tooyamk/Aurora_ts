@@ -2,9 +2,9 @@ namespace Aurora {
     export class BoundMesh implements IBoundShape {
         public static readonly CRITICAL = Math.cos(Math.PI * 0.5);
 
-        public assetStore: AssetStore = null;
+        public assetStore: AssetsStore = null;
 
-        constructor(assetStore: AssetStore = null) {
+        constructor(assetStore: AssetsStore = null) {
             this.assetStore = assetStore;
         }
 

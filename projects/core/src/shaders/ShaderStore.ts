@@ -16,9 +16,6 @@ namespace Aurora {
         private _verts: { [key: string]: ShaderSource } = {};
         private _frags: { [key: string]: ShaderSource } = {};
 
-        constructor() {
-        }
-
         public addLibrary(name: string, source: string): void;
         public addLibrary(lib: ShaderLib): void;
         public addLibrary(libs: ShaderLib[]): void;
@@ -92,7 +89,7 @@ namespace Aurora {
         public addSource(name: string, source: string, type: GLShaderType, excludeDefines: string[] = null, forceUpdate: boolean = false): ShaderSource {
             let map = type === GLShaderType.VERTEX_SHADER ? this._verts : this._frags;
             let ss = map[name];
-            if (ss && !forceUpdate) ss;
+            if (ss && !forceUpdate) return ss;
 
             ss = this.createShaderSource(source, excludeDefines);
             map[name] = ss;
@@ -121,7 +118,7 @@ namespace Aurora {
 
                     return lib;
                 } else {
-                    console.log("shader include not found lib : ", name);
+                    console.log("Shader include not found lib : ", name);
                 }
 
                 return "";

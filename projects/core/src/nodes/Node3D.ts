@@ -199,6 +199,24 @@ namespace Aurora {
             };
         }
 
+        public clone(cloneChildren: boolean): Node3D {
+            let n = new Node3D();
+            n.name = this.name;
+            n.setLocalScale(this._localScale.x, this._localScale.y, this._localScale.z);
+            n.setLocalRotation(this._localRot);
+            n.setLocalPosition(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32);
+            if (this._color) n.setColor4(this._color);
+
+            if (cloneChildren) {
+                let child = this._childHead;
+                while (child) {
+                    n.addChild(child.clone(true));
+                }
+            }
+
+            return n;
+        }
+
         /**
          * @returns numChildren.
          */

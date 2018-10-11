@@ -1,15 +1,15 @@
 ///<reference path="DrawIndexSource.ts" />
 
 namespace Aurora {
-    export class AssetStore {
+    export class AssetsStore {
         public vertexSources: Map<string, VertexSource> = null;
         public drawIndexSource: DrawIndexSource = null;
 
         public vertexBuffers: Map<string, GLVertexBuffer> = null;
         public drawIndexBuffer: GLIndexBuffer = null;
 
-        public customGetVertexBufferFn: (assetStore: AssetStore, info: GLProgramAttribInfo) => GLVertexBuffer = null;
-        public customGetDrawIndexBufferFn: (assetStore: AssetStore) => GLIndexBuffer = null;
+        public customGetVertexBufferFn: (assets: AssetsStore, info: GLProgramAttribInfo) => GLVertexBuffer = null;
+        public customGetDrawIndexBufferFn: (assets: AssetsStore) => GLIndexBuffer = null;
 
         public getVertexSource(name: string): VertexSource {
             return this.vertexSources ? this.vertexSources.get(name) : null;

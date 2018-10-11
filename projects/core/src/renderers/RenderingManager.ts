@@ -31,7 +31,7 @@ namespace Aurora {
 
         protected _appendRenderingObjectFn: (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms) => void = null;
 
-        constructor () {
+        constructor() {
             this._shaderDefines.setDefine(ShaderPredefined.LIGHTING_SPECULAR, ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
 
             this._shaderUniforms.setNumber(ShaderPredefined.u_AlphaTestCompareValue, 1);
@@ -255,7 +255,7 @@ namespace Aurora {
                             let atts = p.attributes;
                             for (let i = 0, n = atts.length; i < n; ++i) {
                                 let att = atts[i];
-                                let buffer = pp.assetStore ? pp.assetStore.getVertexBuffer(gl, att) : null;
+                                let buffer = pp.assets ? pp.assets.getVertexBuffer(gl, att) : null;
                                 if (!buffer) {
                                     if (att.name === ShaderPredefined.a_Position0) {
                                         buffer = this._defaultPostProcessVertexBuffer;
@@ -266,7 +266,7 @@ namespace Aurora {
                                 if (buffer) buffer.use(att.location);
                             }
 
-                            let buffer = pp.assetStore ? pp.assetStore.getDrawIndexBuffer(gl) : this._defaultPostProcessIndexBuffer;
+                            let buffer = pp.assets ? pp.assets.getDrawIndexBuffer(gl) : this._defaultPostProcessIndexBuffer;
                             if (!buffer) buffer = this._defaultPostProcessIndexBuffer;
                             if (buffer) buffer.draw(pp.material.drawMode);
                         }

@@ -18,6 +18,32 @@ namespace Aurora {
             this.sampler = null;
         }
 
+        public clone(): ShaderUniformValue {
+            let uv = new ShaderUniformValue();
+
+            uv.type = this.type;
+            if (this.type === ShaderUniformType.NUMBER) {
+                if (this.array === this.vec4) {
+                    if (this.vec4) {
+                        uv.vec4 = this.vec4.concat();
+                        uv.array = uv.vec4;
+                    }
+                } else if (this.array) {
+                    if (this.array instanceof Float32Array) {
+                        uv.array = this.array.slice(0);
+                    } else if (this.array instanceof Int32Array) {
+                        uv.array = this.array.slice(0);
+                    } else {
+                        uv.array = this.array.concat();
+                    }
+                }
+            } else if (this.type === ShaderUniformType.SAMPLER) {
+                uv.sampler = this.sampler;
+            }
+
+            return uv;
+        }
+
         public static isEqual(v0: ShaderUniformValue, v1: ShaderUniformValue): boolean {
             let t0 = v0 ? v0.type : ShaderUniformType.NONE;
             let t1 = v1 ? v1.type : ShaderUniformType.NONE;
@@ -58,12 +84,27 @@ namespace Aurora {
         public next: ShaderUniforms = null;
         
         public _uniforms: { [key: string]: ShaderUniformValue } = {};
-        protected _numUniforms: uint = 0;
+        protected _count: uint = 0;
 
         public get tail(): ShaderUniforms {
             let rst: ShaderUniforms = this;
             while (rst.next) rst = rst.next;
             return rst;
+        }
+
+        public clone(): ShaderUniforms {
+            let u = new ShaderUniforms();
+
+            if (this._count > 0) {
+                for (let name in this._uniforms) {
+                    let uv = this._uniforms[name];
+                    if (uv.type !== ShaderUniformType.NONE) this._uniforms[name] = uv.clone();
+                }
+
+                u._count = this._count;
+            }
+
+            return u;
         }
 
         public static isEqual(value0: ShaderUniforms, value1: ShaderUniforms, info: GLProgramUniformInfo[] = null): boolean {
@@ -76,7 +117,7 @@ namespace Aurora {
                             if (!ShaderUniformValue.isEqual(value0._uniforms[name], value1._uniforms[name])) return false;
                         }
                     } else {
-                        if (value0._numUniforms === value1._numUniforms) {
+                        if (value0._count === value1._count) {
                             for (let key in value0._uniforms) {
                                 if (!ShaderUniformValue.isEqual(value0._uniforms[key], value1._uniforms[key])) return false;
                             }
@@ -127,13 +168,13 @@ namespace Aurora {
             let v = this._uniforms[name];
             if (v) {
                 if (clean) {
-                    if (v.type !== ShaderUniformType.NONE) --this._numUniforms;
+                    if (v.type !== ShaderUniformType.NONE) --this._count;
                     delete this._uniforms[name];
                 } else if (v.type !== ShaderUniformType.NONE) {
                     v.type = ShaderUniformType.NONE;
                     v.array = null;
                     v.sampler = null;
-                    --this._numUniforms;
+                    --this._count;
                 }
             }
         }
@@ -149,11 +190,11 @@ namespace Aurora {
             let v = this._uniforms[name];
             if (v) {
                 v.array = null;
-                if (v.type === ShaderUniformType.NONE) ++this._numUniforms;
+                if (v.type === ShaderUniformType.NONE) ++this._count;
             } else {
                 v = new ShaderUniformValue();
                 this._uniforms[name] = v;
-                ++this._numUniforms;
+                ++this._count;
             }
             return v;
         }

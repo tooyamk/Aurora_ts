@@ -53,7 +53,7 @@ namespace Aurora {
         public get clearMask(): uint {
             return this._clearMask;
         }
-        
+
         public get clearColor(): boolean {
             return this._clearColor;
         }
@@ -240,7 +240,7 @@ namespace Aurora {
                 this._sizePerElement = GLVertexBuffer.calcSizePerElement(this._dataType);
                 this._numElements = (this._memSize / this._sizePerElement) | 0;
             }
-            
+
             this._normalized = normalized;
         }
 
@@ -280,54 +280,54 @@ namespace Aurora {
                     let src: ArrayBufferView;
                     switch (type) {
                         case GLVertexBufferDataType.BYTE:
-                        {
-                            this._sizePerElement = 1;
-                            src = new Int8Array(data);
+                            {
+                                this._sizePerElement = 1;
+                                src = new Int8Array(data);
 
-                            break;
-                        }
+                                break;
+                            }
                         case GLVertexBufferDataType.UNSIGNED_BYTE:
-                        {
-                            this._sizePerElement = 1;
-                            src = new Uint8Array(data);
+                            {
+                                this._sizePerElement = 1;
+                                src = new Uint8Array(data);
 
-                            break;
-                        }
+                                break;
+                            }
                         case GLVertexBufferDataType.SHORT:
-                        {
-                            this._sizePerElement = 2;
-                            src = new Int16Array(data);
+                            {
+                                this._sizePerElement = 2;
+                                src = new Int16Array(data);
 
-                            break;
-                        }
+                                break;
+                            }
                         case GLVertexBufferDataType.UNSIGNED_SHORT:
-                        {
-                            this._sizePerElement = 2;
-                            src = new Uint16Array(data);
+                            {
+                                this._sizePerElement = 2;
+                                src = new Uint16Array(data);
 
-                            break;
-                        }
+                                break;
+                            }
                         case GLVertexBufferDataType.INT:
-                        {
-                            this._sizePerElement = 4;
-                            src = new Uint32Array(data);
+                            {
+                                this._sizePerElement = 4;
+                                src = new Uint32Array(data);
 
-                            break;
-                        }
+                                break;
+                            }
                         case GLVertexBufferDataType.UNSIGNED_INT:
-                        {
-                            this._sizePerElement = 4;
-                            src = new Uint32Array(data);
+                            {
+                                this._sizePerElement = 4;
+                                src = new Uint32Array(data);
 
-                            break;
-                        }
+                                break;
+                            }
                         case GLVertexBufferDataType.FLOAT:
-                        {
-                            this._sizePerElement = 4;
-                            src = new Float32Array(data);
+                            {
+                                this._sizePerElement = 4;
+                                src = new Float32Array(data);
 
-                            break;
-                        }
+                                break;
+                            }
                         default:
                             this._sizePerElement = 0;
                             break;
@@ -437,7 +437,7 @@ namespace Aurora {
                         break;
                 }
 
-                
+
                 this._memSize = numElements * this._sizePerElement;
 
                 gl.bufferData(GL.ELEMENT_ARRAY_BUFFER, this._memSize, usage);
@@ -472,7 +472,7 @@ namespace Aurora {
 
                     this._numElements = (data.byteLength / this._sizePerElement) | 0;
                     this._memSize = data.byteLength;
-                    
+
                     gl.bufferData(GL.ELEMENT_ARRAY_BUFFER, data, usage);
                 } else {
                     let src;
@@ -526,16 +526,16 @@ namespace Aurora {
                                     src = new Uint16Array(data);
                                     break;
                                 case GLIndexDataType.UNSIGNED_INT:
-                                {
-                                    if (this._gl.supprotUintIndexes) {
-                                        src = new Uint32Array(data);
-                                    } else {
-                                        this._dataType = GLIndexDataType.UNSIGNED_SHORT;
-                                        src = new Uint16Array(data);
+                                    {
+                                        if (this._gl.supprotUintIndexes) {
+                                            src = new Uint32Array(data);
+                                        } else {
+                                            this._dataType = GLIndexDataType.UNSIGNED_SHORT;
+                                            src = new Uint16Array(data);
+                                        }
+
+                                        break;
                                     }
-                                    
-                                    break;
-                                }
                                 default:
                                     throw new Error("invalid type");
                                     break;
@@ -560,7 +560,7 @@ namespace Aurora {
 
                     this._numElements = src.length;
                     this._memSize = this._numElements * this._sizePerElement;
-                    
+
                     gl.bufferData(GL.ELEMENT_ARRAY_BUFFER, src, usage);
                 }
             }
@@ -816,7 +816,7 @@ namespace Aurora {
                     let info = gl.getActiveUniform(this._program, i);
                     let pu = new GLProgramUniformInfo(info, gl.getUniformLocation(this._program, info.name));
                     this._uniforms[i] = pu;
-                    if (pu.isSampler) ++this._numSamplers;
+                    if (pu.isSampler)++this._numSamplers;
                 }
 
                 this._status = GLProgramStatus.SUCCESSED;
@@ -1069,7 +1069,7 @@ namespace Aurora {
          * @param format In WebGL 1.0 the value must equal internalformat.
          */
         public upload(level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, source: GLImage): void;
-        
+
         /**
          * @param format In WebGL 1.0 the value must equal internalformat.
          * @param srcOffset Use for WebGL 2.0
@@ -1119,7 +1119,7 @@ namespace Aurora {
         /**
          * **WebGL Version:** 2.0.
          */
-        public upload(face:GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, buffer: AbstractGLBuffer, offset: GLintptr): void;
+        public upload(face: GLTexCubeFace, level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, buffer: AbstractGLBuffer, offset: GLintptr): void;
 
         /**
          * @param format In WebGL 1.0 the value must equal internalformat.
@@ -1344,6 +1344,15 @@ namespace Aurora {
             return this;
         }
 
+        public clone(): GLBlendFunc {
+            let bf = new GLBlendFunc();
+            bf.srcRGB = this.srcRGB;
+            bf.srcAlpha = this.srcAlpha;
+            bf.dstRGB = this.dstRGB;
+            bf.dstAlpha = this.dstAlpha;
+            return bf;
+        }
+
         public isEqual(target: GLBlendFunc): boolean {
             return this.srcRGB === target.srcRGB && this.srcAlpha === target.srcAlpha && this.dstRGB === target.dstRGB && this.dstAlpha === target.dstAlpha;
         }
@@ -1366,6 +1375,13 @@ namespace Aurora {
     export class GLBlendEquation {
         public rgb: GLBlendEquationType = GLBlendEquationType.FUNC_ADD;
         public alpha: GLBlendEquationType = GLBlendEquationType.FUNC_ADD;
+
+        public clone(): GLBlendEquation {
+            let be = new GLBlendEquation();
+            be.rgb = this.rgb;
+            be.alpha = this.alpha;
+            return be;
+        }
 
         public isEqual(target: GLBlendEquation): boolean {
             return this.rgb === target.rgb && this.alpha === target.alpha;
@@ -1407,13 +1423,21 @@ namespace Aurora {
             this.constantColor = color || Color4.TRANSPARENT_BLACK;
         }
 
+        public clone() : GLBlend {
+            let b = new GLBlend();
+            if (this.equation) b.equation = this.equation.clone();
+            if (this.func) b.func = this.func.clone();
+            if (this.constantColor) b.constantColor = this.constantColor.clone();
+            return b;
+        }
+
         public static isEqual(value0: GLBlend, value1: GLBlend): boolean {
             if (value0 === value1) return true;
             if (value0) {
                 if (value1) {
                     return GLBlendEquation.isEqual(value0.equation, value1.equation) &&
-                    GLBlendFunc.isEqual(value0.func, value1.func) &&
-                    Color4.isEqual(value0.constantColor, value1.constantColor);
+                        GLBlendFunc.isEqual(value0.func, value1.func) &&
+                        Color4.isEqual(value0.constantColor, value1.constantColor);
                 } else {
                     return false;
                 }
@@ -1429,6 +1453,15 @@ namespace Aurora {
         public g: boolean = true;
         public b: boolean = true;
         public a: boolean = true;
+
+        public clone() : GLColorWrite {
+            let cw = new GLColorWrite();
+            cw.r = this.r;
+            cw.g = this.g;
+            cw.b = this.b;
+            cw.a = this.a;
+            return cw;
+        }
 
         public isEqual(target: GLColorWrite): boolean {
             return this.r === target.r && this.g === target.g && this.b === target.b && this.a === target.a;
@@ -1455,7 +1488,7 @@ namespace Aurora {
             this.a = target.a;
         }
     }
-    
+
     export class GLStencil {
         /** In the WebGL, Front and Back must be consistent. */
         public writeMask: uint = 0xFFFFFFF;
@@ -1482,6 +1515,18 @@ namespace Aurora {
             this.stenciFail = target.stenciFail;
             this.depthlFail = target.depthlFail;
             this.pass = target.pass;
+        }
+
+        public clone(): GLStencil {
+            let s = new GLStencil();
+            s.writeMask = this.writeMask;
+            s.func = this.func;
+            s.ref = this.ref;
+            s.funcMask = this.funcMask;
+            s.stenciFail = this.stenciFail;
+            s.depthlFail = this.depthlFail;
+            s.pass = this.pass;
+            return s;
         }
 
         public isEqual(target: GLStencil): boolean {
@@ -1584,8 +1629,8 @@ namespace Aurora {
         /** Passed to blendFunc or blendFuncSeparate to turn off a component. */
         public static readonly ZERO = 0;
         /** Passed to blendFunc or blendFuncSeparate to turn on a component. */
-        public static readonly ONE = 1;          
-        /** Passed to blendFunc or blendFuncSeparate to multiply a component by the source elements color.    */              
+        public static readonly ONE = 1;
+        /** Passed to blendFunc or blendFuncSeparate to multiply a component by the source elements color.    */
         public static readonly SRC_COLOR = 0x0300;
         /** Passed to blendFunc or blendFuncSeparate to multiply a component by one minus the source elements color. */
         public static readonly ONE_MINUS_SRC_COLOR = 0x0301;
@@ -1624,8 +1669,8 @@ namespace Aurora {
          */
         /** Passed to blendEquation or blendEquationSeparate to set an addition blend function. */
         public static readonly FUNC_ADD = 0x8006;
-        /** Passed to blendEquation or blendEquationSeparate to specify a subtraction blend function (source - destination). */ 
-        public static readonly FUNC_SUBTRACT = 0x800A; 
+        /** Passed to blendEquation or blendEquationSeparate to specify a subtraction blend function (source - destination). */
+        public static readonly FUNC_SUBTRACT = 0x800A;
         /** Passed to blendEquation or blendEquationSeparate to specify a reverse subtraction blend function (destination - source). */
         public static readonly FUNC_REVERSE_SUBTRACT = 0x800B;
 
@@ -1638,13 +1683,13 @@ namespace Aurora {
          */
         /** Passed to getParameter to get the current RGB blend function. */
         public static readonly BLEND_EQUATION = 0x8009;
-        /** Passed to getParameter to get the current RGB blend function. Same as BLEND_EQUATION. */        
+        /** Passed to getParameter to get the current RGB blend function. Same as BLEND_EQUATION. */
         public static readonly BLEND_EQUATION_RGB = 0x8009;
-        /** Passed to getParameter to get the current alpha blend function. Same as BLEND_EQUATION. */ 
+        /** Passed to getParameter to get the current alpha blend function. Same as BLEND_EQUATION. */
         public static readonly BLEND_EQUATION_ALPHA = 0x883D;
         /** Passed to getParameter to get the current destination RGB blend function. */
         public static readonly BLEND_DST_RGB = 0x80C8;
-        /** Passed to getParameter to get the current destination RGB blend function. */ 
+        /** Passed to getParameter to get the current destination RGB blend function. */
         public static readonly BLEND_SRC_RGB = 0x80C9;
         /** Passed to getParameter to get the current destination alpha blend function. */
         public static readonly BLEND_DST_ALPHA = 0x80CA;
@@ -1685,7 +1730,7 @@ namespace Aurora {
         /** Passed to getParameter to get the current stencil fail function should the depth buffer test pass. Should return KEEP, REPLACE, INCR, DECR, INVERT, INCR_WRAP, or DECR_WRAP. */
         public static readonly STENCIL_PASS_DEPTH_PASS = 0x0B96;
         /** Passed to getParameter to get the reference value used for stencil tests. */
-        public static readonly STENCIL_REF = 0x0B97;                      
+        public static readonly STENCIL_REF = 0x0B97;
         public static readonly STENCIL_VALUE_MASK = 0x0B93;
         public static readonly STENCIL_WRITEMASK = 0x0B98;
         public static readonly STENCIL_BACK_FUNC = 0x8800;
@@ -1810,7 +1855,7 @@ namespace Aurora {
         public static readonly SCISSOR_TEST = 0x0C11;
         /** Passed to enable/disable to turn on/off the stencil test. Can also be used with getParameter to query the stencil test. */
         public static readonly STENCIL_TEST = 0x0B90;
-        
+
         /** 
          * Errors
          * 
@@ -1847,9 +1892,9 @@ namespace Aurora {
         /** There is no preference for this behavior. */
         public static readonly DONT_CARET = 0x1100;
         /** The most efficient behavior should be used. */
-        public static readonly FASTESTT = 0x1101; 
+        public static readonly FASTESTT = 0x1101;
         /** The most correct or the highest quality option should be used. */
-        public static readonly NICESTT = 0x1102; 
+        public static readonly NICESTT = 0x1102;
         /**
          * Hint for the quality of filtering when generating mipmap images with WebGLRenderingContext.generateMipmap(). 
          * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/generateMipmap 
@@ -1912,7 +1957,7 @@ namespace Aurora {
         /** Passed to getProgramParamter to get the number of uniforms active in a program. */
         public static readonly ACTIVE_UNIFORMS = 0x8B86;
         /** The maximum number of entries possible in the vertex attribute list. */
-        public static readonly MAX_VERTEX_ATTRIBS = 0x8869;               
+        public static readonly MAX_VERTEX_ATTRIBS = 0x8869;
         public static readonly MAX_VERTEX_UNIFORM_VECTORS = 0x8DFB;
         public static readonly MAX_VARYING_VECTORS = 0x8DFC;
         public static readonly MAX_COMBINED_TEXTURE_IMAGE_UNITS = 0x8B4D;
@@ -1939,11 +1984,11 @@ namespace Aurora {
         /** Passed to depthFunction or stencilFunction to specify depth or stencil tests will pass if the new depth value is less than the stored value. */
         public static readonly LESS = 0x0201;
         /** Passed to depthFunction or stencilFunction to specify depth or stencil tests will pass if the new depth value is equals to the stored value. */
-        public static readonly EQUAL = 0x0202; 
+        public static readonly EQUAL = 0x0202;
         /** Passed to depthFunction or stencilFunction to specify depth or stencil tests will pass if the new depth value is less than or equal to the stored value. */
         public static readonly LEQUAL = 0x0203;
         /** Passed to depthFunction or stencilFunction to specify depth or stencil tests will pass if the new depth value is greater than the stored value. */
-        public static readonly GREATER = 0x0204; 
+        public static readonly GREATER = 0x0204;
         /** Passed to depthFunction or stencilFunction to specify depth or stencil tests will pass if the new depth value is greater than or equal to the stored value. */
         public static readonly GEQUAL = 0x0206;
         /** Passed to depthFunction or stencilFunction to specify depth or stencil tests will pass if the new depth value is not equal to the stored value. */
@@ -2671,13 +2716,13 @@ namespace Aurora {
         /** The currently active query. */
         public static readonly CURRENT_QUERY_EXT = 0x8865;
         /** The query result. */
-        public static readonly QUERY_RESULT_EXT = 0x8866; 
+        public static readonly QUERY_RESULT_EXT = 0x8866;
         /** A Boolean indicating whether or not a query result is available. */
         public static readonly QUERY_RESULT_AVAILABLE_EXT = 0x8867;
         /** Elapsed time (in nanoseconds). */
-        public static readonly TIME_ELAPSED_EXT = 0x88BF; 
+        public static readonly TIME_ELAPSED_EXT = 0x88BF;
         /** The current time. */
-        public static readonly TIMESTAMP_EXT = 0x8E28; 
+        public static readonly TIMESTAMP_EXT = 0x8E28;
         /** A Boolean indicating whether or not the GPU performed any disjoint operation. */
         public static readonly GPU_DISJOINT_EXT = 0x8FBB;
 
@@ -3147,7 +3192,7 @@ namespace Aurora {
                         writeMask = back.writeMask;
                         ref = back.ref;
                         funcMask = back.funcMask;
-                        
+
                         back.writeMask = front.writeMask;
                         back.ref = front.ref;
                         back.funcMask = front.funcMask;
@@ -3172,26 +3217,26 @@ namespace Aurora {
 
                     this._gl.enable(GL.STENCIL_TEST);
                 }
-                
+
                 if (front === back || front.isEqual(back)) {
                     if (this._stencilFrontFace.writeMask !== front.writeMask || this._stencilBackFace.writeMask !== front.writeMask) {
                         this._stencilFrontFace.writeMask = front.writeMask;
                         this._stencilBackFace.writeMask = front.writeMask;
-    
+
                         this._gl.stencilMaskSeparate(GL.FRONT_AND_BACK, front.writeMask);
                     }
-    
+
                     if (!this._stencilFrontFace.isFuncEqual(front) || this._stencilBackFace.isFuncEqual(front)) {
                         this._stencilFrontFace.copyFunc(front);
                         this._stencilBackFace.copyFunc(front);
-    
+
                         this._gl.stencilFuncSeparate(GL.FRONT_AND_BACK, front.func, front.ref, front.funcMask);
                     }
-    
+
                     if (!this._stencilFrontFace.isOpEqual(front) || !this._stencilBackFace.isOpEqual(front)) {
                         this._stencilFrontFace.copyOp(front);
                         this._stencilBackFace.copyOp(front);
-    
+
                         this._gl.stencilOpSeparate(GL.FRONT_AND_BACK, front.stenciFail, front.depthlFail, front.pass);
                     }
                 } else {
@@ -3341,7 +3386,7 @@ namespace Aurora {
                     {
                         if (this._bindingFrameBuffer !== buf) {
                             this._bindingFrameBuffer = buf;
-                            
+
                             if (this._version >= 2) {
                                 this._bindingReadFrameBuffer = buf;
                                 this._bindingDrawFrameBuffer = buf;
@@ -3535,7 +3580,7 @@ namespace Aurora {
                     this._activingTextureIndex = idx;
                     this._gl.activeTexture(idx);
                 }
-                
+
                 switch (type) {
                     case GLTexType.TEXTURE_2D:
                         if (this._bindingTexture2D) this._bindingTexture2D = null;
@@ -3546,7 +3591,7 @@ namespace Aurora {
                     default:
                         break;
                 }
-                
+
                 this._gl.bindTexture(type, null);
 
                 return true;
@@ -3639,7 +3684,7 @@ namespace Aurora {
         FUNC_ADD = GL.FUNC_ADD,
         FUNC_SUBTRACT = GL.FUNC_SUBTRACT,
         FUNC_REVERSE_SUBTRACT = GL.FUNC_REVERSE_SUBTRACT,
-        
+
         /** **WebGL Version:** EXT_blend_minmax or WebGL 2.0. */
         MIN = GL.MIN,
         /** **WebGL Version:** EXT_blend_minmax or WebGL 2.0. */
@@ -3748,8 +3793,8 @@ namespace Aurora {
          * 
          * Red, green, blue and alpha components are read from the color buffer.
          */
-        RGBA = GL.RGBA, 
-        
+        RGBA = GL.RGBA,
+
         /**
          ** **Format:** LUMINANCE
          ** **Type:** UNSIGNED_BYTE

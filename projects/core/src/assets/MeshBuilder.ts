@@ -1,6 +1,6 @@
 namespace Aurora {
     export abstract class MeshBuilder {
-        public static createBox(length: number, width: number, height: number, lengthSegs: uint = 1, widthSegs: uint = 1, heightSegs: uint = 1, generateTexCoords: Boolean = true, generateNormals: boolean = false): AssetStore {
+        public static createBox(length: number, width: number, height: number, lengthSegs: uint = 1, widthSegs: uint = 1, heightSegs: uint = 1, generateTexCoords: Boolean = true, generateNormals: boolean = false): AssetsStore {
             if (lengthSegs < 1) lengthSegs = 1;
             lengthSegs |= 0;
 
@@ -19,7 +19,7 @@ namespace Aurora {
             let halfHegiht = height * 0.5;
 
             let vertexSources = new Map<string, VertexSource>();
-            let assetStore = new AssetStore();
+            let assetStore = new AssetsStore();
             assetStore.vertexSources = vertexSources;
 
             let vertices: number[] = [];
@@ -103,13 +103,13 @@ namespace Aurora {
             return assetStore;
         }
 
-        public static createSphere(radius: number, segments: uint = 4, generateTexCoords: boolean = true, generateNormals: boolean = false): AssetStore {
+        public static createSphere(radius: number, segments: uint = 4, generateTexCoords: boolean = true, generateNormals: boolean = false): AssetsStore {
             if (radius < 0) radius = 0;
             if (segments < 4) segments = 4;
             segments |= 0;
 
             let vertexSources = new Map<string, VertexSource>();
-            let assetStore = new AssetStore();
+            let assetStore = new AssetsStore();
             assetStore.vertexSources = vertexSources;
 
             let numV = ((segments - 4) * 0.5 + 1) | 0;

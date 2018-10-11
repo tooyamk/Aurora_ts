@@ -57,6 +57,26 @@ namespace Aurora {
             return true;
         }
 
+        public clone(): Material {
+            let m = new Material(this.shader);
+
+            m.renderingPriority = this.renderingPriority;
+            m.renderingSort = this.renderingSort;
+            m.drawMode = this.drawMode;
+            m.cullFace = this.cullFace;
+            m.depthTest = this.depthTest;
+            m.depthWrite = this.depthWrite;
+
+            if (this.blend) m.blend = this.blend.clone();
+            if (this.colorWrite) m.colorWrite = this.colorWrite.clone();
+            if (this.stencilFront) m.stencilFront = this.stencilFront.clone();
+            if (this.stencilBack) m.stencilBack = this.stencilBack.clone();
+            if (this.defines) m.defines = this.defines.clone();
+            if (this.uniforms) m.uniforms = this.uniforms.clone();
+
+            return m;
+        }
+
         public ready(defines: ShaderDefines): GLProgram {
             if (this.shader) {
                 if (this.defines) {

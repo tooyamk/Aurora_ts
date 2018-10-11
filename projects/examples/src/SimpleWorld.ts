@@ -15,8 +15,8 @@ class SimpleWorld {
 
         let mesh = modelNode.addComponent(new Aurora.Mesh());
         mesh.renderer = env.forwardRenderer;
-        //renderable.assetStore = MITOIA.MeshBuilder.createSphere(100, 100, true, true);
-        mesh.assetStore = Aurora.MeshBuilder.createBox(100, 100, 100, 1, 1, 1, true, true);
+        //renderable.assets = MITOIA.MeshBuilder.createSphere(100, 100, true, true);
+        mesh.assets = Aurora.MeshBuilder.createBox(100, 100, 100, 1, 1, 1, true, true);
         mesh.materials = [mat];
 
         modelNode.localRotate(Aurora.Quaternion.createFromEulerX(-Math.PI / 6));

@@ -1,5 +1,5 @@
 ///<reference path="IRenderPass.ts" />
-///<reference path="../assets/AssetStore.ts" />
+///<reference path="../assets/AssetsStore.ts" />
 
 namespace Aurora {
     export class PostProcess implements IRenderPass {
@@ -7,7 +7,7 @@ namespace Aurora {
         public frameBuffer: GLFrameBuffer = null;
         public viewport = new Rect(0, 0, -1, -1);
 
-        public assetStore: AssetStore = null;
+        public assets: AssetsStore = null;
         public material: Material = null;
         public enabled: boolean = true;
     }

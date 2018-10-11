@@ -89,7 +89,7 @@ namespace Aurora {
                 let obj = renderingObjects[i];
                 renderingData.in.renderingObject = obj;
                 obj.renderable.visit(renderingData);
-                let as = renderingData.out.assetStore;
+                let as = renderingData.out.assets;
                 if (as) {
                     let su = renderingData.out.uniforms;
                     let tail: ShaderUniforms = null;

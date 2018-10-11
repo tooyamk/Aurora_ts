@@ -1,10 +1,20 @@
 namespace Aurora {
+    export const enum ShaderDefineType {
+        NONE,
+        BOOL,
+        INT
+    }
+
     export class ShaderDefineValue {
-        public static readonly UNKNOW: int = 0;
-        public static readonly BOOL: int = 1;
-        public static readonly INT: int = 2;
-        public type: int = ShaderDefineValue.UNKNOW;
+        public type: ShaderDefineType = ShaderDefineType.NONE;
         public value: boolean | int = null;
+
+        public clone(): ShaderDefineValue {
+            let dv = new ShaderDefineValue();
+            dv.type = this.type;
+            dv.value = this.value;
+            return dv;
+        }
     }
 
     export class ShaderDefines {
@@ -23,6 +33,20 @@ namespace Aurora {
             return rst;
         }
 
+        public clone(): ShaderDefines {
+            let d = new ShaderDefines();
+
+            if (this._count > 0) {
+                for (let name in this._defines) {
+                    let dv = this._defines[name];
+                    if (dv.type !== ShaderDefineType.NONE) this._defines[name] = dv.clone();
+                }
+                d._count = this._count;
+            }
+
+            return d;
+        }
+
         public clear(): void {
             if (this._count > 0) {
                 this._defines = {};
@@ -31,46 +55,55 @@ namespace Aurora {
         }
 
         public hasDefine(name: string): boolean {
-            return this._defines[name] !== undefined;
+            let v = this._defines[name];
+            return v ? (v.type === ShaderDefineType.NONE ? false : true) : false;
         }
 
         public getDefine(name: string): ShaderDefineValue {
-            return this._defines[name];
+            let v = this._defines[name];
+            if (v) {
+                return v.type === ShaderDefineType.NONE ? null : v;
+            } else {
+                return null;
+            }
         }
 
         public setDefine(name: string, value: boolean | int): void {
             if (value === null || value === undefined) value = false;
             
             let v = this._defines[name];
-            if (!v) {
+            if (v) {
+                if (v.type === ShaderDefineType.NONE) ++this._count;
+            } else {
                 v = new ShaderDefineValue();
                 this._defines[name] = v;
+                ++this._count;
             }
 
             if (value === true) {
-                if (v.type !== ShaderDefineValue.BOOL || v.value !== true) {
-                    v.type = ShaderDefineValue.BOOL;
+                if (v.type !== ShaderDefineType.BOOL || v.value !== true) {
+                    v.type = ShaderDefineType.BOOL;
                     v.value = true;
-                    //this._dirty = true;
-                    ++this._count;
                 }
             } else if (value === false) {
-                if (v.type !== ShaderDefineValue.BOOL || v.value !== true) {
-                    v.type = ShaderDefineValue.BOOL;
+                if (v.type !== ShaderDefineType.BOOL || v.value !== false) {
+                    v.type = ShaderDefineType.BOOL;
                     v.value = false;
-                    //this._dirty = true;
-                    ++this._count;
                 }
             } else {
-                if (v.type !== ShaderDefineValue.INT || v.value !== value) {
-                    v.type = ShaderDefineValue.INT;
+                if (v.type !== ShaderDefineType.INT || v.value !== value) {
+                    v.type = ShaderDefineType.INT;
                     v.value = value;
-                    //this._dirty = true;
-                    ++this._count;
                 }
             }
+        }
 
-            //if (this._dirty) this._defStrDirty = true;
+        public deleteDefine(name: string): void {
+            let v = this._defines[name];
+            if (v && v.type !== ShaderDefineType.NONE) {
+                v.type = ShaderDefineType.NONE;
+                --this._count;
+            }
         }
     }
 }

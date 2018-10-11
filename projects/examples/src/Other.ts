@@ -97,7 +97,7 @@ class Other {
         let indexBuffer = new Aurora.GLIndexBuffer(gl);
         indexBuffer.upload([0, 1, 2], Aurora.GLIndexDataType.UNSIGNED_BYTE, Aurora.GLUsageType.STATIC_DRAW);
     
-        let assetStore = new Aurora.AssetStore();
+        let assetStore = new Aurora.AssetsStore();
         assetStore.vertexBuffers = new Map();
         assetStore.vertexBuffers.set(Aurora.ShaderPredefined.a_Position0, vertexBuffer);
         assetStore.vertexBuffers.set(Aurora.ShaderPredefined.a_TexCoord0, uvBuffer);
@@ -112,7 +112,7 @@ class Other {
     
         let request = new XMLHttpRequest();
         request.addEventListener("loadend", () => {
-            let assetStore = new Aurora.AssetStore();
+            let assets = new Aurora.AssetsStore();
     
             let offset = 0;
             let dv = new DataView(request.response);
@@ -120,7 +120,7 @@ class Other {
             let n = dv.getInt32(offset, true);
             offset += 4;
             let vertices: number[] = [];
-            assetStore.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_Position0, vertices));
+            assets.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_Position0, vertices));
             for (let i = 0; i < n; ++i) {
                 vertices.push(dv.getFloat32(offset, true));
                 offset += 4;
@@ -133,7 +133,7 @@ class Other {
             n = dv.getInt32(offset, true);
             offset += 4;
             let normal: number[] = [];
-            assetStore.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_Normal0, normal, Aurora.GLVertexBufferSize.THREE));
+            assets.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_Normal0, normal, Aurora.GLVertexBufferSize.THREE));
             for (let i = 0; i < n; ++i) {
                 normal.push(dv.getFloat32(offset, true));
                 offset += 4;
@@ -146,7 +146,7 @@ class Other {
             n = dv.getInt32(offset, true);
             offset += 4;
             let uv: number[] = [];
-            assetStore.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_TexCoord0, uv, Aurora.GLVertexBufferSize.TWO));
+            assets.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_TexCoord0, uv, Aurora.GLVertexBufferSize.TWO));
             for (let i = 0; i < n; ++i) {
                 uv.push(dv.getFloat32(offset, true));
                 offset += 4;
@@ -157,13 +157,13 @@ class Other {
             n = dv.getInt32(offset, true);
             offset += 4;
             let index: Aurora.uint[] = [];
-            assetStore.drawIndexSource = new Aurora.DrawIndexSource(index);
+            assets.drawIndexSource = new Aurora.DrawIndexSource(index);
             for (let i = 0; i < n; ++i) {
                 index.push(dv.getInt32(offset, true));
                 offset += 4;
             }
     
-            mesh.assetStore = assetStore;
+            mesh.assets = assets;
         });
         request.open("GET", Helper.getURL("model.bin"), true);
         request.responseType = "arraybuffer";
@@ -295,7 +295,7 @@ class Other {
     public createSkyBox(node: Aurora.Node3D, gl: Aurora.GL, shaderStore: Aurora.ShaderStore, vert: string, frag: string) {
         let mesh = node.addComponent(new Aurora.Mesh());
         mesh.enabled = false;
-        mesh.assetStore = Aurora.MeshBuilder.createBox(10000, 10000, 10000, 1, 1, 1, true, true);
+        mesh.assets = Aurora.MeshBuilder.createBox(10000, 10000, 10000, 1, 1, 1, true, true);
     
         let mat = new Aurora.Material(shaderStore.createShader(gl, vert, frag));
         mat.cullFace = Aurora.GLCullFace.FRONT;

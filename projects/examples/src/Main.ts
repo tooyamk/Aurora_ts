@@ -10,11 +10,4 @@ window.addEventListener("DOMContentLoaded", () => {
     //new Other();
     //new SimpleWorld();
     //new SpriteAtlasTest();
-
-    let i = 0xFFFFFFFF;
-    console.log(i);
-    let i2 = 0x7FFFFFFF;
-    console.log(i2);
-    let i3 = 1 << 31;
-    console.log(i3);
 });
