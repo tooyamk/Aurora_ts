@@ -3,7 +3,7 @@
 namespace Aurora {
     export class Sprite extends AbstractRenderable {
         protected static _tmpVec2: Vector2 = new Vector2();
-        protected static _sharedQuadAssetStore: AssetsStore = null;
+        protected static _sharedQuadAssets: AssetsStore = null;
         protected static _sharedQuadVertices: number[] = null;
         protected static _sharedQuadTexCoords: number[] = null;
         protected static _sharedQuadColors: number[] = null;
@@ -27,7 +27,7 @@ namespace Aurora {
         }
 
         protected static _initSharedQuadAssetStore(): void {
-            if (!Sprite._sharedQuadAssetStore) {
+            if (!Sprite._sharedQuadAssets) {
                 let as = new AssetsStore();
 
                 let vertices: number[] = [];
@@ -44,7 +44,7 @@ namespace Aurora {
 
                 as.drawIndexSource = new DrawIndexSource([0, 1, 2, 0, 2, 3], GLIndexDataType.UNSIGNED_SHORT, GLUsageType.DYNAMIC_DRAW);
 
-                Sprite._sharedQuadAssetStore = as;
+                Sprite._sharedQuadAssets = as;
                 Sprite._sharedQuadVertices = vertices;
                 Sprite._sharedQuadTexCoords = texCoords;
                 Sprite._sharedQuadColors = colors;
@@ -182,7 +182,7 @@ namespace Aurora {
                         Sprite._updateQuadTexCoords(Sprite._sharedQuadTexCoords, lu, ru, bv, tv, f.rotated);
                         this._updateColors(Sprite._sharedQuadColors, 16);
 
-                        renderingData.out.assets = Sprite._sharedQuadAssetStore;
+                        renderingData.out.assets = Sprite._sharedQuadAssets;
                         renderingData.out.uniforms = this._uniforms;
                     }
                 }
@@ -201,7 +201,7 @@ namespace Aurora {
                     Sprite._updateQuadTexCoords(Sprite._sharedQuadTexCoords, 0, 1, 1, 0, 0);
                     this._updateColors(Sprite._sharedQuadColors, 16);
 
-                    renderingData.out.assets = Sprite._sharedQuadAssetStore;
+                    renderingData.out.assets = Sprite._sharedQuadAssets;
                     renderingData.out.uniforms = this._uniforms;
                 }
             }

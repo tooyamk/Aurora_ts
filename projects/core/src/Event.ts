@@ -36,6 +36,8 @@ namespace Aurora {
         public callback: HandlerType = null;
         public once: boolean;
 
+        private _isIdle: boolean = true;
+
         public static create(caller: any, callback: HandlerType, once: boolean): Handler {
             let h: Handler;
             if (Handler._num > 0) {
@@ -47,11 +49,22 @@ namespace Aurora {
             h.caller = caller;
             h.callback = callback;
             h.once = once;
+            h._isIdle = false;
             return h;
         }
 
+        public get isIdle(): boolean {
+            return this._isIdle;
+        }
+
         public emit(e: Event): boolean {
-            if (this.callback) this.callback.call(this.caller, e);
+            if (this.callback) {
+                if (this.caller) {
+                    this.callback(e);
+                } else {
+                    this.callback.call(this.caller, e);
+                }
+            }
             if (this.once) {
                 this.release();
                 return true;
@@ -61,9 +74,12 @@ namespace Aurora {
         }
 
         public release(): void {
-            this.caller = null;
-            this.callback = null;
-            Handler._pool[Handler._num++] = this;
+            if (!this._isIdle) {
+                this.caller = null;
+                this.callback = null;
+                this._isIdle = true;
+                Handler._pool[Handler._num++] = this;
+            }
         }
     }
 
@@ -82,6 +98,7 @@ namespace Aurora {
         public has(type: string, caller: any, callback: HandlerType): boolean {
             let arr = this._map[type];
             if (arr) {
+                if (caller === undefined) caller = null;
                 return this._getHandler(arr, caller, callback) !== null;
             }
             return false;
@@ -90,17 +107,16 @@ namespace Aurora {
         private _getHandler(handlers: Handler[], caller: any, callback: HandlerType): Handler {
             for (let i = 0, n = handlers.length; i < n; ++i) {
                 let h = handlers[i];
-                if (h.caller === caller && h.callback === callback) {
-                    return h;
-                }
+                if (h.caller === caller && h.callback === callback) return h;
             }
             return null;
         }
 
-        public on(type: string, caller: any, callback: HandlerType, single: boolean = true, once: boolean = false): void {
-            let arr = this._map[type];
-            if (arr) {
-                if (single) {
+        public on(type: string, caller: any, callback: HandlerType, once: boolean = false): void {
+            if (type && type.length > 0 && callback) {
+                if (caller === undefined) caller = null;
+                let arr = this._map[type];
+                if (arr) {
                     let h = this._getHandler(arr, caller, callback);
                     if (h) {
                         h.once = once;
@@ -108,22 +124,23 @@ namespace Aurora {
                         arr.push(Handler.create(caller, callback, once));
                     }
                 } else {
-                    arr.push(Handler.create(caller, callback, once));
+                    this._map[type] = [Handler.create(caller, callback, once)];
                 }
-            } else {
-                this._map[type] = [Handler.create(caller, callback, once)];
             }
         }
 
         public off(type: string, caller: any, callback: HandlerType): boolean {
-            let arr = this._map[type];
-            if (arr) {
-                for (let i = 0, n = arr.length; i < n; ++i) {
-                    let h = arr[i];
-                    if (h.caller === caller && h.callback === callback) {
-                        arr.splice(i, 1);
-                        h.release();
-                        return true;
+            if (type && type.length > 0 && callback) {
+                if (caller === undefined) caller = null;
+                let arr = this._map[type];
+                if (arr) {
+                    for (let i = 0, n = arr.length; i < n; ++i) {
+                        let h = arr[i];
+                        if (h.caller === caller && h.callback === callback) {
+                            arr.splice(i, 1);
+                            h.release();
+                            return true;
+                        }
                     }
                 }
             }
@@ -156,9 +173,7 @@ namespace Aurora {
                 if (arr) {
                     let n = arr.length;
                     if (n > 0) {
-                        for (let i = 0, n = arr.length; i < n; ++i) {
-                            arr[i].release();
-                        }
+                        for (let i = 0, n = arr.length; i < n; ++i) arr[i].release();
                         arr.length = 0;
                     }
                 }
@@ -167,9 +182,7 @@ namespace Aurora {
                     let arr = this._map[key];
                     let n = arr.length;
                     if (n > 0) {
-                        for (let i = 0, n = arr.length; i < n; ++i) {
-                            arr[i].release();
-                        }
+                        for (let i = 0, n = arr.length; i < n; ++i) arr[i].release();
                         arr.length = 0;
                     }
                 }
