@@ -1,7 +1,12 @@
 namespace Aurora {
-    export interface IDecodeUTF8Result {
+    export interface IByteArrayDecodeUTF8Result {
         byteLength: uint;
         string: string;
+    }
+
+    export const enum ByteArrayStringMode {
+        END_MARK,
+        DYNAMIC_LENGTH
     }
 
     export class ByteArray {
@@ -272,23 +277,49 @@ namespace Aurora {
             this._pos += length;
         }
 
-        public readString(maxLength: uint = null): string {
-            let rst = ByteArray.decodeUTF8(this._raw, this._pos, maxLength);
-            this._pos += rst.byteLength;
-            return rst.string;
+        public readString(mode: ByteArrayStringMode, maxLength: uint = null): string {
+            switch (mode) {
+                case ByteArrayStringMode.END_MARK: {
+                    let rst = ByteArray.decodeUTF8(this._raw, this._pos, maxLength);
+                    this._pos += rst.byteLength;
+                    return rst.string;
+                }
+                case ByteArrayStringMode.DYNAMIC_LENGTH: {
+                    let n = this.readDynamicLength();
+                    let rst = ByteArray.decodeUTF8(this._raw, this._pos, n);
+                    this._pos += n;
+                    return rst.string;
+                }
+                default:
+                    return "";
+            }
         }
 
-        public writeString(value: string): void {
+        public writeString(value: string, mode: ByteArrayStringMode): void {
             let arr = ByteArray.encodeUTF8(value);
             let n = arr.length;
-            this._checkAndAllocateSpace(n + 1);
-            let raw = this._raw;
-            let pos = this._pos;
-            for (let i = 0; i < n; ++i) {
-                raw.setUint8(pos++, arr[i]);
+            switch (mode) {
+                case ByteArrayStringMode.END_MARK: {
+                    this._checkAndAllocateSpace(n + 1);
+                    let raw = this._raw;
+                    let pos = this._pos;
+                    for (let i = 0; i < n; ++i) raw.setUint8(pos++, arr[i]);
+                    raw.setUint8(pos++, 0);
+
+                    break;
+                }
+                case ByteArrayStringMode.DYNAMIC_LENGTH: {
+                    this.writeDynamicLength(n);
+                    this._checkAndAllocateSpace(n);
+                    let raw = this._raw;
+                    let pos = this._pos;
+                    for (let i = 0; i < n; ++i) raw.setUint8(pos++, arr[i]);
+
+                    break;
+                }
+                default:
+                    break;
             }
-            raw.setUint8(pos++, 0);
-            this._pos = pos;
         }
 
         private _checkAndAllocateSpace(need: uint): void {
@@ -304,6 +335,47 @@ namespace Aurora {
                     this._rawLen = newRawLen;
                 }
                 this._logicLen += need;
+            }
+        }
+
+        public writeDynamicLength(length: uint): void {
+            if (length <= 0x7F) {
+                this.writeUint8(length);
+            } else if (length <= 0x3FFF) {
+                this._checkAndAllocateSpace(2);
+                this._raw.setUint8(this._pos++, 0x80 | (length & 0x7F));
+                this._raw.setUint8(this._pos++, length >> 7 & 0x7F);
+            } else if (length <= 0x1FFFFF) {
+                this._checkAndAllocateSpace(3);
+                this._raw.setUint8(this._pos++, 0x80 | (length & 0x7F));
+                this._raw.setUint8(this._pos++, 0x80 | (length >> 7 & 0x7F));
+                this._raw.setUint8(this._pos++, length >> 14 & 0x7F);
+            } else {
+                this._checkAndAllocateSpace(4);
+                this._raw.setUint8(this._pos++, 0x80 | (length & 0x7F));
+                this._raw.setUint8(this._pos++, 0x80 | (length >> 7 & 0x7F));
+                this._raw.setUint8(this._pos++, 0x80 | (length >> 14 & 0x7F));
+                this._raw.setUint8(this._pos++, length >> 21 & 0x7F);
+            }
+        }
+
+        public readDynamicLength(): uint {
+            let v0 = this.readUint8();
+            if (v0 > 127) {
+                let v1 = this.readUint8();
+                if (v1 > 127) {
+                    let v2 = this.readUint8();
+                    if (v2 > 127) {
+                        let v3 = this.readUint8();
+                        return (v3 << 21) | (v2 << 14 & 0x7F) | (v1 << 7 & 0x7F) | (v0 & 0x7F);
+                    } else {
+                        return (v2 << 14) | (v1 << 7 & 0x7F) | (v0 & 0x7F);
+                    }
+                } else {
+                    return (v1 << 7) | (v0 & 0x7F);
+                }
+            } else {
+                return v0;
             }
         }
 
@@ -333,7 +405,7 @@ namespace Aurora {
             return bytes;
         }
 
-        public static decodeUTF8(bytes: DataView, offset: uint = 0, maxLength: uint = null): IDecodeUTF8Result {
+        public static decodeUTF8(bytes: DataView, offset: uint = 0, maxLength: uint = null): IByteArrayDecodeUTF8Result {
             let str = "";
             let i = offset;
             let len = maxLength === null || maxLength === undefined ? bytes.byteLength : offset + maxLength;

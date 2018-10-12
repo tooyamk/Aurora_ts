@@ -5,10 +5,13 @@ namespace Aurora {
         public static readonly CHUNK_HEAD = 0x0001;
 
         public static readonly CHUNK_MESH = 0x0002;
-        public static readonly CHUNK_MESH_VERT = 0x01;
-        public static readonly CHUNK_MESH_UV = 0x02;
-        public static readonly CHUNK_MESH_NRM = 0x03;
-        public static readonly CHUNK_MESH_DRAW_IDX = 0x04;
+        public static readonly CHUNK_MESH_ATTRIB = 0x01;
+        public static readonly CHUNK_MESH_VERT = 0x02;
+        public static readonly CHUNK_MESH_UV = 0x03;
+        public static readonly CHUNK_MESH_NRM = 0x04;
+        public static readonly CHUNK_MESH_DRAW_IDX = 0x05;
+
+        public static readonly CHUNK_SKELETON = 0x0003;
 
         public meshes: AssetsStore[] = null;
 
@@ -38,6 +41,9 @@ namespace Aurora {
                             break;
                         case ARRFile.CHUNK_MESH:
                             ARRFile._parseMesh(data, length, file);
+                            break;
+                        case ARRFile.CHUNK_SKELETON:
+                            ARRFile._parseSkeleton(data, length);
                             break;
                         default:
                             console.log(`Parse ARR file error : not define chunk (0x${chunk.toString(16)})`);
@@ -86,6 +92,9 @@ namespace Aurora {
                 chunk = chunk >> 2 & 0xFFFF;
                 let pos = data.position;
                 switch (chunk) {
+                    case ARRFile.CHUNK_MESH_ATTRIB:
+                        ARRFile._parseMeshAttrib(data, length, as);
+                        break;
                     case ARRFile.CHUNK_MESH_VERT:
                         as.addVertexSource(ARRFile._parseMeshVertex(data, length, ShaderPredefined.a_Position0));
                         break;
@@ -104,6 +113,10 @@ namespace Aurora {
                 }
                 data.position = pos + length;
             }
+        }
+
+        private static _parseMeshAttrib(data: ByteArray, length: uint, assets: AssetsStore): void {
+            assets.name = data.readString(ByteArrayStringMode.DYNAMIC_LENGTH);
         }
 
         private static _parseMeshVertex(data: ByteArray, length: uint, name: string): VertexSource {
@@ -208,6 +221,13 @@ namespace Aurora {
             }
 
             return new DrawIndexSource(indices, type, GLUsageType.STATIC_DRAW);
+        }
+
+        private static _parseSkeleton(data: ByteArray, length: uint): void {
+            let numBones = data.readDynamicLength();
+            for (let i = 0; i < numBones; ++i) {
+                console.log(data.readString(ByteArrayStringMode.DYNAMIC_LENGTH));
+            }
         }
     }
 }

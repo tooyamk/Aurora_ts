@@ -2,6 +2,8 @@
 
 namespace Aurora {
     export class AssetsStore {
+        public name: string = "";
+
         public vertexSources: Map<string, VertexSource> = null;
         public drawIndexSource: DrawIndexSource = null;
 
