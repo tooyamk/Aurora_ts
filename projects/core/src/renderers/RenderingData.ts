@@ -10,11 +10,11 @@ namespace Aurora {
     }
 
     export class RenderingDataOut {
-        public assets: AssetsStore = null;
+        public asset: MeshAsset = null;
         public uniforms: ShaderUniforms = null;
 
         public clear(): void {
-            this.assets = null;
+            this.asset = null;
             this.uniforms = null;
         }
     }

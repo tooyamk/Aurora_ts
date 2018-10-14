@@ -1,7 +1,7 @@
 ///<reference path="DrawIndexSource.ts" />
 
 namespace Aurora {
-    export class AssetsStore {
+    export class MeshAsset {
         public name: string = "";
 
         public vertexSources: Map<string, VertexSource> = null;
@@ -10,8 +10,10 @@ namespace Aurora {
         public vertexBuffers: Map<string, GLVertexBuffer> = null;
         public drawIndexBuffer: GLIndexBuffer = null;
 
-        public customGetVertexBufferFn: (assets: AssetsStore, info: GLProgramAttribInfo) => GLVertexBuffer = null;
-        public customGetDrawIndexBufferFn: (assets: AssetsStore) => GLIndexBuffer = null;
+        public bindPoses: Map<string, Matrix44> = null;
+
+        public customGetVertexBufferFn: (asset: MeshAsset, info: GLProgramAttribInfo) => GLVertexBuffer = null;
+        public customGetDrawIndexBufferFn: (asset: MeshAsset) => GLIndexBuffer = null;
 
         public getVertexSource(name: string): VertexSource {
             return this.vertexSources ? this.vertexSources.get(name) : null;

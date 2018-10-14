@@ -255,7 +255,7 @@ namespace Aurora {
                             let atts = p.attributes;
                             for (let i = 0, n = atts.length; i < n; ++i) {
                                 let att = atts[i];
-                                let buffer = pp.assets ? pp.assets.getVertexBuffer(gl, att) : null;
+                                let buffer = pp.asset ? pp.asset.getVertexBuffer(gl, att) : null;
                                 if (!buffer) {
                                     if (att.name === ShaderPredefined.a_Position0) {
                                         buffer = this._defaultPostProcessVertexBuffer;
@@ -266,7 +266,7 @@ namespace Aurora {
                                 if (buffer) buffer.use(att.location);
                             }
 
-                            let buffer = pp.assets ? pp.assets.getDrawIndexBuffer(gl) : this._defaultPostProcessIndexBuffer;
+                            let buffer = pp.asset ? pp.asset.getDrawIndexBuffer(gl) : this._defaultPostProcessIndexBuffer;
                             if (!buffer) buffer = this._defaultPostProcessIndexBuffer;
                             if (buffer) buffer.draw(pp.material.drawMode);
                         }

@@ -80,7 +80,7 @@ namespace Aurora {
 
         public readInt8(): int {
             if (this._pos + 1 > this._logicLen) {
-                this._pos = this._logicLen
+                this._pos = this._logicLen;
                 return 0;
             } else {
                 return this._raw.getInt8(this._pos++);
@@ -94,7 +94,7 @@ namespace Aurora {
 
         public readUint8(): uint {
             if (this._pos + 1 > this._logicLen) {
-                this._pos = this._logicLen
+                this._pos = this._logicLen;
                 return 0;
             } else {
                 return this._raw.getUint8(this._pos++);
@@ -108,7 +108,7 @@ namespace Aurora {
 
         public readInt16(): int {
             if (this._pos + 2 > this._logicLen) {
-                this._pos = this._logicLen
+                this._pos = this._logicLen;
                 return 0;
             } else {
                 let v = this._raw.getInt16(this._pos, this._little);
@@ -125,7 +125,7 @@ namespace Aurora {
 
         public readUint16(): uint {
             if (this._pos + 2 > this._logicLen) {
-                this._pos = this._logicLen
+                this._pos = this._logicLen;
                 return 0;
             } else {
                 let v = this._raw.getUint16(this._pos, this._little);
@@ -153,7 +153,7 @@ namespace Aurora {
 
         public readUint24(): uint {
             if (this._pos + 3 > this._logicLen) {
-                this._pos = this._logicLen
+                this._pos = this._logicLen;
                 return 0;
             } else {
                 let v0 = this._raw.getUint8(this._pos);
@@ -184,7 +184,7 @@ namespace Aurora {
 
         public readInt32(): int {
             if (this._pos + 4 > this._logicLen) {
-                this._pos = this._logicLen
+                this._pos = this._logicLen;
                 return 0;
             } else {
                 let v = this._raw.getInt32(this._pos, this._little);
@@ -201,7 +201,7 @@ namespace Aurora {
 
         public readUint32(): uint {
             if (this._pos + 4 > this._logicLen) {
-                this._pos = this._logicLen
+                this._pos = this._logicLen;
                 return 0;
             } else {
                 let v = this._raw.getUint32(this._pos, this._little);
@@ -216,9 +216,48 @@ namespace Aurora {
             this._pos += 4;
         }
 
+        public readUint64(): uint {
+            if (this._pos + 8 > this._logicLen) {
+                this._pos = this._logicLen;
+                return 0;
+            } else {
+                let low: uint, high: uint;
+                if (this._little) {
+                    low = this._raw.getUint32(this._pos, true);
+                    high = this._raw.getUint32(this._pos, true);
+                } else {
+                    high = this._raw.getUint32(this._pos, false);
+                    low = this._raw.getUint32(this._pos, false);
+                }
+                this._pos += 8;
+                return high * 4294967296 + low;
+            }
+        }
+
+        public writeUint64(value: uint): void {
+            this._checkAndAllocateSpace(8);
+            let low: uint, high: uint;
+            if (value > 4294967295) {
+                high = (value / 4294967296) | 0;
+                low = value - high * 4294967296;
+            } else {
+                high = 0;
+                low = value;
+            }
+            if (this._little) {
+                this._raw.setUint32(this._pos, low, true);
+                this._raw.setUint32(this._pos + 4, high, true);
+            } else {
+                this._raw.setUint32(this._pos, high, false);
+                this._raw.setUint32(this._pos + 4, low, false);
+            }
+            
+            this._pos += 8;
+        }
+
         public readFloat32(): number {
             if (this._pos + 4 > this._logicLen) {
-                this._pos = this._logicLen
+                this._pos = this._logicLen;
                 return 0;
             } else {
                 let v = this._raw.getFloat32(this._pos, this._little);
@@ -235,7 +274,7 @@ namespace Aurora {
 
         public readFloat64(): number {
             if (this._pos + 8 > this._logicLen) {
-                this._pos = this._logicLen
+                this._pos = this._logicLen;
                 return 0;
             } else {
                 let v = this._raw.getFloat64(this._pos, this._little);

@@ -1,6 +1,6 @@
 namespace Aurora {
     export abstract class MeshBuilder {
-        public static createBox(length: number, width: number, height: number, lengthSegs: uint = 1, widthSegs: uint = 1, heightSegs: uint = 1, generateTexCoords: Boolean = true, generateNormals: boolean = false): AssetsStore {
+        public static createBox(length: number, width: number, height: number, lengthSegs: uint = 1, widthSegs: uint = 1, heightSegs: uint = 1, generateTexCoords: Boolean = true, generateNormals: boolean = false): MeshAsset {
             if (lengthSegs < 1) lengthSegs = 1;
             lengthSegs |= 0;
 
@@ -19,22 +19,22 @@ namespace Aurora {
             let halfHegiht = height * 0.5;
 
             let vertexSources = new Map<string, VertexSource>();
-            let assetStore = new AssetsStore();
-            assetStore.vertexSources = vertexSources;
+            let asset = new MeshAsset();
+            asset.vertexSources = vertexSources;
 
             let vertices: number[] = [];
-            assetStore.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT));
+            asset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT));
 
             let texCoords: number[];
             if (generateTexCoords) {
                 texCoords = [];
-                assetStore.addVertexSource(new VertexSource(ShaderPredefined.a_TexCoord0, texCoords, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT));
+                asset.addVertexSource(new VertexSource(ShaderPredefined.a_TexCoord0, texCoords, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT));
             }
 
             let drawIndexSource = new DrawIndexSource();
             let drawIndices: uint[] = [];
             drawIndexSource.data = drawIndices;
-            assetStore.drawIndexSource = drawIndexSource;
+            asset.drawIndexSource = drawIndexSource;
 
             let u: number;
             for (let l = 0; l <= lengthSegs; ++l) {
@@ -98,19 +98,19 @@ namespace Aurora {
                 drawIndices.push(i1, i0, i2, i2, i2 + 2, i1, i2 + 1, i0 + 1, i1 + 1, i1 + 1, i2 + 3, i2 + 1);
             }
 
-            if (generateNormals) assetStore.addVertexSource(MeshAssetHelper.createNormals(drawIndices, vertices));
+            if (generateNormals) asset.addVertexSource(MeshAssetHelper.createNormals(drawIndices, vertices));
 
-            return assetStore;
+            return asset;
         }
 
-        public static createSphere(radius: number, segments: uint = 4, generateTexCoords: boolean = true, generateNormals: boolean = false): AssetsStore {
+        public static createSphere(radius: number, segments: uint = 4, generateTexCoords: boolean = true, generateNormals: boolean = false): MeshAsset {
             if (radius < 0) radius = 0;
             if (segments < 4) segments = 4;
             segments |= 0;
 
             let vertexSources = new Map<string, VertexSource>();
-            let assetStore = new AssetsStore();
-            assetStore.vertexSources = vertexSources;
+            let asset = new MeshAsset();
+            asset.vertexSources = vertexSources;
 
             let numV = ((segments - 4) * 0.5 + 1) | 0;
             let d = radius * 2;
@@ -118,7 +118,7 @@ namespace Aurora {
             let angleY = Math.PI * 2 / segments;
 
             let vertices: number[] = [];
-            assetStore.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT));
+            asset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT));
 
             vertices.push(0, radius, 0);
 
@@ -126,7 +126,7 @@ namespace Aurora {
             let texCoords: number[];
             if (generateTexCoords) {
                 texCoords = [];
-                assetStore.addVertexSource(new VertexSource(ShaderPredefined.a_TexCoord0, texCoords, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT));
+                asset.addVertexSource(new VertexSource(ShaderPredefined.a_TexCoord0, texCoords, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT));
 
                 texCoords.push(0.5, 0);
                 uvMax = numV + 1;
@@ -155,7 +155,7 @@ namespace Aurora {
             let drawIndexSource = new DrawIndexSource();
             let drawIndices: uint[] = [];
             drawIndexSource.data = drawIndices;
-            assetStore.drawIndexSource = drawIndexSource;
+            asset.drawIndexSource = drawIndexSource;
             for (let i = 1; i <= segments; ++i) {
                 drawIndices.push(0, i, i + 1);
             }
@@ -177,9 +177,9 @@ namespace Aurora {
                 drawIndices.push(last, j + 1, j);
             }
 
-            if (generateNormals) assetStore.addVertexSource(MeshAssetHelper.createLerpNormals(drawIndices, vertices));
+            if (generateNormals) asset.addVertexSource(MeshAssetHelper.createLerpNormals(drawIndices, vertices));
 
-            return assetStore;
+            return asset;
         }
     }
 }

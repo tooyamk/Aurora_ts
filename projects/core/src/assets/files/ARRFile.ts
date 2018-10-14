@@ -9,11 +9,13 @@ namespace Aurora {
         public static readonly CHUNK_MESH_VERT = 0x02;
         public static readonly CHUNK_MESH_UV = 0x03;
         public static readonly CHUNK_MESH_NRM = 0x04;
+        public static readonly CHUNK_MESH_BIND_POSE = 0x05;
         public static readonly CHUNK_MESH_DRAW_IDX = 0x05;
 
         public static readonly CHUNK_SKELETON = 0x0003;
 
-        public meshes: AssetsStore[] = null;
+        public meshes: MeshAsset[] = null;
+        public skeletons: Skeleton[] = null;
 
         private _version: uint = 0;
 
@@ -43,7 +45,7 @@ namespace Aurora {
                             ARRFile._parseMesh(data, length, file);
                             break;
                         case ARRFile.CHUNK_SKELETON:
-                            ARRFile._parseSkeleton(data, length);
+                            ARRFile._parseSkeleton(data, length, file);
                             break;
                         default:
                             console.log(`Parse ARR file error : not define chunk (0x${chunk.toString(16)})`);
@@ -78,7 +80,7 @@ namespace Aurora {
         }
 
         private static _parseMesh(data: ByteArray, length: uint, file: ARRFile): void {
-            let as = new AssetsStore();
+            let as = new MeshAsset();
             if (file.meshes) {
                 file.meshes.push(as);
             } else {
@@ -115,8 +117,8 @@ namespace Aurora {
             }
         }
 
-        private static _parseMeshAttrib(data: ByteArray, length: uint, assets: AssetsStore): void {
-            assets.name = data.readString(ByteArrayStringMode.DYNAMIC_LENGTH);
+        private static _parseMeshAttrib(data: ByteArray, length: uint, asset: MeshAsset): void {
+            asset.name = data.readString(ByteArrayStringMode.DYNAMIC_LENGTH);
         }
 
         private static _parseMeshVertex(data: ByteArray, length: uint, name: string): VertexSource {
@@ -223,10 +225,34 @@ namespace Aurora {
             return new DrawIndexSource(indices, type, GLUsageType.STATIC_DRAW);
         }
 
-        private static _parseSkeleton(data: ByteArray, length: uint): void {
+        private static _parseSkeleton(data: ByteArray, length: uint, file: ARRFile): void {
             let numBones = data.readDynamicLength();
-            for (let i = 0; i < numBones; ++i) {
-                console.log(data.readString(ByteArrayStringMode.DYNAMIC_LENGTH));
+            if (numBones > 0) {
+                let ske = new Skeleton();
+                if (!file.skeletons) file.skeletons = [];
+                file.skeletons.push(ske);
+
+                let bones: Node3D[] = [];
+                ske.bones = bones;
+
+                for (let i = 0; i < numBones; ++i) {
+                    let bone = new Node3D();
+                    bone.name = data.readString(ByteArrayStringMode.DYNAMIC_LENGTH);
+                    bones[i] = bone;
+                }
+
+                let numRootBones = data.readDynamicLength();
+                
+                let rootBones: Node3D[] = [];
+                ske.rootBones = rootBones;
+
+                if (numBones <= 0xFF) {
+                    for (let i = 0; i < numBones; ++i) rootBones[i] = bones[data.readUint8()];
+                } else if (numBones <= 0xFFFF) {
+                    for (let i = 0; i < numBones; ++i) rootBones[i] = bones[data.readUint16()];
+                } else {
+                    for (let i = 0; i < numBones; ++i) rootBones[i] = bones[data.readUint32()];
+                }
             }
         }
     }

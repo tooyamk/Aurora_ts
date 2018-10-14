@@ -2,10 +2,10 @@ namespace Aurora {
     export class BoundMesh implements IBoundShape {
         public static readonly CRITICAL = Math.cos(Math.PI * 0.5);
 
-        public assetStore: AssetsStore = null;
+        public asset: MeshAsset = null;
 
-        constructor(assetStore: AssetsStore = null) {
-            this.assetStore = assetStore;
+        constructor(asset: MeshAsset = null) {
+            this.asset = asset;
         }
 
         public intersectRay(ray: Ray, cullFace: GLCullFace = GLCullFace.BACK, rst: RaycastHit = null): RaycastHit {
@@ -16,14 +16,14 @@ namespace Aurora {
 
             let min = Number.POSITIVE_INFINITY;
 
-            if (this.assetStore && this.assetStore.vertexSources && this.assetStore.drawIndexSource && this.assetStore.drawIndexSource.data) {
-                let vs = this.assetStore.vertexSources.get(ShaderPredefined.a_Position0);
+            if (this.asset && this.asset.vertexSources && this.asset.drawIndexSource && this.asset.drawIndexSource.data) {
+                let vs = this.asset.vertexSources.get(ShaderPredefined.a_Position0);
                 if (vs) {
                     let vertices = vs.data;
                     if (vertices) {
-                        vs = this.assetStore.vertexSources.get(ShaderPredefined.a_Normal0);
+                        vs = this.asset.vertexSources.get(ShaderPredefined.a_Normal0);
                         let normals = vs ? (vs.data ? vs.data : null) : null;
-                        let indices = this.assetStore.drawIndexSource.data;
+                        let indices = this.asset.drawIndexSource.data;
 
                         let length = indices.length;
                         for (let i = 0; i < length; ++i) {

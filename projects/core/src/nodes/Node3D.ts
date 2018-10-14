@@ -11,11 +11,11 @@ namespace Aurora {
         protected static readonly WORLD_MATRIX_DIRTY: uint = 0b10;
         protected static readonly INVERSE_WORLD_MATRIX_DIRTY: uint = 0b100;
         protected static readonly WORLD_ROTATION_DIRTY: uint = 0b1000;
-        protected static readonly WORLD_MATRIX_AND_INVERSE_DIRTY: uint = Node3D.WORLD_MATRIX_DIRTY | Node3D.INVERSE_WORLD_MATRIX_DIRTY;
-        protected static readonly WORLD_ALL_DIRTY: uint = Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY | Node3D.WORLD_ROTATION_DIRTY;
+        protected static readonly WORLD_AND_INVERSE_MATRIX_DIRTY: uint = Node3D.WORLD_MATRIX_DIRTY | Node3D.INVERSE_WORLD_MATRIX_DIRTY;
+        protected static readonly WORLD_ALL_DIRTY: uint = Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY | Node3D.WORLD_ROTATION_DIRTY;
         protected static readonly LOCAL_AND_WORLD_ALL_DIRTY: uint = Node3D.LOCAL_MATRIX_DIRTY | Node3D.WORLD_ALL_DIRTY;
         protected static readonly LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY: uint = Node3D.LOCAL_AND_WORLD_ALL_DIRTY & (~Node3D.WORLD_ROTATION_DIRTY);
-        protected static readonly ALL_MATRIX_DIRTY: uint = Node3D.LOCAL_MATRIX_DIRTY | Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
+        protected static readonly ALL_MATRIX_DIRTY: uint = Node3D.LOCAL_MATRIX_DIRTY | Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY;
 
         protected static readonly CASCADE_COLOR_DIRTY: uint = 0b10000;
 
@@ -528,16 +528,16 @@ namespace Aurora {
             this._localMatrix.m32 = z;
 
             let old = this._dirty;
-            this._dirty |= Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY);
+            this._dirty |= Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY);
         }
 
         public localTranslate(x: number = 0, y: number = 0, z: number = 0): void {
             this.readonlyLocalMatrix.prependTranslate34XYZ(x, y, z);
 
             let old = this._dirty;
-            this._dirty |= Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY);
+            this._dirty |= Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY);
         }
 
         public getWorldPosition(rst: Vector3 = null): Vector3 {
@@ -578,7 +578,7 @@ namespace Aurora {
             }
 
             this._dirty |= Node3D.INVERSE_WORLD_MATRIX_DIRTY;
-            if (oldDirty !== this._dirty) this._noticeUpdate(Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY);
+            if (oldDirty !== this._dirty) this._noticeUpdate(Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY);
         }
 
         public getLocalRotation(rst: Quaternion = null): Quaternion {
@@ -668,7 +668,7 @@ namespace Aurora {
 
             let old = this._dirty;
             this._dirty |= Node3D.ALL_MATRIX_DIRTY;
-           if (old !== this._dirty)  this._noticeUpdate(Node3D.WORLD_MATRIX_AND_INVERSE_DIRTY);
+           if (old !== this._dirty)  this._noticeUpdate(Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY);
         }
 
         public getLocalMatrix(rst: Matrix44 = null): Matrix44 {
@@ -684,6 +684,20 @@ namespace Aurora {
             let old = this._dirty;
             this._dirty &= ~Node3D.LOCAL_MATRIX_DIRTY;
             this._dirty |= Node3D.WORLD_ALL_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
+        }
+
+        public setLocalTRS(pos: Vector3, rot: Quaternion, scale: Vector3): void {
+            this._localMatrix.m30 = pos.x;
+            this._localMatrix.m31 = pos.y;
+            this._localMatrix.m32 = pos.z;
+
+            this._localRot.set(rot);
+
+            this._localScale.set(scale);
+
+            let old = this._dirty;
+            this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
             if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
         }
 

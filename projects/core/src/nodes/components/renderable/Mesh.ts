@@ -2,14 +2,14 @@
 
 namespace Aurora {
     export class Mesh extends AbstractRenderable {
-        public assets: AssetsStore = null;
+        public asset: MeshAsset = null;
 
         public checkRenderable(): boolean {
-            return Boolean(this.assets);
+            return Boolean(this.asset);
         }
 
         public visit(renderingData: RenderingData): void {
-            renderingData.out.assets = this.assets;
+            renderingData.out.asset = this.asset;
         }
     }
 }

@@ -3,7 +3,7 @@
 namespace Aurora {
     export class Sprite extends AbstractRenderable {
         protected static _tmpVec2: Vector2 = new Vector2();
-        protected static _sharedQuadAssets: AssetsStore = null;
+        protected static _sharedQuadAsset: MeshAsset = null;
         protected static _sharedQuadVertices: number[] = null;
         protected static _sharedQuadTexCoords: number[] = null;
         protected static _sharedQuadColors: number[] = null;
@@ -26,9 +26,9 @@ namespace Aurora {
             this._uniforms = new ShaderUniforms();
         }
 
-        protected static _initSharedQuadAssetStore(): void {
-            if (!Sprite._sharedQuadAssets) {
-                let as = new AssetsStore();
+        protected static _initSharedQuadAsset(): void {
+            if (!Sprite._sharedQuadAsset) {
+                let as = new MeshAsset();
 
                 let vertices: number[] = [];
                 vertices.length = 8;
@@ -44,7 +44,7 @@ namespace Aurora {
 
                 as.drawIndexSource = new DrawIndexSource([0, 1, 2, 0, 2, 3], GLIndexDataType.UNSIGNED_SHORT, GLUsageType.DYNAMIC_DRAW);
 
-                Sprite._sharedQuadAssets = as;
+                Sprite._sharedQuadAsset = as;
                 Sprite._sharedQuadVertices = vertices;
                 Sprite._sharedQuadTexCoords = texCoords;
                 Sprite._sharedQuadColors = colors;
@@ -159,7 +159,7 @@ namespace Aurora {
         public visit(renderingData: RenderingData): void {
             if (this._frame) {
                 if (this._texture) {
-                    Sprite._initSharedQuadAssetStore();
+                    Sprite._initSharedQuadAsset();
 
                     let f = this._frame;
 
@@ -182,12 +182,12 @@ namespace Aurora {
                         Sprite._updateQuadTexCoords(Sprite._sharedQuadTexCoords, lu, ru, bv, tv, f.rotated);
                         this._updateColors(Sprite._sharedQuadColors, 16);
 
-                        renderingData.out.assets = Sprite._sharedQuadAssets;
+                        renderingData.out.asset = Sprite._sharedQuadAsset;
                         renderingData.out.uniforms = this._uniforms;
                     }
                 }
             } else if (this._texture) {
-                Sprite._initSharedQuadAssetStore();
+                Sprite._initSharedQuadAsset();
 
                 let w = this._texture.width, h = this._texture.height;
 
@@ -201,7 +201,7 @@ namespace Aurora {
                     Sprite._updateQuadTexCoords(Sprite._sharedQuadTexCoords, 0, 1, 1, 0, 0);
                     this._updateColors(Sprite._sharedQuadColors, 16);
 
-                    renderingData.out.assets = Sprite._sharedQuadAssets;
+                    renderingData.out.asset = Sprite._sharedQuadAsset;
                     renderingData.out.uniforms = this._uniforms;
                 }
             }

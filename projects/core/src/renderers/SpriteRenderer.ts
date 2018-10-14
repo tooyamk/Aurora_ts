@@ -3,7 +3,7 @@ namespace Aurora {
         protected _maxVertexSize = 65536;
 
         protected _gl: GL;
-        protected _assets: AssetsStore = new AssetsStore();
+        protected _asset: MeshAsset = new MeshAsset();
         protected _vertexSources: VertexSource[] = [];
         protected _reformats: uint[] = [];
         protected _reformatsLen = 0;
@@ -22,16 +22,16 @@ namespace Aurora {
             
             this._gl = gl;
 
-            this._assets.vertexSources = new Map();
-            this._assets.vertexBuffers = new Map();
+            this._asset.vertexSources = new Map();
+            this._asset.vertexBuffers = new Map();
 
             this._numAllicatedVertex = 256;
             this._numAllicatedIndex = 256;
 
-            this._assets.drawIndexSource = new DrawIndexSource([]);
+            this._asset.drawIndexSource = new DrawIndexSource([]);
             let ib = new GLIndexBuffer(gl);
             ib.allocate(this._numAllicatedIndex, GLIndexDataType.UNSIGNED_SHORT);
-            this._assets.drawIndexBuffer = ib;
+            this._asset.drawIndexBuffer = ib;
 
             this._defaultShader = new Shader(gl, new ShaderSource(BuiltinShader.DefaultSprite.VERTEX), new ShaderSource(BuiltinShader.DefaultSprite.FRAGMENT));
             this._defaultMaterial = new Material(this._defaultShader);
@@ -112,7 +112,7 @@ namespace Aurora {
                 let obj = renderingObjects[i];
                 renderingData.in.renderingObject = obj;
                 obj.renderable.visit(renderingData);
-                let as = renderingData.out.assets;
+                let as = renderingData.out.asset;
                 if (as && as.drawIndexSource) {
                     let mat = obj.material;
                     let uniforms = renderingData.out.uniforms;
@@ -191,7 +191,7 @@ namespace Aurora {
             if (this._numCombinedVertex > 0) {
                 let p = this._curMaterial.shader.currentProgram;
                 if (p) {
-                    let as = this._assets;
+                    let as = this._asset;
                     let atts = p.attributes;
                     for (let i = 0, n = atts.length; i < n; ++i) {
                         let name = atts[i].name;
@@ -222,7 +222,7 @@ namespace Aurora {
                     ib.uploadSub(is.data);
                 }
 
-                this.draw(this._assets, this._curMaterial, this._numCombinedIndex);
+                this.draw(this._asset, this._curMaterial, this._numCombinedIndex);
 
                 this._numCombinedVertex = 0;
                 this._numCombinedIndex = 0;
@@ -232,9 +232,9 @@ namespace Aurora {
         public destroy(): void {
             super.destroy();
 
-            if (this._assets) {
-                this._assets.destroy();
-                this._assets = null;
+            if (this._asset) {
+                this._asset.destroy();
+                this._asset = null;
             }
 
             this._vertexSources = null;
@@ -254,7 +254,7 @@ namespace Aurora {
 
         private _pushVertexSource(name: string, reference: VertexSource): boolean {
             let needFlush = false;
-            let vs = this._assets.vertexSources.get(name);
+            let vs = this._asset.vertexSources.get(name);
             if (vs) {
                 if (vs.size !== reference.size || vs.type !== reference.type || vs.normalized !== reference.normalized) {
                     if (this._numCombinedVertex === 0) {
@@ -268,7 +268,7 @@ namespace Aurora {
                 }
             } else {
                 vs = new VertexSource(name, [], reference.size, reference.type, reference.normalized, reference.usage);
-                this._assets.vertexSources.set(name, vs);
+                this._asset.vertexSources.set(name, vs);
             }
 
             this._vertexSources[this._numVertexSources++] = reference;
@@ -290,7 +290,7 @@ namespace Aurora {
 
             let idx2 = this._numCombinedIndex;
             let src = drawIndexSource.data;
-            let dst = this._assets.drawIndexSource.data;
+            let dst = this._asset.drawIndexSource.data;
             for (let i = 0, n = src.length; i < n; ++i) dst[idx2 + i] = src[idx + i];
         }
     }

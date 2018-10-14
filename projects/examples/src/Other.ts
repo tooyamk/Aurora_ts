@@ -50,7 +50,7 @@ class Other {
     
         let mesh = this.createModel(model1Node, env.gl, env.shaderStore, Aurora.BuiltinShader.DefaultMesh.NAME, Aurora.BuiltinShader.DefaultMesh.NAME);
         mesh.renderer = env.forwardRenderer;
-        //model1Node.addComponent(new MITOIA.Collider(new MITOIA.BoundingMesh(mesh.assetStore)));
+        //model1Node.addComponent(new MITOIA.Collider(new MITOIA.BoundingMesh(mesh.asset)));
         model1Node.addComponent(new Aurora.Collider(new Aurora.BoundSphere(null, 100)));
         //model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerX(Math.PI / 180));
     
@@ -97,22 +97,22 @@ class Other {
         let indexBuffer = new Aurora.GLIndexBuffer(gl);
         indexBuffer.upload([0, 1, 2], Aurora.GLIndexDataType.UNSIGNED_BYTE, Aurora.GLUsageType.STATIC_DRAW);
     
-        let assetStore = new Aurora.AssetsStore();
-        assetStore.vertexBuffers = new Map();
-        assetStore.vertexBuffers.set(Aurora.ShaderPredefined.a_Position0, vertexBuffer);
-        assetStore.vertexBuffers.set(Aurora.ShaderPredefined.a_TexCoord0, uvBuffer);
-        assetStore.vertexBuffers.set(Aurora.ShaderPredefined.a_Color0, colorBuffer);
-        assetStore.drawIndexBuffer = indexBuffer;
+        let asset = new Aurora.MeshAsset();
+        asset.vertexBuffers = new Map();
+        asset.vertexBuffers.set(Aurora.ShaderPredefined.a_Position0, vertexBuffer);
+        asset.vertexBuffers.set(Aurora.ShaderPredefined.a_TexCoord0, uvBuffer);
+        asset.vertexBuffers.set(Aurora.ShaderPredefined.a_Color0, colorBuffer);
+        asset.drawIndexBuffer = indexBuffer;
     
-        assetStore = Aurora.MeshBuilder.createSphere(100, 40, true, true);
-        //assetStore = MITOIA.MeshBuilder.createBox(100, 100, 100, 1, 1, 1, true, true);
+        asset = Aurora.MeshBuilder.createSphere(100, 40, true, true);
+        //asset = MITOIA.MeshBuilder.createBox(100, 100, 100, 1, 1, 1, true, true);
     
         let mesh = node.addComponent(new Aurora.Mesh());
-        //mesh.assetStore = assetStore;
+        //mesh.asset = asset;
     
         let request = new XMLHttpRequest();
         request.addEventListener("loadend", () => {
-            let assets = new Aurora.AssetsStore();
+            let asset = new Aurora.MeshAsset();
     
             let offset = 0;
             let dv = new DataView(request.response);
@@ -120,7 +120,7 @@ class Other {
             let n = dv.getInt32(offset, true);
             offset += 4;
             let vertices: number[] = [];
-            assets.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_Position0, vertices));
+            asset.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_Position0, vertices));
             for (let i = 0; i < n; ++i) {
                 vertices.push(dv.getFloat32(offset, true));
                 offset += 4;
@@ -133,7 +133,7 @@ class Other {
             n = dv.getInt32(offset, true);
             offset += 4;
             let normal: number[] = [];
-            assets.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_Normal0, normal, Aurora.GLVertexBufferSize.THREE));
+            asset.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_Normal0, normal, Aurora.GLVertexBufferSize.THREE));
             for (let i = 0; i < n; ++i) {
                 normal.push(dv.getFloat32(offset, true));
                 offset += 4;
@@ -146,7 +146,7 @@ class Other {
             n = dv.getInt32(offset, true);
             offset += 4;
             let uv: number[] = [];
-            assets.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_TexCoord0, uv, Aurora.GLVertexBufferSize.TWO));
+            asset.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_TexCoord0, uv, Aurora.GLVertexBufferSize.TWO));
             for (let i = 0; i < n; ++i) {
                 uv.push(dv.getFloat32(offset, true));
                 offset += 4;
@@ -157,13 +157,13 @@ class Other {
             n = dv.getInt32(offset, true);
             offset += 4;
             let index: Aurora.uint[] = [];
-            assets.drawIndexSource = new Aurora.DrawIndexSource(index);
+            asset.drawIndexSource = new Aurora.DrawIndexSource(index);
             for (let i = 0; i < n; ++i) {
                 index.push(dv.getInt32(offset, true));
                 offset += 4;
             }
     
-            mesh.assets = assets;
+            mesh.asset = asset;
         });
         request.open("GET", Helper.getURL("model.bin"), true);
         request.responseType = "arraybuffer";
@@ -295,7 +295,7 @@ class Other {
     public createSkyBox(node: Aurora.Node3D, gl: Aurora.GL, shaderStore: Aurora.ShaderStore, vert: string, frag: string) {
         let mesh = node.addComponent(new Aurora.Mesh());
         mesh.enabled = false;
-        mesh.assets = Aurora.MeshBuilder.createBox(10000, 10000, 10000, 1, 1, 1, true, true);
+        mesh.asset = Aurora.MeshBuilder.createBox(10000, 10000, 10000, 1, 1, 1, true, true);
     
         let mat = new Aurora.Material(shaderStore.createShader(gl, vert, frag));
         mat.cullFace = Aurora.GLCullFace.FRONT;

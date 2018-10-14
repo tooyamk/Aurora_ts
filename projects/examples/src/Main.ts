@@ -10,4 +10,7 @@ window.addEventListener("DOMContentLoaded", () => {
     //new Other();
     //new SimpleWorld();
     //new SpriteAtlasTest();
+
+    let s = "B";
+    console.log(Aurora.StringInteger.toDecimal("0xFFFFFFFF"));
 });

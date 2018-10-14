@@ -60,26 +60,26 @@ namespace Aurora {
             return null;
         }
 
-        public draw(assets: AssetsStore, material: Material, count: uint = null, offset: uint = 0): void {
-            this._draw(assets, material, material.shader.currentProgram, count, offset);
+        public draw(asset: MeshAsset, material: Material, count: uint = null, offset: uint = 0): void {
+            this._draw(asset, material, material.shader.currentProgram, count, offset);
         }
 
-        public useAndDraw(assets: AssetsStore, material: Material, alternativeUniforms: ShaderUniforms, onShaderPreUse: () => void = null, count: uint = null, offset: uint = 0): void {
+        public useAndDraw(asset: MeshAsset, material: Material, alternativeUniforms: ShaderUniforms, onShaderPreUse: () => void = null, count: uint = null, offset: uint = 0): void {
             let p = this.useShader(material, alternativeUniforms, onShaderPreUse);
             if (p) {
-                this._draw(assets, material, p, count, offset);
+                this._draw(asset, material, p, count, offset);
             }
         }
 
-        protected _draw(assets: AssetsStore, material: Material, program: GLProgram, count: uint = null, offset: uint = 0): void {
+        protected _draw(asset: MeshAsset, material: Material, program: GLProgram, count: uint = null, offset: uint = 0): void {
             let gl = program.gl;
-            let ib = assets.getDrawIndexBuffer(gl);
+            let ib = asset.getDrawIndexBuffer(gl);
             if (ib) {
                 let valid = true;
                 let atts = program.attributes;
                 for (let i = 0, n = atts.length; i < n; ++i) {
                     let att = atts[i];
-                    let vb = assets.getVertexBuffer(gl, att);
+                    let vb = asset.getVertexBuffer(gl, att);
                     if (vb) {
                         vb.use(att.location);
                     } else {
