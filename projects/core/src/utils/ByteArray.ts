@@ -216,33 +216,38 @@ namespace Aurora {
             this._pos += 4;
         }
 
-        public readUint64(): uint {
+        public readUint64(): string {
             if (this._pos + 8 > this._logicLen) {
                 this._pos = this._logicLen;
-                return 0;
+                return "0";
             } else {
                 let low: uint, high: uint;
                 if (this._little) {
                     low = this._raw.getUint32(this._pos, true);
-                    high = this._raw.getUint32(this._pos, true);
+                    high = this._raw.getUint32(this._pos + 4, true);
                 } else {
                     high = this._raw.getUint32(this._pos, false);
-                    low = this._raw.getUint32(this._pos, false);
+                    low = this._raw.getUint32(this._pos + 4, false);
                 }
                 this._pos += 8;
-                return high * 4294967296 + low;
+                let lowHex = low.toString(16);
+                for (let i = 0, n = 8 - lowHex.length; i < n; ++i) lowHex = "0" + lowHex;
+                return StringInteger.toDecimal("0x" + high.toString(16) + lowHex);
             }
         }
 
-        public writeUint64(value: uint): void {
+        public writeUint64(value: string): void {
             this._checkAndAllocateSpace(8);
+            let hex = StringInteger.toHexadecimal(value, 64);
             let low: uint, high: uint;
-            if (value > 4294967295) {
-                high = (value / 4294967296) | 0;
-                low = value - high * 4294967296;
+            let len = hex.length;
+            if (hex.length > 8) {
+                len -= 8;
+                low = parseInt(hex.substr(len, 8), 16);
+                high = parseInt(hex.substr(0, len), 16);
             } else {
+                low = parseInt(hex, 16);
                 high = 0;
-                low = value;
             }
             if (this._little) {
                 this._raw.setUint32(this._pos, low, true);
