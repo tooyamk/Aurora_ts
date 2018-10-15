@@ -4,6 +4,7 @@ const spawn = require('child_process');
 const split = require('split');
 
 const coreTsConfig = "projects/core/tsconfig.json";
+const fbxTsConfig = "projects/fbx/tsconfig.json";
 const wxplatformTsConfig = "projects/wxplatform/tsconfig.json";
 const examplesTsConfig = "projects/examples/tsconfig.json";
 
@@ -34,6 +35,14 @@ gulp.task("build-core", () => {
 
 gulp.task("build-core-watch", () => {
     build(coreTsConfig, true);
+});
+
+gulp.task("build-fbx", () => {
+    build(fbxTsConfig);
+});
+
+gulp.task("build-fbx-watch", () => {
+    build(fbxTsConfig, true);
 });
 
 gulp.task("build-wxplatform", () => {

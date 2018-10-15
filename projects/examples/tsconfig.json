@@ -21,6 +21,7 @@
   "compileOnSave": true,
   "references": [
     { "path": "../core" },
+    { "path": "../fbx" },
     { "path": "../wxplatform" }
   ]
 }

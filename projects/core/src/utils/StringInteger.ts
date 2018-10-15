@@ -324,57 +324,43 @@ namespace Aurora {
             return [quotient, remainder];
         }
 
-        public static toHexadecimal(n: string, bits: uint): string {
-            let len = n.length;
-            if (len === 0 || bits <= 0) {
+        public static getMaxValue(bits: uint): string {
+            bits |= 0;
+            if (bits <= 0) {
                 return "0";
             } else {
-                bits |= 0;
-
-                let max = "";
                 switch (bits) {
                     case 8:
-                        max = "255";
-                        break;
+                        return "255";
                     case 16:
-                        max = "65535";
-                        break;
+                        return "65535";
                     case 24:
-                        max = "‭16777215‬";
-                        break;
+                        return "‭16777215‬";
                     case 32:
-                        max = "‭4294967295‬";
-                        break;
+                        return "‭4294967295‬";
                     case 40:
-                        max = "‭1099511627775‬";
-                        break;
+                        return "‭1099511627775‬";
                     case 48:
-                        max = "‭281474976710655‬";
-                        break;
+                        return "‭281474976710655‬";
                     case 56:
-                        max = "‭72057594037927935‬";
-                        break;
+                        return "‭72057594037927935‬";
                     case 64:
-                        max = "18446744073709551615";
-                        break;
+                        return "18446744073709551615";
                     default: {
                         let bin = "";
                         for (let i = 0; i < bits; ++i) bin += "1";
-                        max = StringInteger.toDecimal("0b" + bin);
-                        break;
+                        return StringInteger.toDecimal("0b" + bin);
                     }
                 }
+            }
+        }
 
-                let dec = StringInteger.toDecimal(n);
-                if (dec.charCodeAt(0) === 45) {
-                    dec = dec.substr(0);
-                    let limit = StringInteger._addNonnegative(max, "1");
-                    let min = StringInteger._div(limit, "2")[0];
-                    if (StringInteger._compareNonnegative(dec, min) > 0) dec = min;
-                    dec = StringInteger._subNonnegative(limit, dec);
-                } else {
-                    if (StringInteger._compareNonnegative(dec, max) > 0) dec = max;
-                }
+        public static toHexadecimal(n: string, bits: int = -1): string {
+            let len = n.length;
+            if (len === 0 || bits === 0) {
+                return "0";
+            } else {
+                let dec = StringInteger.toDecimal(n, bits, false);
 
                 let rst = "";
                 do {
@@ -420,9 +406,10 @@ namespace Aurora {
             }
         }
 
-        public static toDecimal(n: string): string {
+        public static toDecimal(n: string, bits: int = -1, signed: boolean = true): string {
             let len = n.length;
-            if (len === 0) {
+            bits |= 0;
+            if (len === 0 || bits === 0) {
                 return "0";
             } else {
                 let h = n.substr(0, 2);
@@ -453,7 +440,8 @@ namespace Aurora {
                         if (v > 0) rst = StringInteger._addNonnegative(rst, StringInteger._mulNonnegative(v.toString(), base));
                         base = StringInteger._mulNonnegative(base, "16");
                     }
-                    return rst;
+
+                    return StringInteger._usnignedDecimalCheckBitsAndSigned(rst, bits, signed);
                 } else if (h === "0o") {
                     let rst = "0";
                     let base = "1";
@@ -477,7 +465,8 @@ namespace Aurora {
                         if (v > 0) rst = StringInteger._addNonnegative(rst, StringInteger._mulNonnegative(v.toString(), base));
                         base = StringInteger._mulNonnegative(base, "8");
                     }
-                    return rst;
+
+                    return StringInteger._usnignedDecimalCheckBitsAndSigned(rst, bits, signed);
                 } else if (h === "0b") {
                     let rst = "0";
                     let base = "1";
@@ -501,7 +490,8 @@ namespace Aurora {
                         if (v > 0) rst = StringInteger._addNonnegative(rst, base);
                         base = StringInteger._mulNonnegative(base, "2");
                     }
-                    return rst;
+
+                    return StringInteger._usnignedDecimalCheckBitsAndSigned(rst, bits, signed);
                 } else {
                     let first = n.charCodeAt(0);
                     let s = first === 43 || first === 45 ? 1 : 0;
@@ -517,9 +507,43 @@ namespace Aurora {
                         let c = n.charCodeAt(i);
                         if (c < 48 || c > 57) return "0";
                     }
-                    return first === 45 ? "-" + (s === 0 ? n : n.substr(s)) : (s === 0 ? n : n.substr(s));
+
+                    if (s > 0) n = n.substr(s);
+
+                    if (bits > 0) {
+                        let max = StringInteger.getMaxValue(bits);
+                        if (first === 45) {
+                            let limit = StringInteger._addNonnegative(max, "1");
+                            let minSigned = StringInteger._div(limit, "2")[0];
+                            if (StringInteger.compare(n, minSigned) > 0) n = minSigned;
+                            return signed ? "-" + n : StringInteger._subNonnegative(limit, n);
+                        } else {
+                            if (signed) {
+                                let limit = StringInteger._subNonnegative(max, "1");
+                                let maxSigned = StringInteger._div(limit, "2")[0];
+                                return StringInteger.compare(n, maxSigned) > 0 ? maxSigned : n;
+                            } else {
+                                return StringInteger.compare(n, max) > 0 ? max : n;
+                            }
+                        }
+                    } else {
+                        return first === 45 ? (signed ? "-" + n : "0") : n;
+                    }
                 }
             }
+        }
+
+        private static _usnignedDecimalCheckBitsAndSigned(n: string, bits: int, signed: boolean): string {
+            if (bits > 0) {
+                let max = StringInteger.getMaxValue(bits);
+                if (StringInteger.compare(n, max) > 0) n = max;
+                if (signed) {
+                    let limit = StringInteger._addNonnegative(max, "1");
+                    let minSigned = StringInteger._div(limit, "2")[0];
+                    if (StringInteger.compare(n, minSigned) >= 0) n = StringInteger._subNonnegative(n, limit);
+                }
+            }
+            return n;
         }
     }
 }

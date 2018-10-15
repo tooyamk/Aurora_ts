@@ -1,7 +1,3 @@
-class FBXNode {
-
-}
-
 class ARRFileTest {
     private _env: Env;
     private _modelNode: Aurora.Node3D;
@@ -83,50 +79,12 @@ class ARRFileTest {
     private _loadFBX(): void {
         let request = new XMLHttpRequest();
         request.addEventListener("loadend", () => {
-            let bytes = new Aurora.ByteArray(request.response);
-            bytes.position += 23;
-            let ver = bytes.readUint32();
+            Aurora.FBX.parse(new Aurora.ByteArray(request.response));
 
-            let root = new FBXNode();
-
-            while (bytes.bytesAvailable > 4) {
-                if (bytes.readUint32() < bytes.length) {
-                    bytes.position -= 4;
-
-                    this._parseFBXNode(bytes, root, ver);
-                } else {
-                    break;
-                }
-            }
+            let a = 1;
         });
         request.open("GET", Helper.getURL("all.FBX"), true);
         request.responseType = "arraybuffer";
         request.send();
-    }
-
-    private _parseFBXNode(bytes: Aurora.ByteArray, parentNode: FBXNode, ver: number): void {
-        let endOffset = ver < 7500 ? bytes.readUint32() : bytes.readUint32();
-        let numProperties = bytes.readUint32();
-        let propertyListLen = bytes.readUint32();
-        let nameLen = bytes.readUint8();
-        let name = bytes.readString(Aurora.ByteArrayStringMode.END_MARK, nameLen);
-        console.log(name);
-
-        let startPos = bytes.position;
-
-        let node = new FBXNode();
-        //
-
-        bytes.position = startPos + propertyListLen;
-
-        while (true) {
-            if (bytes.position < endOffset) {
-                this._parseFBXNode(bytes, node, ver);
-            } else {
-                break;
-            }
-        }
-
-        let a = 1;
     }
 }

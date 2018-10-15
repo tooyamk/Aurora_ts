@@ -26,6 +26,18 @@
             "problemMatcher": "$tsc-watch"
         },
         {
+            "label": "build-fbx",
+            "type": "shell",
+            "command": "gulp build-fbx"
+        },
+        {
+            "label": "build-fbx-watch",
+            "type": "shell",
+            "command": "gulp build-fbx-watch",
+            "isBackground": true,
+            "problemMatcher": "$tsc-watch"
+        },
+        {
             "label": "build-examples",
             "type": "shell",
             "command": "gulp build-examples"

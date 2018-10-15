@@ -6,7 +6,8 @@ namespace Aurora {
 
     export const enum ByteArrayStringMode {
         END_MARK,
-        DYNAMIC_LENGTH
+        DYNAMIC_LENGTH,
+        FIXED_LENGTH
     }
 
     export class ByteArray {
@@ -76,6 +77,20 @@ namespace Aurora {
 
         public get bytesAvailable(): uint {
             return this._logicLen - this._pos;
+        }
+
+        public readBool(): boolean {
+            if (this._pos + 1 > this._logicLen) {
+                this._pos = this._logicLen;
+                return false;
+            } else {
+                return this._raw.getUint8(this._pos++) !== 0;
+            }
+        }
+
+        public writeBool(value: boolean): void {
+            this._checkAndAllocateSpace(1);
+            this._raw.setUint8(this._pos++, value ? 1 : 0);
         }
 
         public readInt8(): int {
@@ -216,7 +231,15 @@ namespace Aurora {
             this._pos += 4;
         }
 
+        public readInt64(): string {
+            return this._readInt64(true);
+        }
+
         public readUint64(): string {
+            return this._readInt64(false);
+        }
+
+        private _readInt64(signed: boolean): string {
             if (this._pos + 8 > this._logicLen) {
                 this._pos = this._logicLen;
                 return "0";
@@ -232,11 +255,19 @@ namespace Aurora {
                 this._pos += 8;
                 let lowHex = low.toString(16);
                 for (let i = 0, n = 8 - lowHex.length; i < n; ++i) lowHex = "0" + lowHex;
-                return StringInteger.toDecimal("0x" + high.toString(16) + lowHex);
+                return StringInteger.toDecimal("0x" + high.toString(16) + lowHex, 64, signed);
             }
         }
 
+        public writeInt64(value: string): void {
+            this._writeInt64(value);
+        };
+
         public writeUint64(value: string): void {
+            this._writeInt64(value);
+        }
+
+        private _writeInt64(value: string): void {
             this._checkAndAllocateSpace(8);
             let hex = StringInteger.toHexadecimal(value, 64);
             let low: uint, high: uint;
@@ -256,7 +287,7 @@ namespace Aurora {
                 this._raw.setUint32(this._pos, high, false);
                 this._raw.setUint32(this._pos + 4, low, false);
             }
-            
+
             this._pos += 8;
         }
 
@@ -294,7 +325,20 @@ namespace Aurora {
             this._pos += 8;
         }
 
-        public readBytes(value: ByteArray, length: uint = null): void {
+        public readBytes(length: uint): ByteArray;
+        public readBytes(value: ByteArray, length: uint): void;
+
+        public readBytes(...args: any[]): ByteArray | void {
+            let bytes: ByteArray = null;
+            let length: uint = null;
+
+            if (args.length === 1) {
+                length = args[0];
+            } else {
+                bytes = args[0];
+                length = args[1];
+            }
+
             let last = this._logicLen - this._pos;
             if (length === null || length === undefined) {
                 length = last;
@@ -302,7 +346,8 @@ namespace Aurora {
                 length = last;
             }
             
-            value.writeBytes(this, length);
+            if (!bytes) bytes = new ByteArray(length);
+            bytes.writeBytes(this, length);
             this._pos += length;
         }
 
@@ -334,6 +379,11 @@ namespace Aurora {
                     this._pos += n;
                     return rst.string;
                 }
+                case ByteArrayStringMode.FIXED_LENGTH: {
+                    let rst = ByteArray.decodeUTF8(this._raw, this._pos, maxLength);
+                    this._pos += maxLength === null || maxLength === undefined || maxLength < 0 ? rst.byteLength : maxLength;
+                    return rst.string;
+                }
                 default:
                     return "";
             }
@@ -343,7 +393,7 @@ namespace Aurora {
             let arr = ByteArray.encodeUTF8(value);
             let n = arr.length;
             switch (mode) {
-                case ByteArrayStringMode.END_MARK: {
+                case ByteArrayStringMode.END_MARK, ByteArrayStringMode.FIXED_LENGTH: {
                     this._checkAndAllocateSpace(n + 1);
                     let raw = this._raw;
                     let pos = this._pos;
