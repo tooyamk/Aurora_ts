@@ -279,55 +279,48 @@ namespace Aurora {
                 if (data instanceof Array) {
                     let src: ArrayBufferView;
                     switch (type) {
-                        case GLVertexBufferDataType.BYTE:
-                            {
-                                this._sizePerElement = 1;
-                                src = new Int8Array(data);
+                        case GLVertexBufferDataType.BYTE: {
+                            this._sizePerElement = 1;
+                            src = new Int8Array(data);
 
-                                break;
-                            }
-                        case GLVertexBufferDataType.UNSIGNED_BYTE:
-                            {
-                                this._sizePerElement = 1;
-                                src = new Uint8Array(data);
+                            break;
+                        }
+                        case GLVertexBufferDataType.UNSIGNED_BYTE: {
+                            this._sizePerElement = 1;
+                            src = new Uint8Array(data);
 
-                                break;
-                            }
-                        case GLVertexBufferDataType.SHORT:
-                            {
-                                this._sizePerElement = 2;
-                                src = new Int16Array(data);
+                            break;
+                        }
+                        case GLVertexBufferDataType.SHORT: {
+                            this._sizePerElement = 2;
+                            src = new Int16Array(data);
 
-                                break;
-                            }
-                        case GLVertexBufferDataType.UNSIGNED_SHORT:
-                            {
-                                this._sizePerElement = 2;
-                                src = new Uint16Array(data);
+                            break;
+                        }
+                        case GLVertexBufferDataType.UNSIGNED_SHORT: {
+                            this._sizePerElement = 2;
+                            src = new Uint16Array(data);
 
-                                break;
-                            }
-                        case GLVertexBufferDataType.INT:
-                            {
-                                this._sizePerElement = 4;
-                                src = new Uint32Array(data);
+                            break;
+                        }
+                        case GLVertexBufferDataType.INT: {
+                            this._sizePerElement = 4;
+                            src = new Uint32Array(data);
 
-                                break;
-                            }
-                        case GLVertexBufferDataType.UNSIGNED_INT:
-                            {
-                                this._sizePerElement = 4;
-                                src = new Uint32Array(data);
+                            break;
+                        }
+                        case GLVertexBufferDataType.UNSIGNED_INT: {
+                            this._sizePerElement = 4;
+                            src = new Uint32Array(data);
 
-                                break;
-                            }
-                        case GLVertexBufferDataType.FLOAT:
-                            {
-                                this._sizePerElement = 4;
-                                src = new Float32Array(data);
+                            break;
+                        }
+                        case GLVertexBufferDataType.FLOAT: {
+                            this._sizePerElement = 4;
+                            src = new Float32Array(data);
 
-                                break;
-                            }
+                            break;
+                        }
                         default:
                             this._sizePerElement = 0;
                             break;
@@ -525,17 +518,16 @@ namespace Aurora {
                                 case GLIndexDataType.UNSIGNED_SHORT:
                                     src = new Uint16Array(data);
                                     break;
-                                case GLIndexDataType.UNSIGNED_INT:
-                                    {
-                                        if (this._gl.supprotUintIndexes) {
-                                            src = new Uint32Array(data);
-                                        } else {
-                                            this._dataType = GLIndexDataType.UNSIGNED_SHORT;
-                                            src = new Uint16Array(data);
-                                        }
-
-                                        break;
+                                case GLIndexDataType.UNSIGNED_INT: {
+                                    if (this._gl.supprotUintIndexes) {
+                                        src = new Uint32Array(data);
+                                    } else {
+                                        this._dataType = GLIndexDataType.UNSIGNED_SHORT;
+                                        src = new Uint16Array(data);
                                     }
+
+                                    break;
+                                }
                                 default:
                                     throw new Error("invalid type");
                                     break;
@@ -1000,8 +992,6 @@ namespace Aurora {
             if (this._tex) {
                 this.bind();
 
-                let argsLen = args.length;
-
                 if (this._gl.version >= 2) {
                     switch (args.length) {
                         case 6:
@@ -1010,20 +1000,18 @@ namespace Aurora {
                         case 5:
                             this._gl.context.texSubImage2D(target, level, xoffset, yoffset, <uint>args[0], <uint>args[1], <GLTexFormat>args[2], <GLTexDataType>args[3], <GLImage>args[4]);
                             break;
-                        case 4:
-                            {
-                                (<AbstractGLBuffer>args[2]).bind();
-                                this._gl.context.texSubImage2D(target, level, xoffset, yoffset, <GLTexFormat>args[0], <GLTexDataType>args[1], <GLintptr>args[3]);
+                        case 4: {
+                            (<AbstractGLBuffer>args[2]).bind();
+                            this._gl.context.texSubImage2D(target, level, xoffset, yoffset, <GLTexFormat>args[0], <GLTexDataType>args[1], <GLintptr>args[3]);
 
-                                break;
-                            }
-                        case 3:
-                            {
-                                let img = <GLImage>args[2];
-                                this._gl.context.texSubImage2D(target, level, xoffset, yoffset, img.width, img.height, <GLTexFormat>args[0], <GLTexDataType>args[1], img);
+                            break;
+                        }
+                        case 3: {
+                            let img = <GLImage>args[2];
+                            this._gl.context.texSubImage2D(target, level, xoffset, yoffset, img.width, img.height, <GLTexFormat>args[0], <GLTexDataType>args[1], img);
 
-                                break;
-                            }
+                            break;
+                        }
                         default:
                             break;
                     }
@@ -3382,57 +3370,53 @@ namespace Aurora {
             let buf = buffer.internalBuffer;
 
             switch (target) {
-                case 0:
-                    {
-                        if (this._bindingFrameBuffer !== buf) {
-                            this._bindingFrameBuffer = buf;
+                case 0: {
+                    if (this._bindingFrameBuffer !== buf) {
+                        this._bindingFrameBuffer = buf;
 
-                            if (this._version >= 2) {
-                                this._bindingReadFrameBuffer = buf;
-                                this._bindingDrawFrameBuffer = buf;
-                            }
-
-                            this._gl.bindFramebuffer(target, buf);
-                        }
-
-                        break;
-                    }
-                case GLFrameBufferTarget.FRAMEBUFFER:
-                    {
-                        if (this._bindingFrameBuffer !== buf) {
-                            this._bindingFrameBuffer = buf;
-
-                            if (this._version >= 2) {
-                                this._bindingReadFrameBuffer = buf;
-                                this._bindingDrawFrameBuffer = buf;
-                            }
-
-                            this._gl.bindFramebuffer(target, buf);
-                        }
-
-                        break;
-                    }
-                case GLFrameBufferTarget.READ_FRAMEBUFFER:
-                    {
-                        if (this._version >= 2 && this._bindingReadFrameBuffer !== buf) {
+                        if (this._version >= 2) {
                             this._bindingReadFrameBuffer = buf;
-
-                            this._gl.bindFramebuffer(target, buf);
-                        }
-
-                        break;
-                    }
-                case GLFrameBufferTarget.DRAW_FRAMEBUFFER:
-                    {
-                        if (this._version >= 2 && this._bindingDrawFrameBuffer !== buf) {
                             this._bindingDrawFrameBuffer = buf;
-                            this._bindingFrameBuffer = buf;
-
-                            this._gl.bindFramebuffer(target, buf);
                         }
 
-                        break;
+                        this._gl.bindFramebuffer(target, buf);
                     }
+
+                    break;
+                }
+                case GLFrameBufferTarget.FRAMEBUFFER: {
+                    if (this._bindingFrameBuffer !== buf) {
+                        this._bindingFrameBuffer = buf;
+
+                        if (this._version >= 2) {
+                            this._bindingReadFrameBuffer = buf;
+                            this._bindingDrawFrameBuffer = buf;
+                        }
+
+                        this._gl.bindFramebuffer(target, buf);
+                    }
+
+                    break;
+                }
+                case GLFrameBufferTarget.READ_FRAMEBUFFER: {
+                    if (this._version >= 2 && this._bindingReadFrameBuffer !== buf) {
+                        this._bindingReadFrameBuffer = buf;
+
+                        this._gl.bindFramebuffer(target, buf);
+                    }
+
+                    break;
+                }
+                case GLFrameBufferTarget.DRAW_FRAMEBUFFER: {
+                    if (this._version >= 2 && this._bindingDrawFrameBuffer !== buf) {
+                        this._bindingDrawFrameBuffer = buf;
+                        this._bindingFrameBuffer = buf;
+
+                        this._gl.bindFramebuffer(target, buf);
+                    }
+
+                    break;
+                }
                 default:
                     break;
             }
@@ -3442,57 +3426,53 @@ namespace Aurora {
             let buf = buffer.internalBuffer;
 
             switch (target) {
-                case 0:
-                    {
-                        if (this._bindingFrameBuffer === buf) {
-                            this._bindingFrameBuffer = null;
+                case 0: {
+                    if (this._bindingFrameBuffer === buf) {
+                        this._bindingFrameBuffer = null;
 
-                            if (this._version >= 2) {
-                                this._bindingReadFrameBuffer = null;
-                                this._bindingDrawFrameBuffer = null;
-                            }
-
-                            this._gl.bindFramebuffer(target, null);
-                        }
-
-                        break;
-                    }
-                case GLFrameBufferTarget.FRAMEBUFFER:
-                    {
-                        if (this._bindingFrameBuffer === buf) {
-                            this._bindingFrameBuffer = null;
-
-                            if (this._version >= 2) {
-                                this._bindingReadFrameBuffer = null;
-                                this._bindingDrawFrameBuffer = null;
-                            }
-
-                            this._gl.bindFramebuffer(target, null);
-                        }
-
-                        break;
-                    }
-                case GLFrameBufferTarget.READ_FRAMEBUFFER:
-                    {
-                        if (this._version >= 2 && this._bindingReadFrameBuffer === buf) {
+                        if (this._version >= 2) {
                             this._bindingReadFrameBuffer = null;
-
-                            this._gl.bindFramebuffer(target, null);
-                        }
-
-                        break;
-                    }
-                case GLFrameBufferTarget.DRAW_FRAMEBUFFER:
-                    {
-                        if (this._version >= 2 && this._bindingDrawFrameBuffer === buf) {
                             this._bindingDrawFrameBuffer = null;
-                            this._bindingFrameBuffer = null;
-
-                            this._gl.bindFramebuffer(target, null);
                         }
 
-                        break;
+                        this._gl.bindFramebuffer(target, null);
                     }
+
+                    break;
+                }
+                case GLFrameBufferTarget.FRAMEBUFFER: {
+                    if (this._bindingFrameBuffer === buf) {
+                        this._bindingFrameBuffer = null;
+
+                        if (this._version >= 2) {
+                            this._bindingReadFrameBuffer = null;
+                            this._bindingDrawFrameBuffer = null;
+                        }
+
+                        this._gl.bindFramebuffer(target, null);
+                    }
+
+                    break;
+                }
+                case GLFrameBufferTarget.READ_FRAMEBUFFER: {
+                    if (this._version >= 2 && this._bindingReadFrameBuffer === buf) {
+                        this._bindingReadFrameBuffer = null;
+
+                        this._gl.bindFramebuffer(target, null);
+                    }
+
+                    break;
+                }
+                case GLFrameBufferTarget.DRAW_FRAMEBUFFER: {
+                    if (this._version >= 2 && this._bindingDrawFrameBuffer === buf) {
+                        this._bindingDrawFrameBuffer = null;
+                        this._bindingFrameBuffer = null;
+
+                        this._gl.bindFramebuffer(target, null);
+                    }
+
+                    break;
+                }
                 default:
                     break;
             }

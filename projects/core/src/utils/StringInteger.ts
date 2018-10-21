@@ -265,7 +265,7 @@ namespace Aurora {
 
             let quotient = "0", remainder = "0";
 
-            while (true) {
+            do {
                 let compare = StringInteger._compareNonnegative(a, b);
                 if (compare > 0) {
                     let digitsA = a.length;
@@ -282,7 +282,7 @@ namespace Aurora {
                             quotient = StringInteger._addNonnegative(quotient, mul);
                             remainder = StringInteger._subNonnegative(a, StringInteger._mulNonnegative(b, mul));
                         } else {
-                            mul = StringInteger._mulNonnegative(mul, n.toString());
+                            mul = n.toString() + mul.substr(1);
                             quotient = StringInteger._addNonnegative(quotient, mul);
                             remainder = StringInteger._subNonnegative(a, StringInteger._mulNonnegative(b, mul));
                         }
@@ -319,7 +319,7 @@ namespace Aurora {
                 } else {
                     a = remainder;
                 }
-            }
+            } while (true);
 
             return [quotient, remainder];
         }
