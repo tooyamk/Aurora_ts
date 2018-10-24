@@ -13,7 +13,11 @@ namespace Aurora {
         d = 0x64,
         f = 0x66,
         i = 0x69,
-        l = 0x6C
+        l = 0x6C,
+        DIRECT = "Direct",
+        INDEX_TO_DIRECT = "IndexToDirect",
+        BY_CONTROL_POINT = "ByControlVertex",
+        BY_POLYGON_VERTEX = "ByPolygonVertex"
     }
 
     export const enum FBXNodePropertyValueType {

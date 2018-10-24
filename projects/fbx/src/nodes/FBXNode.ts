@@ -25,6 +25,7 @@ namespace Aurora {
         POSE_NODE = "PoseNode",
         PROPERTIES70 = "Properties70",
         REFERENCE_INFORMATION_TYPE = "ReferenceInformationType",
+        MAPPING_INFORMATION_TYPE = "MappingInformationType",
         TRANSFORM = "Transform",
         TRANSFORM_LINK = "TransformLink",
         UV = "UV",

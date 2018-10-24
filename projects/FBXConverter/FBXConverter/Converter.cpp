@@ -61,7 +61,30 @@ void Converter::_parseMesh(FbxNode* node) {
 	auto mesh = node->GetMesh();
 	if (mesh != nullptr) {
 		printf("mesh\n");
+
+		int numTris = mesh->GetPolygonCount();
+		auto ctrlPoints = mesh->GetControlPoints();
+		for (int i = 0; i < numTris; ++i) {
+			for (int j = 0; j < 3; ++j) {
+				int idx = mesh->GetPolygonVertex(i, j);
+				this->_parseVertex(ctrlPoints, idx);
+
+				idx = mesh->GetTextureUVIndex(i, j);
+				auto uvs = mesh->GetElementUV();
+				auto uv = uvs->GetDirectArray().GetAt(idx);
+				printf("uv %d  %d  %d  %f  %f\n", i, j, idx, uv[0], uv[1]);
+			}
+		}
 	}
+}
+
+void Converter::_parseVertex(FbxVector4* ctrlPoints, int index) {
+	auto& v = ctrlPoints[index];
+	float x = v.mData[0];
+	float y = v.mData[1];
+	float z = v.mData[2];
+
+	//printf("p %f  %f  %f\n", x, y, z);
 }
 
 void Converter::_parseSkeleton(FbxNode* node) {

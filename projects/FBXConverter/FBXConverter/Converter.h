@@ -15,5 +15,6 @@ private:
 
 	void _parseNode(FbxNode* node);
 	void _parseMesh(FbxNode* node);
+	void _parseVertex(FbxVector4* ctrlPoints, int index);
 	void _parseSkeleton(FbxNode* node);
 };
