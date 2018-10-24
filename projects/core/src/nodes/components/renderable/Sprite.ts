@@ -132,12 +132,20 @@ namespace Aurora {
             this._scale.y;
         }
 
-        public getScale(): Vector2 {
+        public get readonlyScale(): Vector2 {
             return this._scale;
         }
 
+        public getScale(rst: Vector2 = null): Vector2 {
+            return rst ? rst.set(this._scale) : this._scale.clone();
+        }
+
         public setScale(s: Vector2 | Vector3 | Vector4) {
-            this._scale.set(s);
+            if (s) this._scale.set(s);
+        }
+
+        public get readonlyAnchor(): Vector2 {
+            return this._anchor;
         }
 
         public getAnchor(rst: Vector2 = null): Vector2 {

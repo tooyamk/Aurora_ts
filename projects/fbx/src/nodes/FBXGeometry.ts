@@ -32,6 +32,8 @@ namespace Aurora {
                             break;
                     }
                 }
+
+                if (this.asset && needTriangulate) this.asset.drawIndexSource.triangulate(faces);
             }
         }
 
@@ -73,9 +75,7 @@ namespace Aurora {
         private _getPropertyValue<T>(node: FBXNode, type: FBXNodePropertyValueType): T {
             if (node.properties.length > 0) {
                 let p = node.properties[0];
-                if (p.type === type) {
-                    return <T><any>p.value;
-                }
+                if (p.type === type) return <T><any>p.value;
             }
             return null;
         }
