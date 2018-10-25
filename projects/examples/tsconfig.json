@@ -14,8 +14,11 @@
     "listFiles": true,
     "listEmittedFiles": true,
     "noResolve": true,
-    "outFile": "../../dist/test.js"
+    "outFile": "../../dist/test.js",
   },
+  "files": [
+    "../fbx/zlib.d.ts"
+  ],
   "include": [ "./**/*.ts" ],
   "exclude": [],
   "compileOnSave": true,

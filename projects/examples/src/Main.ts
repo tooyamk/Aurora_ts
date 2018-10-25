@@ -6,7 +6,7 @@
 document.oncontextmenu = () => { return false; }
 
 window.addEventListener("DOMContentLoaded", () => {
-    new ARRFileTest();
+    new FileTest();
     //new Other();
     //new SimpleWorld();
     //new SpriteAtlasTest();

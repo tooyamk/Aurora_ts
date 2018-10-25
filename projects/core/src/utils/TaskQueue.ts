@@ -55,8 +55,8 @@ namespace Aurora {
 
         private _taskFinish(): void {
             if (this._running) {
-                this._process = this._tasks.length === 0 ? 1 : (this._cur < 0 ? 0 : this._cur / this._tasks.length);
-                if (this._cur >= 0) this._tasks[this._cur] = null;
+                this._process = this._tasks.length === 0 ? 1 : (this._cur <= 0 ? 0 : this._cur / this._tasks.length);
+                if (this._cur >= 1) this._tasks[this._cur - 1] = null;
 
                 if (this._cur >= this._tasks.length) {
                     this._tasks.length = 0;
@@ -66,7 +66,7 @@ namespace Aurora {
                         func();
                     }
                 } else {
-                    this._tasks[++this._cur].start(Handler.create(this, this._taskFinish, true));
+                    this._tasks[this._cur++].start(Handler.create(this, this._taskFinish, true));
                 }
             }
         }

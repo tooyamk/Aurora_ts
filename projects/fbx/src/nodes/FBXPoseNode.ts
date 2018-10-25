@@ -1,7 +1,7 @@
 ///<reference path="FBXNode.ts"/>
 
 namespace Aurora {
-    export class FBXDeformer extends FBXNode {
+    export class FBXPoseNode extends FBXNode {
         public finish(): void {
             super.finish();
 

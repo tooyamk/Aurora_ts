@@ -1,31 +1,31 @@
 namespace Aurora {
     export abstract class FBX {
-        public static parse(data: ByteArray): void {
+        public static parse(data: ByteArray): FBXParseResult {
             data.position += 23;
             let ver = data.readUint32();
 
+            let collections = new FBXCollections();
             let root = new FBXNode();
 
             while (data.bytesAvailable > 4) {
                 if (data.readUint32() < data.length) {
                     data.position -= 4;
 
-                    FBX._parseNode(data, root, ver);
+                    FBX._parseNode(data, root, ver, collections);
                 } else {
                     break;
                 }
             }
 
-            let a = 1;
+            return collections.parse();
         }
 
-        private static _parseNode(data: ByteArray, parentNode: FBXNode, ver: number): void {
+        private static _parseNode(data: ByteArray, parentNode: FBXNode, ver: number, collections: FBXCollections): void {
             let endOffset = ver < 7500 ? data.readUint32() : parseInt(data.readUint64());
             let numProperties = ver < 7500 ? data.readUint32() : parseInt(data.readUint64());
             let propertyListLen = ver < 7500 ? data.readUint32() : parseInt(data.readUint64());
             let nameLen = data.readUint8();
             let name = data.readString(ByteArrayStringMode.END_MARK, nameLen);
-            //console.log(name);
 
             if (endOffset === 0) return;
 
@@ -47,19 +47,23 @@ namespace Aurora {
                     node = new FBXAnimationStack();
                     break;
                 case FBXNodeName.C:
-                    node = new FBXSubConnection();
+                case FBXNodeName.CONNECTIONS:
+                    node = collections.addConnections(new FBXConnection());
                     break;
                 case FBXNodeName.DEFORMER:
-                    node = new FBXDeformer();
+                    node = collections.addDeformer(new FBXDeformer());
                     break;
                 case FBXNodeName.GEOMETRY:
-                    node = new FBXGeometry();
+                    node = collections.addGeometry(new FBXGeometry());
                     break;
                 case FBXNodeName.GLOBAL_SETTINGS:
                     node = new FBXGlobalSettings();
                     break;
                 case FBXNodeName.MODEL:
-                    node = new FBXModel();
+                    node = collections.addModel(new FBXModel());
+                    break;
+                case FBXNodeName.POSE_NODE:
+                    node = new FBXPoseNode();
                     break;
                 default:
                     node = new FBXNode();
@@ -78,9 +82,9 @@ namespace Aurora {
 
             data.position = startPos + propertyListLen;
 
-            while (data.position < endOffset) FBX._parseNode(data, node, ver);
+            while (data.position < endOffset) FBX._parseNode(data, node, ver, collections);
 
-            node.parse();
+            node.finish();
         }
 
         private static _parseNodeProperty(data: ByteArray): FBXNodeProperty {
@@ -150,10 +154,11 @@ namespace Aurora {
 
                     if (encoding === 1) {
                         if (typeof Zlib === 'undefined') {
+                            console.error('FBX parse error: need thirdparty library zlib.js, see https://github.com/imaya/zlib.js');
                             data.position += compressedLength;
                             break;
                         } else {
-                            let inflate = new Zlib.Inflate(new Uint8Array(data.raw.slice(data.position, compressedLength)));
+                            let inflate = new Zlib.Inflate(new Uint8Array(data.raw), { index: data.position, bufferSize: compressedLength });
                             data.position += compressedLength;
                             uncompressedData = new ByteArray(inflate.decompress().buffer);
                         }

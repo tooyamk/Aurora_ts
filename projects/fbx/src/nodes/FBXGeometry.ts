@@ -2,13 +2,7 @@
 
 namespace Aurora {
     export class FBXGeometry extends FBXNode {
-        public asset: MeshAsset = null;
-
-        public parse(): void {
-            super.parse();
-
-            this._id = <int>this.properties[0].value;
-
+        public createMeshAsset(collections: FBXCollections): MeshAsset {
             let sourceIndices: uint[] = [];
             let faces: uint[] = [];
             let needTriangulate = false;
@@ -16,33 +10,61 @@ namespace Aurora {
             if (child) needTriangulate = this._parsePolygonVertexIndex(child, sourceIndices, faces);
 
             if (sourceIndices.length > 0) {
+                let asset = new MeshAsset();
+
                 for (let i = 0, n = this.children.length; i < n; ++i) {
                     let child = this.children[i];
                     switch (child.name) {
                         case FBXNodeName.VERTICES:
-                            this._parseVertices(child, sourceIndices);
+                            this._parseVertices(child, sourceIndices, asset);
                             break;
                         case FBXNodeName.LAYER_ELEMENT_NORMAL:
-                            this._parseNormals(child, sourceIndices);
+                            this._parseNormals(child, sourceIndices, asset);
                             break;
                         case FBXNodeName.LAYER_ELEMENT_UV:
-                            this._parseUVs(child, sourceIndices);
+                            this._parseUVs(child, sourceIndices, asset);
                             break;
                         default:
                             break;
                     }
                 }
 
-                if (this.asset && needTriangulate) this.asset.drawIndexSource.triangulate(faces);
+                this._parseSkin(asset, collections);
+
+                if (needTriangulate) asset.drawIndexSource.triangulate(faces);
+                asset.drawIndexSource.invert();
+                return asset;
+            }
+            return null;
+        }
+
+        private _parseSkin(asset: MeshAsset, collections: FBXCollections): void {
+            let skins = collections.findChildren(this._id, FBXDeformer, FBXNodeAttribType.SKIN);
+            if (skins) {
+                for (let i = 0, n = skins.length; i < n; ++i) {
+                    let clusters = collections.findChildren(skins[i].id, FBXDeformer, FBXNodeAttribType.CLUSTER);
+                    if (clusters) {
+                        for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, collections, clusters[j]);
+                    }
+                }
             }
         }
 
-        private _getOrCreateAsset(): MeshAsset {
-            if (!this.asset) this.asset = new MeshAsset();
-            return this.asset;
+        private _parseCluster(asset: MeshAsset, collections: FBXCollections, cluster: FBXDeformer): void {
+            for (let i = 0, n = cluster.children.length; i < n; ++i) {
+                let child = cluster.children[i];
+                let children = collections.getConnectionParents(child.id);
+                switch (child.name) {
+                    case FBXNodeName.TRANSFORM_LINK:
+                        break;
+                    default:
+                        console.log(child.name);
+                        break;
+                }
+            }
         }
 
-        private _parseVertices(node: FBXNode, sourceIndices: number[]): void {
+        private _parseVertices(node: FBXNode, sourceIndices: number[], asset: MeshAsset): void {
             if (node.properties && node.properties.length > 0) {
                 let p = node.properties[0];
                 if (p.type === FBXNodePropertyValueType.NUMBER_ARRAY) {
@@ -60,14 +82,14 @@ namespace Aurora {
                     for (let i = 0; i < n; ++i) {
                         let idx = sourceIndices[i] * 3;
                         vertices[vertIdx++]= sourceVertices[idx];
-                        vertices[vertIdx++] = sourceVertices[idx + 1];
                         vertices[vertIdx++] = sourceVertices[idx + 2];
+                        vertices[vertIdx++] = sourceVertices[idx + 1];
 
                         indices[i] = i;
                     }
 
-                    this._getOrCreateAsset().drawIndexSource = new DrawIndexSource(indices, GLIndexDataType.AUTO, GLUsageType.STATIC_DRAW);
-                    this._getOrCreateAsset().addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
+                    asset.drawIndexSource = new DrawIndexSource(indices, GLIndexDataType.AUTO, GLUsageType.STATIC_DRAW);
+                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
                 }
             }
         }
@@ -121,7 +143,7 @@ namespace Aurora {
             return null;
         }
 
-        private _parseNormals(node: FBXNode, sourceIndices: uint[]): void {
+        private _parseNormals(node: FBXNode, sourceIndices: uint[], asset: MeshAsset): void {
             let values: number[] = null;
             let refType: string = null;
             let mappingType: string = null;
@@ -143,10 +165,17 @@ namespace Aurora {
             }
 
             let normals = this._parseVertexSource(values, null, refType, mappingType, sourceIndices, 3);
-            if (normals) this._getOrCreateAsset().addVertexSource(new VertexSource(ShaderPredefined.a_Normal0, normals, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
+            if (normals) {
+                for (let i = 1, n = normals.length; i < n; i += 3) {
+                    let y = normals[i];
+                    normals[i] = normals[i + 1];
+                    normals[i + 1] = y;
+                }
+                asset.addVertexSource(new VertexSource(ShaderPredefined.a_Normal0, normals, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
+            }
         }
 
-        private _parseUVs(node: FBXNode, sourceIndices: uint[]): void {
+        private _parseUVs(node: FBXNode, sourceIndices: uint[], asset: MeshAsset): void {
             let values: number[] = null;
             let indices: uint[] = null;
             let refType: string = null;
@@ -172,7 +201,10 @@ namespace Aurora {
             }
 
             let uvs = this._parseVertexSource(values, indices, refType, mappingType, sourceIndices, 2);
-            if (uvs) this._getOrCreateAsset().addVertexSource(new VertexSource(ShaderPredefined.a_TexCoord0, uvs, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
+            if (uvs) {
+                for (let i = 1, n = uvs.length; i < n; i += 2) uvs[i] = 1 - uvs[i];
+                asset.addVertexSource(new VertexSource(ShaderPredefined.a_TexCoord0, uvs, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
+            }
         }
 
         private _parsePolygonVertexIndex(node: FBXNode, sourceIndices: uint[], faces: uint[]): boolean {
@@ -204,49 +236,5 @@ namespace Aurora {
 
             return needTriangulate;
         }
-
-        /*
-        private _parsePolygonVertexIndex(node: FBXNode): uint[] {
-            if (node.properties && node.properties.length > 0) {
-                let p = node.properties[0];
-                if (p.type === FBXNodePropertyValueType.INT_ARRAY) {
-                    let src = <int[]>p.value;
-                    let len = src.length;
-
-                    let indices: uint[] = [];
-                    let idx = 0;
-                    for (let i = 0; i < len; ++i) {
-                        let end: uint;
-                        for (let j = i + 2; j < len; ++j) {
-                            if (src[j] < 0) {
-                                end = j;
-                                src[j] = ~src[j];
-                                break;
-                            }
-                        }
-
-                        let n = end - i + 1;
-
-                        indices[idx++] = src[i];
-                        indices[idx++] = src[i + 1];
-                        indices[idx++] = src[i + 2];
-
-                        for (let j = 0, nn = n - 3; j < nn; ++j) {
-                            let offset = j + 1;
-                            indices[idx++] = src[i];
-                            indices[idx++] = src[i + offset + 1];
-                            indices[idx++] = src[i + offset + 2];
-                        }
-
-                        i = end;
-                    }
-
-                    return indices;
-                }
-            }
-
-            return null;
-        }
-        */
     }
 }

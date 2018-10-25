@@ -662,7 +662,7 @@ namespace Aurora {
         }
 
         private static compileErrorLog(type: GLShaderType, source: string, msg: string): void {
-            console.log("compile " + (type === GLShaderType.VERTEX_SHADER ? "vertex" : "fragment") + " shader error : \n" + source + "\n" + msg);
+            console.error("compile " + (type === GLShaderType.VERTEX_SHADER ? "vertex" : "fragment") + " shader error : \n" + source + "\n" + msg);
         }
     }
 
@@ -815,7 +815,7 @@ namespace Aurora {
             } else {
                 gl.validateProgram(this._program);
                 err = gl.getProgramInfoLog(this._program);
-                console.log("link program error : " + err);
+                console.error("link program error : " + err);
 
                 this._attributes = null;
                 this._uniforms = null;
@@ -906,7 +906,7 @@ namespace Aurora {
                 this._gl.bindTexture(this, force);
                 return true;
             } else {
-                console.log("can not call bind method, tex is destroyed");
+                console.error("can not call bind method, tex is destroyed");
                 return false;
             }
         }
@@ -918,7 +918,7 @@ namespace Aurora {
                     return true;
                 }
             } else {
-                console.log("can not call use method, tex is destroyed");
+                console.error("can not call use method, tex is destroyed");
             }
             return false;
         }

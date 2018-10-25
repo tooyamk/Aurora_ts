@@ -41,8 +41,8 @@ namespace Aurora {
         public static create(caller: any, callback: HandlerType, once: boolean): Handler {
             let h: Handler;
             if (Handler._num > 0) {
-                h = Handler._pool[Handler._num];
-                Handler._pool[Handler._num--] = null;
+                h = Handler._pool[--Handler._num];
+                Handler._pool[Handler._num] = null;
             } else {
                 h = new Handler();
             }
@@ -60,9 +60,9 @@ namespace Aurora {
         public emit(e: Event): boolean {
             if (this.callback) {
                 if (this.caller) {
-                    this.callback(e);
-                } else {
                     this.callback.call(this.caller, e);
+                } else {
+                    this.callback(e);
                 }
             }
             if (this.once) {

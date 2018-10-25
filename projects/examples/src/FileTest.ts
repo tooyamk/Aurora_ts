@@ -1,4 +1,4 @@
-class ARRFileTest {
+class FileTest {
     private _env: Env;
     private _modelNode: Aurora.Node3D;
 
@@ -8,7 +8,7 @@ class ARRFileTest {
 
         let modelNode = env.world.addChild(new Aurora.Node3D());
         let light = env.world.addChild(new Aurora.Node3D()).addComponent(new Aurora.PointLight());
-        light.setAttenuation(2500);
+        light.setAttenuation(12500);
 
         modelNode.localTranslate(0, 0, 500);
         this._modelNode = modelNode;
@@ -20,7 +20,7 @@ class ARRFileTest {
             env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
         },
         (delta: number) => {
-            modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.001 * delta * Math.PI));
+            modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.0005 * delta * Math.PI));
             env.renderingManager.render(env.gl, env.camera, env.world, [light]);
         });
 
@@ -59,7 +59,6 @@ class ARRFileTest {
                 Helper.printNodeHierarchy(file.skeletons[0].rootBones);
             }
 
-
             let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
             mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
             mat.uniforms.setNumber(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
@@ -77,14 +76,47 @@ class ARRFileTest {
     }
 
     private _loadFBX(): void {
-        let request = new XMLHttpRequest();
-        request.addEventListener("loadend", () => {
-            Aurora.FBX.parse(new Aurora.ByteArray(request.response));
+        let result: Aurora.FBXParseResult = null;
+        let img: HTMLImageElement = null;
 
-            let a = 1;
+        let taskQueue = new Aurora.TaskQueue();
+        taskQueue.createTask((task: Aurora.Task) => {
+            let request = new XMLHttpRequest();
+            request.addEventListener("loadend", () => {
+                result = Aurora.FBX.parse(new Aurora.ByteArray(request.response));
+                task.finish();
+            });
+            //request.open("GET", Helper.getURL("people/model.FBX"), true);
+            request.open("GET", Helper.getURL("skinPeople/model.FBX"), true);
+            request.responseType = "arraybuffer";
+            request.send();
         });
-        request.open("GET", Helper.getURL("all.FBX"), true);
-        request.responseType = "arraybuffer";
-        request.send();
+        taskQueue.createTask((task: Aurora.Task) => {
+            img = new Image();
+            img.onload = () => {
+                task.finish();
+            }
+            img.src = Helper.getURL("skinPeople/tex.png");
+        });
+        taskQueue.start(() => {
+            let tex = new Aurora.GLTexture2D(this._env.gl);
+            tex.upload(0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
+
+            let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
+            mat.cullFace = Aurora.GLCullFace.NONE;
+            mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
+            mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
+            mat.uniforms.setNumber(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
+            mat.uniforms.setNumber(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
+            mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
+
+            let mesh = this._modelNode.addChild(new Aurora.Node3D()).addComponent(new Aurora.Mesh());
+            mesh.renderer = this._env.forwardRenderer;
+            mesh.asset = result.meshes[0];
+            mesh.materials = [mat];
+
+            mesh.node.setLocalScale(30, 30, 30);
+        });
+        
     }
 }

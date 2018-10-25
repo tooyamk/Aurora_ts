@@ -65,6 +65,17 @@ namespace Aurora {
             }
         }
 
+        public invert(): void {
+            if (this.data) {
+                let src = this.data;
+                for (let i = 1, n = src.length; i < n; i += 3) {
+                    let idx = src[i];
+                    src[i] = src[i + 1];
+                    src[i + 1] = idx;
+                }
+            }
+        }
+
         public createBuffer(gl: GL): GLIndexBuffer {
             if (this.data && gl) {
                 let buffer = new GLIndexBuffer(gl);
