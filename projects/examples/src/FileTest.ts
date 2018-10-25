@@ -56,7 +56,7 @@ class FileTest {
             let file = Aurora.ARRFile.parse(new Aurora.ByteArray(request.response));
 
             if (file.skeletons) {
-                Helper.printNodeHierarchy(file.skeletons[0].rootBones);
+                //Helper.printNodeHierarchy(file.skeletons[0].rootBones);
             }
 
             let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
@@ -87,7 +87,7 @@ class FileTest {
                 task.finish();
             });
             //request.open("GET", Helper.getURL("people/model.FBX"), true);
-            request.open("GET", Helper.getURL("skinPeople/model.FBX"), true);
+            request.open("GET", Helper.getURL("all.FBX"), true);
             request.responseType = "arraybuffer";
             request.send();
         });
@@ -110,7 +110,7 @@ class FileTest {
             mat.uniforms.setNumber(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
             mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
 
-            let mesh = this._modelNode.addChild(new Aurora.Node3D()).addComponent(new Aurora.Mesh());
+            let mesh = this._modelNode.addChild(new Aurora.Node3D()).addComponent(new Aurora.SkinnedMesh());
             mesh.renderer = this._env.forwardRenderer;
             mesh.asset = result.meshes[0];
             mesh.materials = [mat];

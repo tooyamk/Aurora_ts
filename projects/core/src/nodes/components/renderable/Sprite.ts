@@ -36,7 +36,7 @@ namespace Aurora {
 
                 let texCoords: number[] = [];
                 texCoords.length = 8;
-                as.addVertexSource(new VertexSource(ShaderPredefined.a_TexCoord0, texCoords, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
+                as.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, texCoords, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
 
                 let colors: number[] = [];
                 colors.length = 16;

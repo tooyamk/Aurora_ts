@@ -1,9 +1,9 @@
-///<reference path="AbstractNodeComponent.ts" />
+///<reference path="AbstractNode3DComponent.ts" />
 ///<reference path="../../renderers/IRenderPass.ts" />
 ///<reference path="../../physics/Ray.ts" />
 
 namespace Aurora {
-    export class Camera extends AbstractNodeComponent implements IRenderPass {
+    export class Camera extends AbstractNode3DComponent implements IRenderPass {
         public clear = new GLClear();
         public frameBuffer: GLFrameBuffer = null;
         public viewport = new Rect(0, 0, -1, -1);

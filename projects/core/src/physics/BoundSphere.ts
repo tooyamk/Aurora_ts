@@ -4,7 +4,7 @@ namespace Aurora {
         protected _radius: number;
         protected _radiusSquared: number;
 
-        constructor(center: Vector3 = Vector3.Zero, radius: number = 1.0) {
+        constructor(center: Vector3 = Vector3.Zero, radius: number = 1) {
             if (center) this.center.set(center);
             this._radius = radius;
             this._radiusSquared = radius * radius;

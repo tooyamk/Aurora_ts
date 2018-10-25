@@ -49,7 +49,7 @@ namespace Aurora {
             return this._defaultShader;
         }
 
-        public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], createFn: (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms) => void): void {
+        public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void {
             let mats = renderable.materials;
             let len = mats ? mats.length : 1;
             if (len === 0) len = 1;
@@ -59,7 +59,7 @@ namespace Aurora {
                 if (len >= len1) {
                     for (let i = 0; i < len1; ++i) {
                         let m = mats ? mats[i] : null;
-                        createFn(renderable, replaceMaterials[i], m ? m.uniforms : this._defaultMaterial.uniforms);
+                        appendFn(renderable, replaceMaterials[i], m ? m.uniforms : this._defaultMaterial.uniforms);
                     }
                 } else if (len === 1) {
                     let u: ShaderUniforms;
@@ -69,17 +69,17 @@ namespace Aurora {
                     } else {
                         u = this._defaultMaterial.uniforms;
                     }
-                    for (let i = 0; i < len1; ++i) createFn(renderable, replaceMaterials[i], u);
+                    for (let i = 0; i < len1; ++i) appendFn(renderable, replaceMaterials[i], u);
                 } else {
                     for (let i = 0; i < len; ++i) {
                         let m = mats ? mats[i] : null;
-                        createFn(renderable, replaceMaterials[i], m ? m.uniforms : this._defaultMaterial.uniforms);
+                        appendFn(renderable, replaceMaterials[i], m ? m.uniforms : this._defaultMaterial.uniforms);
                     }
                 }
             } else {
                 for (let i = 0; i < len; ++i) {
                     let m = mats ? mats[i] : null;
-                    createFn(renderable, m ? m : this._defaultMaterial, this._defaultMaterial.uniforms);
+                    appendFn(renderable, m ? m : this._defaultMaterial, this._defaultMaterial.uniforms);
                 }
             }
         }

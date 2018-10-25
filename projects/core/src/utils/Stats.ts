@@ -61,7 +61,7 @@ namespace Aurora {
             ++this._count;
             let d = t - this._time;
             if (d >= this._delta) {
-                this._fps = 1000.0 * this._count / d;
+                this._fps = 1000 * this._count / d;
                 this._count = 0;
                 this._time = t;
 

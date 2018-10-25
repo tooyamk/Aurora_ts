@@ -33,7 +33,7 @@ namespace Aurora {
         protected _numChildren: number = 0;
         protected _traversingStack: Node3D[] = null;
 
-        protected _components: AbstractNodeComponent[] = null;
+        protected _components: AbstractNode3DComponent[] = null;
 
         protected _localRot: Quaternion = new Quaternion();
         protected _localScale: Vector3 = Vector3.One;
@@ -429,7 +429,7 @@ namespace Aurora {
             }
         }
 
-        public addComponent<T extends AbstractNodeComponent>(component: T): T {
+        public addComponent<T extends AbstractNode3DComponent>(component: T): T {
             if (component && component.node !== this) {
                 if (!this._components) this._components = [];
                 if (component.node) component.node._removeComponent(component);
@@ -440,14 +440,14 @@ namespace Aurora {
             return component;
         }
 
-        public removeComponent(component: AbstractNodeComponent): void {
+        public removeComponent(component: AbstractNode3DComponent): void {
             if (component && this._components && component.node === this) {
                 component._setNode(null);
                 this._removeComponent(component);
             }
         }
 
-        protected _removeComponent(component: AbstractNodeComponent): void {
+        protected _removeComponent(component: AbstractNode3DComponent): void {
             this._components.splice(this._components.indexOf(component), 1);
         }
 
@@ -458,7 +458,7 @@ namespace Aurora {
             }
         }
 
-        public getComponentByType<T extends AbstractNodeComponent>(c: {prototype: T}, checkEnabled: boolean = true): T {
+        public getComponentByType<T extends AbstractNode3DComponent>(c: {prototype: T}, checkEnabled: boolean = true): T {
             if (this._components) {
                 let type = <any>c;
 
@@ -472,7 +472,7 @@ namespace Aurora {
             return null;
         }
 
-        public getComponentsByType<T extends AbstractNodeComponent>(c: { prototype: T }, checkEnabled: boolean = true, rst: T[] = null, rstOffset: uint = 0): uint {
+        public getComponentsByType<T extends AbstractNode3DComponent>(c: { prototype: T }, checkEnabled: boolean = true, rst: T[] = null, rstOffset: uint = 0): uint {
             let num = 0;
 
             if (this._components) {

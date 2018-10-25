@@ -27,7 +27,7 @@ namespace Aurora {
             }
         }
 
-        public setClip(clip: T, startTime: number = 0.0, blendTime: number = 0.0): void {
+        public setClip(clip: T, startTime: number = 0, blendTime: number = 0): void {
             this._curClip = clip;
             if (clip) {
                 this._elapsed = startTime;

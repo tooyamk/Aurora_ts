@@ -24,7 +24,7 @@ namespace Aurora {
             this._enalbedLighting = value;
         }
 
-        public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], createFn: (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms) => void): void {
+        public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void {
             let mats = renderable.materials;
             if (mats) {
                 let len = mats.length;
@@ -34,20 +34,20 @@ namespace Aurora {
                         if (len >= len1) {
                             for (let i = 0; i < len1; ++i) {
                                 let m = mats[i];
-                                createFn(renderable, replaceMaterials[i], m ? m.uniforms : null);
+                                appendFn(renderable, replaceMaterials[i], m ? m.uniforms : null);
                             }
                         } else if (len === 1) {
                             let m = mats[0];
                             let u = m ? m.uniforms : null;
-                            for (let i = 0; i < len1; ++i) createFn(renderable, replaceMaterials[i], u);
+                            for (let i = 0; i < len1; ++i) appendFn(renderable, replaceMaterials[i], u);
                         } else {
                             for (let i = 0; i < len; ++i) {
                                 let m = mats[i];
-                                createFn(renderable, replaceMaterials[i], m ? m.uniforms : null);
+                                appendFn(renderable, replaceMaterials[i], m ? m.uniforms : null);
                             }
                         }
                     } else {
-                        for (let i = 0; i < len; ++i) createFn(renderable, mats[i], null);
+                        for (let i = 0; i < len; ++i) appendFn(renderable, mats[i], null);
                     }
                 }
             }

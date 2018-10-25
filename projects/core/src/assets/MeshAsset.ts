@@ -4,13 +4,13 @@ namespace Aurora {
     export class MeshAsset {
         public name: string = "";
 
+        public bindMatrices: Matrix44[] = null;
+
         public vertexSources: Map<string, VertexSource> = null;
         public drawIndexSource: DrawIndexSource = null;
 
         public vertexBuffers: Map<string, GLVertexBuffer> = null;
         public drawIndexBuffer: GLIndexBuffer = null;
-
-        public bindPoses: Map<string, Matrix44> = null;
 
         public customGetVertexBufferFn: (asset: MeshAsset, info: GLProgramAttribInfo) => GLVertexBuffer = null;
         public customGetDrawIndexBufferFn: (asset: MeshAsset) => GLIndexBuffer = null;

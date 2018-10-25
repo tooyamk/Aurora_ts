@@ -17,14 +17,11 @@
         "listEmittedFiles": true,
         "outFile": "../../dist/aurora.fbx.js"
     },
-    "include": [
-        "./**/*.ts", "../examples/zlib.d.ts"
-    ],
+    "files": [ "../ThirdPartyLibraries/zlib.d.ts" ],
+    "include": [ "./**/*.ts" ],
     "exclude": [],
     "compileOnSave": true,
     "references": [
-        {
-            "path": "../core"
-        }
+        { "path": "../core" }
     ]
 }

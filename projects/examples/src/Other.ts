@@ -100,7 +100,7 @@ class Other {
         let asset = new Aurora.MeshAsset();
         asset.vertexBuffers = new Map();
         asset.vertexBuffers.set(Aurora.ShaderPredefined.a_Position0, vertexBuffer);
-        asset.vertexBuffers.set(Aurora.ShaderPredefined.a_TexCoord0, uvBuffer);
+        asset.vertexBuffers.set(Aurora.ShaderPredefined.a_UV0, uvBuffer);
         asset.vertexBuffers.set(Aurora.ShaderPredefined.a_Color0, colorBuffer);
         asset.drawIndexBuffer = indexBuffer;
     
@@ -146,7 +146,7 @@ class Other {
             n = dv.getInt32(offset, true);
             offset += 4;
             let uv: number[] = [];
-            asset.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_TexCoord0, uv, Aurora.GLVertexBufferSize.TWO));
+            asset.addVertexSource(new Aurora.VertexSource(Aurora.ShaderPredefined.a_UV0, uv, Aurora.GLVertexBufferSize.TWO));
             for (let i = 0; i < n; ++i) {
                 uv.push(dv.getFloat32(offset, true));
                 offset += 4;

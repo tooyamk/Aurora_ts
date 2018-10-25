@@ -259,7 +259,7 @@ namespace Aurora {
                                 if (!buffer) {
                                     if (att.name === ShaderPredefined.a_Position0) {
                                         buffer = this._defaultPostProcessVertexBuffer;
-                                    } else if (att.name === ShaderPredefined.a_TexCoord0) {
+                                    } else if (att.name === ShaderPredefined.a_UV0) {
                                         buffer = this._defaultPostProcessTexCoordBuffer;
                                     }
                                 }

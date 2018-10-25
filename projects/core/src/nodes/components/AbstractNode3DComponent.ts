@@ -1,5 +1,5 @@
 namespace Aurora {
-    export abstract class AbstractNodeComponent {
+    export abstract class AbstractNode3DComponent {
         protected _node: Node3D = null;
         protected _enabled: boolean = true;
 

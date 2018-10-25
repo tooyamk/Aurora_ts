@@ -497,7 +497,7 @@ namespace Aurora {
             rstRot.m03 = 1;
 
             let len = this.m00 * this.m00 + this.m01 * this.m01 + this.m02 * this.m02;
-            if (len != 1.0 && len != 0.0) {
+            if (len != 1 && len != 0) {
                 len = Math.sqrt(len);
 
                 rstRot.m00 /= len;

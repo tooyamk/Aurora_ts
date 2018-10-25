@@ -1,5 +1,6 @@
 namespace Aurora {
     export type AnimatorWrapType = (elapsed:number, duration:number) => number;
+    export type AppendRenderingObjectFn = (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms) => void;
     export type byte = number;
     export type ubyte = number;
     export type short = number;

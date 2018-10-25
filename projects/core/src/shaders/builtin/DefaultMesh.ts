@@ -9,7 +9,7 @@ namespace Aurora.BuiltinShader.DefaultMesh {
 attribute vec3 ${ShaderPredefined.a_Position0};
 
 #if defined(${ShaderPredefined.DIFFUSE_TEX}) || defined(${ShaderPredefined.SPECULAR_TEX})
-#include<${General.DECLARE_ATTRIB.name}>(vec2, ${ShaderPredefined.a_TexCoord0})
+#include<${General.DECLARE_ATTRIB.name}>(vec2, ${ShaderPredefined.a_UV0})
 #include<${General.DECLARE_VARYING.name}>(vec2, ${ShaderPredefined.v_TexCoord0})
 #endif
 
@@ -20,7 +20,7 @@ attribute vec3 ${ShaderPredefined.a_Position0};
 
 void main(void) {
 #ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_TexCoord0}
-    ${ShaderPredefined.v_TexCoord0} = ${ShaderPredefined.a_TexCoord0};
+    ${ShaderPredefined.v_TexCoord0} = ${ShaderPredefined.a_UV0};
 #endif
 
 #include<${Lib.Lighting.VERT.name}>

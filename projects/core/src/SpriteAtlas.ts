@@ -82,8 +82,6 @@ namespace Aurora {
                 }
 
                 this.addFrame(ns + key, sf);
-                //console.log(key);
-                //console.log(data);
             }
         }
 

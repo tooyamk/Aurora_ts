@@ -1,13 +1,12 @@
-///<reference path="../AbstractNodeComponent.ts" />
-///<reference path="../../../shaders/ShaderDefines.ts" />
-///<reference path="../../../shaders/ShaderUniforms.ts" />
+///<reference path="../AbstractNode3DComponent.ts" />
 
 namespace Aurora {
-    export abstract class AbstractLight extends AbstractNodeComponent {
+    export abstract class AbstractLight extends AbstractNode3DComponent {
         public readonly color: Color3 = Color3.WHITE;
-        public intensity: number = 1.0;
+        public intensity: number = 1;
 
         public ready(defines: ShaderDefines, uniforms: ShaderUniforms): void {
+            //override
         }
 
         protected _generalReady(defines: ShaderDefines, uniforms: ShaderUniforms): void {

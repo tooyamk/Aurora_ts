@@ -2,9 +2,9 @@
 
 namespace Aurora {
     export class SpotLight extends PointLight {
-        public spotAngle: number = Math.PI / 6.0;
+        public spotAngle: number = Math.PI / 6;
 
-        public smoothEdgeFactor = 1200.0;
+        public smoothEdgeFactor = 1200;
 
         public ready(defines: ShaderDefines, uniforms: ShaderUniforms): void {
             this._generalReady(defines, uniforms);

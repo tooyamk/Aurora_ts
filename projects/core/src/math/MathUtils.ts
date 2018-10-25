@@ -4,6 +4,8 @@
 namespace Aurora {
     export abstract class MathUtils {
         public static readonly ZERO_TOLERANCE: number = 1E-6;//Number.EPSILON;
+        public static readonly PI2: number = Math.PI * 2;
+        public static readonly PI_2: number = Math.PI * 0.5;
         public static readonly RAD_2_DEG: number = 180 / Math.PI;
         public static readonly DEG_2_RAD: number = Math.PI / 180;
 

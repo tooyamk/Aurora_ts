@@ -16,9 +16,6 @@
     "noResolve": true,
     "outFile": "../../dist/test.js",
   },
-  "files": [
-    "../fbx/zlib.d.ts"
-  ],
   "include": [ "./**/*.ts" ],
   "exclude": [],
   "compileOnSave": true,

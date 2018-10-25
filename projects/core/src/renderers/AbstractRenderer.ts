@@ -1,8 +1,3 @@
-///<reference path="RenderingObject.ts" />
-///<reference path="../nodes/components/lights/AbstractLight.ts" />
-///<reference path="../shaders/ShaderDefines.ts" />
-///<reference path="../shaders/ShaderUniforms.ts" />
-
 namespace Aurora {
     export abstract class AbstractRenderer {
         public isRendering: boolean = false;
@@ -36,7 +31,7 @@ namespace Aurora {
             return this._shaderUniforms;
         }
 
-        public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], createFn: (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms) => void): void {
+        public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void {
             //override
         }
 

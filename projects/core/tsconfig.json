@@ -17,7 +17,7 @@
     "listEmittedFiles": true,
     "outFile": "../../dist/aurora.core.js"
   },
-  "include": [ "./**/*.ts", "../examples/zlib.d.ts" ],
+  "include": [ "./**/*.ts" ],
   "exclude": [],
   "compileOnSave": true
 }

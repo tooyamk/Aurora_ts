@@ -81,36 +81,18 @@ namespace Aurora {
                 this._objects.set(g.id, g);
             }
 
-            let bones: Map<uint, Node3D> = new Map();
-
-            for (let i = 0, n = this._deformers.length; i < n; ++i) {
-                let d = this._deformers[i];
-                switch (d.attribType) {
-                    case FBXNodeAttribType.SKIN:
-                        let aaa = this._childrenMap.get(d.id);
-                        let bbb = this._parentsMap.get(d.id);
-                        let objb = this._objects.get(bbb[0]);
-                        let a = 1;
-                        break;
-                    default:
-                        break;
-                }
-            }
+            let meshes: FBXModel[] = null;
+            let skeleton: FBXSkeleton = null;
 
             for (let i = 0, n = this._models.length; i < n; ++i) {
                 let m = this._models[i];
 
                 switch (m.attribType) {
                     case FBXNodeAttribType.MESH: {
-                        let g = this.findChild(m.id, FBXGeometry);
-                        if (g) {
-                            let asset = g.createMeshAsset(this);
-                            if (asset) {
-                                asset.name = m.attribName;
-
-                                if (!result.meshes) result.meshes = [];
-                                result.meshes.push(asset);
-                            }
+                        if (meshes) {
+                            meshes.push(m);
+                        } else {
+                            meshes = [m];
                         }
 
                         break;
@@ -118,7 +100,8 @@ namespace Aurora {
                     case FBXNodeAttribType.LIMB_NODE: {
                         let bone = new Node3D();
                         bone.name = m.attribName;
-                        bones.set(m.id, bone);
+                        if (!skeleton) skeleton = new FBXSkeleton();
+                        skeleton.addBone(bone, m.id);
 
                         break;
                     }
@@ -127,18 +110,29 @@ namespace Aurora {
                 }
             }
 
-            if (bones.size > 0) {
-                let rootBones: Node3D[] = [];
-                for (let itr of bones) {
-                    let m = this._findParentObj(itr[0], FBXModel);
-                    if (m) {
-                        bones.get(m.id).addChild(itr[1]);
-                    } else {
-                        rootBones.push(itr[1]);
+            if (skeleton) {
+                skeleton.finish(this);
+
+                let ske = new Skeleton();
+                ske.bones = skeleton.bones;
+                ske.rootBoneIndices = skeleton.rootBoneIndices;
+                result.skeleton = ske;
+            }
+
+            if (meshes) {
+                for (let i = 0, n = meshes.length; i < n; ++i) {
+                    let m = meshes[i];
+                    let g = this.findChild(m.id, FBXGeometry);
+                    if (g) {
+                        let asset = g.createMeshAsset(this, skeleton);
+                        if (asset) {
+                            asset.name = m.attribName;
+
+                            if (!result.meshes) result.meshes = [];
+                            result.meshes.push(asset);
+                        }
                     }
                 }
-
-                let a = 1;
             }
 
             return result;
@@ -173,7 +167,7 @@ namespace Aurora {
             return arr;
         }
 
-        private _findParentObj<T extends FBXNode>(id: uint, c: new () => T): T {
+        public findParent<T extends FBXNode>(id: uint, c: new () => T): T {
             let parents = this._parentsMap.get(id);
             if (parents) {
                 for (let i = 0, n = parents.length; i < n; ++i) {

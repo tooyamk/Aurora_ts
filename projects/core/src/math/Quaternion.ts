@@ -68,7 +68,7 @@ namespace Aurora {
         }
 
         public normalize(): Quaternion {
-            let length = 1.0 / this.length;
+            let length = 1 / this.length;
             this.x *= length;
             this.y *= length;
             this.z *= length;
@@ -147,7 +147,6 @@ namespace Aurora {
             return Quaternion.createFromEulerXYZ(angles.x, angles.y, angles.z, rst);
         }
     
-
         /**
 		 * @param axis the axis is a normalize vector.
 		 */
@@ -211,8 +210,8 @@ namespace Aurora {
             this.w = 1;
         }
 
-        public isEqual(toCompare: Quaternion, tolerance: number = 0.0): boolean {
-            if (tolerance === 0.0) {
+        public isEqual(toCompare: Quaternion, tolerance: number = 0): boolean {
+            if (tolerance === 0) {
                 return this.x === toCompare.x && this.y === toCompare.y && this.z === toCompare.z && this.w === toCompare.w;
             } else {
                 if (tolerance < 0) tolerance = -tolerance;
@@ -267,10 +266,9 @@ namespace Aurora {
         }
 
         public rotateXYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
-            let m = this.toMatrix33();
-            return m.transform33XYZ(x, y, z, rst);
+            //let m = this.toMatrix33();
+            //return m.transform33XYZ(x, y, z, rst);
             
-
             rst = rst || new Vector3();
 
             let w1 = -x * this.x - y * this.y - z * this.z;
@@ -290,9 +288,9 @@ namespace Aurora {
         }
 
         public toMatrix33(rst: Matrix44 = null): Matrix44 {
-            let x2 = this.x * 2.0;
-            let y2 = this.y * 2.0;
-            let z2 = this.z * 2.0;
+            let x2 = this.x * 2;
+            let y2 = this.y * 2;
+            let z2 = this.z * 2;
             let xx = this.x * x2;
             let xy = this.x * y2;
             let xz = this.x * z2;

@@ -57,9 +57,10 @@ namespace Aurora.ShaderPredefined {
 
     export const a_Position0: string = "a_Position0";
     export const a_Normal0: string = "a_Normal0";
-    export const a_TexCoord0: string = "a_TexCoord0";
+    export const a_UV0: string = "a_UV0";
     export const a_Color0: string = "a_Color0";
-    export const a_Index0: string = "a_Index0";
+    export const a_BoneIndex0: string = "a_BoneIndex0";
+    export const a_BoneWeight0: string = "a_BoneWeight0";
 
     export const u_M44_W2V: string = "u_M44_W2V";
     export const u_M44_W2P: string = "u_M44_W2P";

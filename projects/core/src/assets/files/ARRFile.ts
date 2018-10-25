@@ -101,7 +101,7 @@ namespace Aurora {
                         as.addVertexSource(ARRFile._parseMeshVertex(data, length, ShaderPredefined.a_Position0));
                         break;
                     case ARRFile.CHUNK_MESH_UV:
-                        as.addVertexSource(ARRFile._parseMeshVertex(data, length, ShaderPredefined.a_TexCoord0));
+                        as.addVertexSource(ARRFile._parseMeshVertex(data, length, ShaderPredefined.a_UV0));
                         break;
                     case ARRFile.CHUNK_MESH_NRM:
                         as.addVertexSource(ARRFile._parseMeshVertex(data, length, ShaderPredefined.a_Normal0));
@@ -244,7 +244,7 @@ namespace Aurora {
                 let numRootBones = data.readDynamicLength();
                 
                 let rootBones: Node3D[] = [];
-                ske.rootBones = rootBones;
+                //ske.rootBones = rootBones;
 
                 if (numBones <= 0xFF) {
                     for (let i = 0; i < numBones; ++i) rootBones[i] = bones[data.readUint8()];

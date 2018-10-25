@@ -10,7 +10,7 @@ namespace Aurora {
         constructor() {
             super();
 
-            this.setAttenuation(1000.0);
+            this.setAttenuation(1000);
         }
 
         public ready(defines: ShaderDefines, uniforms: ShaderUniforms): void {
@@ -30,9 +30,9 @@ namespace Aurora {
         public setAttenuation(...args: any[]): void {
             if (args.length === 1) {
                 let radius = <number>args[0];
-                this._attenConstant = 1.0;
+                this._attenConstant = 1;
                 this._attenLinear = 4.5 / radius;
-                this._attenQuadratic = 75.0 / (radius * radius);
+                this._attenQuadratic = 75 / (radius * radius);
             } else if (args.length === 3) {
                 this._attenConstant = args[0];
                 this._attenLinear = args[1];
