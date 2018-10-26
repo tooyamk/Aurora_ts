@@ -3,7 +3,7 @@ class Env {
     public gl: Aurora.GL;
     public shaderStore: Aurora.ShaderStore;
 
-    public world: Aurora.Node3D;
+    public world: Aurora.Node;
     public camera: Aurora.Camera;
 
     public renderingManager: Aurora.RenderingManager;
@@ -26,8 +26,8 @@ class Env {
         this.shaderStore.addBuiltinLibraries();
         this.shaderStore.addBuiltinShaderSources();
 
-        this.world = new Aurora.Node3D();
-        this.camera = this.world.addChild(new Aurora.Node3D()).addComponent(new Aurora.Camera());
+        this.world = new Aurora.Node();
+        this.camera = this.world.addChild(new Aurora.Node()).addComponent(new Aurora.Camera());
 
         this.renderingManager = new Aurora.RenderingManager();
         this.forwardRenderer = new Aurora.ForwardRenderer();

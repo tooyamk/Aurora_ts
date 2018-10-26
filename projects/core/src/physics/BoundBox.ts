@@ -13,19 +13,19 @@ namespace Aurora {
         public intersectRay(ray: Ray, cullFace: GLCullFace = GLCullFace.BACK, rst: RaycastHit = null): RaycastHit {
             rst = rst || new RaycastHit();
 
-            let rayOrigin = ray.origin;
-            let rayDir = ray.direction;
+            const rayOrigin = ray.origin;
+            const rayDir = ray.direction;
 
-            let halfX = this.size.x * 0.5;
-            let halfY = this.size.x * 0.5;
-            let halfZ = this.size.x * 0.5;
+            const halfX = this.size.x * 0.5;
+            const halfY = this.size.x * 0.5;
+            const halfZ = this.size.x * 0.5;
 
-            let minX = this.center.x - halfX;
-            let maxX = this.center.x + halfX;
-            let minY = this.center.y - halfY;
-            let maxY = this.center.y + halfY;
-            let minZ = this.center.z - halfZ;
-            let maxZ = this.center.z + halfZ;
+            const minX = this.center.x - halfX;
+            const maxX = this.center.x + halfX;
+            const minY = this.center.y - halfY;
+            const maxY = this.center.y + halfY;
+            const minZ = this.center.z - halfZ;
+            const maxZ = this.center.z + halfZ;
 
             //if (rayOrigin.x >= minX && rayOrigin.x <= maxX && rayOrigin.y >= minY && rayOrigin.y <= maxY && rayOrigin.z >= minZ && rayOrigin.z <= maxZ) return 0;
 

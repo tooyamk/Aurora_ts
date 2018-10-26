@@ -56,10 +56,10 @@ namespace Aurora {
         }
 
         public update(): void {
-            let t = this._platform.duration();
+            const t = this._platform.duration();
 
             ++this._count;
-            let d = t - this._time;
+            const d = t - this._time;
             if (d >= this._delta) {
                 this._fps = 1000 * this._count / d;
                 this._count = 0;

@@ -17,6 +17,7 @@
     "listEmittedFiles": true,
     "outFile": "../../dist/aurora.wxplatform.js"
   },
+  "files": [ "../ThirdPartyLibraries/wx.d.ts" ],
   "include": [ "./**/*.ts" ],
   "exclude": [],
   "compileOnSave": true,

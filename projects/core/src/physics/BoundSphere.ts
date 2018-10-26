@@ -24,19 +24,19 @@ namespace Aurora {
         public intersectRay(ray: Ray, cullFace: GLCullFace = GLCullFace.BACK, rst: RaycastHit = null): RaycastHit {
             rst = rst || new RaycastHit();
 
-            let rayOrigin = ray.origin;
-            let rayDir = ray.direction;
+            const rayOrigin = ray.origin;
+            const rayDir = ray.direction;
 
-            let dx = rayOrigin.x - this.center.x;
-            let dy = rayOrigin.y - this.center.y;
-            let dz = rayOrigin.z - this.center.z;
+            const dx = rayOrigin.x - this.center.x;
+            const dy = rayOrigin.y - this.center.y;
+            const dz = rayOrigin.z - this.center.z;
 
-            let sub = dx * dx + dy * dy + dz * dz - this._radiusSquared;
+            const sub = dx * dx + dy * dy + dz * dz - this._radiusSquared;
             if ((cullFace === GLCullFace.BACK && sub < 0) ||
                 (cullFace === GLCullFace.FRONT && sub > 0)) {
                 rst.distance = -1;
             } else {
-                let a = (rayDir.x * dx + rayDir.y * dy + rayDir.z * dz) * 2;
+                const a = (rayDir.x * dx + rayDir.y * dy + rayDir.z * dz) * 2;
                 let b = a * a - 4 * sub;
 
                 if (b < 0) {
@@ -45,7 +45,7 @@ namespace Aurora {
                     b = Math.sqrt(b);
 
                     let t0 = b - a;
-                    let t1 = -a - b;
+                    const t1 = -a - b;
 
                     if (t0 >= 0) {
                         if (t1 >= 0) {
@@ -62,9 +62,9 @@ namespace Aurora {
                 }
 
                 if (rst.distance >= 0) {
-                    let x = rayOrigin.x + rayDir.x * rst.distance - this.center.x;
-                    let y = rayOrigin.y + rayDir.y * rst.distance - this.center.y;
-                    let z = rayOrigin.z + rayDir.z * rst.distance - this.center.z;
+                    const x = rayOrigin.x + rayDir.x * rst.distance - this.center.x;
+                    const y = rayOrigin.y + rayDir.y * rst.distance - this.center.y;
+                    const z = rayOrigin.z + rayDir.z * rst.distance - this.center.z;
 
                     rst.normal.setFromNumbers(x, y, z);
                 }

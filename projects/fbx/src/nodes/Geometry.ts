@@ -1,24 +1,24 @@
-///<reference path="FBXNode.ts"/>
+///<reference path="Node.ts"/>
 
-namespace Aurora {
-    export class FBXGeometry extends FBXNode {
-        public createMeshAsset(collections: FBXCollections, skeleton: FBXSkeleton): MeshAsset {
-            let sourceIndices: uint[] = [];
-            let faces: uint[] = [];
+namespace Aurora.FBX {
+    export class Geometry extends Node {
+        public createMeshAsset(collections: Collections, skeleton: SkeletonData): MeshAsset {
+            const sourceIndices: uint[] = [];
+            const faces: uint[] = [];
             let needTriangulate = false;
-            let child = this.getChildByName(FBXNodeName.POLYGON_VERTEX_INDEX);
+            const child = this.getChildByName(NodeName.POLYGON_VERTEX_INDEX);
             if (child) needTriangulate = this._parsePolygonVertexIndex(child, sourceIndices, faces);
 
             if (sourceIndices.length > 0) {
-                let asset = new MeshAsset();
+                const asset = new MeshAsset();
                 let vertIdxMapping: uint[] = null;
-                let numSourceVertices: uint = 0;
+                let numSourceVertices = 0;
 
                 for (let i = 0, n = this.children.length; i < n; ++i) {
-                    let child = this.children[i];
+                    const child = this.children[i];
                     switch (child.name) {
-                        case FBXNodeName.VERTICES: {
-                            let rst = this._parseVertices(child, sourceIndices, asset);
+                        case NodeName.VERTICES: {
+                            const rst = this._parseVertices(child, sourceIndices, asset);
                             if (rst) {
                                 vertIdxMapping = rst[0];
                                 numSourceVertices = rst[1];
@@ -26,10 +26,10 @@ namespace Aurora {
 
                             break;
                         }
-                        case FBXNodeName.LAYER_ELEMENT_NORMAL:
+                        case NodeName.LAYER_ELEMENT_NORMAL:
                             this._parseNormals(child, sourceIndices, asset);
                             break;
-                        case FBXNodeName.LAYER_ELEMENT_UV:
+                        case NodeName.LAYER_ELEMENT_UV:
                             this._parseUVs(child, sourceIndices, asset);
                             break;
                         default:
@@ -46,40 +46,40 @@ namespace Aurora {
             return null;
         }
 
-        private _parseSkin(asset: MeshAsset, collections: FBXCollections, skeleton: FBXSkeleton, vertIdxMapping: uint[], numSourceVertices: uint): void {
-            let skins = collections.findChildren(this._id, FBXDeformer, FBXNodeAttribType.SKIN);
+        private _parseSkin(asset: MeshAsset, collections: Collections, skeleton: SkeletonData, vertIdxMapping: uint[], numSourceVertices: uint): void {
+            const skins = collections.findChildren(this._id, Deformer, NodeAttribType.SKIN);
             if (skins) {
-                let skinData: number[][] = [];
+                const skinData: number[][] = [];
                 skinData.length = numSourceVertices;
                 for (let i = 0, n = skins.length; i < n; ++i) {
-                    let clusters = collections.findChildren(skins[i].id, FBXDeformer, FBXNodeAttribType.CLUSTER);
+                    const clusters = collections.findChildren(skins[i].id, Deformer, NodeAttribType.CLUSTER);
                     if (clusters) {
                         for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, collections, clusters[j], skeleton, skinData);
                     }
                 }
 
-                let n = vertIdxMapping.length;
-                let len = n << 2;
-                let boneIndices: uint[] = [];
+                const n = vertIdxMapping.length;
+                const len = n << 2;
+                const boneIndices: uint[] = [];
                 boneIndices.length = len;
-                let boneWeights: number[] = [];
+                const boneWeights: number[] = [];
                 boneWeights.length = len;
 
                 for (let i = 0; i < n; ++i) {
-                    let idx = i << 2;
-                    let data = skinData[vertIdxMapping[i]];
+                    const idx = i << 2;
+                    const data = skinData[vertIdxMapping[i]];
                     if (data) {
                         let nn = data.length >> 1;
                         if (nn > 4) nn = 4;
                         let j = 0;
                         for (; j < nn; ++j) {
-                            let idx1 = idx + j;
+                            const idx1 = idx + j;
                             let idx2 = j << 1;
                             boneIndices[idx1] = data[idx2++];
                             boneWeights[idx1] = data[idx2];
                         }
                         for (; j < 4; ++j) {
-                            let idx1 = idx + j;
+                            const idx1 = idx + j;
                             boneIndices[idx1] = 0;
                             boneWeights[idx1] = 0;
                         }
@@ -101,30 +101,29 @@ namespace Aurora {
             }
         }
 
-        private _parseCluster(asset: MeshAsset, collections: FBXCollections, cluster: FBXDeformer, skeleton: FBXSkeleton, skinData: number[][]): void {
-            let boneNode: FBXNode = null;
-            let links = collections.getConnectionChildren(cluster.id);
+        private _parseCluster(asset: MeshAsset, collections: Collections, cluster: Deformer, skeleton: SkeletonData, skinData: number[][]): void {
+            const links = collections.getConnectionChildren(cluster.id);
             if (links) {
-                boneNode = collections.getNode(links[0]);
+                const boneNode = collections.getNode(links[0]);
                 if (boneNode) {
-                    let boneIdx = skeleton.getIndexByName(boneNode.attribName);
+                    const boneIdx = skeleton.getIndexByName(boneNode.attribName);
                     if (boneIdx >= 0) {
                         let transMat: Matrix44 = null, transLinkMat: Matrix44 = null;
                         let indices: uint[] = null, weights: number[] = null;
                         for (let i = 0, n = cluster.children.length; i < n; ++i) {
-                            let child = cluster.children[i];
+                            const child = cluster.children[i];
                             switch (child.name) {
-                                case FBXNodeName.TRANSFORM:
+                                case NodeName.TRANSFORM:
                                     transMat = this._getPropertyMatrix(child);
                                     break;
-                                case FBXNodeName.TRANSFORM_LINK:
+                                case NodeName.TRANSFORM_LINK:
                                     transLinkMat = this._getPropertyMatrix(child);
                                     break;
-                                case FBXNodeName.INDEXES:
-                                    indices = this._getPropertyValue(child, FBXNodePropertyValueType.INT_ARRAY);
+                                case NodeName.INDEXES:
+                                    indices = this._getPropertyValue(child, NodePropertyValueType.INT_ARRAY);
                                     break;
-                                case FBXNodeName.WEIGHTS:
-                                    weights = this._getPropertyValue(child, FBXNodePropertyValueType.NUMBER_ARRAY);
+                                case NodeName.WEIGHTS:
+                                    weights = this._getPropertyValue(child, NodePropertyValueType.NUMBER_ARRAY);
                                     break;
                                 default:
                                     break;
@@ -133,13 +132,13 @@ namespace Aurora {
 
                         if (!asset.bindMatrices) {
                             asset.bindMatrices = [];
-                            let n = skeleton.bones.length;
+                            const n = skeleton.bones.length;
                             asset.bindMatrices.length = n;
                             for (let i = 0; i < n; ++i) asset.bindMatrices[i] = new Matrix44();
                         }
 
                         for (let i = 0, n = indices.length; i < n; ++i) {
-                            let idx = indices[i];
+                            const idx = indices[i];
                             let arr = skinData[idx];
                             if (!arr) {
                                 arr = [];
@@ -154,26 +153,26 @@ namespace Aurora {
             }
         }
 
-        private _parseVertices(node: FBXNode, sourceIndices: number[], asset: MeshAsset): [uint[], uint] {
+        private _parseVertices(node: Node, sourceIndices: number[], asset: MeshAsset): [uint[], uint] {
             if (node.properties && node.properties.length > 0) {
-                let p = node.properties[0];
-                if (p.type === FBXNodePropertyValueType.NUMBER_ARRAY) {
-                    let sourceVertices = <number[]>p.value;
-                    let n = sourceIndices.length;
+                const p = node.properties[0];
+                if (p.type === NodePropertyValueType.NUMBER_ARRAY) {
+                    const sourceVertices = <number[]>p.value;
+                    const n = sourceIndices.length;
 
-                    let indices: uint[] = [];
+                    const indices: uint[] = [];
                     indices.length = n;
 
-                    let vertices: number[] = [];
+                    const vertices: number[] = [];
                     vertices.length = n * 3;
 
-                    let vertIdxMapping: uint[] = [];
+                    const vertIdxMapping: uint[] = [];
                     vertIdxMapping.length - n;
 
                     let vertIdx = 0;
 
                     for (let i = 0; i < n; ++i) {
-                        let idx = sourceIndices[i] * 3;
+                        const idx = sourceIndices[i] * 3;
                         vertices[vertIdx++] = sourceVertices[idx];
                         vertices[vertIdx++] = sourceVertices[idx + 2];
                         vertices[vertIdx++] = sourceVertices[idx + 1];
@@ -186,19 +185,19 @@ namespace Aurora {
                     asset.drawIndexSource = new DrawIndexSource(indices, GLIndexDataType.AUTO, GLUsageType.STATIC_DRAW);
                     asset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
 
-                    return [vertIdxMapping, n / 3];
+                    return [vertIdxMapping, (n / 3) | 0];
                 }
             }
 
             return null;
         }
 
-        private _getPropertyMatrix(node: FBXNode): Matrix44 {
+        private _getPropertyMatrix(node: Node): Matrix44 {
             if (node.properties.length > 0) {
-                let p = node.properties[0];
-                if (p.type === FBXNodePropertyValueType.NUMBER_ARRAY) {
-                    let values = <number[]>p.value;
-                    let m = new Matrix44();
+                const p = node.properties[0];
+                if (p.type === NodePropertyValueType.NUMBER_ARRAY) {
+                    const values = <number[]>p.value;
+                    const m = new Matrix44();
                     m.m00 = values[0];
                     m.m01 = values[2];
                     m.m02 = values[1];
@@ -224,9 +223,9 @@ namespace Aurora {
             return null;
         }
 
-        private _getPropertyValue<T>(node: FBXNode, type: FBXNodePropertyValueType): T {
+        private _getPropertyValue<T>(node: Node, type: NodePropertyValueType): T {
             if (node.properties.length > 0) {
-                let p = node.properties[0];
+                const p = node.properties[0];
                 if (p.type === type) return <T><any>p.value;
             }
             return null;
@@ -234,36 +233,36 @@ namespace Aurora {
 
         private _parseVertexSource(values: number[], indices: uint[], refType: string, mappingType: string, sourceIndices: uint[], numDataPerVertex: uint): number[] {
             if (values) {
-                let n = sourceIndices.length;
-                if (mappingType === FBXNodePropertyType.BY_CONTROL_POINT) {
-                    if (refType === FBXNodePropertyType.DIRECT) {
-                        let vertices: number[] = [];
+                const n = sourceIndices.length;
+                if (mappingType === NodePropertyType.BY_CONTROL_POINT) {
+                    if (refType === NodePropertyType.DIRECT) {
+                        const vertices: number[] = [];
                         vertices.length = n * numDataPerVertex;
                         let vertIdx = 0;
                         for (let i = 0; i < n; ++i) {
-                            let idx = sourceIndices[i] * numDataPerVertex;
+                            const idx = sourceIndices[i] * numDataPerVertex;
                             for (let j = 0; j < numDataPerVertex; ++j) vertices[vertIdx++] = values[idx + j];
                         }
                         return vertices;
-                    } else if (refType === FBXNodePropertyType.INDEX_TO_DIRECT) {
-                        let vertices: number[] = [];
+                    } else if (refType === NodePropertyType.INDEX_TO_DIRECT) {
+                        const vertices: number[] = [];
                         vertices.length = n * numDataPerVertex;
                         let vertIdx = 0;
                         for (let i = 0; i < n; ++i) {
-                            let idx = indices[sourceIndices[i]] * numDataPerVertex;
+                            const idx = indices[sourceIndices[i]] * numDataPerVertex;
                             for (let j = 0; j < numDataPerVertex; ++j) vertices[vertIdx++] = values[idx + j];
                         }
                         return vertices;
                     }
-                } else if (mappingType === FBXNodePropertyType.BY_POLYGON_VERTEX) {
-                    if (refType === FBXNodePropertyType.DIRECT) {
+                } else if (mappingType === NodePropertyType.BY_POLYGON_VERTEX) {
+                    if (refType === NodePropertyType.DIRECT) {
                         return values.concat();
-                    } else if (refType === FBXNodePropertyType.INDEX_TO_DIRECT) {
-                        let vertices: number[] = [];
+                    } else if (refType === NodePropertyType.INDEX_TO_DIRECT) {
+                        const vertices: number[] = [];
                         vertices.length = n * numDataPerVertex;
                         let vertIdx = 0;
                         for (let i = 0; i < n; ++i) {
-                            let idx = indices[i] * numDataPerVertex;
+                            const idx = indices[i] * numDataPerVertex;
                             for (let j = 0; j < numDataPerVertex; ++j) vertices[vertIdx++] = values[idx + j];
                         }
                         return vertices;
@@ -273,31 +272,31 @@ namespace Aurora {
             return null;
         }
 
-        private _parseNormals(node: FBXNode, sourceIndices: uint[], asset: MeshAsset): void {
+        private _parseNormals(node: Node, sourceIndices: uint[], asset: MeshAsset): void {
             let values: number[] = null;
             let refType: string = null;
             let mappingType: string = null;
             for (let i = 0, n = node.children.length; i < n; ++i) {
-                let child = node.children[i];
+                const child = node.children[i];
                 switch (child.name) {
-                    case FBXNodeName.NORMALS:
-                        values = this._getPropertyValue<number[]>(child, FBXNodePropertyValueType.NUMBER_ARRAY);
+                    case NodeName.NORMALS:
+                        values = this._getPropertyValue<number[]>(child, NodePropertyValueType.NUMBER_ARRAY);
                         break;
-                    case FBXNodeName.REFERENCE_INFORMATION_TYPE:
-                        refType = this._getPropertyValue<string>(child, FBXNodePropertyValueType.STRING);
+                    case NodeName.REFERENCE_INFORMATION_TYPE:
+                        refType = this._getPropertyValue<string>(child, NodePropertyValueType.STRING);
                         break;
-                    case FBXNodeName.MAPPING_INFORMATION_TYPE:
-                        mappingType = this._getPropertyValue<string>(child, FBXNodePropertyValueType.STRING);
+                    case NodeName.MAPPING_INFORMATION_TYPE:
+                        mappingType = this._getPropertyValue<string>(child, NodePropertyValueType.STRING);
                         break;
                     default:
                         break;
                 }
             }
 
-            let normals = this._parseVertexSource(values, null, refType, mappingType, sourceIndices, 3);
+            const normals = this._parseVertexSource(values, null, refType, mappingType, sourceIndices, 3);
             if (normals) {
                 for (let i = 1, n = normals.length; i < n; i += 3) {
-                    let y = normals[i];
+                    const y = normals[i];
                     normals[i] = normals[i + 1];
                     normals[i + 1] = y;
                 }
@@ -305,46 +304,46 @@ namespace Aurora {
             }
         }
 
-        private _parseUVs(node: FBXNode, sourceIndices: uint[], asset: MeshAsset): void {
+        private _parseUVs(node: Node, sourceIndices: uint[], asset: MeshAsset): void {
             let values: number[] = null;
             let indices: uint[] = null;
             let refType: string = null;
             let mappingType: string = null;
             for (let i = 0, n = node.children.length; i < n; ++i) {
-                let child = node.children[i];
+                const child = node.children[i];
                 switch (child.name) {
-                    case FBXNodeName.UV:
-                        values = this._getPropertyValue<number[]>(child, FBXNodePropertyValueType.NUMBER_ARRAY);
+                    case NodeName.UV:
+                        values = this._getPropertyValue<number[]>(child, NodePropertyValueType.NUMBER_ARRAY);
                         break;
-                    case FBXNodeName.UV_INDEX:
-                        indices = this._getPropertyValue<uint[]>(child, FBXNodePropertyValueType.INT_ARRAY);
+                    case NodeName.UV_INDEX:
+                        indices = this._getPropertyValue<uint[]>(child, NodePropertyValueType.INT_ARRAY);
                         break;
-                    case FBXNodeName.REFERENCE_INFORMATION_TYPE:
-                        refType = this._getPropertyValue<string>(child, FBXNodePropertyValueType.STRING);
+                    case NodeName.REFERENCE_INFORMATION_TYPE:
+                        refType = this._getPropertyValue<string>(child, NodePropertyValueType.STRING);
                         break;
-                    case FBXNodeName.MAPPING_INFORMATION_TYPE:
-                        mappingType = this._getPropertyValue<string>(child, FBXNodePropertyValueType.STRING);
+                    case NodeName.MAPPING_INFORMATION_TYPE:
+                        mappingType = this._getPropertyValue<string>(child, NodePropertyValueType.STRING);
                         break;
                     default:
                         break;
                 }
             }
 
-            let uvs = this._parseVertexSource(values, indices, refType, mappingType, sourceIndices, 2);
+            const uvs = this._parseVertexSource(values, indices, refType, mappingType, sourceIndices, 2);
             if (uvs) {
                 for (let i = 1, n = uvs.length; i < n; i += 2) uvs[i] = 1 - uvs[i];
                 asset.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, uvs, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
             }
         }
 
-        private _parsePolygonVertexIndex(node: FBXNode, sourceIndices: uint[], faces: uint[]): boolean {
+        private _parsePolygonVertexIndex(node: Node, sourceIndices: uint[], faces: uint[]): boolean {
             let needTriangulate = false;
 
             if (node.properties && node.properties.length > 0) {
-                let p = node.properties[0];
-                if (p.type === FBXNodePropertyValueType.INT_ARRAY) {
-                    let src = <int[]>p.value;
-                    let len = src.length;
+                const p = node.properties[0];
+                if (p.type === NodePropertyValueType.INT_ARRAY) {
+                    const src = <int[]>p.value;
+                    const len = src.length;
 
                     let numIdx = 0;
                     let numFaces = 0;
@@ -353,7 +352,7 @@ namespace Aurora {
                         let idx = src[i];
                         if (idx < 0) {
                             idx = ~idx;
-                            let n = i - start + 1;
+                            const n = i - start + 1;
                             if (n > 3) needTriangulate = true;
                             faces[numFaces++] = n;
                             start = i + 1;

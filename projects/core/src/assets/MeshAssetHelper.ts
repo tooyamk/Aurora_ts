@@ -9,10 +9,10 @@ namespace Aurora {
 
     export abstract class MeshAssetHelper {
         public static sortSameVertices(vertices: number[], precision: int = -1): SortSameVerticesResult {
-            let len = vertices.length;
-            let count = (len / 3) | 0;
+            const len = vertices.length;
+            const count = (len / 3) | 0;
 
-            let sorted: number[] = [];
+            const sorted: number[] = [];
             sorted.length = count;
 
             for (let i = 0; i < count; ++i) sorted[i] = i * 3;
@@ -32,8 +32,8 @@ namespace Aurora {
             } else if (precision > 0) {
                 vert = [];
                 vert.length = len;
-                let mul = precision * 10;
-                let div = 1 / mul;
+                const mul = precision * 10;
+                const div = 1 / mul;
                 for (let i = 0; i < len; ++i) {
                     vert[i] = ((vertices[i] * mul) | 0) * div;
                     ++i;
@@ -72,14 +72,14 @@ namespace Aurora {
         }
 
         public static createLerpNormals(indices: uint[], vertices: number[], precision: int = -1): VertexSource {
-            let vs = MeshAssetHelper.createNormals(indices, vertices);
-            let sortResult = MeshAssetHelper.sortSameVertices(vertices, precision);
-            let sortIndices = sortResult.indices;
+            const vs = MeshAssetHelper.createNormals(indices, vertices);
+            const sortResult = MeshAssetHelper.sortSameVertices(vertices, precision);
+            const sortIndices = sortResult.indices;
 
-            let len = sortIndices.length;
+            const len = sortIndices.length;
             if (len > 0) {
                 vertices = sortResult.vertices;
-                let normals = vs.data;
+                const normals = vs.data;
 
                 let beginIdx = 0;
                 let idx = sortIndices[0];
@@ -87,7 +87,7 @@ namespace Aurora {
                 let y = vertices[++idx];
                 let z = vertices[++idx];
 
-                let lerpNormals = (endIdx: int) => {
+                const lerpNormals = (endIdx: int) => {
                     let nx = 0, ny = 0, nz = 0;
                     for (let i = beginIdx; i <= endIdx; ++i) {
                         let idx = sortIndices[i];
@@ -96,7 +96,7 @@ namespace Aurora {
                         nz += normals[++idx];
                     }
 
-                    let sqr = Math.sqrt(nx * nx + ny * ny + nz * nz);
+                    const sqr = Math.sqrt(nx * nx + ny * ny + nz * nz);
                     if (sqr > MathUtils.ZERO_TOLERANCE) {
                         nx /= sqr;
                         ny /= sqr;
@@ -112,9 +112,9 @@ namespace Aurora {
 
                 for (let i = 1; i < len; ++i) {
                     idx = sortIndices[i];
-                    let x1 = vertices[idx];
-                    let y1 = vertices[++idx];
-                    let z1 = vertices[++idx];
+                    const x1 = vertices[idx];
+                    const y1 = vertices[++idx];
+                    const z1 = vertices[++idx];
 
                     if (x !== x1 || y !== y1 || z !== z1) {
                         if (beginIdx < i - 1) lerpNormals(i - 1);
@@ -133,49 +133,49 @@ namespace Aurora {
         }
 
         public static createNormals(indices: uint[], vertices: number[]): VertexSource {
-            let len = vertices.length;
+            const len = vertices.length;
 
-            let normals: number[] = [];
+            const normals: number[] = [];
             normals.length = len;
 
-            let multi: boolean[] = [];
+            const multi: boolean[] = [];
             multi.length = len / 3;
 
-            var map: Object = {};
+            const map: Object = {};
 
             for (let i = 0, n = indices.length; i < n; ++i) {
-                let idx0 = indices[i];
-                let idx1 = indices[++i];
-                let idx2 = indices[++i];
+                const idx0 = indices[i];
+                const idx1 = indices[++i];
+                const idx2 = indices[++i];
 
                 let i0 = idx0 * 3;
                 let i1 = idx1 * 3;
                 let i2 = idx2 * 3;
 
-                let x0 = vertices[i0];
-                let y0 = vertices[i0 + 1];
-                let z0 = vertices[i0 + 2];
+                const x0 = vertices[i0];
+                const y0 = vertices[i0 + 1];
+                const z0 = vertices[i0 + 2];
 
-                let x1 = vertices[i1];
-                let y1 = vertices[i1 + 1];
-                let z1 = vertices[i1 + 2];
+                const x1 = vertices[i1];
+                const y1 = vertices[i1 + 1];
+                const z1 = vertices[i1 + 2];
 
-                let x2 = vertices[i2];
-                let y2 = vertices[i2 + 1];
-                let z2 = vertices[i2 + 2];
+                const x2 = vertices[i2];
+                const y2 = vertices[i2 + 1];
+                const z2 = vertices[i2 + 2];
 
-                let abX = x1 - x0;
-                let abY = y1 - y0;
-                let abZ = z1 - z0;
-                let acX = x2 - x0;
-                let acY = y2 - y0;
-                let acZ = z2 - z0;
+                const abX = x1 - x0;
+                const abY = y1 - y0;
+                const abZ = z1 - z0;
+                const acX = x2 - x0;
+                const acY = y2 - y0;
+                const acZ = z2 - z0;
 
                 let nx = abY * acZ - abZ * acY;
                 let ny = abZ * acX - abX * acZ;
                 let nz = abX * acY - abY * acX;
 
-                let sqr = Math.sqrt(nx * nx + ny * ny + nz * nz);
+                const sqr = Math.sqrt(nx * nx + ny * ny + nz * nz);
                 if (sqr > MathUtils.ZERO_TOLERANCE) {
                     nx /= sqr;
                     ny /= sqr;
@@ -219,11 +219,11 @@ namespace Aurora {
                 if (multi[i]) {
                     let idx = i * 3;
 
-                    let x = normals[idx];
-                    let y = normals[idx + 1];
-                    let z = normals[idx + 2];
+                    const x = normals[idx];
+                    const y = normals[idx + 1];
+                    const z = normals[idx + 2];
 
-                    let sqr = Math.sqrt(x * x + y * y + z * z);
+                    const sqr = Math.sqrt(x * x + y * y + z * z);
                     if (sqr > MathUtils.ZERO_TOLERANCE) {
                         normals[idx] = x / sqr;
                         normals[++idx] = y / sqr;

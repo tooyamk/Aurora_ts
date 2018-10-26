@@ -116,12 +116,12 @@ namespace Aurora {
         private static _isContainmentBox(face: Vector4, min: Vector3, max: Vector3): int {
             let state = 0;
 
-            let x1 = face.x * min.x + face.w;
-            let x2 = face.x * max.x + face.w;
-            let y1 = face.y * min.y;
-            let y2 = face.y * max.y;
-            let z1 = face.z * min.z;
-            let z2 = face.z * max.z;
+            const x1 = face.x * min.x + face.w;
+            const x2 = face.x * max.x + face.w;
+            const y1 = face.y * min.y;
+            const y2 = face.y * max.y;
+            const z1 = face.z * min.z;
+            const z2 = face.z * max.z;
 
             if (x1 + y1 + z1 >= 0) state++;
             if (x2 + y1 + z1 >= 0) state++;

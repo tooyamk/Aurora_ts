@@ -1,9 +1,5 @@
-///<reference path="../math/Matrix44.ts" />
-///<reference path="../math/Quaternion.ts" />
-///<reference path="../math/Vector.ts" />
-
 namespace Aurora {
-    export class Node3D {
+    export class Node {
         protected static _tmpVec3: Vector3 = Vector3.Zero;
         protected static _tmpMat: Matrix44 = new Matrix44();
 
@@ -11,11 +7,11 @@ namespace Aurora {
         protected static readonly WORLD_MATRIX_DIRTY: uint = 0b10;
         protected static readonly INVERSE_WORLD_MATRIX_DIRTY: uint = 0b100;
         protected static readonly WORLD_ROTATION_DIRTY: uint = 0b1000;
-        protected static readonly WORLD_AND_INVERSE_MATRIX_DIRTY: uint = Node3D.WORLD_MATRIX_DIRTY | Node3D.INVERSE_WORLD_MATRIX_DIRTY;
-        protected static readonly WORLD_ALL_DIRTY: uint = Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY | Node3D.WORLD_ROTATION_DIRTY;
-        protected static readonly LOCAL_AND_WORLD_ALL_DIRTY: uint = Node3D.LOCAL_MATRIX_DIRTY | Node3D.WORLD_ALL_DIRTY;
-        protected static readonly LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY: uint = Node3D.LOCAL_AND_WORLD_ALL_DIRTY & (~Node3D.WORLD_ROTATION_DIRTY);
-        protected static readonly ALL_MATRIX_DIRTY: uint = Node3D.LOCAL_MATRIX_DIRTY | Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY;
+        protected static readonly WORLD_AND_INVERSE_MATRIX_DIRTY: uint = Node.WORLD_MATRIX_DIRTY | Node.INVERSE_WORLD_MATRIX_DIRTY;
+        protected static readonly WORLD_ALL_DIRTY: uint = Node.WORLD_AND_INVERSE_MATRIX_DIRTY | Node.WORLD_ROTATION_DIRTY;
+        protected static readonly LOCAL_AND_WORLD_ALL_DIRTY: uint = Node.LOCAL_MATRIX_DIRTY | Node.WORLD_ALL_DIRTY;
+        protected static readonly LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY: uint = Node.LOCAL_AND_WORLD_ALL_DIRTY & (~Node.WORLD_ROTATION_DIRTY);
+        protected static readonly ALL_MATRIX_DIRTY: uint = Node.LOCAL_MATRIX_DIRTY | Node.WORLD_AND_INVERSE_MATRIX_DIRTY;
 
         protected static readonly CASCADE_COLOR_DIRTY: uint = 0b10000;
 
@@ -23,17 +19,17 @@ namespace Aurora {
         public layer: uint = 0x7FFFFFFF;
         public active: boolean = true;
 
-        protected _parent: Node3D = null;
-        protected _root: Node3D = null;
+        protected _parent: Node = null;
+        protected _root: Node = null;
 
-        public _prev: Node3D = null;
-        public _next: Node3D = null;
+        public _prev: Node = null;
+        public _next: Node = null;
 
-        public _childHead: Node3D = null;
+        public _childHead: Node = null;
         protected _numChildren: number = 0;
-        protected _traversingStack: Node3D[] = null;
+        protected _traversingStack: Node[] = null;
 
-        protected _components: AbstractNode3DComponent[] = null;
+        protected _components: Node.AbstractComponent[] = null;
 
         protected _localRot: Quaternion = new Quaternion();
         protected _localScale: Vector3 = Vector3.One;
@@ -53,18 +49,18 @@ namespace Aurora {
             this._root = this;
         }
 
-        public get root(): Node3D {
+        public get root(): Node {
             return this._root;
         }
 
-        public get parent(): Node3D {
+        public get parent(): Node {
             return this._parent;
         }
 
         /**
          * @returns If operate succeed, return child, else return null.
          */
-        public addChild(c: Node3D): Node3D {
+        public addChild(c: Node): Node {
             if (c && c._parent === null && c !== this._root) {
                 this._addNode(c);
                 c._parentChanged(this._root);
@@ -76,7 +72,7 @@ namespace Aurora {
         /**
          * @returns If operate succeed, return child, else return null.
          */
-        public insertChild(c: Node3D, before: Node3D): Node3D {
+        public insertChild(c: Node, before: Node): Node {
             if (c && c !== this._root) {
                 if (c === before) return c;
 
@@ -99,7 +95,7 @@ namespace Aurora {
             return null;
         }
 
-        public removeChild(c: Node3D): boolean {
+        public removeChild(c: Node): boolean {
             if (c && c._parent === this) {
                 this._removeNode(null);
                 c._parentChanged(c);
@@ -112,28 +108,28 @@ namespace Aurora {
             return this._parent ? this._parent.removeChild(this) : false;
         }
 
-        protected _parentChanged(root: Node3D): void {
+        protected _parentChanged(root: Node): void {
             this._root = root;
 
-            let sendDirty = Node3D.WORLD_ALL_DIRTY;
+            let sendDirty = Node.WORLD_ALL_DIRTY;
 
-            let p = this._parent;
+            const p = this._parent;
             if (p) {
                 p.updateMCascadeColor();
                 if (p._cascadeColor) {
                     if (this._cascadeColor) {
-                        if (!this._cascadeColor.isEqualColor4(p._cascadeColor)) sendDirty |= Node3D.CASCADE_COLOR_DIRTY;
+                        if (!this._cascadeColor.isEqualColor4(p._cascadeColor)) sendDirty |= Node.CASCADE_COLOR_DIRTY;
                     } else {
-                        if (!p._cascadeColor.isWhite) sendDirty |= Node3D.CASCADE_COLOR_DIRTY;
+                        if (!p._cascadeColor.isWhite) sendDirty |= Node.CASCADE_COLOR_DIRTY;
                     }
                 } else {
-                    if (this._cascadeColor && !this._cascadeColor.isWhite) sendDirty |= Node3D.CASCADE_COLOR_DIRTY;
+                    if (this._cascadeColor && !this._cascadeColor.isWhite) sendDirty |= Node.CASCADE_COLOR_DIRTY;
                 }
             } else {
-                if (this._cascadeColor && !this._cascadeColor.isWhite) sendDirty |= Node3D.CASCADE_COLOR_DIRTY;
+                if (this._cascadeColor && !this._cascadeColor.isWhite) sendDirty |= Node.CASCADE_COLOR_DIRTY;
             }
 
-            let old = this._dirty;
+            const old = this._dirty;
             this._dirty |= sendDirty;
             if (old !== this._dirty) this._noticeUpdate(sendDirty);
         }
@@ -184,7 +180,7 @@ namespace Aurora {
 
             return {
                 done: false,
-                value: <Node3D>null,
+                value: <Node>null,
                 next() {
                     if (next) {
                         this.value = next;
@@ -199,8 +195,8 @@ namespace Aurora {
             };
         }
 
-        public clone(cloneChildren: boolean): Node3D {
-            let n = new Node3D();
+        public clone(cloneChildren: boolean): Node {
+            const n = new Node();
             n.name = this.name;
             n.setLocalScale(this._localScale.x, this._localScale.y, this._localScale.z);
             n.setLocalRotation(this._localRot);
@@ -211,6 +207,7 @@ namespace Aurora {
                 let child = this._childHead;
                 while (child) {
                     n.addChild(child.clone(true));
+                    child = child._next;
                 }
             }
 
@@ -220,7 +217,7 @@ namespace Aurora {
         /**
          * @returns numChildren.
          */
-        public getAllChildren(rst: Node3D[], start: uint = 0): Node3D[] {
+        public getAllChildren(rst: Node[], start: uint = 0): Node[] {
             rst = rst || [];
             
             let node = this._childHead;
@@ -240,7 +237,7 @@ namespace Aurora {
 
                 let node = this._childHead;
                 do {
-                    let next = node._next;
+                    const next = node._next;
 
                     node._prev = null;
                     node._next = null;
@@ -316,9 +313,9 @@ namespace Aurora {
         }
 
         protected _colorChanged(): void {
-            let old = this._dirty;
-            this._dirty |= Node3D.CASCADE_COLOR_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(Node3D.CASCADE_COLOR_DIRTY);
+            const old = this._dirty;
+            this._dirty |= Node.CASCADE_COLOR_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node.CASCADE_COLOR_DIRTY);
         }
 
         public getMultipliedColor(rst: Color4 = null): Color4 {
@@ -331,11 +328,11 @@ namespace Aurora {
         }
 
         public updateMCascadeColor(): void {
-            if (this._dirty & Node3D.CASCADE_COLOR_DIRTY) {
-                this._dirty &= ~Node3D.CASCADE_COLOR_DIRTY;
+            if (this._dirty & Node.CASCADE_COLOR_DIRTY) {
+                this._dirty &= ~Node.CASCADE_COLOR_DIRTY;
 
                 if (this._parent) {
-                    let c = this._parent.readonlyCascadeColor;
+                    const c = this._parent.readonlyCascadeColor;
                     if (this._color) {
                         this._cascadeColor = Color4.mul(this._color, c, this._cascadeColor);
                     } else {
@@ -350,11 +347,11 @@ namespace Aurora {
         /**
          * @param callback if return false, break.
          */
-        public foreach(callback: (child: Node3D) => boolean): void {
+        public foreach(callback: (child: Node) => boolean): void {
             if (callback && this._childHead) {
                 let node = this._childHead;
                 if (!this._traversingStack) this._traversingStack = [];
-                let n = this._traversingStack.length;
+                const n = this._traversingStack.length;
                 while (node) {
                     this._traversingStack[n] = node._next;
                     if (!callback(node)) break;
@@ -364,7 +361,7 @@ namespace Aurora {
             }
         }
 
-        protected _addNode(node: Node3D): void {
+        protected _addNode(node: Node): void {
             if (this._childHead) {
                 let tail = this._childHead._prev;
 
@@ -380,7 +377,7 @@ namespace Aurora {
             ++this._numChildren;
         }
 
-        protected _insertNode(node: Node3D, before: Node3D): void {
+        protected _insertNode(node: Node, before: Node): void {
             node._next = before;
             node._prev = before._prev;
             if (before === this._childHead) {
@@ -394,17 +391,17 @@ namespace Aurora {
             ++this._numChildren;
         }
 
-        protected _removeNode(node: Node3D): void {
+        protected _removeNode(node: Node): void {
             this._checkTraversingStack(node);
 
-            let next = node._next;
+            const next = node._next;
 
             if (this._childHead === node) {
                 this._childHead = next;
 
                 if (next) next._prev = node._prev;
             } else {
-                let prev = node._prev;
+                const prev = node._prev;
 
                 prev._next = next;
                 if (next) {
@@ -421,7 +418,7 @@ namespace Aurora {
             --this._numChildren;
         }
 
-        protected _checkTraversingStack(node: Node3D): void {
+        protected _checkTraversingStack(node: Node): void {
             if (this._traversingStack) {
                 for (let i = 0, n = this._traversingStack.length; i < n; ++i) {
                     if (this._traversingStack[i] === node) this._traversingStack[i] = node._next;
@@ -429,7 +426,7 @@ namespace Aurora {
             }
         }
 
-        public addComponent<T extends AbstractNode3DComponent>(component: T): T {
+        public addComponent<T extends Node.AbstractComponent>(component: T): T {
             if (component && component.node !== this) {
                 if (!this._components) this._components = [];
                 if (component.node) component.node._removeComponent(component);
@@ -440,14 +437,14 @@ namespace Aurora {
             return component;
         }
 
-        public removeComponent(component: AbstractNode3DComponent): void {
+        public removeComponent(component: Node.AbstractComponent): void {
             if (component && this._components && component.node === this) {
                 component._setNode(null);
                 this._removeComponent(component);
             }
         }
 
-        protected _removeComponent(component: AbstractNode3DComponent): void {
+        protected _removeComponent(component: Node.AbstractComponent): void {
             this._components.splice(this._components.indexOf(component), 1);
         }
 
@@ -458,12 +455,12 @@ namespace Aurora {
             }
         }
 
-        public getComponentByType<T extends AbstractNode3DComponent>(c: {prototype: T}, checkEnabled: boolean = true): T {
+        public getComponentByType<T extends Node.AbstractComponent>(c: {prototype: T}, checkEnabled: boolean = true): T {
             if (this._components) {
-                let type = <any>c;
+                const type = <any>c;
 
                 for (let i = 0, n = this._components.length; i < n; ++i) {
-                    let com = this._components[i];
+                    const com = this._components[i];
                     if (checkEnabled && !com.enabled) continue;
                     if (com instanceof type) return <T>com;
                 }
@@ -472,14 +469,14 @@ namespace Aurora {
             return null;
         }
 
-        public getComponentsByType<T extends AbstractNode3DComponent>(c: { prototype: T }, checkEnabled: boolean = true, rst: T[] = null, rstOffset: uint = 0): uint {
+        public getComponentsByType<T extends Node.AbstractComponent>(c: { prototype: T }, checkEnabled: boolean = true, rst: T[] = null, rstOffset: uint = 0): uint {
             let num = 0;
 
             if (this._components) {
-                let type = <any>c;
+                const type = <any>c;
 
                 for (let i = 0, n = this._components.length; i < n; ++i) {
-                    let com = this._components[i];
+                    const com = this._components[i];
                     if (checkEnabled && !com.enabled) continue;
                     if (com instanceof type) rst[rstOffset + num++] = <T>com;
                 }
@@ -497,12 +494,12 @@ namespace Aurora {
         }
 
         protected _receiveNoticeUpdate(dirty: uint): void {
-            let old = this._dirty;
+            const old = this._dirty;
             this._dirty |= dirty;
             if (this._dirty !== old) this._noticeUpdate(dirty);
         }
 
-        public getLocalToLocalMatrix(to: Node3D, rst: Matrix44 = null): Matrix44 {
+        public getLocalToLocalMatrix(to: Node, rst: Matrix44 = null): Matrix44 {
             if (to && this._root === to._root) {
                 return this.readonlyWorldMatrix.append34(to.readonlyInverseWorldMatrix, rst);
             } else {
@@ -527,17 +524,17 @@ namespace Aurora {
             this._localMatrix.m31 = y;
             this._localMatrix.m32 = z;
 
-            let old = this._dirty;
-            this._dirty |= Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY);
+            const old = this._dirty;
+            this._dirty |= Node.WORLD_AND_INVERSE_MATRIX_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node.WORLD_AND_INVERSE_MATRIX_DIRTY);
         }
 
         public localTranslate(x: number = 0, y: number = 0, z: number = 0): void {
             this.readonlyLocalMatrix.prependTranslate34XYZ(x, y, z);
 
-            let old = this._dirty;
-            this._dirty |= Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY);
+            const old = this._dirty;
+            this._dirty |= Node.WORLD_AND_INVERSE_MATRIX_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node.WORLD_AND_INVERSE_MATRIX_DIRTY);
         }
 
         public getWorldPosition(rst: Vector3 = null): Vector3 {
@@ -547,7 +544,7 @@ namespace Aurora {
         }
 
         public setWorldPosition(x: number = 0, y: number = 0, z: number = 0): void {
-            let old = this._dirty;
+            const old = this._dirty;
             this.updateWorldMatrix();
 
             this._worldMatrix.m30 = x;
@@ -558,7 +555,7 @@ namespace Aurora {
         }
 
         public worldTranslate(x: number = 0, y: number = 0, z: number = 0): void {
-            let old = this._dirty;
+            const old = this._dirty;
             this.readonlyWorldMatrix.prependTranslate34XYZ(x, y, z);
 
             this._worldPositionChanged(old);
@@ -566,7 +563,7 @@ namespace Aurora {
 
         protected _worldPositionChanged(oldDirty: uint): void {
             if (this._parent) {
-                let vec3 = this._parent.readonlyInverseWorldMatrix.transform34XYZ(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32, Node3D._tmpVec3);
+                const vec3 = this._parent.readonlyInverseWorldMatrix.transform34XYZ(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32, Node._tmpVec3);
                 
                 this._localMatrix.m30 = vec3.x;
                 this._localMatrix.m31 = vec3.y;
@@ -577,8 +574,8 @@ namespace Aurora {
                 this._localMatrix.m32 = this._worldMatrix.m32;
             }
 
-            this._dirty |= Node3D.INVERSE_WORLD_MATRIX_DIRTY;
-            if (oldDirty !== this._dirty) this._noticeUpdate(Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY);
+            this._dirty |= Node.INVERSE_WORLD_MATRIX_DIRTY;
+            if (oldDirty !== this._dirty) this._noticeUpdate(Node.WORLD_AND_INVERSE_MATRIX_DIRTY);
         }
 
         public getLocalRotation(rst: Quaternion = null): Quaternion {
@@ -588,25 +585,25 @@ namespace Aurora {
         public setLocalRotation(quat: Quaternion): void {
             this._localRot.set(quat);
 
-            let old = this._dirty;
-            this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
+            const old = this._dirty;
+            this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node.WORLD_ALL_DIRTY);
         }
 
         public localRotate(quat: Quaternion): void {
             this._localRot.prepend(quat);
 
-            let old = this._dirty;
-            this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
+            const old = this._dirty;
+            this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node.WORLD_ALL_DIRTY);
         }
 
         public parentRotate(quat: Quaternion): void {
             this._localRot.prepend(quat);
 
-            let old = this._dirty;
-            this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
+            const old = this._dirty;
+            this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node.WORLD_ALL_DIRTY);
         }
 
         public getWorldRotation(rst: Quaternion = null): Quaternion {
@@ -620,7 +617,7 @@ namespace Aurora {
         }
 
         public worldRotate(quat: Quaternion): void {
-            let old = this._dirty;
+            const old = this._dirty;
             this.readonlyWorldRotation.prepend(quat);
 
             this._worldRotationChanged(old);
@@ -634,9 +631,9 @@ namespace Aurora {
                 this._localRot.set(this._worldRot);
             }
 
-            this._dirty &= ~Node3D.WORLD_ROTATION_DIRTY;
-            this._dirty |= Node3D.LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY;
-            if (oldDirty !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
+            this._dirty &= ~Node.WORLD_ROTATION_DIRTY;
+            this._dirty |= Node.LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY;
+            if (oldDirty !== this._dirty) this._noticeUpdate(Node.WORLD_ALL_DIRTY);
         }
 
         /**
@@ -666,9 +663,9 @@ namespace Aurora {
         public setLocalScale(x: number, y: number, z: number): void {
             this._localScale.setFromNumbers(x, y, z);
 
-            let old = this._dirty;
-            this._dirty |= Node3D.ALL_MATRIX_DIRTY;
-           if (old !== this._dirty)  this._noticeUpdate(Node3D.WORLD_AND_INVERSE_MATRIX_DIRTY);
+            const old = this._dirty;
+            this._dirty |= Node.ALL_MATRIX_DIRTY;
+           if (old !== this._dirty)  this._noticeUpdate(Node.WORLD_AND_INVERSE_MATRIX_DIRTY);
         }
 
         public getLocalMatrix(rst: Matrix44 = null): Matrix44 {
@@ -678,13 +675,13 @@ namespace Aurora {
         public setLocalMatrix(m: Matrix44): void {
             this._localMatrix.set34(m);
 
-            this._localMatrix.decomposition(Node3D._tmpMat, this._localScale);
-            Node3D._tmpMat.toQuaternion(this._localRot);
+            this._localMatrix.decomposition(Node._tmpMat, this._localScale);
+            Node._tmpMat.toQuaternion(this._localRot);
 
-            let old = this._dirty;
-            this._dirty &= ~Node3D.LOCAL_MATRIX_DIRTY;
-            this._dirty |= Node3D.WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
+            const old = this._dirty;
+            this._dirty &= ~Node.LOCAL_MATRIX_DIRTY;
+            this._dirty |= Node.WORLD_ALL_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node.WORLD_ALL_DIRTY);
         }
 
         public setLocalTRS(pos: Vector3, rot: Quaternion, scale: Vector3): void {
@@ -696,9 +693,9 @@ namespace Aurora {
 
             this._localScale.set(scale);
 
-            let old = this._dirty;
-            this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
+            const old = this._dirty;
+            this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node.WORLD_ALL_DIRTY);
         }
 
         public getWorldMatrix(rst: Matrix44 = null): Matrix44 {
@@ -708,9 +705,9 @@ namespace Aurora {
         public setWorldMatrix(m: Matrix44): void {
             this._worldMatrix.set34(m);
 
-            let old = this._dirty;
-            this._dirty &= ~Node3D.WORLD_MATRIX_DIRTY;
-            this._dirty |= Node3D.INVERSE_WORLD_MATRIX_DIRTY;
+            const old = this._dirty;
+            this._dirty &= ~Node.WORLD_MATRIX_DIRTY;
+            this._dirty |= Node.INVERSE_WORLD_MATRIX_DIRTY;
 
             if (this._parent) {
                 this._worldMatrix.append34(this.readonlyInverseWorldMatrix, this._localMatrix);
@@ -718,12 +715,12 @@ namespace Aurora {
                 this._localMatrix.set34(this._worldMatrix);
             }
 
-            this._localMatrix.decomposition(Node3D._tmpMat, this._localScale);
-            Node3D._tmpMat.toQuaternion(this._localRot);
+            this._localMatrix.decomposition(Node._tmpMat, this._localScale);
+            Node._tmpMat.toQuaternion(this._localRot);
 
-            this._dirty &= ~Node3D.LOCAL_MATRIX_DIRTY;
-            this._dirty |= Node3D.WORLD_ROTATION_DIRTY;
-            if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
+            this._dirty &= ~Node.LOCAL_MATRIX_DIRTY;
+            this._dirty |= Node.WORLD_ROTATION_DIRTY;
+            if (old !== this._dirty) this._noticeUpdate(Node.WORLD_ALL_DIRTY);
         }
 
         public getInverseWorldMatrix(rst: Matrix44 = null): Matrix44 {
@@ -736,15 +733,15 @@ namespace Aurora {
                 this._localRot.identity();
                 this._localScale.set(Vector3.CONST_ONE);
 
-                let old = this._dirty;
-                this._dirty |= Node3D.LOCAL_AND_WORLD_ALL_DIRTY;
-                if (old !== this._dirty) this._noticeUpdate(Node3D.WORLD_ALL_DIRTY);
+                const old = this._dirty;
+                this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
+                if (old !== this._dirty) this._noticeUpdate(Node.WORLD_ALL_DIRTY);
             }
         }
 
         public updateWorldRotation(): void {
-            if (this._dirty & Node3D.WORLD_ROTATION_DIRTY) {
-                this._dirty &= ~Node3D.WORLD_ROTATION_DIRTY;
+            if (this._dirty & Node.WORLD_ROTATION_DIRTY) {
+                this._dirty &= ~Node.WORLD_ROTATION_DIRTY;
 
                 if (this._parent) {
                     this._localRot.append(this._parent.readonlyWorldRotation, this._worldRot);
@@ -755,8 +752,8 @@ namespace Aurora {
         }
 
         public updateLocalMatrix(): void {
-            if (this._dirty & Node3D.LOCAL_MATRIX_DIRTY) {
-                this._dirty &= ~Node3D.LOCAL_MATRIX_DIRTY;
+            if (this._dirty & Node.LOCAL_MATRIX_DIRTY) {
+                this._dirty &= ~Node.LOCAL_MATRIX_DIRTY;
 
                 this._localRot.toMatrix33(this._localMatrix);
                 this._localMatrix.prependScale34Vector3(this._localScale);
@@ -764,8 +761,8 @@ namespace Aurora {
         }
 
         public updateWorldMatrix(): void {
-            if (this._dirty & Node3D.WORLD_MATRIX_DIRTY) {
-                this._dirty &= ~Node3D.WORLD_MATRIX_DIRTY;
+            if (this._dirty & Node.WORLD_MATRIX_DIRTY) {
+                this._dirty &= ~Node.WORLD_MATRIX_DIRTY;
 
                 if (this._parent) {
                     this.readonlyLocalMatrix.append34(this._parent.readonlyWorldMatrix, this._worldMatrix);
@@ -776,14 +773,14 @@ namespace Aurora {
         }
 
         public updateInverseWorldMatrix(): void {
-            if (this._dirty & Node3D.INVERSE_WORLD_MATRIX_DIRTY) {
-                this._dirty &= ~Node3D.INVERSE_WORLD_MATRIX_DIRTY;
+            if (this._dirty & Node.INVERSE_WORLD_MATRIX_DIRTY) {
+                this._dirty &= ~Node.INVERSE_WORLD_MATRIX_DIRTY;
 
                 this.readonlyWorldMatrix.invert(this._inverseWorldMatrix);
             }
         }
 
-        public getChildByName(name: string, depth: uint = 0): Node3D {
+        public getChildByName(name: string, depth: uint = 0): Node {
             if (depth === 0) {
                 let child = this._childHead;
                 while (child) {
@@ -791,7 +788,7 @@ namespace Aurora {
                     child = child._next;
                 }
             } else if (depth > 0) {
-                let arr1: Node3D[] = [this], arr2: Node3D[] = [];
+                let arr1: Node[] = [this], arr2: Node[] = [];
                 let len1 = 0, len2 = 0;
 
                 do {
@@ -819,7 +816,7 @@ namespace Aurora {
             return null;
         }
 
-        public isContains(node: Node3D, depth: uint = Number.MAX_SAFE_INTEGER): int {
+        public isContains(node: Node, depth: uint = Number.MAX_SAFE_INTEGER): int {
             if (node === this) {
                 return 0;
             } else if (depth > 0 && node) {
@@ -839,6 +836,48 @@ namespace Aurora {
                 return -1;
             } else {
                 return -1;
+            }
+        }
+    }
+
+    export namespace Node {
+        export abstract class AbstractComponent {
+            protected _node: Node = null;
+            protected _enabled: boolean = true;
+
+            public get node(): Node {
+                return this._node;
+            }
+
+            public _setNode(node: Node): void {
+                const old = this._node;
+                this._node = node;
+
+                this._nodeChanged(old);
+            }
+
+            public get enabled(): boolean {
+                return this._enabled;
+            }
+
+            public set enabled(b: boolean) {
+                if (this._enabled !== b) {
+                    this._enabled = b;
+
+                    this._enabledChanged();
+                }
+            }
+
+            public destroy(): void {
+                if (this._node) this._node.removeComponent(this);
+            }
+
+            protected _nodeChanged(old: Node): void {
+                //override
+            }
+
+            protected _enabledChanged(): void {
+                //override
             }
         }
     }

@@ -1,5 +1,5 @@
-namespace Aurora {
-    export const enum FBXNodePropertyType {
+namespace Aurora.FBX {
+    export const enum NodePropertyType {
         C = 0x43,
         D = 0x44,
         F = 0x46,
@@ -20,7 +20,7 @@ namespace Aurora {
         BY_POLYGON_VERTEX = "ByPolygonVertex"
     }
 
-    export const enum FBXNodePropertyValueType {
+    export const enum NodePropertyValueType {
         UNKNOW,
         BOOL,
         INT,
@@ -32,8 +32,8 @@ namespace Aurora {
         BYTES
     }
 
-    export class FBXNodeProperty {
-        public type = FBXNodePropertyValueType.UNKNOW;
+    export class NodeProperty {
+        public type = NodePropertyValueType.UNKNOW;
         public value: boolean | int | number | string | boolean[] | int[] | number[] | ByteArray = null;
     }
 }

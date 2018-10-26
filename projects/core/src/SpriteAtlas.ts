@@ -36,27 +36,27 @@ namespace Aurora {
                 ns = "";
             }
             
-            let frames = json.frames;
-            let meta = json.meta;
+            const frames = json.frames;
+            const meta = json.meta;
             
             let scale = 1;
             let texW = -1, texH = -1;
             if (meta) {
                 scale = 1 / parseFloat(meta.scale);
-                let size = meta.size;
+                const size = meta.size;
                 if (size) {
                     texW = size.w * scale;
                     texH = size.h * scale;
                 }
             }
 
-            for (let key in frames) {
-                let data = frames[key];
-                let fd = data.frame;
-                let ss = data.sourceSize;
-                let sss = data.spriteSourceSize;
+            for (const key in frames) {
+                const data = frames[key];
+                const fd = data.frame;
+                const ss = data.sourceSize;
+                const sss = data.spriteSourceSize;
 
-                let sf = new SpriteFrame();
+                const sf = new SpriteFrame();
                 sf.texture = tex;
                 sf.x = fd.x;
                 sf.y = fd.y;
@@ -86,7 +86,7 @@ namespace Aurora {
         }
 
         public addFrame(name: string, frame: SpriteFrame): void {
-            let old = this._frames[name];
+            const old = this._frames[name];
             if (old !== frame) {
                 if (old) {
                     if (frame) {

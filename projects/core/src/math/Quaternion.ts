@@ -18,6 +18,10 @@ namespace Aurora {
             return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
         }
 
+        public get lengthSq(): number {
+            return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
+        }
+
         public setFromNumbers(x: number = 0, y: number = 0, z: number = 0, w: number = 1): Quaternion {
             this.x = x;
             this.y = y;
@@ -59,7 +63,7 @@ namespace Aurora {
         public toEuler(rst: Vector3 = null): Vector3 {
             rst = rst || new Vector3();
 
-            let y2 = this.y * this.y;
+            const y2 = this.y * this.y;
             rst.x = Math.atan2(2 * (this.w * this.x + this.y * this.z), (1 - 2 * (this.x * this.x + y2)));
             rst.y = Math.asin(2 * (this.w * this.y - this.z * this.x));
             rst.z = Math.atan2(2 * (this.w * this.z + this.x * this.y), (1 - 2 * (y2 + this.z * this.z)));
@@ -68,11 +72,11 @@ namespace Aurora {
         }
 
         public normalize(): Quaternion {
-            let length = 1 / this.length;
-            this.x *= length;
-            this.y *= length;
-            this.z *= length;
-            this.w *= length;
+            const len = 1 / this.length;
+            this.x *= len;
+            this.y *= len;
+            this.z *= len;
+            this.w *= len;
 
             return this;
         }
@@ -82,12 +86,7 @@ namespace Aurora {
 
             radian *= 0.5;
 
-            rst.x = Math.sin(radian);
-            rst.y = 0;
-            rst.z = 0;
-            rst.w = Math.cos(radian);
-
-            return rst;
+            return rst.setFromNumbers(Math.sin(radian), 0, 0, Math.cos(radian));
         }
 
         public static createFromEulerY(radian: number, rst: Quaternion = null): Quaternion {
@@ -95,12 +94,7 @@ namespace Aurora {
 
             radian *= 0.5;
 
-            rst.x = 0;
-            rst.y = Math.sin(radian);
-            rst.z = 0;
-            rst.w = Math.cos(radian);
-
-            return rst;
+            return rst.setFromNumbers(0, Math.sin(radian), 0, Math.cos(radian));
         }
 
         public static createFromEulerZ(radian: number, rst: Quaternion = null): Quaternion {
@@ -108,12 +102,7 @@ namespace Aurora {
 
             radian *= 0.5;
 
-            rst.x = 0;
-            rst.y = 0;
-            rst.z = Math.sin(radian);
-            rst.w = Math.cos(radian);
-
-            return rst;
+            return rst.setFromNumbers(0, 0, Math.sin(radian), Math.cos(radian));
         }
 
         public static createFromEulerXYZ(x: number = 0, y: number = 0, z: number = 0, rst: Quaternion = null): Quaternion {
@@ -123,17 +112,17 @@ namespace Aurora {
             y *= 0.5;
             z *= 0.5;
 
-            let sinX = Math.sin(x);
-            let cosX = Math.cos(x);
-            let sinY = Math.sin(y);
-            let cosY = Math.cos(y);
-            let sinZ = Math.sin(z);
-            let cosZ = Math.cos(z);
+            const sinX = Math.sin(x);
+            const cosX = Math.cos(x);
+            const sinY = Math.sin(y);
+            const cosY = Math.cos(y);
+            const sinZ = Math.sin(z);
+            const cosZ = Math.cos(z);
 
-            let scXY = sinX * cosY;
-            let csXY = cosX * sinY;
-            let ccXY = cosX * cosY;
-            let ssXY = sinX * sinY;
+            const scXY = sinX * cosY;
+            const csXY = cosX * sinY;
+            const ccXY = cosX * cosY;
+            const ssXY = sinX * sinY;
 
             rst.x = scXY * cosZ - csXY * sinZ;
             rst.y = csXY * cosZ + scXY * sinZ;
@@ -154,13 +143,9 @@ namespace Aurora {
             rst = rst || new Quaternion();
 
             radian *= 0.5;
-            let s = Math.sin(radian);
-            rst.x = -axis.x * s;
-            rst.y = -axis.y * s;
-            rst.z = -axis.z * s;
-            rst.w = Math.cos(radian);
+            const s = Math.sin(radian);
 
-            return rst;
+            return rst.setFromNumbers(-axis.x * s, -axis.y * s, -axis.z * s, Math.cos(radian));
         }
 
         /**
@@ -186,9 +171,9 @@ namespace Aurora {
                 k0 = 1 - t;
                 k1 = t;
             } else {
-                let omega = Math.acos(cosOmega);
-                let sinOmega = Math.sin(omega);
-                let to = t * omega;
+                const omega = Math.acos(cosOmega);
+                const sinOmega = Math.sin(omega);
+                const to = t * omega;
                 k0 = Math.sin(omega - to) / sinOmega;
                 k1 = Math.sin(to) / sinOmega;
             }
@@ -216,10 +201,10 @@ namespace Aurora {
             } else {
                 if (tolerance < 0) tolerance = -tolerance;
                 tolerance *= tolerance;
-                let x = this.x - toCompare.x;
-                let y = this.y - toCompare.y;
-                let z = this.z - toCompare.z;
-                let w = this.w - toCompare.w;
+                const x = this.x - toCompare.x;
+                const y = this.y - toCompare.y;
+                const z = this.z - toCompare.z;
+                const w = this.w - toCompare.w;
 
                 return (x * x + y * y + z * z + w * w) <= tolerance;
             }
@@ -251,18 +236,12 @@ namespace Aurora {
         */
 
         public append(quat: Quaternion, rst: Quaternion = null): Quaternion {
-            let w1 = this.w * quat.w - this.x * quat.x - this.y * quat.y - this.z * quat.z;
-            let x1 = this.x * quat.w + this.w * quat.x + this.z * quat.y - this.y * quat.z;
-            let y1 = this.y * quat.w + this.w * quat.y + this.x * quat.z - this.z * quat.x;
-            let z1 = this.z * quat.w + this.w * quat.z + this.y * quat.x - this.x * quat.y;
+            const w1 = this.w * quat.w - this.x * quat.x - this.y * quat.y - this.z * quat.z;
+            const x1 = this.x * quat.w + this.w * quat.x + this.z * quat.y - this.y * quat.z;
+            const y1 = this.y * quat.w + this.w * quat.y + this.x * quat.z - this.z * quat.x;
+            const z1 = this.z * quat.w + this.w * quat.z + this.y * quat.x - this.x * quat.y;
 
-            rst = rst || this;
-            rst.x = x1;
-            rst.y = y1;
-            rst.z = z1;
-            rst.w = w1;
-
-            return rst;
+            return rst ? rst.setFromNumbers(x1, y1, z1, w1) : new Quaternion(x1, y1, z1, w1);
         }
 
         public rotateXYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
@@ -271,10 +250,10 @@ namespace Aurora {
             
             rst = rst || new Vector3();
 
-            let w1 = -x * this.x - y * this.y - z * this.z;
-            let x1 = this.w * x + this.y * z - this.z * y;
-            let y1 = this.w * y - this.x * z + this.z * x;
-            let z1 = this.w * z + this.x * y - this.y * x;
+            const w1 = -x * this.x - y * this.y - z * this.z;
+            const x1 = this.w * x + this.y * z - this.z * y;
+            const y1 = this.w * y - this.x * z + this.z * x;
+            const z1 = this.w * z + this.x * y - this.y * x;
 
             rst.x = -w1 * this.x + x1 * this.w - y1 * this.z + z1 * this.y;
             rst.y = -w1 * this.y + x1 * this.z + y1 * this.w - z1 * this.x;
@@ -288,18 +267,18 @@ namespace Aurora {
         }
 
         public toMatrix33(rst: Matrix44 = null): Matrix44 {
-            let x2 = this.x * 2;
-            let y2 = this.y * 2;
-            let z2 = this.z * 2;
-            let xx = this.x * x2;
-            let xy = this.x * y2;
-            let xz = this.x * z2;
-            let yy = this.y * y2;
-            let yz = this.y * z2;
-            let zz = this.z * z2;
-            let wx = this.w * x2;
-            let wy = this.w * y2;
-            let wz = this.w * z2;
+            const x2 = this.x * 2;
+            const y2 = this.y * 2;
+            const z2 = this.z * 2;
+            const xx = this.x * x2;
+            const xy = this.x * y2;
+            const xz = this.x * z2;
+            const yy = this.y * y2;
+            const yz = this.y * z2;
+            const zz = this.z * z2;
+            const wx = this.w * x2;
+            const wy = this.w * y2;
+            const wz = this.w * z2;
 
             if (rst) {
                 rst.m00 = 1 - yy - zz;
@@ -314,7 +293,10 @@ namespace Aurora {
                 rst.m21 = yz - wx;
                 rst.m22 = 1 - xx - yy;
             } else {
-                rst = new Matrix44(1 - yy - zz, xy + wz, xz - wy, 0, xy - wz, 1 - xx - zz, yz + wx, 0, xz + wy, yz - wx, 1 - xx - yy, 0);
+                rst = new Matrix44(
+                    1 - yy - zz, xy + wz, xz - wy, 0,
+                    xy - wz, 1 - xx - zz, yz + wx, 0,
+                    xz + wy, yz - wx, 1 - xx - yy);
             }
 
             return rst;

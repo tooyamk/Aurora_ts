@@ -118,7 +118,7 @@ namespace Aurora {
         }
 
         private static _parseMeshAttrib(data: ByteArray, length: uint, asset: MeshAsset): void {
-            asset.name = data.readString(ByteArrayStringMode.DYNAMIC_LENGTH);
+            asset.name = data.readString(ByteArray.StringMode.DYNAMIC_LENGTH);
         }
 
         private static _parseMeshVertex(data: ByteArray, length: uint, name: string): VertexSource {
@@ -232,18 +232,18 @@ namespace Aurora {
                 if (!file.skeletons) file.skeletons = [];
                 file.skeletons.push(ske);
 
-                let bones: Node3D[] = [];
+                let bones: Node[] = [];
                 ske.bones = bones;
 
                 for (let i = 0; i < numBones; ++i) {
-                    let bone = new Node3D();
-                    bone.name = data.readString(ByteArrayStringMode.DYNAMIC_LENGTH);
+                    let bone = new Node();
+                    bone.name = data.readString(ByteArray.StringMode.DYNAMIC_LENGTH);
                     bones[i] = bone;
                 }
 
                 let numRootBones = data.readDynamicLength();
                 
-                let rootBones: Node3D[] = [];
+                let rootBones: Node[] = [];
                 //ske.rootBones = rootBones;
 
                 if (numBones <= 0xFF) {

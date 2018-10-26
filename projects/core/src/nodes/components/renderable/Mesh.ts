@@ -5,7 +5,7 @@ namespace Aurora {
         public asset: MeshAsset = null;
 
         public checkRenderable(): boolean {
-            return Boolean(this.asset);
+            return !!this.asset;
         }
 
         public visit(renderingData: RenderingData): void {

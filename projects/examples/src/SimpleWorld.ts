@@ -2,8 +2,8 @@ class SimpleWorld {
     constructor() {
         let env = new Env();
 
-        let modelNode = env.world.addChild(new Aurora.Node3D());
-        let light = env.world.addChild(new Aurora.Node3D()).addComponent(new Aurora.PointLight());
+        let modelNode = env.world.addChild(new Aurora.Node());
+        let light = env.world.addChild(new Aurora.Node()).addComponent(new Aurora.PointLight());
         light.setAttenuation(2500);
 
         modelNode.localTranslate(0, 0, 500);
@@ -24,7 +24,7 @@ class SimpleWorld {
         env.start(() => {
             let gl = env.gl;
             gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
+            env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLH(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
         },
         (delta: number) => {
             modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.001 * delta * Math.PI));

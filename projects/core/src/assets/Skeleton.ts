@@ -1,6 +1,6 @@
 namespace Aurora {
     export class Skeleton {
-        public bones: Node3D[] = [];
+        public bones: Node[] = [];
         public rootBoneIndices: uint[] = [];
     }
 }

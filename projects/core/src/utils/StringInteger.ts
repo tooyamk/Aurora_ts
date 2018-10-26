@@ -5,13 +5,13 @@ namespace Aurora {
         }
 
         private static _compare(a: string, b: string): int {
-            let negativeA = a.charCodeAt(0) === 45;
-            let negativeB = b.charCodeAt(0) === 45;
+            const negativeA = a.charCodeAt(0) === 45;
+            const negativeB = b.charCodeAt(0) === 45;
 
             if (negativeA) {
                 if (negativeB) {
                     let rst = StringInteger._compareNonnegative(a.substr(1), b.substr(1));
-                    if (rst !== 0) rst *= -1;
+                    if (rst !== 0) rst = -rst;
                     return rst;
                 } else {
                     return -1;
@@ -24,16 +24,16 @@ namespace Aurora {
         }
 
         private static _compareNonnegative(a: string, b: string): int {
-            let lenA = a.length;
-            let lenB = b.length;
+            const lenA = a.length;
+            const lenB = b.length;
             if (lenA > lenB) {
                 return 1;
             } else if (lenA < lenB) {
                 return -1;
             } else {
                 for (let i = 0; i < lenA; ++i) {
-                    let c0 = a.charCodeAt(i);
-                    let c1 = b.charCodeAt(i);
+                    const c0 = a.charCodeAt(i);
+                    const c1 = b.charCodeAt(i);
                     if (c0 > c1) {
                         return 1;
                     } else if (c0 < c1) {
@@ -49,8 +49,8 @@ namespace Aurora {
         }
 
         private static _add(a: string, b: string): string {
-            let negativeA = a.charCodeAt(0) === 45;
-            let negativeB = b.charCodeAt(0) === 45;
+            const negativeA = a.charCodeAt(0) === 45;
+            const negativeB = b.charCodeAt(0) === 45;
 
             if (negativeA) {
                 if (negativeB) {
@@ -71,16 +71,16 @@ namespace Aurora {
 
             let rst = "";
 
-            let digitsA = a.length;
-            let digitsB = b.length;
+            const digitsA = a.length;
+            const digitsB = b.length;
 
-            let maxDigits = digitsA > digitsB ? digitsA : digitsB;
+            const maxDigits = digitsA > digitsB ? digitsA : digitsB;
 
             let tens = 0;
             for (let i = 1; i <= maxDigits; ++i) {
-                let n0 = i <= digitsA ? a.charCodeAt(digitsA - i) - 48 : 0;
-                let n1 = i <= digitsB ? b.charCodeAt(digitsB - i) - 48 : 0;
-                let n = n0 + n1 + tens;
+                const n0 = i <= digitsA ? a.charCodeAt(digitsA - i) - 48 : 0;
+                const n1 = i <= digitsB ? b.charCodeAt(digitsB - i) - 48 : 0;
+                const n = n0 + n1 + tens;
                 if (n > 9) {
                     tens = 1;
                     rst = (n - 10) + rst;
@@ -97,8 +97,8 @@ namespace Aurora {
         }
 
         private static _sub(a: string, b: string): string {
-            let negativeA = a.charCodeAt(0) === 45;
-            let negativeB = b.charCodeAt(0) === 45;
+            const negativeA = a.charCodeAt(0) === 45;
+            const negativeB = b.charCodeAt(0) === 45;
 
             if (negativeA) {
                 if (negativeB) {
@@ -116,12 +116,12 @@ namespace Aurora {
         private static _subNonnegative(a: string, b: string): string {
             if (b === "0") return a;
 
-            let compare = StringInteger._compareNonnegative(a, b);
+            const compare = StringInteger._compareNonnegative(a, b);
             if (compare === 0) {
                 return "0";
             } else {
                 if (compare < 0) {
-                    let tmp = a;
+                    const tmp = a;
                     a = b;
                     b = tmp;
                 }
@@ -129,20 +129,20 @@ namespace Aurora {
                 let rst = "";
 
                 let digitsA = a.length;
-                let digitsB = b.length;
+                const digitsB = b.length;
 
-                let arr: uint[] = [];
+                const arr: uint[] = [];
                 arr.length = digitsA;
                 for (let i = 0; i < digitsA; ++i) arr[i] = a.charCodeAt(digitsA - i - 1) - 48;
 
                 for (let i = 0; i < digitsA; ++i) {
                     let n0 = arr[i];
-                    let n1 = i < digitsB ? b.charCodeAt(digitsB - i - 1) - 48 : 0;
+                    const n1 = i < digitsB ? b.charCodeAt(digitsB - i - 1) - 48 : 0;
 
                     if (n0 < n1) {
                         let idx = i + 1;
                         do {
-                            let value = arr[idx];
+                            const value = arr[idx];
                             if (value > 0) {
                                 if (value === 1 && idx + 1 === digitsA) {
                                     --digitsA;
@@ -159,8 +159,7 @@ namespace Aurora {
                         n0 += 10;
                     }
                     
-                    let n = n0 - n1;
-                    rst = n + rst;
+                    rst = (n0 - n1) + rst;
                 }
 
                 digitsA = rst.length;
@@ -184,8 +183,8 @@ namespace Aurora {
         }
 
         private static _mul(a: string, b: string): string {
-            let negativeA = a.charCodeAt(0) === 45;
-            let negativeB = b.charCodeAt(0) === 45;
+            const negativeA = a.charCodeAt(0) === 45;
+            const negativeB = b.charCodeAt(0) === 45;
 
             if (negativeA) {
                 if (negativeB) {
@@ -206,15 +205,15 @@ namespace Aurora {
             if (a === "0" || b === "0") return "0";
 
             let rst = "0";
-            let len = b.length;
+            const len = b.length;
             let base = "";
             for (let i = a.length - 1; i >= 0; --i) {
                 let tmp = base;
                 base += "0";
                 let tens = 0;
-                let n0 = a.charCodeAt(i) - 48;
+                const n0 = a.charCodeAt(i) - 48;
                 for (let j = len - 1; j >= 0; --j) {
-                    let n = n0 * (b.charCodeAt(j) - 48) + tens;
+                    const n = n0 * (b.charCodeAt(j) - 48) + tens;
                     if (n > 9) {
                         tens = (n * 0.1) | 0;
                         tmp = n - tens * 10 + tmp;
@@ -229,27 +228,27 @@ namespace Aurora {
             return rst;
         }
 
-        public static div(a: string, b: string): string[] {
+        public static div(a: string, b: string): [string, string] {
             return StringInteger._div(StringInteger.toDecimal(a), StringInteger.toDecimal(b));
         }
 
-        private static _div(a: string, b: string): string[] {
-            let negativeA = a.charCodeAt(0) === 45;
-            let negativeB = b.charCodeAt(0) === 45;
+        private static _div(a: string, b: string): [string, string] {
+            const negativeA = a.charCodeAt(0) === 45;
+            const negativeB = b.charCodeAt(0) === 45;
 
             if (negativeA) {
                 if (negativeB) {
-                    let rst = StringInteger._divNonnegative(a.substr(1), b.substr(1));
+                    const rst = StringInteger._divNonnegative(a.substr(1), b.substr(1));
                     if (rst[1] !== "0") rst[1] = "-" + rst[1];
                     return rst;
                 } else {
-                    let rst = StringInteger._divNonnegative(a.substr(1), b);
+                    const rst = StringInteger._divNonnegative(a.substr(1), b);
                     if (rst[0] !== "0") rst[0] = "-" + rst[0];
                     if (rst[1] !== "0") rst[1] = "-" + rst[1];
                     return rst;
                 }
             } else if (negativeB) {
-                let rst = StringInteger._divNonnegative(a, b.substr(1));
+                const rst = StringInteger._divNonnegative(a, b.substr(1));
                 if (rst[0] !== "0") rst[0] = "-" + rst[0];
                 return rst;
             } else {
@@ -257,23 +256,22 @@ namespace Aurora {
             }
         }
 
-        private static _divNonnegative(a: string, b: string): string[] {
+        private static _divNonnegative(a: string, b: string): [string, string] {
             if (b === "1") return [a, "0"];
             if (a === "0" || b === "0") return ["0", "0"];
 
-            let digitsB = b.length;
-
+            const digitsB = b.length;
             let quotient = "0", remainder = "0";
 
             do {
-                let compare = StringInteger._compareNonnegative(a, b);
+                const compare = StringInteger._compareNonnegative(a, b);
                 if (compare > 0) {
-                    let digitsA = a.length;
-                    let len = digitsA - digitsB;
+                    const digitsA = a.length;
+                    const len = digitsA - digitsB;
                     if (len > 0) {
-                        let a0 = (a.charCodeAt(0) - 48) * 10 + a.charCodeAt(1) - 48;
-                        let b0 = b.charCodeAt(0) - 48;
-                        let n = ((a0 / b0) | 0) >> 1;
+                        const a0 = (a.charCodeAt(0) - 48) * 10 + a.charCodeAt(1) - 48;
+                        const b0 = b.charCodeAt(0) - 48;
+                        const n = ((a0 / b0) | 0) >> 1;
 
                         let mul = "1";
                         for (let i = 1; i < len; ++i) mul += "0";
@@ -287,19 +285,19 @@ namespace Aurora {
                             remainder = StringInteger._subNonnegative(a, StringInteger._mulNonnegative(b, mul));
                         }
                     } else {
-                        let a0 = a.charCodeAt(0) - 48;
-                        let b0 = b.charCodeAt(0) - 48;
+                        const a0 = a.charCodeAt(0) - 48;
+                        const b0 = b.charCodeAt(0) - 48;
                         if (a0 === b0) {
                             quotient = StringInteger._addNonnegative(quotient, "1");
                             remainder = StringInteger._subNonnegative(a, b);
                             break;
                         } else {
-                            let n = ((a0 / b0) | 0) >> 1;
+                            const n = ((a0 / b0) | 0) >> 1;
                             if (n < 2) {
                                 quotient = StringInteger._addNonnegative(quotient, "1");
                                 remainder = StringInteger._subNonnegative(a, b);
                             } else {
-                                let mul = n.toString();
+                                const mul = n.toString();
                                 quotient = StringInteger._addNonnegative(quotient, mul);
                                 remainder = StringInteger._subNonnegative(a, StringInteger._mulNonnegative(b, mul));
                             }
@@ -356,7 +354,7 @@ namespace Aurora {
         }
 
         public static toHexadecimal(n: string, bits: int = -1): string {
-            let len = n.length;
+            const len = n.length;
             if (len === 0 || bits === 0) {
                 return "0";
             } else {
@@ -364,10 +362,9 @@ namespace Aurora {
 
                 let rst = "";
                 do {
-                    let div = StringInteger._divNonnegative(dec, "16");
-                    let quotient = div[0];
-
-                    let remainder = div[1];
+                    const div = StringInteger._divNonnegative(dec, "16");
+                    const quotient = div[0];
+                    const remainder = div[1];
                     if (remainder.length === 1) {
                         rst = remainder + rst;
                     } else {
@@ -407,12 +404,12 @@ namespace Aurora {
         }
 
         public static toDecimal(n: string, bits: int = -1, signed: boolean = true): string {
-            let len = n.length;
+            const len = n.length;
             bits |= 0;
             if (len === 0 || bits === 0) {
                 return "0";
             } else {
-                let h = n.substr(0, 2);
+                const h = n.substr(0, 2);
                 if (h === "0x") {
                     let rst = "0";
                     let base = "1";
@@ -425,7 +422,7 @@ namespace Aurora {
                         }
                     }
                     for (let i = len - 1; i >= s; --i) {
-                        let c = n.charCodeAt(i);
+                        const c = n.charCodeAt(i);
                         let v = 0;
                         if (c >= 48 && c <= 57) {
                             v = c - 48;
@@ -454,7 +451,7 @@ namespace Aurora {
                         }
                     }
                     for (let i = len - 1; i >= s; --i) {
-                        let c = n.charCodeAt(i);
+                        const c = n.charCodeAt(i);
                         let v = 0;
                         if (c >= 48 && c <= 55) {
                             v = c - 48;
@@ -479,7 +476,7 @@ namespace Aurora {
                         }
                     }
                     for (let i = len - 1; i >= s; --i) {
-                        let c = n.charCodeAt(i);
+                        const c = n.charCodeAt(i);
                         let v = 0;
                         if (c === 48 || c === 49) {
                             v = c - 48;
@@ -493,7 +490,7 @@ namespace Aurora {
 
                     return StringInteger._usnignedDecimalCheckBitsAndSigned(rst, bits, signed);
                 } else {
-                    let first = n.charCodeAt(0);
+                    const first = n.charCodeAt(0);
                     let s = first === 43 || first === 45 ? 1 : 0;
                     for (let i = s; i < len; ++i) {
                         if (n.charCodeAt(i) === 48) {
@@ -503,24 +500,24 @@ namespace Aurora {
                         }
                     }
                     for (let i = s; i < len; ++i) {
-                        let c1 = n.charAt(i);
-                        let c = n.charCodeAt(i);
+                        const c1 = n.charAt(i);
+                        const c = n.charCodeAt(i);
                         if (c < 48 || c > 57) return "0";
                     }
 
                     if (s > 0) n = n.substr(s);
 
                     if (bits > 0) {
-                        let max = StringInteger.getMaxValue(bits);
+                        const max = StringInteger.getMaxValue(bits);
                         if (first === 45) {
-                            let limit = StringInteger._addNonnegative(max, "1");
-                            let minSigned = StringInteger._div(limit, "2")[0];
+                            const limit = StringInteger._addNonnegative(max, "1");
+                            const minSigned = StringInteger._div(limit, "2")[0];
                             if (StringInteger.compare(n, minSigned) > 0) n = minSigned;
                             return signed ? "-" + n : StringInteger._subNonnegative(limit, n);
                         } else {
                             if (signed) {
-                                let limit = StringInteger._subNonnegative(max, "1");
-                                let maxSigned = StringInteger._div(limit, "2")[0];
+                                const limit = StringInteger._subNonnegative(max, "1");
+                                const maxSigned = StringInteger._div(limit, "2")[0];
                                 return StringInteger.compare(n, maxSigned) > 0 ? maxSigned : n;
                             } else {
                                 return StringInteger.compare(n, max) > 0 ? max : n;
@@ -534,12 +531,13 @@ namespace Aurora {
         }
 
         private static _usnignedDecimalCheckBitsAndSigned(n: string, bits: int, signed: boolean): string {
+            if (n === "0") return n;
             if (bits > 0) {
-                let max = StringInteger.getMaxValue(bits);
+                const max = StringInteger.getMaxValue(bits);
                 if (StringInteger.compare(n, max) > 0) n = max;
                 if (signed) {
-                    let limit = StringInteger._addNonnegative(max, "1");
-                    let minSigned = StringInteger._div(limit, "2")[0];
+                    const limit = StringInteger._addNonnegative(max, "1");
+                    const minSigned = StringInteger._div(limit, "2")[0];
                     if (StringInteger.compare(n, minSigned) >= 0) n = StringInteger._subNonnegative(n, limit);
                 }
             }

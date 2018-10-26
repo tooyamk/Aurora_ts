@@ -19,7 +19,7 @@ namespace Aurora {
 
         public createBuffer(gl: GL): GLVertexBuffer {
             if (this.data && gl) {
-                let buffer = new GLVertexBuffer(gl);
+                const buffer = new GLVertexBuffer(gl);
                 buffer.upload(this.data, this.size, this.type, this.normalized, this.usage);
                 return buffer;
             }

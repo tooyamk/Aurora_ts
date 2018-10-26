@@ -29,7 +29,7 @@ namespace Aurora.Collections {
             if (capacity > 0) {
                 let head = new ListNode<T>();
                 for (let i = 1; i < capacity; ++i) {
-                    let node = new ListNode<T>();
+                    const node = new ListNode<T>();
                     node.next = head;
                     head = node;
                 }
@@ -51,9 +51,9 @@ namespace Aurora.Collections {
                 }
             }
 
-            let list = this;
+            const list = this;
 
-            let itr = {
+            const itr = {
                 list: list,
                 value: <any>undefined,
                 done: true,
@@ -135,7 +135,7 @@ namespace Aurora.Collections {
         }
 
         private _erase(node: ListNode<T>): void {
-            let next = node.next;
+            const next = node.next;
             if (node.prev) {
                 node.prev.next = next;
                 if (next) {
@@ -157,7 +157,7 @@ namespace Aurora.Collections {
         }
 
         public erase(itr: IListIterator<T>, doNext: boolean = true): IListIterator<T> {
-            let node = itr.node;
+            const node = itr.node;
             if (node && itr.list === this) {
                 doNext ? itr.next() : itr.prev();
 
@@ -211,7 +211,7 @@ namespace Aurora.Collections {
             if (this._head) {
                 let node = this._head;
                 while (node) {
-                    let next = node.next;
+                    const next = node.next;
                     this._pushNodeToCache(node);
                     node = next;
                 }
@@ -223,7 +223,7 @@ namespace Aurora.Collections {
         }
 
         public pushBack(value: T): void {
-            let node = this._popNodeFromCache();
+            const node = this._popNodeFromCache();
             node.value = value;
             if (this._head) {
                 node.prev = this._tail;
@@ -237,7 +237,7 @@ namespace Aurora.Collections {
         }
 
         public pushFront(value: T): void {
-            let node = this._popNodeFromCache();
+            const node = this._popNodeFromCache();
             node.value = value;
             if (this._head) {
                 node.next = this._head;
@@ -251,11 +251,11 @@ namespace Aurora.Collections {
         }
 
         private _insert(target: ListNode<T>, insertValue: T, before: boolean = true): void {
-            let node = this._popNodeFromCache();
+            const node = this._popNodeFromCache();
             node.value = insertValue;
 
             if (before) {
-                let prev = target.prev;
+                const prev = target.prev;
                 if (prev) {
                     prev.next = node;
                     node.prev = prev;
@@ -267,7 +267,7 @@ namespace Aurora.Collections {
                     this._head = node;
                 }
             } else {
-                let next = target.next;
+                const next = target.next;
                 if (next) {
                     next.prev = node;
                     node.next = next;

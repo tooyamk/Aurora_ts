@@ -34,22 +34,22 @@ namespace Aurora {
 
         public static parseDefineNames(source: string, excludeDefines: string[]): Set<string> {
             ShaderSource._init();
-            let op = new Set<string>();
-            let lines = ("\n" + source + "\n").match(/[\r\n][  ]*#(define|undef|ifdef|ifndef|if|elif)[  ]+[^\r\n\/]*/g);
+            const op = new Set<string>();
+            const lines = ("\n" + source + "\n").match(/[\r\n][  ]*#(define|undef|ifdef|ifndef|if|elif)[  ]+[^\r\n\/]*/g);
             if (lines) {
-                let searchRegs: RegExp[] = [];
-                let replaceRegs: RegExp[] = [];
-                let searchIfOrElifReg = /#(if|elif)[  ]*/;
-                let splitReg = /==|>|<|!=|>=|<=|&&|\|\|/;
-                let replaceReg = /\s*!*defined\s*\(\s*|\s|\)/g;
-                let noNumberReg = /\D/;
+                const searchRegs: RegExp[] = [];
+                const replaceRegs: RegExp[] = [];
+                const searchIfOrElifReg = /#(if|elif)[  ]*/;
+                const splitReg = /==|>|<|!=|>=|<=|&&|\|\|/;
+                const replaceReg = /\s*!*defined\s*\(\s*|\s|\)/g;
+                const noNumberReg = /\D/;
 
                 let ext1: Set<string> = null;
                 let ext2: RegExp = null;
                 if (excludeDefines) {
                     let ext2Str: string = null;
                     for (let i = 0, n = excludeDefines.length; i < n; ++i) {
-                        let n = excludeDefines[i];
+                        const n = excludeDefines[i];
                         if (n && n.length > 0) {
                             if (n.charAt(n.length - 1) === "*") {
                                 if (ext2Str) {
@@ -67,7 +67,7 @@ namespace Aurora {
                     if (ext2Str) ext2 = new RegExp(ext2Str);
                 }
 
-                let createReg = (name: string) => {
+                const createReg = (name: string) => {
                     searchRegs.push(new RegExp("#" + name + "[  ]+\\S+"));
                     replaceRegs.push(new RegExp("#" + name + "|\\s", "g"));
                 }
@@ -77,7 +77,7 @@ namespace Aurora {
                 createReg("ifdef");
                 createReg("ifndef");
 
-                let addDefine = (name: string) => {
+                const addDefine = (name: string) => {
                     if (!ShaderSource.SYS_DEFINES.has(name)) {
                         if (ext1 && ext1.has(name)) return;
                         if (name.search(ShaderSource.EXCLUDE_DEFINES) < 0) {
@@ -87,13 +87,13 @@ namespace Aurora {
                     }
                 }
 
-                let regsLen = searchRegs.length;
+                const regsLen = searchRegs.length;
 
                 for (let i = 0, n = lines.length; i < n; ++i) {
                     let line = lines[i];
-                    let isBreak: boolean = false;
+                    let isBreak = false;
                     for (let j = 0; j < regsLen; ++j) {
-                        let find = line.match(searchRegs[j]);
+                        const find = line.match(searchRegs[j]);
                         if (find) {
                             addDefine(find[0].replace(replaceRegs[j], ""));
                             isBreak = true;
@@ -102,12 +102,12 @@ namespace Aurora {
                     }
 
                     if (!isBreak) {
-                        let idx = line.search(searchIfOrElifReg);
+                        const idx = line.search(searchIfOrElifReg);
                         if (idx >= 0) {
                             line = line.replace(searchIfOrElifReg, "");
-                            let params = line.split(splitReg);
+                            const params = line.split(splitReg);
                             for (let j = 0, n = params.length; j < n; ++j) {
-                                let value = params[j].replace(replaceReg, "");
+                                const value = params[j].replace(replaceReg, "");
                                 if (value.search(noNumberReg) === 0) addDefine(value);
                             }
                         }

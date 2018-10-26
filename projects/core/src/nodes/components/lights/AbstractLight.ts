@@ -1,7 +1,7 @@
-///<reference path="../AbstractNode3DComponent.ts" />
+///<reference path="../../Node.ts" />
 
 namespace Aurora {
-    export abstract class AbstractLight extends AbstractNode3DComponent {
+    export abstract class AbstractLight extends Node.AbstractComponent {
         public readonly color: Color3 = Color3.WHITE;
         public intensity: number = 1;
 
@@ -10,7 +10,7 @@ namespace Aurora {
         }
 
         protected _generalReady(defines: ShaderDefines, uniforms: ShaderUniforms): void {
-            let wm = this.node.readonlyWorldMatrix;
+            const wm = this.node.readonlyWorldMatrix;
 
             uniforms.setNumber(ShaderPredefined.u_LightColor0, this.color.r * this.intensity, this.color.g * this.intensity, this.color.b * this.intensity);
             uniforms.setNumber(ShaderPredefined.u_LightDirW0, wm.m20, wm.m21, wm.m22);

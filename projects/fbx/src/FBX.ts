@@ -1,230 +1,228 @@
-namespace Aurora {
-    export abstract class FBX {
-        public static parse(data: ByteArray): FBXParseResult {
-            data.position += 23;
-            let ver = data.readUint32();
+namespace Aurora.FBX {
+    export function parse(data: ByteArray): ParseResult {
+        data.position += 23;
+        const ver = data.readUint32();
 
-            let collections = new FBXCollections();
-            let root = new FBXNode();
+        const collections = new Collections();
+        const root = new Node();
 
-            while (data.bytesAvailable > 4) {
-                if (data.readUint32() < data.length) {
-                    data.position -= 4;
+        while (data.bytesAvailable > 4) {
+            if (data.readUint32() < data.length) {
+                data.position -= 4;
 
-                    FBX._parseNode(data, root, ver, collections);
-                } else {
-                    break;
-                }
+                _parseNode(data, root, ver, collections);
+            } else {
+                break;
             }
-
-            return collections.parse();
         }
 
-        private static _parseNode(data: ByteArray, parentNode: FBXNode, ver: number, collections: FBXCollections): void {
-            let endOffset = ver < 7500 ? data.readUint32() : parseInt(data.readUint64());
-            let numProperties = ver < 7500 ? data.readUint32() : parseInt(data.readUint64());
-            let propertyListLen = ver < 7500 ? data.readUint32() : parseInt(data.readUint64());
-            let nameLen = data.readUint8();
-            let name = data.readString(ByteArrayStringMode.END_MARK, nameLen);
+        return collections.parse();
+    }
 
-            if (endOffset === 0) return;
+    function _parseNode(data: ByteArray, parentNode: Node, ver: number, collections: Collections): void {
+        const endOffset = ver < 7500 ? data.readUint32() : parseInt(data.readUint64());
+        const numProperties = ver < 7500 ? data.readUint32() : parseInt(data.readUint64());
+        const propertyListLen = ver < 7500 ? data.readUint32() : parseInt(data.readUint64());
+        const nameLen = data.readUint8();
+        const name = data.readString(ByteArray.StringMode.END_MARK, nameLen);
 
-            let startPos = data.position;
+        if (endOffset === 0) return;
 
-            let node: FBXNode;
+        const startPos = data.position;
 
-            switch (name) {
-                case FBXNodeName.ANIMATION_CURVE:
-                    node = new FBXAnimationCurve();
-                    break;
-                case FBXNodeName.ANIMATION_CURVE_NODE:
-                    node = new FBXAnimationCurveNode();
-                    break;
-                case FBXNodeName.ANIMATION_LAYER:
-                    node = new FBXAnimationLayer();
-                    break;
-                case FBXNodeName.ANIMATION_STACK:
-                    node = new FBXAnimationStack();
-                    break;
-                case FBXNodeName.C:
-                case FBXNodeName.CONNECTIONS:
-                    node = collections.addConnections(new FBXConnection());
-                    break;
-                case FBXNodeName.DEFORMER:
-                    node = collections.addDeformer(new FBXDeformer());
-                    break;
-                case FBXNodeName.GEOMETRY:
-                    node = collections.addGeometry(new FBXGeometry());
-                    break;
-                case FBXNodeName.GLOBAL_SETTINGS:
-                    node = new FBXGlobalSettings();
-                    break;
-                case FBXNodeName.MODEL:
-                    node = collections.addModel(new FBXModel());
-                    break;
-                case FBXNodeName.POSE_NODE:
-                    node = new FBXPoseNode();
-                    break;
-                default:
-                    node = new FBXNode();
-                    break;
-            }
-            
-            node.name = name;
-            parentNode.children.push(node);
+        let node: Node;
 
-            if (numProperties > 0) {
-                let properties: FBXNodeProperty[] = [];
-                properties.length = numProperties;
-                node.properties = properties;
-                for (let i = 0; i < numProperties; ++i) properties[i] = FBX._parseNodeProperty(data);
-            }
+        switch (name) {
+            case NodeName.ANIMATION_CURVE:
+                node = new AnimationCurve();
+                break;
+            case NodeName.ANIMATION_CURVE_NODE:
+                node = new AnimationCurveNode();
+                break;
+            case NodeName.ANIMATION_LAYER:
+                node = new AnimationLayer();
+                break;
+            case NodeName.ANIMATION_STACK:
+                node = new AnimationStack();
+                break;
+            case NodeName.C:
+            case NodeName.CONNECTIONS:
+                node = collections.addConnections(new Connection());
+                break;
+            case NodeName.DEFORMER:
+                node = collections.addDeformer(new Deformer());
+                break;
+            case NodeName.GEOMETRY:
+                node = collections.addGeometry(new Geometry());
+                break;
+            case NodeName.GLOBAL_SETTINGS:
+                node = new GlobalSettings();
+                break;
+            case NodeName.MODEL:
+                node = collections.addModel(new Model());
+                break;
+            case NodeName.POSE_NODE:
+                node = new PoseNode();
+                break;
+            default:
+                node = new Node();
+                break;
+        }
+        
+        node.name = name;
+        parentNode.children.push(node);
 
-            data.position = startPos + propertyListLen;
-
-            while (data.position < endOffset) FBX._parseNode(data, node, ver, collections);
-
-            node.finish();
+        if (numProperties > 0) {
+            const properties: NodeProperty[] = [];
+            properties.length = numProperties;
+            node.properties = properties;
+            for (let i = 0; i < numProperties; ++i) properties[i] = _parseNodeProperty(data);
         }
 
-        private static _parseNodeProperty(data: ByteArray): FBXNodeProperty {
-            let property = new FBXNodeProperty();
+        data.position = startPos + propertyListLen;
 
-            let type = data.readUint8();
-            switch (type) {
-                case FBXNodePropertyType.C: {
-                    property.type = FBXNodePropertyValueType.BOOL;
-                    property.value = data.readBool();
+        while (data.position < endOffset) _parseNode(data, node, ver, collections);
 
-                    break;
-                }
-                case FBXNodePropertyType.D: {
-                    property.type = FBXNodePropertyValueType.NUMBER;
-                    property.value = data.readFloat64();
+        node.finish();
+    }
 
-                    break;
-                }
-                case FBXNodePropertyType.F: {
-                    property.type = FBXNodePropertyValueType.NUMBER;
-                    property.value = data.readFloat32();
+    function _parseNodeProperty(data: ByteArray): NodeProperty {
+        const property = new NodeProperty();
 
-                    break;
-                }
-                case FBXNodePropertyType.I: {
-                    property.type = FBXNodePropertyValueType.INT;
-                    property.value = data.readInt32();
+        const type = data.readUint8();
+        switch (type) {
+            case NodePropertyType.C: {
+                property.type = NodePropertyValueType.BOOL;
+                property.value = data.readBool();
 
-                    break;
-                }
-                case FBXNodePropertyType.L: {
-                    property.type = FBXNodePropertyValueType.INT;
-                    property.value = parseInt(data.readInt64());
+                break;
+            }
+            case NodePropertyType.D: {
+                property.type = NodePropertyValueType.NUMBER;
+                property.value = data.readFloat64();
 
-                    break;
-                }
-                case FBXNodePropertyType.R: {
-                    property.type = FBXNodePropertyValueType.BYTES;
-                    property.value = data.readBytes(data.readUint32());
+                break;
+            }
+            case NodePropertyType.F: {
+                property.type = NodePropertyValueType.NUMBER;
+                property.value = data.readFloat32();
 
-                    break;
-                }
-                case FBXNodePropertyType.S: {
-                    property.type = FBXNodePropertyValueType.STRING;
-                    property.value = data.readString(ByteArrayStringMode.FIXED_LENGTH, data.readUint32());
+                break;
+            }
+            case NodePropertyType.I: {
+                property.type = NodePropertyValueType.INT;
+                property.value = data.readInt32();
 
-                    break;
-                }
-                case FBXNodePropertyType.Y: {
-                    property.type = FBXNodePropertyValueType.INT;
-                    property.value = data.readInt16();
+                break;
+            }
+            case NodePropertyType.L: {
+                property.type = NodePropertyValueType.INT;
+                property.value = parseInt(data.readInt64());
 
-                    break;
-                }
-                case FBXNodePropertyType.b:
-                case FBXNodePropertyType.c:
-                case FBXNodePropertyType.d:
-                case FBXNodePropertyType.f:
-                case FBXNodePropertyType.i:
-                case FBXNodePropertyType.l: {
-                    let arrLen = data.readUint32();
-                    let encoding = data.readUint32();
-                    let compressedLength = data.readUint32();
+                break;
+            }
+            case NodePropertyType.R: {
+                property.type = NodePropertyValueType.BYTES;
+                property.value = data.readBytes(data.readUint32());
 
-                    let uncompressedData: ByteArray;
+                break;
+            }
+            case NodePropertyType.S: {
+                property.type = NodePropertyValueType.STRING;
+                property.value = data.readString(ByteArray.StringMode.FIXED_LENGTH, data.readUint32());
 
-                    if (encoding === 1) {
-                        if (typeof Zlib === 'undefined') {
-                            console.error('FBX parse error: need thirdparty library zlib.js, see https://github.com/imaya/zlib.js');
-                            data.position += compressedLength;
-                            break;
-                        } else {
-                            let inflate = new Zlib.Inflate(new Uint8Array(data.raw), { index: data.position, bufferSize: compressedLength });
-                            data.position += compressedLength;
-                            uncompressedData = new ByteArray(inflate.decompress().buffer);
-                        }
+                break;
+            }
+            case NodePropertyType.Y: {
+                property.type = NodePropertyValueType.INT;
+                property.value = data.readInt16();
+
+                break;
+            }
+            case NodePropertyType.b:
+            case NodePropertyType.c:
+            case NodePropertyType.d:
+            case NodePropertyType.f:
+            case NodePropertyType.i:
+            case NodePropertyType.l: {
+                const arrLen = data.readUint32();
+                const encoding = data.readUint32();
+                const compressedLength = data.readUint32();
+
+                let uncompressedData: ByteArray;
+
+                if (encoding === 1) {
+                    if (typeof Zlib === 'undefined') {
+                        console.error('FBX parse error: need thirdparty library zlib.js, see https://github.com/imaya/zlib.js');
+                        data.position += compressedLength;
+                        break;
                     } else {
-                        uncompressedData = data;
+                        const inflate = new Zlib.Inflate(new Uint8Array(data.raw), { index: data.position, bufferSize: compressedLength });
+                        data.position += compressedLength;
+                        uncompressedData = new ByteArray(inflate.decompress().buffer);
                     }
-
-                    switch (type) {
-                        case FBXNodePropertyType.b:
-                        case FBXNodePropertyType.c: {
-                            property.type = FBXNodePropertyValueType.BOOL_ARRAY;
-                            let arr: boolean[] = [];
-                            arr.length = arrLen;
-                            property.value = arr;
-                            for (let i = 0; i < arrLen; ++i) arr[i] = uncompressedData.readBool();
-
-                            break;
-                        }
-                        case FBXNodePropertyType.d: {
-                            property.type = FBXNodePropertyValueType.NUMBER_ARRAY;
-                            let arr: number[] = [];
-                            arr.length = arrLen;
-                            property.value = arr;
-                            for (let i = 0; i < arrLen; ++i) arr[i] = uncompressedData.readFloat64();
-
-                            break;
-                        }
-                        case FBXNodePropertyType.f: {
-                            property.type = FBXNodePropertyValueType.NUMBER_ARRAY;
-                            let arr: number[] = [];
-                            arr.length = arrLen;
-                            property.value = arr;
-                            for (let i = 0; i < arrLen; ++i) arr[i] = uncompressedData.readFloat32();
-
-                            break;
-                        }
-                        case FBXNodePropertyType.i: {
-                            property.type = FBXNodePropertyValueType.INT_ARRAY;
-                            let arr: int[] = [];
-                            arr.length = arrLen;
-                            property.value = arr;
-                            for (let i = 0; i < arrLen; ++i) arr[i] = uncompressedData.readInt32();
-
-                            break;
-                        }
-                        case FBXNodePropertyType.l: {
-                            property.type = FBXNodePropertyValueType.INT_ARRAY;
-                            let arr: int[] = [];
-                            arr.length = arrLen;
-                            property.value = arr;
-                            for (let i = 0; i < arrLen; ++i) arr[i] = parseInt(uncompressedData.readInt64());
-
-                            break;
-                        }
-                        default:
-                            break;
-                    }
-
-                    break;
+                } else {
+                    uncompressedData = data;
                 }
-                default:
-                    throw new Error("FBX parse: Unknown property type " + type);
-                    break;
-            }
 
-            return property;
+                switch (type) {
+                    case NodePropertyType.b:
+                    case NodePropertyType.c: {
+                        property.type = NodePropertyValueType.BOOL_ARRAY;
+                        const arr: boolean[] = [];
+                        arr.length = arrLen;
+                        property.value = arr;
+                        for (let i = 0; i < arrLen; ++i) arr[i] = uncompressedData.readBool();
+
+                        break;
+                    }
+                    case NodePropertyType.d: {
+                        property.type = NodePropertyValueType.NUMBER_ARRAY;
+                        const arr: number[] = [];
+                        arr.length = arrLen;
+                        property.value = arr;
+                        for (let i = 0; i < arrLen; ++i) arr[i] = uncompressedData.readFloat64();
+
+                        break;
+                    }
+                    case NodePropertyType.f: {
+                        property.type = NodePropertyValueType.NUMBER_ARRAY;
+                        const arr: number[] = [];
+                        arr.length = arrLen;
+                        property.value = arr;
+                        for (let i = 0; i < arrLen; ++i) arr[i] = uncompressedData.readFloat32();
+
+                        break;
+                    }
+                    case NodePropertyType.i: {
+                        property.type = NodePropertyValueType.INT_ARRAY;
+                        const arr: int[] = [];
+                        arr.length = arrLen;
+                        property.value = arr;
+                        for (let i = 0; i < arrLen; ++i) arr[i] = uncompressedData.readInt32();
+
+                        break;
+                    }
+                    case NodePropertyType.l: {
+                        property.type = NodePropertyValueType.INT_ARRAY;
+                        const arr: int[] = [];
+                        arr.length = arrLen;
+                        property.value = arr;
+                        for (let i = 0; i < arrLen; ++i) arr[i] = parseInt(uncompressedData.readInt64());
+
+                        break;
+                    }
+                    default:
+                        break;
+                }
+
+                break;
+            }
+            default:
+                throw new Error("FBX parse: Unknown property type " + type);
+                break;
         }
+
+        return property;
     }
 }

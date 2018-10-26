@@ -1,13 +1,13 @@
 class FileTest {
     private _env: Env;
-    private _modelNode: Aurora.Node3D;
+    private _modelNode: Aurora.Node;
 
     constructor() {
         let env = new Env();
         this._env = env;
 
-        let modelNode = env.world.addChild(new Aurora.Node3D());
-        let light = env.world.addChild(new Aurora.Node3D()).addComponent(new Aurora.PointLight());
+        let modelNode = env.world.addChild(new Aurora.Node());
+        let light = env.world.addChild(new Aurora.Node()).addComponent(new Aurora.PointLight());
         light.setAttenuation(12500);
 
         modelNode.localTranslate(0, 0, 500);
@@ -17,7 +17,7 @@ class FileTest {
         env.start(() => {
             let gl = env.gl;
             gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
+            env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLH(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
         },
         (delta: number) => {
             modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.0005 * delta * Math.PI));
@@ -38,7 +38,7 @@ class FileTest {
             mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
             mat.uniforms.setNumber(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
 
-            let mesh = this._modelNode.addChild(new Aurora.Node3D()).addComponent(new Aurora.Mesh());
+            let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.Mesh());
             mesh.renderer = this._env.forwardRenderer;
             mesh.asset = file.meshes[0];
             mesh.materials = [mat];
@@ -63,7 +63,7 @@ class FileTest {
             mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
             mat.uniforms.setNumber(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
 
-            let mesh = this._modelNode.addChild(new Aurora.Node3D()).addComponent(new Aurora.Mesh());
+            let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.Mesh());
             mesh.renderer = this._env.forwardRenderer;
             mesh.asset = file.meshes[0];
             mesh.materials = [mat];
@@ -76,7 +76,7 @@ class FileTest {
     }
 
     private _loadFBX(): void {
-        let result: Aurora.FBXParseResult = null;
+        let result: Aurora.FBX.ParseResult = null;
         let img: HTMLImageElement = null;
 
         let taskQueue = new Aurora.TaskQueue();
@@ -110,10 +110,12 @@ class FileTest {
             mat.uniforms.setNumber(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
             mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
 
-            let mesh = this._modelNode.addChild(new Aurora.Node3D()).addComponent(new Aurora.SkinnedMesh());
+            let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
             mesh.renderer = this._env.forwardRenderer;
             mesh.asset = result.meshes[0];
             mesh.materials = [mat];
+
+            Helper.printNodeHierarchy([result.skeleton.bones[result.skeleton.rootBoneIndices[0]]]);
 
             mesh.node.setLocalScale(30, 30, 30);
         });

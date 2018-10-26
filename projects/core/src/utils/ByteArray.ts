@@ -1,15 +1,4 @@
 namespace Aurora {
-    export interface IByteArrayDecodeUTF8Result {
-        byteLength: uint;
-        string: string;
-    }
-
-    export const enum ByteArrayStringMode {
-        END_MARK,
-        DYNAMIC_LENGTH,
-        FIXED_LENGTH
-    }
-
     export class ByteArray {
         private _pos: uint = 0;
         private _logicLen: uint = 0;
@@ -19,14 +8,14 @@ namespace Aurora {
 
         constructor(data: ArrayBuffer | uint | null = null, offset: uint = 0, logicLength: uint = null, rawLength: uint = null) {
             if (data instanceof ArrayBuffer) {
-                let len = data.byteLength;
+                const len = data.byteLength;
                 if (offset > len) offset = len;
                 if (rawLength === null || rawLength === undefined) {
                     rawLength = len - offset;
                 } else if (offset + rawLength > len) {
                     rawLength = len - offset;
                 }
-
+                
                 this._raw = new DataView(data, offset, rawLength);
                 this._rawLen = rawLength;
 
@@ -62,7 +51,7 @@ namespace Aurora {
         }
 
         public set length(len: uint) {
-            let sub = len - this._logicLen;
+            const sub = len - this._logicLen;
             if (sub > 0) {
                 this._checkAndAllocateSpace(sub);
             } else if (sub < 0) {
@@ -126,7 +115,7 @@ namespace Aurora {
                 this._pos = this._logicLen;
                 return 0;
             } else {
-                let v = this._raw.getInt16(this._pos, this._little);
+                const v = this._raw.getInt16(this._pos, this._little);
                 this._pos += 2;
                 return v;
             }
@@ -143,7 +132,7 @@ namespace Aurora {
                 this._pos = this._logicLen;
                 return 0;
             } else {
-                let v = this._raw.getUint16(this._pos, this._little);
+                const v = this._raw.getUint16(this._pos, this._little);
                 this._pos += 2;
                 return v;
             }
@@ -156,7 +145,7 @@ namespace Aurora {
         }
 
         public readInt24(): int {
-            let v = this.readUint24();
+            const v = this.readUint24();
             if (v > 0x7FFFFF) return v - 0x1000000;
             return v;
         }
@@ -171,9 +160,9 @@ namespace Aurora {
                 this._pos = this._logicLen;
                 return 0;
             } else {
-                let v0 = this._raw.getUint8(this._pos);
-                let v1 = this._raw.getUint8(this._pos + 1);
-                let v2 = this._raw.getUint8(this._pos + 2);
+                const v0 = this._raw.getUint8(this._pos);
+                const v1 = this._raw.getUint8(this._pos + 1);
+                const v2 = this._raw.getUint8(this._pos + 2);
                 this._pos += 3;
                 if (this._little) {
                     return v2 << 16 | v1 << 8 | v0;
@@ -202,7 +191,7 @@ namespace Aurora {
                 this._pos = this._logicLen;
                 return 0;
             } else {
-                let v = this._raw.getInt32(this._pos, this._little);
+                const v = this._raw.getInt32(this._pos, this._little);
                 this._pos += 4;
                 return v;
             }
@@ -219,7 +208,7 @@ namespace Aurora {
                 this._pos = this._logicLen;
                 return 0;
             } else {
-                let v = this._raw.getUint32(this._pos, this._little);
+                const v = this._raw.getUint32(this._pos, this._little);
                 this._pos += 4;
                 return v;
             }
@@ -253,9 +242,14 @@ namespace Aurora {
                     low = this._raw.getUint32(this._pos + 4, false);
                 }
                 this._pos += 8;
-                let lowHex = low.toString(16);
-                for (let i = 0, n = 8 - lowHex.length; i < n; ++i) lowHex = "0" + lowHex;
-                return StringInteger.toDecimal("0x" + high.toString(16) + lowHex, 64, signed);
+
+                if (high === 0) {
+                    return low.toString();
+                } else {
+                    let lowHex = low.toString(16);
+                    for (let i = 0, n = 8 - lowHex.length; i < n; ++i) lowHex = "0" + lowHex;
+                    return StringInteger.toDecimal("0x" + high.toString(16) + lowHex, 64, signed);
+                }
             }
         }
 
@@ -269,7 +263,7 @@ namespace Aurora {
 
         private _writeInt64(value: string): void {
             this._checkAndAllocateSpace(8);
-            let hex = StringInteger.toHexadecimal(value, 64);
+            const hex = StringInteger.toHexadecimal(value, 64);
             let low: uint, high: uint;
             let len = hex.length;
             if (hex.length > 8) {
@@ -296,7 +290,7 @@ namespace Aurora {
                 this._pos = this._logicLen;
                 return 0;
             } else {
-                let v = this._raw.getFloat32(this._pos, this._little);
+                const v = this._raw.getFloat32(this._pos, this._little);
                 this._pos += 4;
                 return v;
             }
@@ -313,7 +307,7 @@ namespace Aurora {
                 this._pos = this._logicLen;
                 return 0;
             } else {
-                let v = this._raw.getFloat64(this._pos, this._little);
+                const v = this._raw.getFloat64(this._pos, this._little);
                 this._pos += 8;
                 return v;
             }
@@ -339,7 +333,7 @@ namespace Aurora {
                 length = args[1];
             }
 
-            let last = this._logicLen - this._pos;
+            const last = this._logicLen - this._pos;
             if (length === null || length === undefined) {
                 length = last;
             } else if (length > last) {
@@ -352,7 +346,7 @@ namespace Aurora {
         }
 
         public writeBytes(value: ByteArray, length: uint = null): void {
-            let last = value.length - value.position;
+            const last = value.length - value.position;
             if (length === null || length === undefined) {
                 length = last;
             } else if (length > last) {
@@ -360,52 +354,53 @@ namespace Aurora {
             }
 
             this._checkAndAllocateSpace(length);
-            let src = value._raw, dst = this._raw;
-            let srcStart = value.position, dstStart = this._pos;
+            const src = value._raw, dst = this._raw;
+            const srcStart = value.position, dstStart = this._pos;
             for (let i = 0; i < length; ++i) dst.setUint8(dstStart + i, src.getUint8(srcStart + i));
             this._pos += length;
         }
 
-        public readString(mode: ByteArrayStringMode, maxLength: uint = null): string {
+        public readString(mode: ByteArray.StringMode, maxLength: uint = null): string {
             switch (mode) {
-                case ByteArrayStringMode.END_MARK: {
-                    let rst = ByteArray.decodeUTF8(this._raw, this._pos, maxLength);
-                    this._pos += rst.byteLength;
-                    return rst.string;
+                case ByteArray.StringMode.END_MARK: {
+                    const rst = ByteArray.decodeUTF8(this._raw, this._pos, maxLength);
+                    this._pos += rst[1];
+                    return rst[0];
                 }
-                case ByteArrayStringMode.DYNAMIC_LENGTH: {
-                    let n = this.readDynamicLength();
-                    let rst = ByteArray.decodeUTF8(this._raw, this._pos, n);
+                case ByteArray.StringMode.DYNAMIC_LENGTH: {
+                    const n = this.readDynamicLength();
+                    const rst = ByteArray.decodeUTF8(this._raw, this._pos, n);
                     this._pos += n;
-                    return rst.string;
+                    return rst[0];
                 }
-                case ByteArrayStringMode.FIXED_LENGTH: {
-                    let rst = ByteArray.decodeUTF8(this._raw, this._pos, maxLength);
-                    this._pos += maxLength === null || maxLength === undefined || maxLength < 0 ? rst.byteLength : maxLength;
-                    return rst.string;
+                case ByteArray.StringMode.FIXED_LENGTH: {
+                    const rst = ByteArray.decodeUTF8(this._raw, this._pos, maxLength);
+                    this._pos += maxLength === null || maxLength === undefined || maxLength < 0 ? rst[1] : maxLength;
+                    return rst[0];
                 }
                 default:
                     return "";
             }
         }
 
-        public writeString(value: string, mode: ByteArrayStringMode): void {
-            let arr = ByteArray.encodeUTF8(value);
-            let n = arr.length;
+        public writeString(value: string, mode: ByteArray.StringMode): void {
+            const arr = ByteArray.encodeUTF8(value);
+            const n = arr.length;
             switch (mode) {
-                case ByteArrayStringMode.END_MARK, ByteArrayStringMode.FIXED_LENGTH: {
+                case ByteArray.StringMode.END_MARK:
+                case ByteArray.StringMode.FIXED_LENGTH: {
                     this._checkAndAllocateSpace(n + 1);
-                    let raw = this._raw;
+                    const raw = this._raw;
                     let pos = this._pos;
                     for (let i = 0; i < n; ++i) raw.setUint8(pos++, arr[i]);
                     raw.setUint8(pos++, 0);
 
                     break;
                 }
-                case ByteArrayStringMode.DYNAMIC_LENGTH: {
+                case ByteArray.StringMode.DYNAMIC_LENGTH: {
                     this.writeDynamicLength(n);
                     this._checkAndAllocateSpace(n);
-                    let raw = this._raw;
+                    const raw = this._raw;
                     let pos = this._pos;
                     for (let i = 0; i < n; ++i) raw.setUint8(pos++, arr[i]);
 
@@ -417,13 +412,13 @@ namespace Aurora {
         }
 
         private _checkAndAllocateSpace(need: uint): void {
-            let needRawLen = this._pos + need;
+            const needRawLen = this._pos + need;
             if (needRawLen > this._logicLen) {
                 if (needRawLen > this._rawLen) {
                     let newRawLen = (this._rawLen * 1.5) | 0;
                     if (newRawLen < needRawLen) newRawLen = (needRawLen * 1.5) | 0;
-                    let newRaw = new DataView(new ArrayBuffer(newRawLen));
-                    let oldRaw = this._raw;
+                    const newRaw = new DataView(new ArrayBuffer(newRawLen));
+                    const oldRaw = this._raw;
                     for (let i = 0, n = this._rawLen; i < n; ++i) newRaw.setUint8(i, oldRaw.getUint8(i));
                     this._raw = newRaw;
                     this._rawLen = newRawLen;
@@ -454,13 +449,13 @@ namespace Aurora {
         }
 
         public readDynamicLength(): uint {
-            let v0 = this.readUint8();
+            const v0 = this.readUint8();
             if (v0 > 127) {
-                let v1 = this.readUint8();
+                const v1 = this.readUint8();
                 if (v1 > 127) {
-                    let v2 = this.readUint8();
+                    const v2 = this.readUint8();
                     if (v2 > 127) {
-                        let v3 = this.readUint8();
+                        const v3 = this.readUint8();
                         return (v3 << 21) | (v2 << 14 & 0x7F) | (v1 << 7 & 0x7F) | (v0 & 0x7F);
                     } else {
                         return (v2 << 14) | (v1 << 7 & 0x7F) | (v0 & 0x7F);
@@ -474,7 +469,7 @@ namespace Aurora {
         }
 
         public static encodeUTF8(s: string): uint[] {
-            let bytes: uint[] = [];
+            const bytes: uint[] = [];
             let num = 0;
             for (let i = 0, n = s.length; i < n; ++i) {
                 let c = s.charCodeAt(i);
@@ -499,13 +494,15 @@ namespace Aurora {
             return bytes;
         }
 
-        public static decodeUTF8(bytes: DataView, offset: uint = 0, maxLength: uint = null): IByteArrayDecodeUTF8Result {
+        /**
+         * @returns [0] = string, [1] = byteLength
+         */
+        public static decodeUTF8(bytes: DataView, offset: uint = 0, maxLength: uint = null): [string, uint] {
             let str = "";
             let i = offset;
-            let len = maxLength === null || maxLength === undefined ? bytes.byteLength : offset + maxLength;
-            let char2: uint, char3: uint;
+            const len = maxLength === null || maxLength === undefined ? bytes.byteLength : offset + maxLength;
             while (i < len) {
-                let c = bytes.getUint8(i++);
+                const c = bytes.getUint8(i++);
                 if (c === 0) {
                     break;
                 } else {
@@ -516,20 +513,29 @@ namespace Aurora {
                             break;
                         case 12: case 13:
                             // 110x xxxx   10xx xxxx
-                            char2 = bytes.getUint8(i++);
-                            str += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
+                            str += String.fromCharCode(((c & 0x1F) << 6) | (bytes.getUint8(i++) & 0x3F));
                             break;
-                        case 14:
+                        case 14: {
                             // 1110 xxxx  10xx xxxx  10xx xxxx
-                            char2 = bytes.getUint8(i++);
-                            char3 = bytes.getUint8(i++);
-                            str += String.fromCharCode(((c & 0x0F) << 12) | ((char2 & 0x3F) << 6) | ((char3 & 0x3F) << 0));
+                            const c2 = bytes.getUint8(i++);
+                            const c3 = bytes.getUint8(i++);
+                            str += String.fromCharCode(((c & 0x0F) << 12) | ((c2 & 0x3F) << 6) | ((c3 & 0x3F) << 0));
+
                             break;
+                        }
                     }
                 }
             }
 
-            return { byteLength: i - offset, string: str };
+            return [str, i - offset];
+        }
+    }
+
+    export namespace ByteArray {
+        export const enum StringMode {
+            END_MARK,
+            DYNAMIC_LENGTH,
+            FIXED_LENGTH
         }
     }
 }

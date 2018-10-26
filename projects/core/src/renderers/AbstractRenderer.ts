@@ -48,7 +48,7 @@ namespace Aurora {
                 } else {
                     su = this._shaderUniforms;
                 }
-                let p = material.use(su);
+                const p = material.use(su);
                 if (tail) tail.next = null;
                 return p;
             }
@@ -60,18 +60,16 @@ namespace Aurora {
         }
 
         public useAndDraw(asset: MeshAsset, material: Material, alternativeUniforms: ShaderUniforms, onShaderPreUse: () => void = null, count: uint = null, offset: uint = 0): void {
-            let p = this.useShader(material, alternativeUniforms, onShaderPreUse);
-            if (p) {
-                this._draw(asset, material, p, count, offset);
-            }
+            const p = this.useShader(material, alternativeUniforms, onShaderPreUse);
+            if (p) this._draw(asset, material, p, count, offset);
         }
 
         protected _draw(asset: MeshAsset, material: Material, program: GLProgram, count: uint = null, offset: uint = 0): void {
-            let gl = program.gl;
-            let ib = asset.getDrawIndexBuffer(gl);
+            const gl = program.gl;
+            const ib = asset.getDrawIndexBuffer(gl);
             if (ib) {
                 let valid = true;
-                let atts = program.attributes;
+                const atts = program.attributes;
                 for (let i = 0, n = atts.length; i < n; ++i) {
                     let att = atts[i];
                     let vb = asset.getVertexBuffer(gl, att);

@@ -76,7 +76,7 @@ namespace Aurora {
         }
 
         public begin(gl: GL, pass: IRenderPass): void {
-            let vp = pass.viewport;
+            const vp = pass.viewport;
             if (pass.frameBuffer) {
                 pass.frameBuffer.bind();
                 if (vp && vp.width >= 0 && vp.height >= 0) {
@@ -98,7 +98,7 @@ namespace Aurora {
             gl.clear(pass.clear);
         }
 
-        public render(gl: GL, camera: Camera, node: Node3D, lights: AbstractLight[] = null, replaceMaterials: Material[] = null): void {
+        public render(gl: GL, camera: Camera, node: Node, lights: AbstractLight[] = null, replaceMaterials: Material[] = null): void {
             if (camera.node) {
                 camera.node.getWorldMatrix(this._cameraWorldMatrix);
                 camera.node.getInverseWorldMatrix(this._worldToViewMatrix);
@@ -122,7 +122,7 @@ namespace Aurora {
 
             this._collectNode(node, camera.cullingMask, replaceMaterials);
             for (let i = 0, n = this._renderables.length; i < n; ++i) {
-                let r = this._renderables[i];
+                const r = this._renderables[i];
                 if (r) {
                     this._renderables[i] = null;
                 } else {
@@ -132,11 +132,11 @@ namespace Aurora {
 
             if (this._renderingQueueLength > 0) {
                 Sort.Merge.sort(this._renderingQueue, (a: RenderingObject, b: RenderingObject) => {
-                    let sub = a.material.renderingPriority - b.material.renderingPriority;
+                    const sub = a.material.renderingPriority - b.material.renderingPriority;
                     if (sub < 0) {
                         return true;
                     } else if (sub === 0) {
-                        let value = a.material.renderingSort - b.material.renderingSort;
+                        const value = a.material.renderingSort - b.material.renderingSort;
                         if (value === 0) {
                             switch (a.material.renderingSort) {
                                 case RenderingSort.FAR_TO_NEAR: {
@@ -191,7 +191,7 @@ namespace Aurora {
             }
         }
 
-        private _collectNode(node: Node3D, cullingMask: uint, replaceMaterials: Material[]): void {
+        private _collectNode(node: Node, cullingMask: uint, replaceMaterials: Material[]): void {
             if (node.active) {
                 if (node.layer & cullingMask) {
                     let num = node.getComponentsByType(AbstractRenderable, true, this._renderables);
@@ -215,10 +215,10 @@ namespace Aurora {
             if (this._renderingQueueLength > 0) {
                 for (let i = 0, n = this._renderers.length; i < n; ++i) this._renderers[i].preRender(this._shaderDefines, this._shaderUniforms, lights);
 
-                let renderer: AbstractRenderer = this._renderingQueue[0].renderable.renderer;
-                let start: int = 0;
+                const renderer = this._renderingQueue[0].renderable.renderer;
+                let start = 0;
                 for (let i = 1; i < this._renderingQueueLength; ++i) {
-                    let obj = this._renderingQueue[i];
+                    const obj = this._renderingQueue[i];
 
                     if (obj.renderable.renderer !== renderer) {
                         if (renderer) renderer.render(this._renderingData, this._renderingQueue, start, i - 1);
@@ -229,7 +229,7 @@ namespace Aurora {
                 if (renderer) renderer.render(this._renderingData, this._renderingQueue, start, this._renderingQueueLength - 1);
 
                 for (let i = 0, n = this._renderers.length; i < n; ++i) {
-                    let renderer = this._renderers[i];
+                    const renderer = this._renderers[i];
                     renderer.isRendering = false;
                     renderer.postRender();
                 }
@@ -242,19 +242,19 @@ namespace Aurora {
                 this._createDefaultPostProcessAssets(gl);
 
                 for (let i = 0, n = postProcesses.length; i < n; ++i) {
-                    let pp = postProcesses[i];
+                    const pp = postProcesses[i];
                     if (pp && pp.enabled && pp.material) {
-                        let useDefaultShader = pp.material.shader === null;
+                        const useDefaultShader = pp.material.shader === null;
                         if (useDefaultShader) pp.material.shader = this._defaultPostProcessShader;
 
                         if (pp.material.ready(this._shaderDefines)) {
                             this.begin(gl, pp);
 
-                            let p = pp.material.use(this._shaderUniforms);
+                            const p = pp.material.use(this._shaderUniforms);
 
-                            let atts = p.attributes;
+                            const atts = p.attributes;
                             for (let i = 0, n = atts.length; i < n; ++i) {
-                                let att = atts[i];
+                                const att = atts[i];
                                 let buffer = pp.asset ? pp.asset.getVertexBuffer(gl, att) : null;
                                 if (!buffer) {
                                     if (att.name === ShaderPredefined.a_Position0) {

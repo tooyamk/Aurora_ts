@@ -22,6 +22,7 @@ namespace Aurora {
         }
 
         public setAttenuation(radius: number): void;
+
         /**
          * luminosity = 1 / (constant + linear * distance + quadratic * distance * distance).
          */
@@ -29,7 +30,7 @@ namespace Aurora {
 
         public setAttenuation(...args: any[]): void {
             if (args.length === 1) {
-                let radius = <number>args[0];
+                const radius = <number>args[0];
                 this._attenConstant = 1;
                 this._attenLinear = 4.5 / radius;
                 this._attenQuadratic = 75 / (radius * radius);
@@ -38,7 +39,7 @@ namespace Aurora {
                 this._attenLinear = args[1];
                 this._attenQuadratic = args[2];
             } else {
-                //error
+                console.error("PointLight setAttenuation params error");
             }
         }
     }

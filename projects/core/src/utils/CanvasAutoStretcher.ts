@@ -7,7 +7,7 @@ namespace Aurora {
         constructor(canvas: HTMLCanvasElement) {
             this._canvas = canvas;
             this._size = new Vector2(this._canvas.width, this._canvas.height);
-            this._hasClientSize = Boolean(this._canvas.clientWidth);
+            this._hasClientSize = !!this._canvas.clientWidth;
         }
 
         public execute(): boolean {

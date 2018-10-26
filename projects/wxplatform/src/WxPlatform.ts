@@ -3,7 +3,7 @@ namespace Aurora {
         private _isDevtools: boolean;
 
         constructor() {
-            let info = wx.getSystemInfoSync();
+            const info = wx.getSystemInfoSync();
             this._isDevtools = info.platform === "devtools";
         }
 

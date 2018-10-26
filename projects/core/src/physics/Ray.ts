@@ -54,7 +54,7 @@ namespace Aurora {
             return rst;
         }
 
-        public cast(root: Node3D, layerMask: uint = 0x7FFFFFFF, cullFace: GLCullFace = GLCullFace.BACK, rst: RaycastHit = null): RaycastHit {
+        public cast(root: Node, layerMask: uint = 0x7FFFFFFF, cullFace: GLCullFace = GLCullFace.BACK, rst: RaycastHit = null): RaycastHit {
             if (rst) {
                 rst.clear();
             } else {
@@ -62,10 +62,10 @@ namespace Aurora {
             }
 
             if (root) {
-                let ray = this.clone();
-                let hit = new RaycastHit();
-                let vec3 = new Vector3();
-                let arr: Collider[] = [];
+                const ray = this.clone();
+                const hit = new RaycastHit();
+                const vec3 = new Vector3();
+                const arr: Collider[] = [];
                 this._castNode(root, layerMask, ray, cullFace, rst, hit, vec3, arr);
 
                 if (rst.collider) {
@@ -78,11 +78,11 @@ namespace Aurora {
             return rst;
         }
 
-        private _castNode(node: Node3D, layerMask: uint, ray: Ray, cullFace: GLCullFace, rstHit: RaycastHit, tmpHit: RaycastHit, tmpVec3: Vector3, tmpArr: Collider[]): void {
+        private _castNode(node: Node, layerMask: uint, ray: Ray, cullFace: GLCullFace, rstHit: RaycastHit, tmpHit: RaycastHit, tmpVec3: Vector3, tmpArr: Collider[]): void {
             if (node.active && node.layer & layerMask) {
-                let num = node.getComponentsByType(Collider, true, tmpArr);
+                const num = node.getComponentsByType(Collider, true, tmpArr);
                 for (let i = 0; i < num; ++i) {
-                    let collider = tmpArr[i];
+                    const collider = tmpArr[i];
                     if (collider.shape) {
                         this.transform34(node.readonlyInverseWorldMatrix, ray);
                         collider.shape.intersectRay(ray, cullFace, tmpHit);
@@ -96,7 +96,7 @@ namespace Aurora {
                             x = tmpVec3.x - this.origin.x;
                             y = tmpVec3.y - this.origin.y;
                             z = tmpVec3.z - this.origin.z;
-                            let disSqr = x * x + y * y + z * z;
+                            const disSqr = x * x + y * y + z * z;
 
                             if (!rstHit.collider || rstHit.distanceSquared > disSqr) {
                                 rstHit.collider = collider;

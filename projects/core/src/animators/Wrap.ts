@@ -8,7 +8,7 @@ namespace Aurora.AnimatorWrap {
     }
 
     export const Pingpong: AnimatorWrapType = (elapsed: number, duration: number) => {
-        let d = duration * 2.0;
+        const d = duration * 2;
         elapsed %= d;
         return elapsed < duration ? elapsed : d - elapsed;
     }

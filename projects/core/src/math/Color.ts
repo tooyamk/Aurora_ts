@@ -184,10 +184,10 @@ namespace Aurora {
         }
 
         public static mul(c1: Color4, c2: Color4, rst: Color4 = null): Color4 {
-            let r = c1.r * c2.r;
-            let g = c1.g * c2.g;
-            let b = c1.b * c2.b;
-            let a = c1.a * c2.a;
+            const r = c1.r * c2.r;
+            const g = c1.g * c2.g;
+            const b = c1.b * c2.b;
+            const a = c1.a * c2.a;
 
             return rst ? rst.setFromNumbers(r, g, b, a) : new Color4(r, g, b, a);
         }

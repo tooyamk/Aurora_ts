@@ -29,7 +29,7 @@ namespace Aurora {
             this._numAllicatedIndex = 256;
 
             this._asset.drawIndexSource = new DrawIndexSource([]);
-            let ib = new GLIndexBuffer(gl);
+            const ib = new GLIndexBuffer(gl);
             ib.allocate(this._numAllicatedIndex, GLIndexDataType.UNSIGNED_SHORT);
             this._asset.drawIndexBuffer = ib;
 
@@ -50,21 +50,21 @@ namespace Aurora {
         }
 
         public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void {
-            let mats = renderable.materials;
+            const mats = renderable.materials;
             let len = mats ? mats.length : 1;
             if (len === 0) len = 1;
 
             if (replaceMaterials) {
-                let len1 = replaceMaterials.length;
+                const len1 = replaceMaterials.length;
                 if (len >= len1) {
                     for (let i = 0; i < len1; ++i) {
-                        let m = mats ? mats[i] : null;
+                        const m = mats ? mats[i] : null;
                         appendFn(renderable, replaceMaterials[i], m ? m.uniforms : this._defaultMaterial.uniforms);
                     }
                 } else if (len === 1) {
                     let u: ShaderUniforms;
                     if (mats) {
-                        let m = mats[0];
+                        const m = mats[0];
                         u = m ? m.uniforms : this._defaultMaterial.uniforms;
                     } else {
                         u = this._defaultMaterial.uniforms;
@@ -72,13 +72,13 @@ namespace Aurora {
                     for (let i = 0; i < len1; ++i) appendFn(renderable, replaceMaterials[i], u);
                 } else {
                     for (let i = 0; i < len; ++i) {
-                        let m = mats ? mats[i] : null;
+                        const m = mats ? mats[i] : null;
                         appendFn(renderable, replaceMaterials[i], m ? m.uniforms : this._defaultMaterial.uniforms);
                     }
                 }
             } else {
                 for (let i = 0; i < len; ++i) {
-                    let m = mats ? mats[i] : null;
+                    const m = mats ? mats[i] : null;
                     appendFn(renderable, m ? m : this._defaultMaterial, this._defaultMaterial.uniforms);
                 }
             }
@@ -109,13 +109,13 @@ namespace Aurora {
             };
 
             for (let i = start; i <= end; ++i) {
-                let obj = renderingObjects[i];
+                const obj = renderingObjects[i];
                 renderingData.in.renderingObject = obj;
                 obj.renderable.visit(renderingData);
-                let as = renderingData.out.asset;
+                const as = renderingData.out.asset;
                 if (as && as.drawIndexSource) {
-                    let mat = obj.material;
-                    let uniforms = renderingData.out.uniforms;
+                    const mat = obj.material;
+                    const uniforms = renderingData.out.uniforms;
 
                     if (!atts) activeMaterialFn(mat, uniforms, obj.alternativeUniforms);
                     
@@ -124,10 +124,10 @@ namespace Aurora {
                     if (atts) {
                         this._numVertexSources = 0;
                         for (let i = 0, n = atts.length; i < n; ++i) {
-                            let att = atts[i];
-                            let vs = as.getVertexSource(att.name);
+                            const att = atts[i];
+                            const vs = as.getVertexSource(att.name);
                             if (vs) {
-                                let numElements = vs.data.length / vs.size;
+                                const numElements = vs.data.length / vs.size;
                                 if (len < 0) {
                                     len = numElements;
                                 } else if (len !== numElements) {
@@ -150,8 +150,8 @@ namespace Aurora {
 
                             for (let i = 0; i < this._reformatsLen; ++i) {
                                 let idx = this._reformats[i];
-                                let vs0 = this._vertexSources[idx++];
-                                let vs1 = this._vertexSources[idx];
+                                const vs0 = this._vertexSources[idx++];
+                                const vs1 = this._vertexSources[idx];
                                 vs1.size = vs0.size;
                                 vs1.type = vs0.type;
                                 vs1.normalized = vs0.normalized;
@@ -189,13 +189,13 @@ namespace Aurora {
 
         public flush(): void {
             if (this._numCombinedVertex > 0) {
-                let p = this._curMaterial.shader.currentProgram;
+                const p = this._curMaterial.shader.currentProgram;
                 if (p) {
-                    let as = this._asset;
-                    let atts = p.attributes;
+                    const as = this._asset;
+                    const atts = p.attributes;
                     for (let i = 0, n = atts.length; i < n; ++i) {
-                        let name = atts[i].name;
-                        let vs = as.vertexSources.get(name);
+                        const name = atts[i].name;
+                        const vs = as.vertexSources.get(name);
                         let vb = as.vertexBuffers.get(name);
                         if (vb) {
                             if (vb.memSize !== this._numAllicatedVertex * vs.size * GLVertexBuffer.calcSizePerElement(vs.type)) {
@@ -213,8 +213,8 @@ namespace Aurora {
                         vb.uploadSub(vs.data);
                     }
 
-                    let is = as.drawIndexSource;
-                    let ib = as.drawIndexBuffer;
+                    const is = as.drawIndexSource;
+                    const ib = as.drawIndexBuffer;
                     if (ib.numElements !== this._numAllicatedIndex) {
                         ib.reCreate();
                         ib.allocate(this._numAllicatedIndex, GLIndexDataType.UNSIGNED_SHORT, GLUsageType.DYNAMIC_DRAW);
@@ -278,19 +278,19 @@ namespace Aurora {
         }
 
         private _combine(drawIndexSource: DrawIndexSource): void {
-            let idx = this._numCombinedVertex;
+            const idx = this._numCombinedVertex;
             for (let i = 0; i < this._numVertexSources; i += 2) {
-                let vs = this._vertexSources[i];
-                let src = vs.data;
-                let dst = this._vertexSources[i + 1].data;
+                const vs = this._vertexSources[i];
+                const src = vs.data;
+                const dst = this._vertexSources[i + 1].data;
 
-                let offset = idx * vs.size;
+                const offset = idx * vs.size;
                 for (let j = 0, n = src.length; j < n; ++j) dst[idx + j] = src[j];
             }
 
-            let idx2 = this._numCombinedIndex;
-            let src = drawIndexSource.data;
-            let dst = this._asset.drawIndexSource.data;
+            const idx2 = this._numCombinedIndex;
+            const src = drawIndexSource.data;
+            const dst = this._asset.drawIndexSource.data;
             for (let i = 0, n = src.length; i < n; ++i) dst[idx2 + i] = src[idx + i];
         }
     }

@@ -10,7 +10,7 @@ namespace Aurora {
 
         public set elapsed(value: number) {
             if (this._curClip) {
-                let delta = value - this._elapsed;
+                const delta = value - this._elapsed;
                 this._elapsed = value;
                 this._update(delta);
             }

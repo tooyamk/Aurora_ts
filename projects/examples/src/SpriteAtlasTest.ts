@@ -10,7 +10,7 @@ class SpriteAtlasTest {
         env.start(() => {
             let gl = env.gl;
             gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            env.camera.setProjectionMatrix(Aurora.Matrix44.createOrthoLHMatrix(gl.canvas.width, gl.canvas.height, 5, 10000));
+            env.camera.setProjectionMatrix(Aurora.Matrix44.createOrthoLH(gl.canvas.width, gl.canvas.height, 5, 10000));
         },
         (delta: number) => {
             env.renderingManager.render(env.gl, env.camera, env.world, null);
@@ -30,7 +30,7 @@ class SpriteAtlasTest {
                 tex.upload(0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
                 atlas.parse("", JSON.parse(request.responseText), tex);
 
-                let s = new Aurora.Node3D().addComponent(new Aurora.Sprite());
+                let s = new Aurora.Node().addComponent(new Aurora.Sprite());
                 s.frame = atlas.getFrame("discharge");
                 s.renderer = this._env.spriteRenderer;
                 s.node.localTranslate(0, 0, 100);

@@ -1,89 +1,8 @@
 namespace Aurora {
-    export const enum ShaderUniformType {
-        NONE,
-        NUMBER,
-        SAMPLER
-    }
-
-    export class ShaderUniformValue {
-        public type: ShaderUniformType;
-        public vec4: number[] = null;
-        public array: number[] | Float32Array | Int32Array = null;
-        public sampler: AbstractGLTexture = null;
-
-        public clear(): void {
-            this.type = ShaderUniformType.NONE;
-            this.vec4 = null;
-            this.array = null;
-            this.sampler = null;
-        }
-
-        public clone(): ShaderUniformValue {
-            let uv = new ShaderUniformValue();
-
-            uv.type = this.type;
-            if (this.type === ShaderUniformType.NUMBER) {
-                if (this.array === this.vec4) {
-                    if (this.vec4) {
-                        uv.vec4 = this.vec4.concat();
-                        uv.array = uv.vec4;
-                    }
-                } else if (this.array) {
-                    if (this.array instanceof Float32Array) {
-                        uv.array = this.array.slice(0);
-                    } else if (this.array instanceof Int32Array) {
-                        uv.array = this.array.slice(0);
-                    } else {
-                        uv.array = this.array.concat();
-                    }
-                }
-            } else if (this.type === ShaderUniformType.SAMPLER) {
-                uv.sampler = this.sampler;
-            }
-
-            return uv;
-        }
-
-        public static isEqual(v0: ShaderUniformValue, v1: ShaderUniformValue): boolean {
-            let t0 = v0 ? v0.type : ShaderUniformType.NONE;
-            let t1 = v1 ? v1.type : ShaderUniformType.NONE;
-            if (t0 === t1) {
-                switch (t0) {
-                    case ShaderUniformType.NUMBER:
-                    {
-                        let n0 = v0.array ? v0.array.length : 0;
-                        let n1 = v1.array ? v1.array.length : 0;
-                        if (n0 === n1) {
-                            for (let i = 0; i < n0; ++i) {
-                                if (v0.array[i] !== v1.array[i]) return false;
-                            }
-                        } else {
-                            return false;
-                        }
-
-                        break;
-                    }
-                    case ShaderUniformType.SAMPLER:
-                    {
-                        if (v0.sampler !== v1.sampler) return false;
-
-                        break;
-                    }
-                    default:
-                        break;
-                }
-            } else {
-                return false;
-            }
-
-            return true;
-        }
-    }
-
     export class ShaderUniforms {
         public next: ShaderUniforms = null;
         
-        public _uniforms: { [key: string]: ShaderUniformValue } = {};
+        public _uniforms: { [key: string]: ShaderUniforms.Value } = {};
         protected _count: uint = 0;
 
         public get tail(): ShaderUniforms {
@@ -93,12 +12,12 @@ namespace Aurora {
         }
 
         public clone(): ShaderUniforms {
-            let u = new ShaderUniforms();
+            const u = new ShaderUniforms();
 
             if (this._count > 0) {
                 for (let name in this._uniforms) {
-                    let uv = this._uniforms[name];
-                    if (uv.type !== ShaderUniformType.NONE) this._uniforms[name] = uv.clone();
+                    const uv = this._uniforms[name];
+                    if (uv.type !== ShaderUniforms.ValueType.NONE) this._uniforms[name] = uv.clone();
                 }
 
                 u._count = this._count;
@@ -113,13 +32,13 @@ namespace Aurora {
                 if (value1) {
                     if (info) {
                         for (let i = 0, n = info.length; i < n; ++i) {
-                            let name = info[i].name;
-                            if (!ShaderUniformValue.isEqual(value0._uniforms[name], value1._uniforms[name])) return false;
+                            const name = info[i].name;
+                            if (!ShaderUniforms.Value.isEqual(value0._uniforms[name], value1._uniforms[name])) return false;
                         }
                     } else {
                         if (value0._count === value1._count) {
                             for (let key in value0._uniforms) {
-                                if (!ShaderUniformValue.isEqual(value0._uniforms[key], value1._uniforms[key])) return false;
+                                if (!ShaderUniforms.Value.isEqual(value0._uniforms[key], value1._uniforms[key])) return false;
                             }
                         } else {
                             return false;
@@ -135,8 +54,8 @@ namespace Aurora {
         }
 
         public setNumber(name: string, x: number = 0, y: number = 0, z: number = 0, w: number = 0): void {
-            let v = this._getOrCreateUniform(name);
-            v.type = ShaderUniformType.NUMBER;
+            const v = this._getOrCreateUniform(name);
+            v.type = ShaderUniforms.ValueType.NUMBER;
             if (v.vec4) {
                 v.vec4[0] = x;
                 v.vec4[1] = y;
@@ -150,28 +69,28 @@ namespace Aurora {
 
         public setNumberArray(name: string, array: number[] | Float32Array | Int32Array): void {
             if (array) {
-                let v = this._getOrCreateUniform(name);
-                v.type = ShaderUniformType.NUMBER;
+                const v = this._getOrCreateUniform(name);
+                v.type = ShaderUniforms.ValueType.NUMBER;
                 v.array = array;
             }
         }
 
         public setTexture(name: string, tex: AbstractGLTexture): void {
             if (tex) {
-                let v = this._getOrCreateUniform(name);
-                v.type = ShaderUniformType.SAMPLER;
+                const v = this._getOrCreateUniform(name);
+                v.type = ShaderUniforms.ValueType.SAMPLER;
                 v.sampler = tex;
             }
         }
 
         public delete(name: string, clean: boolean = false): void {
-            let v = this._uniforms[name];
+            const v = this._uniforms[name];
             if (v) {
                 if (clean) {
-                    if (v.type !== ShaderUniformType.NONE) --this._count;
+                    if (v.type !== ShaderUniforms.ValueType.NONE) --this._count;
                     delete this._uniforms[name];
-                } else if (v.type !== ShaderUniformType.NONE) {
-                    v.type = ShaderUniformType.NONE;
+                } else if (v.type !== ShaderUniforms.ValueType.NONE) {
+                    v.type = ShaderUniforms.ValueType.NONE;
                     v.array = null;
                     v.sampler = null;
                     --this._count;
@@ -181,22 +100,101 @@ namespace Aurora {
 
         public destroy(): void {
             if (this._uniforms) {
-                for (let name in this._uniforms) this._uniforms[name].clear();
+                for (const name in this._uniforms) this._uniforms[name].clear();
                 this._uniforms = null;
             }
         }
 
-        private _getOrCreateUniform(name: string): ShaderUniformValue {
+        private _getOrCreateUniform(name: string): ShaderUniforms.Value {
             let v = this._uniforms[name];
             if (v) {
                 v.array = null;
-                if (v.type === ShaderUniformType.NONE) ++this._count;
+                if (v.type === ShaderUniforms.ValueType.NONE) ++this._count;
             } else {
-                v = new ShaderUniformValue();
+                v = new ShaderUniforms.Value();
                 this._uniforms[name] = v;
                 ++this._count;
             }
             return v;
+        }
+    }
+
+    export namespace ShaderUniforms {
+        export const enum ValueType {
+            NONE,
+            NUMBER,
+            SAMPLER
+        }
+
+        export class Value {
+            public type: ValueType;
+            public vec4: number[] = null;
+            public array: number[] | Float32Array | Int32Array = null;
+            public sampler: AbstractGLTexture = null;
+
+            public clear(): void {
+                this.type = ValueType.NONE;
+                this.vec4 = null;
+                this.array = null;
+                this.sampler = null;
+            }
+
+            public clone(): Value {
+                const uv = new Value();
+
+                uv.type = this.type;
+                if (this.type === ValueType.NUMBER) {
+                    if (this.array === this.vec4) {
+                        if (this.vec4) {
+                            uv.vec4 = this.vec4.concat();
+                            uv.array = uv.vec4;
+                        }
+                    } else if (this.array) {
+                        if (this.array instanceof Float32Array) {
+                            uv.array = this.array.slice(0);
+                        } else if (this.array instanceof Int32Array) {
+                            uv.array = this.array.slice(0);
+                        } else {
+                            uv.array = this.array.concat();
+                        }
+                    }
+                } else if (this.type === ValueType.SAMPLER) {
+                    uv.sampler = this.sampler;
+                }
+
+                return uv;
+            }
+
+            public static isEqual(v0: Value, v1: Value): boolean {
+                const t0 = v0 ? v0.type : ValueType.NONE;
+                const t1 = v1 ? v1.type : ValueType.NONE;
+                if (t0 === t1) {
+                    switch (t0) {
+                        case ValueType.NUMBER: {
+                            const n0 = v0.array ? v0.array.length : 0;
+                            const n1 = v1.array ? v1.array.length : 0;
+                            if (n0 === n1) {
+                                for (let i = 0; i < n0; ++i) {
+                                    if (v0.array[i] !== v1.array[i]) return false;
+                                }
+                            } else {
+                                return false;
+                            }
+
+                            break;
+                        }
+                        case ValueType.SAMPLER:
+                            if (v0.sampler !== v1.sampler) return false;
+                            break;
+                        default:
+                            break;
+                    }
+                } else {
+                    return false;
+                }
+
+                return true;
+            }
         }
     }
 }

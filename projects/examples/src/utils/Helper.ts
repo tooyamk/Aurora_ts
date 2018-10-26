@@ -5,12 +5,12 @@ class Helper {
         return root + name + "?ts=" + Date.now();
     }
 
-    public static printNodeHierarchy(nodes: Aurora.Node3D[]): void {
+    public static printNodeHierarchy(nodes: Aurora.Node[]): void {
         let s = "";
 
         let tmpVec3 = new Aurora.Vector3();
 
-        let printChildFn = (indent: string, node: Aurora.Node3D) => {
+        let printChildFn = (indent: string, node: Aurora.Node) => {
             if (s.length > 0) s += "\n";
             s += indent + (node.name.length ? node.name : "(Empty Name)");
 

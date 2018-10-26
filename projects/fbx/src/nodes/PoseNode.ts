@@ -1,7 +1,7 @@
-///<reference path="FBXNode.ts"/>
+///<reference path="Node.ts"/>
 
-namespace Aurora {
-    export class FBXDeformer extends FBXNode {
+namespace Aurora.FBX {
+    export class PoseNode extends Node {
         public finish(): void {
             super.finish();
 

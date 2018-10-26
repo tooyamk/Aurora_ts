@@ -12,11 +12,11 @@ namespace Aurora {
 
         public triangulate(polygons: uint[]): void {
             if (this.data && polygons) {
-                let src = this.data;
-                let newData: uint[] = [];
+                const src = this.data;
+                const newData: uint[] = [];
                 let srcIdx = 0, newIdx = 0;
                 for (let i = 0, n = polygons.length; i < n; ++i) {
-                    let n = polygons[i] | 0;
+                    const n = polygons[i] | 0;
                     switch (n) {
                         case 0:
                             break;
@@ -67,9 +67,9 @@ namespace Aurora {
 
         public invert(): void {
             if (this.data) {
-                let src = this.data;
+                const src = this.data;
                 for (let i = 1, n = src.length; i < n; i += 3) {
-                    let idx = src[i];
+                    const idx = src[i];
                     src[i] = src[i + 1];
                     src[i + 1] = idx;
                 }
@@ -78,7 +78,7 @@ namespace Aurora {
 
         public createBuffer(gl: GL): GLIndexBuffer {
             if (this.data && gl) {
-                let buffer = new GLIndexBuffer(gl);
+                const buffer = new GLIndexBuffer(gl);
                 buffer.upload(this.data, this.type, this.usage);
                 return buffer;
             }

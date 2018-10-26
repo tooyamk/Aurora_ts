@@ -1,26 +1,8 @@
 namespace Aurora {
-    export const enum ShaderDefineType {
-        NONE,
-        BOOL,
-        INT
-    }
-
-    export class ShaderDefineValue {
-        public type: ShaderDefineType = ShaderDefineType.NONE;
-        public value: boolean | int = null;
-
-        public clone(): ShaderDefineValue {
-            let dv = new ShaderDefineValue();
-            dv.type = this.type;
-            dv.value = this.value;
-            return dv;
-        }
-    }
-
     export class ShaderDefines {
         public next: ShaderDefines = null;
 
-        private _defines: { [key: string] : ShaderDefineValue } = {};
+        private _defines: { [key: string]: ShaderDefines.Value } = {};
         private _count: uint = 0;
 
         public get count(): uint {
@@ -34,12 +16,12 @@ namespace Aurora {
         }
 
         public clone(): ShaderDefines {
-            let d = new ShaderDefines();
+            const d = new ShaderDefines();
 
             if (this._count > 0) {
-                for (let name in this._defines) {
-                    let dv = this._defines[name];
-                    if (dv.type !== ShaderDefineType.NONE) this._defines[name] = dv.clone();
+                for (const name in this._defines) {
+                    const dv = this._defines[name];
+                    if (dv.type !== ShaderDefines.VlaueType.NONE) this._defines[name] = dv.clone();
                 }
                 d._count = this._count;
             }
@@ -55,14 +37,14 @@ namespace Aurora {
         }
 
         public hasDefine(name: string): boolean {
-            let v = this._defines[name];
-            return v ? (v.type === ShaderDefineType.NONE ? false : true) : false;
+            const v = this._defines[name];
+            return v ? (v.type === ShaderDefines.VlaueType.NONE ? false : true) : false;
         }
 
-        public getDefine(name: string): ShaderDefineValue {
-            let v = this._defines[name];
+        public getDefine(name: string): ShaderDefines.Value {
+            const v = this._defines[name];
             if (v) {
-                return v.type === ShaderDefineType.NONE ? null : v;
+                return v.type === ShaderDefines.VlaueType.NONE ? null : v;
             } else {
                 return null;
             }
@@ -73,36 +55,56 @@ namespace Aurora {
             
             let v = this._defines[name];
             if (v) {
-                if (v.type === ShaderDefineType.NONE) ++this._count;
+                if (v.type === ShaderDefines.VlaueType.NONE) ++this._count;
             } else {
-                v = new ShaderDefineValue();
+                v = new ShaderDefines.Value();
                 this._defines[name] = v;
                 ++this._count;
             }
 
             if (value === true) {
-                if (v.type !== ShaderDefineType.BOOL || v.value !== true) {
-                    v.type = ShaderDefineType.BOOL;
+                if (v.type !== ShaderDefines.VlaueType.BOOL || v.value !== true) {
+                    v.type = ShaderDefines.VlaueType.BOOL;
                     v.value = true;
                 }
             } else if (value === false) {
-                if (v.type !== ShaderDefineType.BOOL || v.value !== false) {
-                    v.type = ShaderDefineType.BOOL;
+                if (v.type !== ShaderDefines.VlaueType.BOOL || v.value !== false) {
+                    v.type = ShaderDefines.VlaueType.BOOL;
                     v.value = false;
                 }
             } else {
-                if (v.type !== ShaderDefineType.INT || v.value !== value) {
-                    v.type = ShaderDefineType.INT;
+                if (v.type !== ShaderDefines.VlaueType.INT || v.value !== value) {
+                    v.type = ShaderDefines.VlaueType.INT;
                     v.value = value;
                 }
             }
         }
 
         public deleteDefine(name: string): void {
-            let v = this._defines[name];
-            if (v && v.type !== ShaderDefineType.NONE) {
-                v.type = ShaderDefineType.NONE;
+            const v = this._defines[name];
+            if (v && v.type !== ShaderDefines.VlaueType.NONE) {
+                v.type = ShaderDefines.VlaueType.NONE;
                 --this._count;
+            }
+        }
+    }
+
+    export namespace ShaderDefines {
+        export const enum VlaueType {
+            NONE,
+            BOOL,
+            INT
+        }
+
+        export class Value {
+            public type: VlaueType = VlaueType.NONE;
+            public value: boolean | int = null;
+
+            public clone(): Value {
+                const dv = new Value();
+                dv.type = this.type;
+                dv.value = this.value;
+                return dv;
             }
         }
     }

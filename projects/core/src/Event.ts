@@ -96,7 +96,7 @@ namespace Aurora {
         }
 
         public has(type: string, caller: any, callback: HandlerType): boolean {
-            let arr = this._map[type];
+            const arr = this._map[type];
             if (arr) {
                 if (caller === undefined) caller = null;
                 return this._getHandler(arr, caller, callback) !== null;
@@ -106,7 +106,7 @@ namespace Aurora {
 
         private _getHandler(handlers: Handler[], caller: any, callback: HandlerType): Handler {
             for (let i = 0, n = handlers.length; i < n; ++i) {
-                let h = handlers[i];
+                const h = handlers[i];
                 if (h.caller === caller && h.callback === callback) return h;
             }
             return null;
@@ -115,9 +115,9 @@ namespace Aurora {
         public on(type: string, caller: any, callback: HandlerType, once: boolean = false): void {
             if (type && type.length > 0 && callback) {
                 if (caller === undefined) caller = null;
-                let arr = this._map[type];
+                const arr = this._map[type];
                 if (arr) {
-                    let h = this._getHandler(arr, caller, callback);
+                    const h = this._getHandler(arr, caller, callback);
                     if (h) {
                         h.once = once;
                     } else {
@@ -132,10 +132,10 @@ namespace Aurora {
         public off(type: string, caller: any, callback: HandlerType): boolean {
             if (type && type.length > 0 && callback) {
                 if (caller === undefined) caller = null;
-                let arr = this._map[type];
+                const arr = this._map[type];
                 if (arr) {
                     for (let i = 0, n = arr.length; i < n; ++i) {
-                        let h = arr[i];
+                        const h = arr[i];
                         if (h.caller === caller && h.callback === callback) {
                             arr.splice(i, 1);
                             h.release();
@@ -150,17 +150,15 @@ namespace Aurora {
         public emit(type: string, data: any = null): void {
             let arr = this._map[type];
             if (arr) {
-                let n = arr.length;
+                const n = arr.length;
                 if (n > 0) {
-                    let e = Event.create(this._target, data);
+                    const e = Event.create(this._target, data);
                     if (n === 1) {
-                        let h = arr[0];
+                        const h = arr[0];
                         if (h.emit(e)) arr.length = 0;
                     } else {
                         arr = arr.concat();
-                        for (let i = 0; i < n; ++i) {
-                            arr[i].emit(e);
-                        }
+                        for (let i = 0; i < n; ++i) arr[i].emit(e);
                     }
                     e.release();
                 }
@@ -169,18 +167,18 @@ namespace Aurora {
 
         public offAll(type: string = null): void {
             if (type) {
-                let arr = this._map[type];
+                const arr = this._map[type];
                 if (arr) {
-                    let n = arr.length;
+                    const n = arr.length;
                     if (n > 0) {
                         for (let i = 0, n = arr.length; i < n; ++i) arr[i].release();
                         arr.length = 0;
                     }
                 }
             } else {
-                for (let key in this._map) {
-                    let arr = this._map[key];
-                    let n = arr.length;
+                for (const key in this._map) {
+                    const arr = this._map[key];
+                    const n = arr.length;
                     if (n > 0) {
                         for (let i = 0, n = arr.length; i < n; ++i) arr[i].release();
                         arr.length = 0;

@@ -1,7 +1,7 @@
-///<reference path="FBXNode.ts"/>
+///<reference path="Node.ts"/>
 
-namespace Aurora {
-    export class FBXConnection extends FBXNode {
+namespace Aurora.FBX {
+    export class Connection extends Node {
         private _curID: int = 0;
         private _parentID: int = 0;
 

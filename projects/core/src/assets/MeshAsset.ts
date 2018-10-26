@@ -31,14 +31,14 @@ namespace Aurora {
         public getVertexBuffer(gl: GL, info: GLProgramAttribInfo): GLVertexBuffer {
             let buffer: GLVertexBuffer = this.vertexBuffers ? this.vertexBuffers.get(info.name) : null;
             if (!buffer && this.vertexSources) {
-                let src = this.vertexSources.get(info.name);
+                const src = this.vertexSources.get(info.name);
                 if (src) {
                     buffer = src.createBuffer(gl);
                 } else {
                     if (info.name === ShaderPredefined.a_Normal0) {
-                        let vs = this.vertexSources.get(ShaderPredefined.a_Position0);
+                        const vs = this.vertexSources.get(ShaderPredefined.a_Position0);
                         if (vs && vs.data && this.drawIndexSource && this.drawIndexSource.data) {
-                            let ns = MeshAssetHelper.createNormals(this.drawIndexSource.data, vs.data);
+                            const ns = MeshAssetHelper.createNormals(this.drawIndexSource.data, vs.data);
                             if (this.addVertexSource(ns)) buffer = ns.createBuffer(gl);
                         }
                     }
@@ -69,9 +69,7 @@ namespace Aurora {
             this.drawIndexSource = null;
 
             if (this.vertexBuffers) {
-                for (let itr of this.vertexBuffers) {
-                    itr[1].destroy();
-                }
+                for (const itr of this.vertexBuffers) itr[1].destroy();
                 this.vertexBuffers = null;
             }
 

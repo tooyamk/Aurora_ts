@@ -1,9 +1,8 @@
-///<reference path="AbstractNode3DComponent.ts" />
+///<reference path="../Node.ts" />
 ///<reference path="../../renderers/IRenderPass.ts" />
-///<reference path="../../physics/Ray.ts" />
 
 namespace Aurora {
-    export class Camera extends AbstractNode3DComponent implements IRenderPass {
+    export class Camera extends Node.AbstractComponent implements IRenderPass {
         public clear = new GLClear();
         public frameBuffer: GLFrameBuffer = null;
         public viewport = new Rect(0, 0, -1, -1);
@@ -75,8 +74,8 @@ namespace Aurora {
             let dirX: number, dirY: number, dirZ: number;
 
             if (this._projectionMatrix.m33 === 1) {
-                let w: number = 2 / this._projectionMatrix.m00;
-                let h: number = 2 / this._projectionMatrix.m11;
+                let w = 2 / this._projectionMatrix.m00;
+                let h = 2 / this._projectionMatrix.m11;
 
                 w /= screenWidth;
                 h /= screenHeight;
@@ -101,13 +100,13 @@ namespace Aurora {
                 dirY = dirY * this._zNear / this._projectionMatrix.m11;
                 dirZ = this._zNear;
 
-                let d: number = dirX * dirX + dirY * dirY + dirZ * dirZ;
+                let d = dirX * dirX + dirY * dirY + dirZ * dirZ;
                 d = Math.sqrt(d);
                 dirX /= d;
                 dirY /= d;
                 dirZ /= d;
 
-                let t: number = this._zNear / dirZ;
+                const t = this._zNear / dirZ;
 
                 originX = dirX * t;
                 originY = dirY * t;

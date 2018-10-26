@@ -19,14 +19,14 @@ namespace Aurora {
             return new Vector2(1, 1);
         }
 
-        public get lengthSquared(): number {
-            return this.x * this.x + this.y * this.y;
-        }
-
         public get length(): number {
             let len = this.x * this.x + this.y * this.y;
             if (len !== 1) len = Math.sqrt(len);
             return len;
+        }
+
+        public get lengthSq(): number {
+            return this.x * this.x + this.y * this.y;
         }
 
         public clone(): Vector2 {
@@ -52,7 +52,7 @@ namespace Aurora {
         }
 
         public static angleBetween(p1: Vector2, p2: Vector2, clamp: boolean = false): number {
-            let len = p1.length * p2.length;
+            const len = p1.length * p2.length;
             let val = p1.x * p2.x + p1.y * p2.y;
             if (len !== 1) val /= len;
 
@@ -67,8 +67,8 @@ namespace Aurora {
         }
 
         public static distance(p1: Vector2, p2: Vector2): number {
-            let x = p1.x - p2.x;
-            let y = p1.y - p2.y;
+            const x = p1.x - p2.x;
+            const y = p1.y - p2.y;
             return Math.sqrt(x * x + y * y);
         }
 
@@ -135,14 +135,14 @@ namespace Aurora {
             this.x = this.y = this.z = 0;
         }
 
-        public get lengthSquared(): number {
-            return this.x * this.x + this.y * this.y + this.z * this.z;
-        }
-
         public get length(): number {
             let len = this.x * this.x + this.y * this.y + this.z * this.z;
             if (len !== 1) len = Math.sqrt(len);
             return len;
+        }
+
+        public get lengthSq(): number {
+            return this.x * this.x + this.y * this.y + this.z * this.z;
         }
 
         public clone(): Vector3 {
@@ -150,16 +150,7 @@ namespace Aurora {
         }
 
         public toVector4(w:number = 1, rst: Vector4 = null): Vector4 {
-            if (rst) {
-                rst.x = this.x;
-                rst.y = this.y;
-                rst.z = this.z;
-                rst.w = w;
-            } else {
-                rst = new Vector4(this.x, this.y, this.z, w);
-            }
-
-            return rst;
+            return rst ? rst.setFromNumbers(this.x, this.y, this.z, w) : new Vector4(this.x, this.y, this.z, w);
         }
 
         public setFromNumbers(x: number = 0, y: number = 0, z: number = 0): Vector3 {
@@ -259,14 +250,14 @@ namespace Aurora {
         }
 
         public static cross(p1: Vector3, p2: Vector3, rst: Vector3 = null): Vector3 {
-            let x = p1.y * p2.z - p1.z * p2.y;
-            let y = p1.z * p2.x - p1.x * p2.z;
-            let z = p1.x * p2.y - p1.y * p2.x;
+            const x = p1.y * p2.z - p1.z * p2.y;
+            const y = p1.z * p2.x - p1.x * p2.z;
+            const z = p1.x * p2.y - p1.y * p2.x;
             return rst ? rst.setFromNumbers(x, y, z) : new Vector3(x, y, z);
         }
 
         public static angleBetween(p1: Vector3, p2: Vector3, clamp: boolean = false): number {
-            let len = p1.length * p2.length;
+            const len = p1.length * p2.length;
             let val = p1.x * p2.x + p1.y * p2.y + p1.z * p2.z;
             if (len !== 1) val /= len;
 
@@ -281,9 +272,9 @@ namespace Aurora {
         }
 
         public static distance(p1: Vector3, p2: Vector3): number {
-            let x = p1.x - p2.x;
-            let y = p1.y - p2.y;
-            let z = p1.z - p2.z;
+            const x = p1.x - p2.x;
+            const y = p1.y - p2.y;
+            const z = p1.z - p2.z;
             return Math.sqrt(x * x + y * y + z * z);
         }
 

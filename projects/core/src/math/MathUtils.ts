@@ -50,9 +50,9 @@ namespace Aurora {
         public static getFootOfPerpendicular(begin: Vector3, end: Vector3, pt: Vector3, rst: Vector3 = null): Vector3 {
             rst = rst || new Vector3();
 
-            let dx = end.x - begin.x;
-            let dy = end.y - begin.y;
-            let dz = end.z - begin.z;
+            const dx = end.x - begin.x;
+            const dy = end.y - begin.y;
+            const dz = end.z - begin.z;
             if (Math.abs(dx) < MathUtils.ZERO_TOLERANCE && Math.abs(dy) < MathUtils.ZERO_TOLERANCE && Math.abs(dz) < MathUtils.ZERO_TOLERANCE) {
                 rst.setFromNumbers(NaN, NaN, NaN);
                 return rst;

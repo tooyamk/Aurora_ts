@@ -1,7 +1,7 @@
-///<reference path="../AbstractNode3DComponent.ts" />
+///<reference path="../../Node.ts" />
 
 namespace Aurora {
-    export abstract class AbstractRenderable extends AbstractNode3DComponent {
+    export abstract class AbstractRenderable extends Node.AbstractComponent {
         public renderer: AbstractRenderer = null;
         public materials: Material[] = null;
 

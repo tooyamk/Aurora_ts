@@ -21,11 +21,11 @@ namespace Aurora {
             this._vert = vert;
             this._frag = frag;
 
-            let defines: { [key: string]: boolean } = {};
-            for (let n of vert.defines) defines[n] = true;
-            for (let n of frag.defines) defines[n] = true;
+            const defines: { [key: string]: boolean } = {};
+            for (const n of vert.defines) defines[n] = true;
+            for (const n of frag.defines) defines[n] = true;
 
-            for (let n in defines) this._defines.push(n);
+            for (const n in defines) this._defines.push(n);
             Sort.Merge.sort(this._defines, (a: string, b: string) => {
                 return a < b;
             });
@@ -57,13 +57,13 @@ namespace Aurora {
         }
 
         public precompile(defines: ShaderDefines): boolean {
-            let appendDefines = this._collectDefines(defines);
-            let p = this._getProgramFromCache(appendDefines);
+            const appendDefines = this._collectDefines(defines);
+            const p = this._getProgramFromCache(appendDefines);
             return p ? true : this._createProgram(appendDefines).status === GLProgramStatus.SUCCESSED;
         }
 
         public ready(defines: ShaderDefines): GLProgram {
-            let appendDefines = this._collectDefines(defines);
+            const appendDefines = this._collectDefines(defines);
             this._curProgram = this._getProgramFromCache(appendDefines);
             if (!this._curProgram) this._curProgram = this._createProgram(appendDefines);
 
@@ -78,9 +78,9 @@ namespace Aurora {
 
             if (defines) {
                 for (let i = 0, n = this._defines.length; i < n; ++i) {
-                    let name = this._defines[i];
+                    const name = this._defines[i];
 
-                    let v: ShaderDefineValue = null;
+                    let v: ShaderDefines.Value = null;
                     let d = defines;
                     do {
                         v = d.getDefine(name);
@@ -92,9 +92,9 @@ namespace Aurora {
                     } while (d);
 
                     if (v) {
-                        if (v.type === ShaderDefineType.BOOL) {
+                        if (v.type === ShaderDefines.VlaueType.BOOL) {
                             if (v.value) appendDefines += "\n" + name;
-                        } else if (v.type === ShaderDefineType.INT) {
+                        } else if (v.type === ShaderDefines.VlaueType.INT) {
                             appendDefines += "\n" + name + " " + v.value;
                         }
                     }
@@ -105,8 +105,8 @@ namespace Aurora {
         }
 
         private _createProgram(appendDefines: string): GLProgram {
-            let finalAppendDefines = appendDefines.length > 0 ? appendDefines.replace(/\n/g, "\n#define ") + "\n" : "";
-            let p = new GLProgram(this._gl);
+            const finalAppendDefines = appendDefines.length > 0 ? appendDefines.replace(/\n/g, "\n#define ") + "\n" : "";
+            const p = new GLProgram(this._gl);
             p.compileAndLink(finalAppendDefines + this._vert.source, finalAppendDefines + this._frag.source);
             if (appendDefines.length > 0) {
                 this._cachedPrograms[appendDefines] = p;
@@ -123,12 +123,12 @@ namespace Aurora {
                 this._curProgram.use();
 
                 if (this._curProgram.uniforms && uniforms) {
-                    let curUniforms = this._curProgram.uniforms;
-                    let gl = this._gl.context;
+                    const curUniforms = this._curProgram.uniforms;
+                    const gl = this._gl.context;
                     let samplerIndex = 0;
                     for (let i = 0, n = curUniforms.length; i < n; ++i) {
-                        let info = curUniforms[i];
-                        let v: ShaderUniformValue = null;
+                        const info = curUniforms[i];
+                        let v: ShaderUniforms.Value = null;
                         let u = uniforms;
                         do {
                             v = u._uniforms[info.name];
@@ -141,7 +141,7 @@ namespace Aurora {
 
                         switch (info.type) {
                             case GLUniformType.FLOAT: {
-                                if (v && v.type === ShaderUniformType.NUMBER) {
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) {
                                     if (info.isArray) {
                                         gl.uniform1fv(info.location, <any>v.array);
                                     } else {
@@ -152,7 +152,7 @@ namespace Aurora {
                                 break;
                             }
                             case GLUniformType.FLOAT_VEC2: {
-                                if (v && v.type === ShaderUniformType.NUMBER) {
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) {
                                     if (info.isArray) {
                                         gl.uniform2fv(info.location, <any>v.array);
                                     } else {
@@ -163,7 +163,7 @@ namespace Aurora {
                                 break;
                             }
                             case GLUniformType.FLOAT_VEC3: {
-                                if (v && v.type === ShaderUniformType.NUMBER) {
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) {
                                     if (info.isArray) {
                                         gl.uniform3fv(info.location, <any>v.array);
                                     } else {
@@ -174,7 +174,7 @@ namespace Aurora {
                                 break;
                             }
                             case GLUniformType.FLOAT_VEC4: {
-                                if (v && v.type === ShaderUniformType.NUMBER) {
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) {
                                     if (info.isArray) {
                                         gl.uniform4fv(info.location, <any>v.array);
                                     } else {
@@ -185,7 +185,7 @@ namespace Aurora {
                                 break;
                             }
                             case GLUniformType.INT: {
-                                if (v && v.type === ShaderUniformType.NUMBER) {
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) {
                                     if (info.isArray) {
                                         gl.uniform1iv(info.location, <any>v.array);
                                     } else {
@@ -196,7 +196,7 @@ namespace Aurora {
                                 break;
                             }
                             case GLUniformType.INT_VEC2: {
-                                if (v && v.type === ShaderUniformType.NUMBER) {
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) {
                                     if (info.isArray) {
                                         gl.uniform2iv(info.location, <any>v.array);
                                     } else {
@@ -207,7 +207,7 @@ namespace Aurora {
                                 break;
                             }
                             case GLUniformType.INT_VEC3: {
-                                if (v && v.type === ShaderUniformType.NUMBER) {
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) {
                                     if (info.isArray) {
                                         gl.uniform3iv(info.location, <any>v.array);
                                     } else {
@@ -218,7 +218,7 @@ namespace Aurora {
                                 break;
                             }
                             case GLUniformType.INT_VEC4: {
-                                if (v && v.type === ShaderUniformType.NUMBER) {
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) {
                                     if (info.isArray) {
                                         gl.uniform4iv(info.location, <any>v.array);
                                     } else {
@@ -229,7 +229,7 @@ namespace Aurora {
                                 break;
                             }
                             case GLUniformType.BOOL: {
-                                if (v && v.type === ShaderUniformType.NUMBER) {
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) {
                                     if (info.isArray) {
                                         gl.uniform1fv(info.location, <any>v.array);
                                     } else {
@@ -240,7 +240,7 @@ namespace Aurora {
                                 break;
                             }
                             case GLUniformType.BOOL_VEC2: {
-                                if (v && v.type === ShaderUniformType.NUMBER) {
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) {
                                     if (info.isArray) {
                                         gl.uniform2fv(info.location, <any>v.array);
                                     } else {
@@ -251,7 +251,7 @@ namespace Aurora {
                                 break;
                             }
                             case GLUniformType.BOOL_VEC3: {
-                                if (v && v.type === ShaderUniformType.NUMBER) {
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) {
                                     if (info.isArray) {
                                         gl.uniform3fv(info.location, <any>v.array);
                                     } else {
@@ -262,7 +262,7 @@ namespace Aurora {
                                 break;
                             }
                             case GLUniformType.BOOL_VEC4: {
-                                if (v && v.type === ShaderUniformType.NUMBER) {
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) {
                                     if (info.isArray) {
                                         gl.uniform4fv(info.location, <any>v.array);
                                     } else {
@@ -273,17 +273,17 @@ namespace Aurora {
                                 break;
                             }
                             case GLUniformType.FLOAT_MAT2: {
-                                if (v && v.type === ShaderUniformType.NUMBER) gl.uniformMatrix2fv(info.location, false, <any>v.array);
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) gl.uniformMatrix2fv(info.location, false, <any>v.array);
 
                                 break;
                             }
                             case GLUniformType.FLOAT_MAT3: {
-                                if (v && v.type === ShaderUniformType.NUMBER) gl.uniformMatrix3fv(info.location, false, <any>v.array);
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) gl.uniformMatrix3fv(info.location, false, <any>v.array);
 
                                 break;
                             }
                             case GLUniformType.FLOAT_MAT4: {
-                                if (v && v.type === ShaderUniformType.NUMBER) gl.uniformMatrix4fv(info.location, false, <any>v.array);
+                                if (v && v.type === ShaderUniforms.ValueType.NUMBER) gl.uniformMatrix4fv(info.location, false, <any>v.array);
 
                                 break;
                             }
@@ -321,7 +321,7 @@ namespace Aurora {
                 this._cachedNoDefineProgram = null;
             }
 
-            for (let key in this._cachedPrograms) this._cachedPrograms[key].destroy();
+            for (const key in this._cachedPrograms) this._cachedPrograms[key].destroy();
             this._cachedPrograms = {};
 
             this._curProgram = null;

@@ -13,7 +13,7 @@ namespace Aurora {
                 this._running = true;
                 this._onFinish = onFinish;
                 if (this._onStart) {
-                    let func = this._onStart;
+                    const func = this._onStart;
                     this._onStart = null;
                     func(this);
                 }

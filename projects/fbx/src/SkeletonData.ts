@@ -1,6 +1,6 @@
-namespace Aurora {
-    export class FBXSkeleton {
-        public bones: Node3D[] = [];
+namespace Aurora.FBX {
+    export class SkeletonData {
+        public bones: Aurora.Node[] = [];
         public rootBoneIndices: uint[] = [];
 
         private _numBones = 0;
@@ -9,7 +9,7 @@ namespace Aurora {
 
         private _boneIDs: uint[] = [];
 
-        public addBone(bone: Node3D, id: uint): void {
+        public addBone(bone: Aurora.Node, id: uint): void {
             this.bones[this._numBones] = bone;
             this._boneIDs[this._numBones] = id;
             this._bonesByName.set(bone.name, this._numBones);
@@ -21,10 +21,10 @@ namespace Aurora {
             return this._bonesByName.has(name) ? this._bonesByName.get(name) : -1;
         }
 
-        public finish(collections: FBXCollections): void {
+        public finish(collections: Collections): void {
             for (let i = 0, n = this._numBones; i < n; ++i) {
-                let bone = this.bones[i];
-                let m = collections.findParent(this._boneIDs[i], FBXModel);
+                const bone = this.bones[i];
+                const m = collections.findParent(this._boneIDs[i], Model);
                 if (m) {
                     this.bones[this._bonesByID.get(m.id)].addChild(bone);
                 } else {

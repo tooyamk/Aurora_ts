@@ -31,13 +31,13 @@ namespace Aurora {
                 }
             } else if (args.length === 1) {
                 if (args[0] instanceof Array) {
-                    let libs = <ShaderLib[]>args[0];
+                    const libs = <ShaderLib[]>args[0];
                     for (let i = 0, n = libs.length; i < n; ++i) {
-                        let lib = libs[i];
+                        const lib = libs[i];
                         this._addLibrary(lib.name, lib.source);
                     }
                 } else {
-                    let lib = <ShaderLib>args[0];
+                    const lib = <ShaderLib>args[0];
                     this._addLibrary(lib.name, lib.source);
                 }
             }
@@ -80,14 +80,14 @@ namespace Aurora {
         public createShader(gl: GL, vertName: string, fragName: string): Shader;
 
         public createShader(gl: GL, name1: string, ...args: any[]): Shader {
-            let fragName: string = args.length === 0 ? name1 : args[0];
-            let vertSrc = this.getShaderSource(name1, GLShaderType.VERTEX_SHADER);
-            let fragSrc = this.getShaderSource(fragName, GLShaderType.FRAGMENT_SHADER);
+            const fragName: string = args.length === 0 ? name1 : args[0];
+            const vertSrc = this.getShaderSource(name1, GLShaderType.VERTEX_SHADER);
+            const fragSrc = this.getShaderSource(fragName, GLShaderType.FRAGMENT_SHADER);
             return vertSrc && fragSrc ? new Shader(gl, vertSrc, fragSrc) : null;
         }
 
         public addSource(name: string, source: string, type: GLShaderType, excludeDefines: string[] = null, forceUpdate: boolean = false): ShaderSource {
-            let map = type === GLShaderType.VERTEX_SHADER ? this._verts : this._frags;
+            const map = type === GLShaderType.VERTEX_SHADER ? this._verts : this._frags;
             let ss = map[name];
             if (ss && !forceUpdate) return ss;
 
@@ -99,7 +99,7 @@ namespace Aurora {
         public doInclude(source: string): string {
             return source.replace(/^[  ]*#include[  ]*<[  ]*\S+[  ]*>[^\r\n]*/gm, (substring: string, ...args: any[]) => {
                 let params: string[] = null;
-                let parenthesisEnd = substring.lastIndexOf(")");
+                const parenthesisEnd = substring.lastIndexOf(")");
                 if (parenthesisEnd > 0) {
                     let parenthesisStart = substring.lastIndexOf("(");
                     if (parenthesisStart > 0 && parenthesisStart < parenthesisEnd) {
@@ -108,7 +108,7 @@ namespace Aurora {
                     }
                 }
                 let name = substring.replace(/[  ]*#include[  ]*<[  ]*|[  ]*>/g, "");
-                let parenthesisStart = name.indexOf("(");
+                const parenthesisStart = name.indexOf("(");
                 if (parenthesisStart > 0) name = name.substr(0, parenthesisStart);
                 let lib = this._libs[name];
                 if (lib) {
@@ -118,7 +118,7 @@ namespace Aurora {
 
                     return lib;
                 } else {
-                    console.log("Shader include not found lib : ", name);
+                    console.error("Shader include not found lib : ", name);
                 }
 
                 return "";

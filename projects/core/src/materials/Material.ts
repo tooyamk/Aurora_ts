@@ -58,7 +58,7 @@ namespace Aurora {
         }
 
         public clone(): Material {
-            let m = new Material(this.shader);
+            const m = new Material(this.shader);
 
             m.renderingPriority = this.renderingPriority;
             m.renderingSort = this.renderingSort;
@@ -80,9 +80,9 @@ namespace Aurora {
         public ready(defines: ShaderDefines): GLProgram {
             if (this.shader) {
                 if (this.defines) {
-                    let tail = this.defines.tail;
+                    const tail = this.defines.tail;
                     tail.next = defines;
-                    let rst = this.shader.ready(this.defines);
+                    const rst = this.shader.ready(this.defines);
                     tail.next = null;
                     return rst;
                 } else {
@@ -94,7 +94,7 @@ namespace Aurora {
         }
 
         public use(uniforms: ShaderUniforms): GLProgram {
-            let gl = this.shader.gl;
+            const gl = this.shader.gl;
             gl.setBlend(this.blend);
             gl.setCullFace(this.cullFace);
             gl.setDepthTest(this.depthTest);
@@ -103,9 +103,9 @@ namespace Aurora {
             gl.setStencil(this.stencilFront, this.stencilBack);
 
             if (this.uniforms) {
-                let tail = this.uniforms.tail;
+                const tail = this.uniforms.tail;
                 tail.next = uniforms;
-                let rst = this.shader.use(this.uniforms);
+                const rst = this.shader.use(this.uniforms);
                 tail.next = null;
                 return rst;
             } else {
@@ -114,9 +114,7 @@ namespace Aurora {
         }
 
         public destroy(destroyShader: boolean): void {
-            if (destroyShader && this.shader) {
-                this.shader.destroy();
-            }
+            if (destroyShader && this.shader) this.shader.destroy();
 
             this.shader = null;
             this.blend = null;

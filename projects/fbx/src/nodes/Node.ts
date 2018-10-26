@@ -1,12 +1,12 @@
-namespace Aurora {
-    export const enum FBXNodeAttribType {
+namespace Aurora.FBX {
+    export const enum NodeAttribType {
         CLUSTER = "Cluster",
         LIMB_NODE = "LimbNode",
         MESH = "Mesh",
         SKIN = "Skin"
     }
 
-    export const enum FBXNodeName {
+    export const enum NodeName {
         ANIMATION_CURVE = "AnimationCurve",
         ANIMATION_CURVE_NODE = "AnimationCurveNode",
         ANIMATION_LAYER = "AnimationLayer",
@@ -42,14 +42,14 @@ namespace Aurora {
         WEIGHTS = "Weights"
     }
 
-    export class FBXNode {
+    export class Node {
         protected _id: int = null;
         protected _attribType: string = null;
         protected _attribName: string = null;
 
         public name: String;
-        public properties: FBXNodeProperty[] = null;
-        public children: FBXNode[] = [];
+        public properties: NodeProperty[] = null;
+        public children: Node[] = [];
 
         public get id(): int {
             return this._id;
@@ -63,7 +63,7 @@ namespace Aurora {
             return this._attribType;
         }
 
-        public getChildByName(name: string): FBXNode {
+        public getChildByName(name: string): Node {
             for (let i = 0, n = this.children.length; i < n; ++i) {
                 if (this.children[i].name === name) return this.children[i];
             }
@@ -72,10 +72,10 @@ namespace Aurora {
 
         public finish(): void {
             if (this.properties) {
-                let len = this.properties.length;
-                if (len > 0 && this.properties[0].type === FBXNodePropertyValueType.INT) this._id = <int>this.properties[0].value;
-                if (len > 1 && this.properties[1].type === FBXNodePropertyValueType.STRING) this._attribName = <string>this.properties[1].value;
-                if (len > 2 && this.properties[2].type === FBXNodePropertyValueType.STRING) this._attribType = <string>this.properties[2].value;
+                const len = this.properties.length;
+                if (len > 0 && this.properties[0].type === NodePropertyValueType.INT) this._id = <int>this.properties[0].value;
+                if (len > 1 && this.properties[1].type === NodePropertyValueType.STRING) this._attribName = <string>this.properties[1].value;
+                if (len > 2 && this.properties[2].type === NodePropertyValueType.STRING) this._attribType = <string>this.properties[2].value;
 
                 if (this._id === 1433315232) {
                     let a = 1;

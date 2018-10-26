@@ -4,10 +4,10 @@ class Other {
     constructor() {
         let env = new Env();
         
-        let skyNode = env.world.addChild(new Aurora.Node3D());
-        let model1Node = env.world.addChild(new Aurora.Node3D());
-        let model2Node = env.world.addChild(new Aurora.Node3D());
-        let light = env.world.addChild(new Aurora.Node3D()).addComponent(new Aurora.PointLight());
+        let skyNode = env.world.addChild(new Aurora.Node());
+        let model1Node = env.world.addChild(new Aurora.Node());
+        let model2Node = env.world.addChild(new Aurora.Node());
+        let light = env.world.addChild(new Aurora.Node()).addComponent(new Aurora.PointLight());
         //light.spotAngle = 10 * Math.PI / 180;
         light.color.setFromNumbers(1, 1, 1);
         light.setAttenuation(2500);
@@ -70,7 +70,7 @@ class Other {
         env.start(() => {
             let gl = env.gl;
             gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLHMatrix(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
+            env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLH(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
         },
         (delta: number) => {
             model1Node.localRotate(Aurora.Quaternion.createFromEulerY(Math.PI / 180));
@@ -83,7 +83,7 @@ class Other {
         });
     }
 
-    public createModel(node: Aurora.Node3D, gl: Aurora.GL, shaderStore: Aurora.ShaderStore, vert: string, frag: string) {
+    public createModel(node: Aurora.Node, gl: Aurora.GL, shaderStore: Aurora.ShaderStore, vert: string, frag: string) {
         let vertexBuffer = new Aurora.GLVertexBuffer(gl);
         vertexBuffer.upload([-150, -100, 0.0, -100.0, 100, 0.0, 100, -100, 0.0], Aurora.GLVertexBufferSize.THREE, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
         //vertexBuffer.upload([-0.5, -0.5, 0.0, -0.5, 0.5, 0.0, 0.5, -0.5, 0.0], MITOIA.GLVertexBufferSize.THREE, MITOIA.GLVertexBufferDataType.FLOAT, false, MITOIA.GLUsageType.STATIC_DRAW);
@@ -292,7 +292,7 @@ class Other {
         return mesh;
     }
     
-    public createSkyBox(node: Aurora.Node3D, gl: Aurora.GL, shaderStore: Aurora.ShaderStore, vert: string, frag: string) {
+    public createSkyBox(node: Aurora.Node, gl: Aurora.GL, shaderStore: Aurora.ShaderStore, vert: string, frag: string) {
         let mesh = node.addComponent(new Aurora.Mesh());
         mesh.enabled = false;
         mesh.asset = Aurora.MeshBuilder.createBox(10000, 10000, 10000, 1, 1, 1, true, true);

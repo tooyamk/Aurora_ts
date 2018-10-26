@@ -28,17 +28,17 @@ namespace Aurora {
 
         protected static _initSharedQuadAsset(): void {
             if (!Sprite._sharedQuadAsset) {
-                let as = new MeshAsset();
+                const as = new MeshAsset();
 
-                let vertices: number[] = [];
+                const vertices: number[] = [];
                 vertices.length = 8;
                 as.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
 
-                let texCoords: number[] = [];
-                texCoords.length = 8;
-                as.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, texCoords, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
+                const uvs: number[] = [];
+                uvs.length = 8;
+                as.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, uvs, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
 
-                let colors: number[] = [];
+                const colors: number[] = [];
                 colors.length = 16;
                 as.addVertexSource(new VertexSource(ShaderPredefined.a_Color0, colors, GLVertexBufferSize.FOUR, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
 
@@ -46,7 +46,7 @@ namespace Aurora {
 
                 Sprite._sharedQuadAsset = as;
                 Sprite._sharedQuadVertices = vertices;
-                Sprite._sharedQuadTexCoords = texCoords;
+                Sprite._sharedQuadTexCoords = uvs;
                 Sprite._sharedQuadColors = colors;
             }
         }
@@ -65,7 +65,7 @@ namespace Aurora {
 
         public set frame(f: SpriteFrame) {
             if (this._frame !== f) {
-                let oldTex = this._frame ? this._frame.texture : null;
+                const oldTex = this._frame ? this._frame.texture : null;
                 this._frame = f;
 
                 if (oldTex === this._texture) this._setTex(f ? f.texture : null);
@@ -169,23 +169,23 @@ namespace Aurora {
                 if (this._texture) {
                     Sprite._initSharedQuadAsset();
 
-                    let f = this._frame;
+                    const f = this._frame;
 
-                    let w = f.sourceWidth, h = f.sourceHeight;
+                    const w = f.sourceWidth, h = f.sourceHeight;
 
-                    let lx = -w * this._anchor.x + f.offsetX, ty = -h * this._anchor.y + h - f.offsetY;
-                    let rx = lx + f.width, by = ty = f.height;
+                    const lx = -w * this._anchor.x + f.offsetX, ty = -h * this._anchor.y + h - f.offsetY;
+                    const rx = lx + f.width, by = ty - f.height;
 
-                    let sx = this._scale.x, sy = this._scale.y;
+                    const sx = this._scale.x, sy = this._scale.y;
 
                     Sprite._updateQuadVertices(Sprite._sharedQuadVertices, lx * sx, rx * sx, by * sy, ty * sy, renderingData.in.renderingObject.localToProj);
                     if (Sprite.isInViewport(Sprite._sharedQuadVertices)) {
-                        let texW = f.texWidth < 0 ? this._texture.width : f.texWidth, texH = f.texHeight < 0 ? this._texture.height : f.texHeight;
+                        const texW = f.texWidth < 0 ? this._texture.width : f.texWidth, texH = f.texHeight < 0 ? this._texture.height : f.texHeight;
 
-                        let lu = f.x / texW;
-                        let tv = f.y / texH;
-                        let ru = lu + f.width / texW;
-                        let bv = tv + f.height / texH;
+                        const lu = f.x / texW;
+                        const tv = f.y / texH;
+                        const ru = lu + f.width / texW;
+                        const bv = tv + f.height / texH;
 
                         Sprite._updateQuadTexCoords(Sprite._sharedQuadTexCoords, lu, ru, bv, tv, f.rotated);
                         this._updateColors(Sprite._sharedQuadColors, 16);
@@ -197,12 +197,12 @@ namespace Aurora {
             } else if (this._texture) {
                 Sprite._initSharedQuadAsset();
 
-                let w = this._texture.width, h = this._texture.height;
+                const w = this._texture.width, h = this._texture.height;
 
-                let lx = -w * this._anchor.x, by = -h * this._anchor.y;
-                let rx = lx + w, ty = by + h;
+                const lx = -w * this._anchor.x, by = -h * this._anchor.y;
+                const rx = lx + w, ty = by + h;
 
-                let sx = this._scale.x, sy = this._scale.y;
+                const sx = this._scale.x, sy = this._scale.y;
 
                 Sprite._updateQuadVertices(Sprite._sharedQuadVertices, lx * sx, rx * sx, by * sy, ty * sy, renderingData.in.renderingObject.localToProj);
                 if (Sprite.isInViewport(Sprite._sharedQuadVertices)) {
@@ -216,7 +216,7 @@ namespace Aurora {
         }
 
         protected static _updateQuadVertices(vertices: number[], lx: number, rx: number, by: number, ty: number, m: Matrix44): void {
-            let v = Sprite._tmpVec2;
+            const v = Sprite._tmpVec2;
             m.transform44XY(lx, by, v);
             vertices[0] = v.x;
             vertices[1] = v.y;
@@ -234,48 +234,48 @@ namespace Aurora {
             vertices[7] = v.y;
         }
 
-        protected static _updateQuadTexCoords(texCoords: number[], lu: number, ru: number, bv: number, tv: number, rotated: int): void {
+        protected static _updateQuadTexCoords(uvs: number[], lu: number, ru: number, bv: number, tv: number, rotated: int): void {
             if (rotated === 0) {
-                texCoords[0] = lu;
-                texCoords[1] = bv;
+                uvs[0] = lu;
+                uvs[1] = bv;
 
-                texCoords[2] = lu;
-                texCoords[3] = tv;
+                uvs[2] = lu;
+                uvs[3] = tv;
 
-                texCoords[4] = ru;
-                texCoords[5] = tv;
+                uvs[4] = ru;
+                uvs[5] = tv;
 
-                texCoords[6] = ru;
-                texCoords[7] = bv;
+                uvs[6] = ru;
+                uvs[7] = bv;
             } else if (rotated > 0) {
-                texCoords[0] = lu;
-                texCoords[1] = tv;
+                uvs[0] = lu;
+                uvs[1] = tv;
 
-                texCoords[2] = ru;
-                texCoords[3] = tv;
+                uvs[2] = ru;
+                uvs[3] = tv;
 
-                texCoords[4] = ru;
-                texCoords[5] = bv;
+                uvs[4] = ru;
+                uvs[5] = bv;
 
-                texCoords[6] = lu;
-                texCoords[7] = bv;
+                uvs[6] = lu;
+                uvs[7] = bv;
             } else {
-                texCoords[0] = ru;
-                texCoords[1] = bv;
+                uvs[0] = ru;
+                uvs[1] = bv;
 
-                texCoords[2] = lu;
-                texCoords[3] = bv;
+                uvs[2] = lu;
+                uvs[3] = bv;
 
-                texCoords[4] = lu;
-                texCoords[5] = tv;
+                uvs[4] = lu;
+                uvs[5] = tv;
 
-                texCoords[6] = ru;
-                texCoords[7] = tv;
+                uvs[6] = ru;
+                uvs[7] = tv;
             }
         }
 
         public static isInViewport(vertices: number[]): boolean {
-            let len = vertices.length;
+            const len = vertices.length;
             if (len > 0) {
                 let x = vertices[0];
                 let y = vertices[1];
@@ -304,9 +304,9 @@ namespace Aurora {
         }
 
         protected _updateColors(colors: number[], n: uint): void {
-            let c0 = this.node.readonlyCascadeColor;
-            let c1 = this._color;
-            let r = c0.r * c1.r, g = c0.g * c1.g, b = c0.b * c1.b, a = c0.a * c1.a;
+            const c0 = this.node.readonlyCascadeColor;
+            const c1 = this._color;
+            const r = c0.r * c1.r, g = c0.g * c1.g, b = c0.b * c1.b, a = c0.a * c1.a;
 
             for (let i = 0; i < n; ++i) {
                 colors[i] = r;

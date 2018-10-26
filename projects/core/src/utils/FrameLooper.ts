@@ -60,7 +60,7 @@ namespace Aurora {
         private _timeoutTick(): void {
             this._timerID = undefined;
             let t = this._platform.duration();
-            let d = t - this._prevTime;
+            const d = t - this._prevTime;
             this._prevTime = t;
             this._callback(d);
 
@@ -73,8 +73,8 @@ namespace Aurora {
 
         private _animationFrameTick(): void {
             this._timerID = undefined;
-            let t = this._platform.duration();
-            let d = t - this._prevTime;
+            const t = this._platform.duration();
+            const d = t - this._prevTime;
             this._prevTime = t;
             this._callback(d);
 

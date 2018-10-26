@@ -9,7 +9,7 @@ namespace Aurora.Sort {
 
             if (start < end) {
                 let k = 1, len = end - start + 1;
-                let TR: T[] = [];
+                const TR: T[] = [];
                 TR.length = len;
 
                 if (start === 0) {
@@ -31,8 +31,9 @@ namespace Aurora.Sort {
         }
 
         private static _mergePass<T>(SR: T[], TR: T[], s: int, n: int, compareFn: (a: T, b: T) => boolean) {
-            let i = 0, j: int, s2 = s << 1, s_1 = s - 1;
-            let nn = n - s2, s2_1 = s2 - 1;
+            let i = 0;
+            const s2 = s << 1, s_1 = s - 1;
+            const nn = n - s2, s2_1 = s2 - 1;
             while (i <= nn) {
                 Merge._merge<T>(SR, TR, i, i + s_1, i + s2_1, compareFn);
                 i += s2;
@@ -40,13 +41,14 @@ namespace Aurora.Sort {
             if (i < n - s + 1) {
                 Merge._merge<T>(SR, TR, i, i + s_1, n - 1, compareFn);
             } else {
-                for (j = i; j < n; ++j) TR[j] = SR[j];
+                for (let j = i; j < n; ++j) TR[j] = SR[j];
             }
         }
 
         private static _mergePassOffset<T>(SR: T[], SROffset: int, TR: T[], TROffset:int, s: int, n: int, compareFn: (a: T, b: T) => boolean) {
-            let i = 0, j: int, s2 = s << 1, s_1 = s - 1;
-            let nn = n - s2, s2_1 = s2 - 1;
+            let i = 0;
+            const s2 = s << 1, s_1 = s - 1;
+            const nn = n - s2, s2_1 = s2 - 1;
             while (i <= nn) {
                 Merge._merge<T>(SR, TR, i, i + s_1, i + s2_1, compareFn);
                 i += s2;
@@ -54,7 +56,7 @@ namespace Aurora.Sort {
             if (i < n - s + 1) {
                 Merge._merge<T>(SR, TR, i, i + s_1, n - 1, compareFn);
             } else {
-                for (j = i; j < n; ++j) TR[j + TROffset] = SR[j + SROffset];
+                for (let j = i; j < n; ++j) TR[j + TROffset] = SR[j + SROffset];
             }
         }
 
