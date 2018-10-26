@@ -1,4 +1,42 @@
 namespace Aurora.FBX {
+    export const enum NodePropertyType {
+        C = 0x43,
+        D = 0x44,
+        F = 0x46,
+        I = 0x49,
+        L = 0x4C,
+        R = 0x52,
+        S = 0x53,
+        Y = 0x59,
+        b = 0x62,
+        c = 0x63,
+        d = 0x64,
+        f = 0x66,
+        i = 0x69,
+        l = 0x6C,
+        DIRECT = "Direct",
+        INDEX_TO_DIRECT = "IndexToDirect",
+        BY_CONTROL_POINT = "ByControlVertex",
+        BY_POLYGON_VERTEX = "ByPolygonVertex"
+    }
+
+    export const enum NodePropertyValueType {
+        UNKNOW,
+        BOOL,
+        INT,
+        NUMBER,
+        STRING,
+        BOOL_ARRAY,
+        INT_ARRAY,
+        NUMBER_ARRAY,
+        BYTES
+    }
+
+    export class NodeProperty {
+        public type = NodePropertyValueType.UNKNOW;
+        public value: boolean | int | number | string | boolean[] | int[] | number[] | ByteArray = null;
+    }
+    
     export const enum NodeAttribType {
         CLUSTER = "Cluster",
         LIMB_NODE = "LimbNode",
@@ -43,13 +81,29 @@ namespace Aurora.FBX {
     }
 
     export class Node {
-        protected _id: int = null;
-        protected _attribType: string = null;
-        protected _attribName: string = null;
+        private _id: int = null;
+        private _attribType: string = null;
+        private _attribName: string = null;
+        private _name: string;
 
-        public name: String;
         public properties: NodeProperty[] = null;
         public children: Node[] = [];
+
+        constructor(name: string, properties: NodeProperty[]) {
+            this._name = name;
+            this.properties = properties;
+
+            if (this.properties) {
+                const len = this.properties.length;
+                if (len > 0 && this.properties[0].type === NodePropertyValueType.INT) this._id = <int>this.properties[0].value;
+                if (len > 1 && this.properties[1].type === NodePropertyValueType.STRING) this._attribName = <string>this.properties[1].value;
+                if (len > 2 && this.properties[2].type === NodePropertyValueType.STRING) this._attribType = <string>this.properties[2].value;
+            }
+        }
+
+        public get name(): string {
+            return this._name;
+        }
 
         public get id(): int {
             return this._id;
@@ -68,19 +122,6 @@ namespace Aurora.FBX {
                 if (this.children[i].name === name) return this.children[i];
             }
             return null;
-        }
-
-        public finish(): void {
-            if (this.properties) {
-                const len = this.properties.length;
-                if (len > 0 && this.properties[0].type === NodePropertyValueType.INT) this._id = <int>this.properties[0].value;
-                if (len > 1 && this.properties[1].type === NodePropertyValueType.STRING) this._attribName = <string>this.properties[1].value;
-                if (len > 2 && this.properties[2].type === NodePropertyValueType.STRING) this._attribType = <string>this.properties[2].value;
-
-                if (this._id === 1433315232) {
-                    let a = 1;
-                }
-            }
         }
     }
 }

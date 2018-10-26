@@ -29,6 +29,20 @@ namespace Aurora {
             return d;
         }
 
+        public getValue(name: string): ShaderDefines.Value {
+            let v: ShaderDefines.Value = null;
+            let u: ShaderDefines = this;
+            do {
+                v = u._defines[name];
+                if (v) {
+                    break;
+                } else {
+                    u = u.next;
+                }
+            } while (u);
+            return v;
+        }
+
         public clear(): void {
             if (this._count > 0) {
                 this._defines = {};

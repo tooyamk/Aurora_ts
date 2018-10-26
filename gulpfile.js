@@ -1,5 +1,5 @@
 const gulp = require("gulp");
-const args = require("minimist")(process.argv.slice(2));
+//const args = require("minimist")(process.argv.slice(2));
 const spawn = require('child_process');
 const split = require('split');
 
@@ -11,7 +11,7 @@ const examplesTsConfig = "projects/examples/tsconfig.json";
 function build(tsConfig, isWatch = false) {
     if (isWatch) {
         console.log("watch : " + tsConfig);
-        let p = spawn.exec("tsc -b " + tsConfig + " -w --verbose", (error, stdout, stderr) => {
+        const p = spawn.exec("tsc -b " + tsConfig + " -w --verbose", (error, stdout, stderr) => {
             if (stdout && stdout.length > 0) console.log(stdout);
             if (stderr && stderr.length > 0) console.log(stderr);
             if (error) console.log(`exec error: ${error}`);

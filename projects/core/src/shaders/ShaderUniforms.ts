@@ -26,6 +26,20 @@ namespace Aurora {
             return u;
         }
 
+        public getValue(name: string): ShaderUniforms.Value {
+            let v: ShaderUniforms.Value = null;
+            let u: ShaderUniforms = this;
+            do {
+                v = u._uniforms[name];
+                if (v) {
+                    break;
+                } else {
+                    u = u.next;
+                }
+            } while (u);
+            return v;
+        }
+
         public static isEqual(value0: ShaderUniforms, value1: ShaderUniforms, info: GLProgramUniformInfo[] = null): boolean {
             if (value0 === value1) return true;
             if (value0) {

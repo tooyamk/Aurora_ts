@@ -79,18 +79,7 @@ namespace Aurora {
             if (defines) {
                 for (let i = 0, n = this._defines.length; i < n; ++i) {
                     const name = this._defines[i];
-
-                    let v: ShaderDefines.Value = null;
-                    let d = defines;
-                    do {
-                        v = d.getDefine(name);
-                        if (v) {
-                            break;
-                        } else {
-                            d = d.next;
-                        }
-                    } while (d);
-
+                    const v = defines.getValue(name);
                     if (v) {
                         if (v.type === ShaderDefines.VlaueType.BOOL) {
                             if (v.value) appendDefines += "\n" + name;
@@ -128,17 +117,7 @@ namespace Aurora {
                     let samplerIndex = 0;
                     for (let i = 0, n = curUniforms.length; i < n; ++i) {
                         const info = curUniforms[i];
-                        let v: ShaderUniforms.Value = null;
-                        let u = uniforms;
-                        do {
-                            v = u._uniforms[info.name];
-                            if (v) {
-                                break;
-                            } else {
-                                u = u.next;
-                            }
-                        } while (u);
-
+                        const v = uniforms.getValue(info.name);
                         switch (info.type) {
                             case GLUniformType.FLOAT: {
                                 if (v && v.type === ShaderUniforms.ValueType.NUMBER) {

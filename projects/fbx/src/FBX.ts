@@ -4,7 +4,7 @@ namespace Aurora.FBX {
         const ver = data.readUint32();
 
         const collections = new Collections();
-        const root = new Node();
+        const root = new Node("", null);
 
         while (data.bytesAvailable > 4) {
             if (data.readUint32() < data.length) {
@@ -30,60 +30,20 @@ namespace Aurora.FBX {
 
         const startPos = data.position;
 
-        let node: Node;
-
-        switch (name) {
-            case NodeName.ANIMATION_CURVE:
-                node = new AnimationCurve();
-                break;
-            case NodeName.ANIMATION_CURVE_NODE:
-                node = new AnimationCurveNode();
-                break;
-            case NodeName.ANIMATION_LAYER:
-                node = new AnimationLayer();
-                break;
-            case NodeName.ANIMATION_STACK:
-                node = new AnimationStack();
-                break;
-            case NodeName.C:
-            case NodeName.CONNECTIONS:
-                node = collections.addConnections(new Connection());
-                break;
-            case NodeName.DEFORMER:
-                node = collections.addDeformer(new Deformer());
-                break;
-            case NodeName.GEOMETRY:
-                node = collections.addGeometry(new Geometry());
-                break;
-            case NodeName.GLOBAL_SETTINGS:
-                node = new GlobalSettings();
-                break;
-            case NodeName.MODEL:
-                node = collections.addModel(new Model());
-                break;
-            case NodeName.POSE_NODE:
-                node = new PoseNode();
-                break;
-            default:
-                node = new Node();
-                break;
-        }
-        
-        node.name = name;
-        parentNode.children.push(node);
-
+        let properties: NodeProperty[] = null;
         if (numProperties > 0) {
-            const properties: NodeProperty[] = [];
+            properties = [];
             properties.length = numProperties;
-            node.properties = properties;
             for (let i = 0; i < numProperties; ++i) properties[i] = _parseNodeProperty(data);
         }
+
+        const node = new Node(name, properties);
+        parentNode.children.push(node);
+        collections.addNode(node);
 
         data.position = startPos + propertyListLen;
 
         while (data.position < endOffset) _parseNode(data, node, ver, collections);
-
-        node.finish();
     }
 
     function _parseNodeProperty(data: ByteArray): NodeProperty {
