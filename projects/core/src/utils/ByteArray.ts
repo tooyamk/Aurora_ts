@@ -301,7 +301,7 @@ namespace Aurora {
                 this._pos += 8;
 
                 if (high > 0x1FFF) {
-                    return Number.MAX_SAFE_INTEGER;
+                    return 9007199254740991;//53bits
                 } else {
                     return high * 4294967296 + low;
                 }
