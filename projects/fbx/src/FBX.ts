@@ -20,9 +20,9 @@ namespace Aurora.FBX {
     }
 
     function _parseNode(data: ByteArray, parentNode: Node, ver: number, collections: Collections): void {
-        const endOffset = ver < 7500 ? data.readUint32() : parseInt(data.readUint64());
-        const numProperties = ver < 7500 ? data.readUint32() : parseInt(data.readUint64());
-        const propertyListLen = ver < 7500 ? data.readUint32() : parseInt(data.readUint64());
+        const endOffset = ver < 7500 ? data.readUint32() : data.readUnsafeUint64();
+        const numProperties = ver < 7500 ? data.readUint32() : data.readUnsafeUint64();
+        const propertyListLen = ver < 7500 ? data.readUint32() : data.readUnsafeUint64();
         const nameLen = data.readUint8();
         const name = data.readString(ByteArray.StringMode.END_MARK, nameLen);
 

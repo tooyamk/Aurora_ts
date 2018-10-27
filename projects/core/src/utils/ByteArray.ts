@@ -285,6 +285,29 @@ namespace Aurora {
             this._pos += 8;
         }
 
+        public readUnsafeUint64(): uint {
+            if (this._pos + 8 > this._logicLen) {
+                this._pos = this._logicLen;
+                return 0;
+            } else {
+                let low: uint, high: uint;
+                if (this._little) {
+                    low = this._raw.getUint32(this._pos, true);
+                    high = this._raw.getUint32(this._pos + 4, true);
+                } else {
+                    high = this._raw.getUint32(this._pos, false);
+                    low = this._raw.getUint32(this._pos + 4, false);
+                }
+                this._pos += 8;
+
+                if (high > 0x1FFF) {
+                    return Number.MAX_SAFE_INTEGER;
+                } else {
+                    return high * 4294967296 + low;
+                }
+            }
+        }
+
         public readFloat32(): number {
             if (this._pos + 4 > this._logicLen) {
                 this._pos = this._logicLen;
