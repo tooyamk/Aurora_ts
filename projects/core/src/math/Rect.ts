@@ -5,18 +5,18 @@ namespace Aurora {
         public width: number;
         public height: number;
 
-        constructor(x: number = 0, y: number = 0, width: number = 0, height: number = 0) {
+        constructor(x: number = 0, y: number = 0, w: number = 0, h: number = 0) {
             this.x = x;
             this.y = y;
-            this.width = width;
-            this.height = height;
+            this.width = w;
+            this.height = h;
         }
 
-        public set(x: number = 0, y: number = 0, width: number = 0, height: number = 0): void {
+        public set(x: number = 0, y: number = 0, w: number = 0, h: number = 0): void {
             this.x = x;
             this.y = y;
-            this.width = width;
-            this.height = height;
+            this.width = w;
+            this.height = h;
         }
 
         public toString(): string {

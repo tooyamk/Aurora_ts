@@ -285,6 +285,91 @@ namespace Aurora {
             this._pos += 8;
         }
 
+        /**
+         * @returns [-2^53 - 2^53]
+         */
+        public readUnsafeInt64(): uint {
+            if (this._pos + 8 > this._logicLen) {
+                this._pos = this._logicLen;
+                return 0;
+            } else {
+                let low: uint, high: uint;
+                if (this._little) {
+                    low = this._raw.getUint32(this._pos, true);
+                    high = this._raw.getUint32(this._pos + 4, true);
+                } else {
+                    high = this._raw.getUint32(this._pos, false);
+                    low = this._raw.getUint32(this._pos + 4, false);
+                }
+                this._pos += 8;
+
+                if (high >= 2147483648) {
+                    if (low > 0) {
+                        --low;
+                    } else {
+                        --high;
+                        low = 0xFFFFFFFF;
+                    }
+
+                    high = ~high;
+                    low = ~low;
+                    
+                    if (high > 0x1FFF) {
+                        return -9007199254740991;//53bits
+                    } else {
+                        return -high * 4294967296 - low;
+                    }
+                } else {
+                    if (high > 0x1FFF) {
+                        return 9007199254740991;//53bits
+                    } else {
+                        return high * 4294967296 + low;
+                    }
+                }
+            }
+        }
+
+        /**
+         * @param value [-2^53 - 2^53]
+         */
+        public writeUnsafeInt64(value: int): void {
+            if (value < 0) {
+                this._checkAndAllocateSpace(8);
+            
+                value = -value;
+                let low: uint, high: uint;
+                if (value <= 4294967295) {
+                    low = ~value;
+                    high = 0;
+                } else {
+                    low = ~(value % 4294967296);
+                    high = ~((value / 4294967296) | 0);
+                }
+
+                if (low === 4294967295) {
+                    low = 0;
+                    ++high;
+                } else {
+                    ++low;
+                }
+
+                if (this._little) {
+                    this._raw.setUint32(this._pos, low, true);
+                    this._raw.setUint32(this._pos + 4, high, true);
+                } else {
+                    this._raw.setUint32(this._pos, high, false);
+                    this._raw.setUint32(this._pos + 4, low, false);
+                }
+
+                this._pos += 8;
+            } else {
+                this.writeUnsafeUint64(value);
+            }
+        }
+
+        /**
+         * @returns [0 - 2^53]
+         */
         public readUnsafeUint64(): uint {
             if (this._pos + 8 > this._logicLen) {
                 this._pos = this._logicLen;
@@ -306,6 +391,35 @@ namespace Aurora {
                     return high * 4294967296 + low;
                 }
             }
+        }
+
+        /**
+         * @param value [0 - 2^53]
+         */
+        public writeUnsafeUint64(value: uint): void {
+            this._checkAndAllocateSpace(8);
+            
+            if (value <= 4294967295) {
+                if (this._little) {
+                    this._raw.setUint32(this._pos, value, true);
+                    this._raw.setUint32(this._pos + 4, 0, true);
+                } else {
+                    this._raw.setUint32(this._pos, 0, false);
+                    this._raw.setUint32(this._pos + 4, value, false);
+                }
+            } else {
+                const low = value % 4294967296;
+                const high = (value / 4294967296) | 0;
+                if (this._little) {
+                    this._raw.setUint32(this._pos, low, true);
+                    this._raw.setUint32(this._pos + 4, high, true);
+                } else {
+                    this._raw.setUint32(this._pos, high, false);
+                    this._raw.setUint32(this._pos + 4, low, false);
+                }
+            }
+
+            this._pos += 8;
         }
 
         public readFloat32(): number {
@@ -450,6 +564,9 @@ namespace Aurora {
             }
         }
 
+        /**
+         * @param length [0 - 2^28]
+         */
         public writeDynamicLength(length: uint): void {
             if (length <= 0x7F) {
                 this.writeUint8(length);
@@ -471,6 +588,9 @@ namespace Aurora {
             }
         }
 
+        /**
+         * @returns [0 - 2^28]
+         */
         public readDynamicLength(): uint {
             const v0 = this.readUint8();
             if (v0 > 127) {

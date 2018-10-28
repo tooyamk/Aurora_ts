@@ -168,7 +168,7 @@ namespace Aurora.FBX {
                         const arr: int[] = [];
                         arr.length = arrLen;
                         property.value = arr;
-                        for (let i = 0; i < arrLen; ++i) arr[i] = parseInt(uncompressedData.readInt64());
+                        for (let i = 0; i < arrLen; ++i) arr[i] = uncompressedData.readUnsafeInt64();
 
                         break;
                     }

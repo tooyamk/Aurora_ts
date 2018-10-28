@@ -40,19 +40,19 @@ namespace Aurora {
             return v;
         }
 
-        public static isEqual(value0: ShaderUniforms, value1: ShaderUniforms, info: GLProgramUniformInfo[] = null): boolean {
-            if (value0 === value1) return true;
-            if (value0) {
-                if (value1) {
+        public static isEqual(v0: ShaderUniforms, v1: ShaderUniforms, info: GLProgramUniformInfo[] = null): boolean {
+            if (v0 === v1) return true;
+            if (v0) {
+                if (v1) {
                     if (info) {
                         for (let i = 0, n = info.length; i < n; ++i) {
                             const name = info[i].name;
-                            if (!ShaderUniforms.Value.isEqual(value0._uniforms[name], value1._uniforms[name])) return false;
+                            if (!ShaderUniforms.Value.isEqual(v0._uniforms[name], v1._uniforms[name])) return false;
                         }
                     } else {
-                        if (value0._count === value1._count) {
-                            for (let key in value0._uniforms) {
-                                if (!ShaderUniforms.Value.isEqual(value0._uniforms[key], value1._uniforms[key])) return false;
+                        if (v0._count === v1._count) {
+                            for (let key in v0._uniforms) {
+                                if (!ShaderUniforms.Value.isEqual(v0._uniforms[key], v1._uniforms[key])) return false;
                             }
                         } else {
                             return false;
@@ -61,10 +61,8 @@ namespace Aurora {
                 } else {
                     return false;
                 }
-            } else if (value1) {
-                return false;
             }
-            return true;
+            return !v1;
         }
 
         public setNumber(name: string, x: number = 0, y: number = 0, z: number = 0, w: number = 0): void {

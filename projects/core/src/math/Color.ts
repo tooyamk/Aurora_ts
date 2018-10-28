@@ -44,16 +44,16 @@ namespace Aurora {
             return this;
         }
 
-        public set(color: Color3 | Color4): Color3 {
-            this.r = color.r;
-            this.g = color.g;
-            this.b = color.b;
+        public set(c: Color3 | Color4): Color3 {
+            this.r = c.r;
+            this.g = c.g;
+            this.b = c.b;
 
             return this;
         }
 
-        public isEqual(color: Color3): boolean {
-            return this.r === color.r && this.g === color.g && this.b === color.b;
+        public isEqual(c: Color3): boolean {
+            return this.r === c.r && this.g === c.g && this.b === c.b;
         }
 
         public toString(): string {
@@ -135,43 +135,37 @@ namespace Aurora {
             return this;
         }
 
-        public set(color: Color4): Color4 {
-            this.r = color.r;
-            this.g = color.g;
-            this.b = color.b;
-            this.a = color.a;
+        public set(c: Color4): Color4 {
+            this.r = c.r;
+            this.g = c.g;
+            this.b = c.b;
+            this.a = c.a;
 
             return this;
         }
 
-        public setFromColor3(color: Color3): Color4 {
-            this.r = color.r;
-            this.g = color.g;
-            this.b = color.b;
+        public setFromColor3(c: Color3): Color4 {
+            this.r = c.r;
+            this.g = c.g;
+            this.b = c.b;
 
             return this;
         }
 
-        public isEqualColor3(color: Color3 | Color4): boolean {
-            return this.r === color.r && this.g === color.g && this.b === color.b;
+        public isEqualColor3(c: Color3 | Color4): boolean {
+            return this.r === c.r && this.g === c.g && this.b === c.b;
         }
 
-        public isEqualColor4(color: Color4): boolean {
-            return this.r === color.r && this.g === color.g && this.b === color.b && this.a === color.a;
+        public isEqualColor4(c: Color4): boolean {
+            return this.r === c.r && this.g === c.g && this.b === c.b && this.a === c.a;
         }
 
-        public static isEqual(value0: Color4, value1: Color4): boolean {
-            if (value0 === value1) return true;
-            if (value0) {
-                if (value1) {
-                    return value0.r === value1.r && value0.g === value1.g && value0.b === value1.b && value0.a === value1.a;
-                } else {
-                    return false;
-                }
-            } else if (value1) {
-                return false;
+        public static isEqual(c0: Color4, v1: Color4): boolean {
+            if (c0 === v1) return true;
+            if (c0) {
+                return v1 ? c0.r === v1.r && c0.g === v1.g && c0.b === v1.b && c0.a === v1.a : false;
             }
-            return true;
+            return !v1;
         }
 
         public mul(c: Color4): Color4 {

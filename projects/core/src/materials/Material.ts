@@ -51,10 +51,8 @@ namespace Aurora {
                 } else {
                     return false;
                 }
-            } else if (value1) {
-                return false;
             }
-            return true;
+            return !value1;
         }
 
         public clone(): Material {

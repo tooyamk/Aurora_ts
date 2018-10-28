@@ -39,15 +39,23 @@ namespace Aurora.FBX {
         }
     }
 
+    class Connection {
+        public readonly id: uint;
+        public readonly relationship: string;
+
+        constructor(id: uint, relationship: string) {
+            this.id = id;
+            this.relationship = relationship === undefined ? null : relationship;
+        }
+    }
+
     export class Collections {
         private _animationStacks: Node[] = null;
-        private _deformers: Node[] = [];
-        private _geometries: Node[] = null;
         private _models: Node[] = [];
 
         private _objects: Map<uint, Node> = new Map();
-        private _parentsMap: Map<uint, uint[]> = new Map();
-        private _childrenMap: Map<uint, uint[]> = new Map();
+        private _parentsMap: Map<uint, Connection[]> = new Map();
+        private _childrenMap: Map<uint, Connection[]> = new Map();
 
         public addNode(node: Node): void {
             switch (node.name) {
@@ -57,18 +65,13 @@ namespace Aurora.FBX {
 
                     break;
                 }
-                case NodeName.GEOMETRY: {
+                case NodeName.ANIMATION_LAYER:
+                case NodeName.ANIMATION_CURVE_NODE:
+                case NodeName.ANIMATION_CURVE:
+                case NodeName.GEOMETRY:
+                case NodeName.DEFORMER: 
                     this._objects.set(node.id, node);
-                    (this._geometries || (this._geometries = [])).push(node);
-
                     break;
-                }
-                case NodeName.DEFORMER: {
-                    this._objects.set(node.id, node);
-                    this._deformers.push(node);
-
-                    break;
-                }
                 case NodeName.MODEL: {
                     this._objects.set(node.id, node);
                     this._models.push(node);
@@ -80,22 +83,29 @@ namespace Aurora.FBX {
                     const properties = node.properties;
                     if (properties && properties.length > 2) {
                         const curID = <int>properties[1].value;
-
                         if (curID !== 0) {
                             const parentID = <int>properties[2].value;
 
-                            const children: uint[] = this._childrenMap.get(parentID);
-                            if (children) {
-                                children.push(curID);
-                            } else {
-                                this._childrenMap.set(parentID, [curID]);
+                            let relationship: string = null;
+                            if (properties.length > 3) {
+                                const p = properties[3];
+                                if (p.type === NodePropertyValueType.STRING) relationship = <string>p.value;
                             }
 
-                            const parents: uint[] = this._parentsMap.get(curID);
-                            if (parents) {
-                                parents.push(parentID);
+                            let c = new Connection(curID, relationship);
+                            const children: Connection[] = this._childrenMap.get(parentID);
+                            if (children) {
+                                children.push(c);
                             } else {
-                                this._parentsMap.set(curID, [parentID]);
+                                this._childrenMap.set(parentID, [c]);
+                            }
+
+                            c = new Connection(parentID, relationship);
+                            const parents: Connection[] = this._parentsMap.get(curID);
+                            if (parents) {
+                                parents.push(c);
+                            } else {
+                                this._parentsMap.set(curID, [c]);
                             }
                         }
                     }
@@ -112,25 +122,18 @@ namespace Aurora.FBX {
             return node ? node : null;
         }
 
-        public getConnectionChildren(id: uint): uint[] {
+        public getConnectionChildren(id: uint): Connection[] {
             const children = this._childrenMap.get(id);
             return children ? children : null;
         }
 
-        public getConnectionParents(id: uint): uint[] {
+        public getConnectionParents(id: uint): Connection[] {
             const parents = this._parentsMap.get(id);
             return parents ? parents : null;
         }
 
         public parse(): ParseResult {
             const result = new ParseResult();
-
-            if (this._animationStacks) {
-                for (let i = 0, n = this._animationStacks.length; i < n; ++i) {
-                    const a = this._animationStacks[i];
-                    let b = 1;
-                }
-            }
 
             let meshes: Node[] = null;
             let skeleton: SkeletonData = null;
@@ -164,12 +167,14 @@ namespace Aurora.FBX {
                 result.skeleton = ske;
             }
 
+            this._parseAnimations();
+
             if (meshes) {
                 for (let i = 0, n = meshes.length; i < n; ++i) {
                     const m = meshes[i];
-                    const g = this.findConnectionChild(m.id, NodeName.GEOMETRY);
+                    const g = this.findConnectionChildNode(m.id, NodeName.GEOMETRY);
                     if (g) {
-                        const asset = this._createMeshAsset(g, skeleton);
+                        const asset = this._parseGeometry(g, skeleton);
                         if (asset) {
                             asset.name = m.attribName;
                             (result.meshes || (result.meshes = [])).push(asset);
@@ -181,35 +186,72 @@ namespace Aurora.FBX {
             return result;
         }
 
-        public findConnectionChild(id: uint, name: NodeName, attribType: string = null): Node {
+        public findConnectionChild(id: uint, name: NodeName, attribType: string = null): Connection {
             const children = this._childrenMap.get(id);
             if (children) {
                 for (let i = 0, n = children.length; i < n; ++i) {
-                    const o = this._objects.get(children[i]);
+                    const c = children[i];
+                    const o = this._objects.get(c.id);
+                    if (o && o.name === name && (!attribType || attribType === o.attribType)) return c;
+                }
+            }
+            return null;
+        }
+
+        public findConnectionChildNode(id: uint, name: NodeName, attribType: string = null): Node {
+            const children = this._childrenMap.get(id);
+            if (children) {
+                for (let i = 0, n = children.length; i < n; ++i) {
+                    const o = this._objects.get(children[i].id);
                     if (o && o.name === name && (!attribType || attribType === o.attribType)) return o;
                 }
             }
             return null;
         }
 
-        public findConnectionChildren(id: uint, name: NodeName, attribType: string = null): Node[] {
+        public findConnectionChildren(id: uint, name: NodeName, attribType: string = null): Connection[] {
+            let arr: Connection[] = null;
+            const children = this._childrenMap.get(id);
+            if (children) {
+                for (let i = 0, n = children.length; i < n; ++i) {
+                    const c = children[i];
+                    const o = this._objects.get(c.id);
+                    if (o && o.name === name && (!attribType || attribType === o.attribType)) (arr || (arr = [])).push(c);
+                }
+            }
+            return arr;
+        }
+
+        public findConnectionChildrenNodes(id: uint, name: NodeName, attribType: string = null): Node[] {
             let arr: Node[] = null;
             const children = this._childrenMap.get(id);
             if (children) {
                 for (let i = 0, n = children.length; i < n; ++i) {
-                    const o = this._objects.get(children[i]);
+                    const o = this._objects.get(children[i].id);
                     if (o && o.name === name && (!attribType || attribType === o.attribType)) (arr || (arr = [])).push(o);
                 }
             }
             return arr;
         }
 
-        public findConnectionParent(id: uint, name: NodeName): Node {
+        public findConnectionParent(id: uint, name: NodeName, attribType: string = null): Connection {
             const parents = this._parentsMap.get(id);
             if (parents) {
                 for (let i = 0, n = parents.length; i < n; ++i) {
-                    const o = this._objects.get(parents[i]);
-                    if (o && o.name === name) return o;
+                    const c = parents[i];
+                    const o = this._objects.get(c.id);
+                    if (o && o.name === name && (!attribType || attribType === o.attribType)) return c;
+                }
+            }
+            return null;
+        }
+
+        public findConnectionParentNode(id: uint, name: NodeName, attribType: string = null): Node {
+            const parents = this._parentsMap.get(id);
+            if (parents) {
+                for (let i = 0, n = parents.length; i < n; ++i) {
+                    const o = this._objects.get(parents[i].id);
+                    if (o && o.name === name && (!attribType || attribType === o.attribType)) return o;
                 }
             }
             return null;
@@ -239,7 +281,64 @@ namespace Aurora.FBX {
             return null;
         }
 
-        private _createMeshAsset(geometry: Node, skeleton: SkeletonData): MeshAsset {
+        private _parseAnimations(): void {
+            if (this._animationStacks) {
+                for (let i0 = 0, n0 = this._animationStacks.length; i0 < n0; ++i0) {
+                    const stack = this._animationStacks[i0];
+                    const layers = this.findConnectionChildrenNodes(stack.id, NodeName.ANIMATION_LAYER);
+                    if (!layers) continue;
+
+                    for (let i1 = 0, n1 = layers.length; i1 < n1; ++i1) {
+                        const layer = layers[i1];
+                        const curveNodes = this.findConnectionChildrenNodes(layer.id, NodeName.ANIMATION_CURVE_NODE);
+                        if (!curveNodes) continue;
+
+                        for (let i2 = 0, n2 = curveNodes.length; i2 < n2; ++i2) {
+                            const curveNode = curveNodes[i2];
+                            const attribName = curveNode.attribName;//R,T,S,DeformPercent?
+                            const bone = this.findConnectionParentNode(curveNode.id, NodeName.MODEL, NodeAttribType.LIMB_NODE);
+                            if (!bone) continue;
+                            
+                            const curves = this.findConnectionChildren(curveNode.id, NodeName.ANIMATION_CURVE);
+                            if (!curves) continue;
+
+                            for (let i3 = 0, n3 = curves.length; i3 < n3; ++i3) {
+                                const c = curves[i3];
+                                const curve = this._objects.get(c.id);
+
+                                const relationship = c.relationship;
+                                if (!relationship) continue;
+
+                                let times: number[] = null;
+                                let values: number[] = null;
+                                for (let i = 0, n = curve.children.length; i < n; ++i) {
+                                    const child = curve.children[i];
+                                    switch (child.name) {
+                                        case NodeName.KEY_TIME:
+                                            times = this._getPropertyValue<uint[]>(child, NodePropertyValueType.INT_ARRAY);
+                                            break;
+                                        case NodeName.KEY_VALUE_FLOAT:
+                                            values = this._getPropertyValue<number[]>(child, NodePropertyValueType.NUMBER_ARRAY);
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                }
+
+                                if (times && values) {
+                                    times = times.concat();
+                                    for (let j = 0, m = times.length; j < m; ++j) times[j] /= 46186158000;
+                                    console.log(bone.attribName + "    " + attribName + "    " + relationship);
+                                    console.log(values);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private _parseGeometry(geometry: Node, skeleton: SkeletonData): MeshAsset {
             const sourceIndices: uint[] = [], faces: uint[] = [];
             let needTriangulate = false;
             const child = geometry.getChildByName(NodeName.POLYGON_VERTEX_INDEX);
@@ -283,15 +382,14 @@ namespace Aurora.FBX {
         }
 
         private _parseSkin(geometry: Node, asset: MeshAsset, skeleton: SkeletonData, vertIdxMapping: uint[], numSourceVertices: uint): void {
-            const skins = this.findConnectionChildren(geometry.id, NodeName.DEFORMER, NodeAttribType.SKIN);
+            const skins = this.findConnectionChildrenNodes(geometry.id, NodeName.DEFORMER, NodeAttribType.SKIN);
             if (skins) {
                 const skinData: number[][] = [];
                 skinData.length = numSourceVertices;
                 for (let i = 0, n = skins.length; i < n; ++i) {
-                    const clusters = this.findConnectionChildren(skins[i].id, NodeName.DEFORMER, NodeAttribType.CLUSTER);
-                    if (clusters) {
-                        for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, clusters[j], skeleton, skinData);
-                    }
+                    const clusters = this.findConnectionChildrenNodes(skins[i].id, NodeName.DEFORMER, NodeAttribType.CLUSTER);
+                    if (!clusters) continue;
+                    for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, clusters[j], skeleton, skinData);
                 }
 
                 const n = vertIdxMapping.length;
@@ -331,7 +429,7 @@ namespace Aurora.FBX {
         private _parseCluster(asset: MeshAsset, cluster: Node, skeleton: SkeletonData, skinData: number[][]): void {
             const links = this.getConnectionChildren(cluster.id);
             if (links) {
-                const boneNode = this.getNode(links[0]);
+                const boneNode = this._objects.get(links[0].id);
                 if (boneNode) {
                     const boneIdx = skeleton.getIndexByName(boneNode.attribName);
                     if (boneIdx >= 0) {

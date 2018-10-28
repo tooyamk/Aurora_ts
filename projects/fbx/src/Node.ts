@@ -17,7 +17,10 @@ namespace Aurora.FBX {
         DIRECT = "Direct",
         INDEX_TO_DIRECT = "IndexToDirect",
         BY_CONTROL_POINT = "ByControlVertex",
-        BY_POLYGON_VERTEX = "ByPolygonVertex"
+        BY_POLYGON_VERTEX = "ByPolygonVertex",
+        D_X = "d|X",
+        D_Y = "d|Y",
+        D_Z = "d|Z"
     }
 
     export const enum NodePropertyValueType {
@@ -36,7 +39,7 @@ namespace Aurora.FBX {
         public type = NodePropertyValueType.UNKNOW;
         public value: boolean | int | number | string | boolean[] | int[] | number[] | ByteArray = null;
     }
-    
+
     export const enum NodeAttribType {
         CLUSTER = "Cluster",
         LIMB_NODE = "LimbNode",
@@ -81,40 +84,25 @@ namespace Aurora.FBX {
     }
 
     export class Node {
-        private _id: int = null;
-        private _attribType: string = null;
-        private _attribName: string = null;
-        private _name: string;
+        public readonly name: string;
+        public readonly id: int = null;
+        public readonly attribType: string = null;
+        public readonly attribName: string = null;
+        
 
-        public properties: NodeProperty[] = null;
-        public children: Node[] = [];
+        public readonly properties: NodeProperty[] = null;
+        public readonly children: Node[] = [];
 
         constructor(name: string, properties: NodeProperty[]) {
-            this._name = name;
+            this.name = name;
             this.properties = properties;
 
             if (this.properties) {
                 const len = this.properties.length;
-                if (len > 0 && this.properties[0].type === NodePropertyValueType.INT) this._id = <int>this.properties[0].value;
-                if (len > 1 && this.properties[1].type === NodePropertyValueType.STRING) this._attribName = <string>this.properties[1].value;
-                if (len > 2 && this.properties[2].type === NodePropertyValueType.STRING) this._attribType = <string>this.properties[2].value;
+                if (len > 0 && this.properties[0].type === NodePropertyValueType.INT) this.id = <int>this.properties[0].value;
+                if (len > 1 && this.properties[1].type === NodePropertyValueType.STRING) this.attribName = <string>this.properties[1].value;
+                if (len > 2 && this.properties[2].type === NodePropertyValueType.STRING) this.attribType = <string>this.properties[2].value;
             }
-        }
-
-        public get name(): string {
-            return this._name;
-        }
-
-        public get id(): int {
-            return this._id;
-        }
-
-        public get attribName(): string {
-            return this._attribName;
-        }
-
-        public get attribType(): string {
-            return this._attribType;
         }
 
         public getChildByName(name: string): Node {

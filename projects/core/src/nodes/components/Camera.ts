@@ -49,17 +49,11 @@ namespace Aurora {
         }
 
         public getWorldToProjectionMatrix(rst: Matrix44 = null): Matrix44 {
-            rst = rst || new Matrix44();
-
             if (this._node) {
-                this._node.getInverseWorldMatrix(rst);
+                return this._node.getInverseWorldMatrix(rst).append44(this._projectionMatrix);
             } else {
-                rst.identity();
+                return rst ? rst.set44(this._projectionMatrix) : this._projectionMatrix.clone();
             }
-
-            rst.append44(this._projectionMatrix);
-
-            return rst;
         }
 
         /**

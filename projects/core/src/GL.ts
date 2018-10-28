@@ -186,11 +186,15 @@ namespace Aurora {
 
         public static calcSizePerElement(type: GLVertexBufferDataType): uint {
             switch (type) {
-                case GLVertexBufferDataType.BYTE, GLVertexBufferDataType.UNSIGNED_BYTE:
+                case GLVertexBufferDataType.BYTE:
+                case GLVertexBufferDataType.UNSIGNED_BYTE:
                     return 1;
-                case GLVertexBufferDataType.SHORT, GLVertexBufferDataType.UNSIGNED_SHORT:
+                case GLVertexBufferDataType.SHORT:
+                case GLVertexBufferDataType.UNSIGNED_SHORT:
                     return 2;
-                case GLVertexBufferDataType.INT, GLVertexBufferDataType.UNSIGNED_INT, GLVertexBufferDataType.FLOAT:
+                case GLVertexBufferDataType.INT:
+                case GLVertexBufferDataType.UNSIGNED_INT:
+                case GLVertexBufferDataType.FLOAT:
                     return 4
                 default:
                     return 0;
@@ -592,16 +596,12 @@ namespace Aurora {
 
                 const stats = this._gl.stats;
                 if (stats) {
-                    stats.drawCalls++;
-                    if (mode === GLDrawMode.TRIANGLES) {
-                        stats.drawTris += (count / 3) | 0;
-                    }
+                    ++stats.drawCalls;
+                    if (mode === GLDrawMode.TRIANGLES) stats.drawTris += (count / 3) | 0;
                 }
 
                 const err = this._gl.context.getError();
-                if (err !== GLEnum.NO_ERROR) {
-                    this._gl.printConstant("draw error : ", err);
-                }
+                if (err !== GLEnum.NO_ERROR) this._gl.printConstant("draw error : ", err);
             }
         }
     }
@@ -636,10 +636,10 @@ namespace Aurora {
             gl.shaderSource(this._shader, source);
             gl.compileShader(this._shader);
 
-            let err: null | string = null;
+            let err: string = null;
             if (!gl.getShaderParameter(this._shader, gl.COMPILE_STATUS)) {
                 err = gl.getShaderInfoLog(this._shader);
-                GLShader.compileErrorLog(this._type, source, err);
+                GLShader._compileErrorLog(this._type, source, err);
             }
 
             return err;
@@ -653,7 +653,7 @@ namespace Aurora {
             internalGL.compileShader(shader);
 
             if (!internalGL.getShaderParameter(shader, internalGL.COMPILE_STATUS)) {
-                GLShader.compileErrorLog(type, source, internalGL.getShaderInfoLog(shader));
+                GLShader._compileErrorLog(type, source, internalGL.getShaderInfoLog(shader));
                 internalGL.deleteShader(shader);
                 shader = null;
             }
@@ -661,7 +661,7 @@ namespace Aurora {
             return shader;
         }
 
-        private static compileErrorLog(type: GLShaderType, source: string, msg: string): void {
+        private static _compileErrorLog(type: GLShaderType, source: string, msg: string): void {
             console.error("compile " + (type === GLShaderType.VERTEX_SHADER ? "vertex" : "fragment") + " shader error : \n" + source + "\n" + msg);
         }
     }
@@ -793,7 +793,7 @@ namespace Aurora {
             gl.linkProgram(this._program);
 
             const linked = gl.getProgramParameter(this._program, GLEnum.LINK_STATUS);
-            let err: null | string = null;
+            let err: string = null;
             if (linked) {
                 let count = gl.getProgramParameter(this._program, GLEnum.ACTIVE_ATTRIBUTES);
                 this._attributes = [];
@@ -1338,18 +1338,12 @@ namespace Aurora {
             return this.srcRGB === target.srcRGB && this.srcAlpha === target.srcAlpha && this.dstRGB === target.dstRGB && this.dstAlpha === target.dstAlpha;
         }
 
-        public static isEqual(value0: GLBlendFunc, value1: GLBlendFunc): boolean {
-            if (value0 === value1) return true;
-            if (value0) {
-                if (value1) {
-                    return value0.srcRGB === value1.srcRGB && value0.srcAlpha === value1.srcAlpha && value0.dstRGB === value1.dstRGB && value0.dstAlpha === value1.dstAlpha;
-                } else {
-                    return false;
-                }
-            } else if (value1) {
-                return false;
+        public static isEqual(v0: GLBlendFunc, v1: GLBlendFunc): boolean {
+            if (v0 === v1) return true;
+            if (v0) {
+                return v1 ? v0.srcRGB === v1.srcRGB && v0.srcAlpha === v1.srcAlpha && v0.dstRGB === v1.dstRGB && v0.dstAlpha === v1.dstAlpha : false;
             }
-            return true;
+            return !v1;
         }
     }
 
@@ -1368,18 +1362,12 @@ namespace Aurora {
             return this.rgb === target.rgb && this.alpha === target.alpha;
         }
 
-        public static isEqual(value0: GLBlendEquation, value1: GLBlendEquation): boolean {
-            if (value0 === value1) return true;
-            if (value0) {
-                if (value1) {
-                    return value0.rgb === value1.rgb && value0.alpha === value1.alpha;
-                } else {
-                    return false;
-                }
-            } else if (value1) {
-                return false;
+        public static isEqual(v0: GLBlendEquation, v1: GLBlendEquation): boolean {
+            if (v0 === v1) return true;
+            if (v0) {
+                return v1 ? v0.rgb === v1.rgb && v0.alpha === v1.alpha : false;
             }
-            return true;
+            return !v1;
         }
 
         public set(mode: GLBlendEquationType): void {
@@ -1412,20 +1400,13 @@ namespace Aurora {
             return b;
         }
 
-        public static isEqual(value0: GLBlend, value1: GLBlend): boolean {
-            if (value0 === value1) return true;
-            if (value0) {
-                if (value1) {
-                    return GLBlendEquation.isEqual(value0.equation, value1.equation) &&
-                        GLBlendFunc.isEqual(value0.func, value1.func) &&
-                        Color4.isEqual(value0.constantColor, value1.constantColor);
-                } else {
-                    return false;
-                }
-            } else if (value1) {
-                return false;
+        public static isEqual(v0: GLBlend, v1: GLBlend): boolean {
+            if (v0 === v1) return true;
+            if (v0) {
+                return v1 ? GLBlendEquation.isEqual(v0.equation, v1.equation) && GLBlendFunc.isEqual(v0.func, v1.func) && 
+                Color4.isEqual(v0.constantColor, v1.constantColor) : false;
             }
-            return true;
+            return !v1;
         }
     }
 
@@ -1448,18 +1429,12 @@ namespace Aurora {
             return this.r === target.r && this.g === target.g && this.b === target.b && this.a === target.a;
         }
 
-        public static isEqual(value0: GLColorWrite, value1: GLColorWrite): boolean {
-            if (value0 === value1) return true;
-            if (value0) {
-                if (value1) {
-                    return value0.r === value1.r && value0.g === value1.g && value0.b === value1.b && value0.a === value1.a;
-                } else {
-                    return false;
-                }
-            } else if (value1) {
-                return false;
+        public static isEqual(v0: GLColorWrite, v1: GLColorWrite): boolean {
+            if (v0 === v1) return true;
+            if (v0) {
+                return v1 ? v0.r === v1.r && v0.g === v1.g && v0.b === v1.b && v0.a === v1.a : false;
             }
-            return true;
+            return !v1;
         }
 
         public set(target: GLColorWrite): void {
@@ -1514,18 +1489,12 @@ namespace Aurora {
             return this.writeMask === target.writeMask && this.isFuncEqual(target) && this.isOpEqual(target);
         }
 
-        public static isEqual(value0: GLStencil, value1: GLStencil): boolean {
-            if (value0 === value1) return true;
-            if (value0) {
-                if (value1) {
-                    return value0.writeMask === value1.writeMask && value0.isFuncEqual(value1) && value0.isOpEqual(value1);
-                } else {
-                    return false;
-                }
-            } else if (value1) {
-                return false;
+        public static isEqual(v0: GLStencil, v1: GLStencil): boolean {
+            if (v0 === v1) return true;
+            if (v0) {
+                return v1 ? v0.writeMask === v1.writeMask && v0.isFuncEqual(v1) && v0.isOpEqual(v1) : false;
             }
-            return true;
+            return !v1;
         }
 
         public isFuncEqual(target: GLStencil): boolean {
@@ -2044,10 +2013,6 @@ namespace Aurora {
                     front.ref = back.ref;
                     front.funcMask = back.funcMask;
                 }
-                //
-
-                //front = front || this._defaultStencil;
-                //back = back || this._defaultStencil;
 
                 if (!this._enabledStencilTest) {
                     this._enabledStencilTest = true;

@@ -80,7 +80,7 @@ namespace Aurora {
             this._setTex(tex);
         }
 
-        public get width(): uint {
+        public get sourceWidth(): uint {
             if (this._frame) {
                 return this._frame.sourceWidth;
             } else if (this._texture) {
@@ -90,7 +90,7 @@ namespace Aurora {
             }
         }
 
-        public get height(): uint {
+        public get sourceHeight(): uint {
             if (this._frame) {
                 return this._frame.sourceHeight;
             } else if (this._texture) {

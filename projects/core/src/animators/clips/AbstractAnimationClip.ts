@@ -1,7 +1,5 @@
-///<reference path="Wrap.ts" />
-
 namespace Aurora {
-    export abstract class AbstractAnimatorClip {
+    export abstract class AbstractAnimationClip {
         protected _elapsed: number = 0;
         protected _duration: number = 0;
         protected _wrap: AnimatorWrapType = AnimatorWrap.Clamp;
@@ -20,6 +18,8 @@ namespace Aurora {
             }
         }
 
-        public update(elapsed: number): void {}
+        public update(elapsed: number): void {
+            //override
+        }
     }
 }

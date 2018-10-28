@@ -1,6 +1,6 @@
 namespace Aurora {
-    export class Animator<T extends AbstractAnimatorClip> {
-        protected _curClip: AbstractAnimatorClip = null;
+    export class Animator<T extends AbstractAnimationClip> {
+        protected _curClip: AbstractAnimationClip = null;
         protected _elapsed: number = 0;
         protected _wrapFunc: (elapsed: number, duration: number) => number = null;
 

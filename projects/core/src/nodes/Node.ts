@@ -318,7 +318,7 @@ namespace Aurora {
             if (old !== this._dirty) this._noticeUpdate(Node.CASCADE_COLOR_DIRTY);
         }
 
-        public getMultipliedColor(rst: Color4 = null): Color4 {
+        public getCascadeColor(rst: Color4 = null): Color4 {
             this.updateMCascadeColor();
             if (this._cascadeColor) {
                 return rst ? rst.set(this._cascadeColor) : this._cascadeColor.clone();
@@ -582,24 +582,24 @@ namespace Aurora {
             return rst ? rst.set(this._localRot) : this._localRot.clone();
         }
 
-        public setLocalRotation(quat: Quaternion): void {
-            this._localRot.set(quat);
+        public setLocalRotation(q: Quaternion): void {
+            this._localRot.set(q);
 
             const old = this._dirty;
             this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
             if (old !== this._dirty) this._noticeUpdate(Node.WORLD_ALL_DIRTY);
         }
 
-        public localRotate(quat: Quaternion): void {
-            this._localRot.prepend(quat);
+        public localRotate(q: Quaternion): void {
+            this._localRot.prepend(q);
 
             const old = this._dirty;
             this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
             if (old !== this._dirty) this._noticeUpdate(Node.WORLD_ALL_DIRTY);
         }
 
-        public parentRotate(quat: Quaternion): void {
-            this._localRot.prepend(quat);
+        public parentRotate(q: Quaternion): void {
+            this._localRot.prepend(q);
 
             const old = this._dirty;
             this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
@@ -610,15 +610,15 @@ namespace Aurora {
             return rst ? rst.set(this.readonlyWorldRotation) : this.readonlyWorldRotation.clone();
         }
 
-        public setWorldRotation(quat: Quaternion): void {
-            this._worldRot.set(quat);
+        public setWorldRotation(q: Quaternion): void {
+            this._worldRot.set(q);
 
             this._worldRotationChanged(this._dirty);
         }
 
-        public worldRotate(quat: Quaternion): void {
+        public worldRotate(q: Quaternion): void {
             const old = this._dirty;
-            this.readonlyWorldRotation.prepend(quat);
+            this.readonlyWorldRotation.prepend(q);
 
             this._worldRotationChanged(old);
         }
@@ -639,18 +639,18 @@ namespace Aurora {
         /**
          ** (this node).setLocalRotation(return value)
          ** (this node).worldRotation = Target world rotation
-         * @param quat Target world rotation
+         * @param q Target world rotation
          */
-        public getLocalRotationFromWorld(quat: Quaternion, rst: Quaternion = null): Quaternion {
+        public getLocalRotationFromWorld(q: Quaternion, rst: Quaternion = null): Quaternion {
             if (this._parent) {
                 rst = rst ? rst.set(this._parent.readonlyWorldRotation) : this._parent.readonlyWorldRotation.clone();
                 rst.x = -rst.x;
                 rst.y = -rst.y;
                 rst.z = -rst.z;
 
-                rst.prepend(quat);
+                rst.prepend(q);
             } else {
-                rst = rst ? rst.set(quat) : quat.clone();
+                rst = rst ? rst.set(q) : q.clone();
             }
 
             return rst;

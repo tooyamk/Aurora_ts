@@ -2,13 +2,11 @@
 ///<reference path="../math/MathUtils.ts" />
 
 namespace Aurora {
-    export interface SortSameVerticesResult {
-        indices: uint[];
-        vertices: number[];
-    }
-
     export abstract class MeshAssetHelper {
-        public static sortSameVertices(vertices: number[], precision: int = -1): SortSameVerticesResult {
+        /**
+         * @returns [0] = indices, [1] = vertices.
+         */
+        public static sortSameVertices(vertices: number[], precision: int = -1): [uint[], number[]] {
             const len = vertices.length;
             const count = (len / 3) | 0;
 
@@ -68,17 +66,17 @@ namespace Aurora {
                 }
             });
 
-            return { indices: sorted, vertices: vert };
+            return [sorted, vert];
         }
 
         public static createLerpNormals(indices: uint[], vertices: number[], precision: int = -1): VertexSource {
             const vs = MeshAssetHelper.createNormals(indices, vertices);
             const sortResult = MeshAssetHelper.sortSameVertices(vertices, precision);
-            const sortIndices = sortResult.indices;
+            const sortIndices = sortResult[0];
 
             const len = sortIndices.length;
             if (len > 0) {
-                vertices = sortResult.vertices;
+                vertices = sortResult[1];
                 const normals = vs.data;
 
                 let beginIdx = 0;
@@ -140,8 +138,6 @@ namespace Aurora {
 
             const multi: boolean[] = [];
             multi.length = len / 3;
-
-            const map: Object = {};
 
             for (let i = 0, n = indices.length; i < n; ++i) {
                 const idx0 = indices[i];

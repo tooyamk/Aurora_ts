@@ -1,6 +1,6 @@
 namespace Aurora {
     export class Timer {
-        private _isRunning: boolean = false;
+        private _isRunning = false;
         private _delay: number = 0;
         private _timeoutID: number = null;
         private _count: uint = 0;
