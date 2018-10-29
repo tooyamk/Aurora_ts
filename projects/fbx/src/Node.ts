@@ -37,7 +37,7 @@ namespace Aurora.FBX {
 
     export class NodeProperty {
         public type = NodePropertyValueType.UNKNOW;
-        public value: boolean | int | number | string | boolean[] | int[] | number[] | ByteArray = null;
+        public value: boolean | long | number | string | boolean[] | long[] | number[] | ByteArray = null;
     }
 
     export const enum NodeAttribType {

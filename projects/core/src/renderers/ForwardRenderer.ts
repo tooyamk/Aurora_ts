@@ -34,7 +34,7 @@ namespace Aurora {
                             }
                         } else if (len === 1) {
                             const m = mats[0];
-                            let u = m ? m.uniforms : null;
+                            const u = m ? m.uniforms : null;
                             for (let i = 0; i < len1; ++i) appendFn(renderable, replaceMaterials[i], u);
                         } else {
                             for (let i = 0; i < len; ++i) {
@@ -95,7 +95,7 @@ namespace Aurora {
                     } else {
                         su = obj.alternativeUniforms;
                     }
-                    this.useAndDraw(as, obj.material, su,() => {
+                    this.useAndDraw(as, obj.material, su, () => {
                         const shader = obj.material.shader;
 
                         if (shader.hasUniform(ShaderPredefined.u_M33_L2W)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M33_L2W, obj.localToWorld.toArray33(false, this._localToWorldM33Array));

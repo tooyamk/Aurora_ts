@@ -288,7 +288,7 @@ namespace Aurora {
         /**
          * @returns [-2^53 - 2^53]
          */
-        public readUnsafeInt64(): uint {
+        public readUnsafeInt64(): long {
             if (this._pos + 8 > this._logicLen) {
                 this._pos = this._logicLen;
                 return 0;
@@ -332,7 +332,7 @@ namespace Aurora {
         /**
          * @param value [-2^53 - 2^53]
          */
-        public writeUnsafeInt64(value: int): void {
+        public writeUnsafeInt64(value: long): void {
             if (value < 0) {
                 this._checkAndAllocateSpace(8);
             
@@ -370,7 +370,7 @@ namespace Aurora {
         /**
          * @returns [0 - 2^53]
          */
-        public readUnsafeUint64(): uint {
+        public readUnsafeUint64(): ulong {
             if (this._pos + 8 > this._logicLen) {
                 this._pos = this._logicLen;
                 return 0;
@@ -396,7 +396,7 @@ namespace Aurora {
         /**
          * @param value [0 - 2^53]
          */
-        public writeUnsafeUint64(value: uint): void {
+        public writeUnsafeUint64(value: ulong): void {
             this._checkAndAllocateSpace(8);
             
             if (value <= 4294967295) {

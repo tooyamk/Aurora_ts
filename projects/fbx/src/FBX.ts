@@ -77,7 +77,7 @@ namespace Aurora.FBX {
             }
             case NodePropertyType.L: {
                 property.type = NodePropertyValueType.INT;
-                property.value = parseInt(data.readInt64());
+                property.value = data.readUnsafeInt64();
 
                 break;
             }
@@ -156,7 +156,7 @@ namespace Aurora.FBX {
                     }
                     case NodePropertyType.i: {
                         property.type = NodePropertyValueType.INT_ARRAY;
-                        const arr: int[] = [];
+                        const arr: long[] = [];
                         arr.length = arrLen;
                         property.value = arr;
                         for (let i = 0; i < arrLen; ++i) arr[i] = uncompressedData.readInt32();
@@ -165,7 +165,7 @@ namespace Aurora.FBX {
                     }
                     case NodePropertyType.l: {
                         property.type = NodePropertyValueType.INT_ARRAY;
-                        const arr: int[] = [];
+                        const arr: long[] = [];
                         arr.length = arrLen;
                         property.value = arr;
                         for (let i = 0; i < arrLen; ++i) arr[i] = uncompressedData.readUnsafeInt64();
