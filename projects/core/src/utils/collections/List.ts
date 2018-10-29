@@ -38,7 +38,7 @@ namespace Aurora.Collections {
             }
         }
 
-        private _getIterator(node: ListNode<T>, isForof: boolean = false): IListIterator<T> {
+        private _getIterator(node: ListNode<T>, isForOf: boolean = false): IListIterator<T> {
             let step = (itr: IListIterator<T>, callback: () => void) => {
                 if (itr.node) {
                     callback();
@@ -59,7 +59,7 @@ namespace Aurora.Collections {
                 done: true,
                 node: node,
                 [Symbol.iterator]() {
-                    isForof = true;
+                    isForOf = true;
                     return this;
                 },
                 prev() {
@@ -69,8 +69,8 @@ namespace Aurora.Collections {
                     return this;
                 },
                 next() {
-                    if (isForof) {
-                        isForof = false;
+                    if (isForOf) {
+                        isForOf = false;
                     } else {
                         step(this, () => {
                             this.node = this.node.next;
@@ -152,7 +152,6 @@ namespace Aurora.Collections {
             }
 
             this._pushNodeToCache(node);
-
             --this._size;
         }
 

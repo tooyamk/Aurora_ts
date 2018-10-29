@@ -15,6 +15,8 @@ namespace Aurora {
         public customGetVertexBufferFn: (asset: MeshAsset, info: GLProgramAttribInfo) => GLVertexBuffer = null;
         public customGetDrawIndexBufferFn: (asset: MeshAsset) => GLIndexBuffer = null;
 
+        public link: MeshAsset = null;
+
         public getVertexSource(name: string): VertexSource {
             return this.vertexSources ? this.vertexSources.get(name) : null;
         }
@@ -30,37 +32,50 @@ namespace Aurora {
 
         public getVertexBuffer(gl: GL, info: GLProgramAttribInfo): GLVertexBuffer {
             let buffer: GLVertexBuffer = this.vertexBuffers ? this.vertexBuffers.get(info.name) : null;
-            if (!buffer && this.vertexSources) {
-                const src = this.vertexSources.get(info.name);
-                if (src) {
-                    buffer = src.createBuffer(gl);
-                } else {
-                    if (info.name === ShaderPredefined.a_Normal0) {
-                        const vs = this.vertexSources.get(ShaderPredefined.a_Position0);
-                        if (vs && vs.data && this.drawIndexSource && this.drawIndexSource.data) {
-                            const ns = MeshAssetHelper.createNormals(this.drawIndexSource.data, vs.data);
-                            if (this.addVertexSource(ns)) buffer = ns.createBuffer(gl);
+            if (!buffer) {
+                if (this.vertexSources) {
+                    const src = this.vertexSources.get(info.name);
+                    if (src) {
+                        buffer = src.createBuffer(gl);
+                    } else {
+                        if (info.name === ShaderPredefined.a_Normal0) {
+                            const vs = this.vertexSources.get(ShaderPredefined.a_Position0);
+                            if (vs && vs.data && this.drawIndexSource && this.drawIndexSource.data) {
+                                const ns = MeshAssetHelper.createNormals(this.drawIndexSource.data, vs.data);
+                                if (this.addVertexSource(ns)) buffer = ns.createBuffer(gl);
+                            }
                         }
+                    }
+
+                    if (buffer) {
+                        if (!this.vertexBuffers) this.vertexBuffers = new Map();
+                        this.vertexBuffers.set(info.name, buffer);
                     }
                 }
 
-                if (buffer) {
-                    if (!this.vertexBuffers) this.vertexBuffers = new Map();
-                    this.vertexBuffers.set(info.name, buffer);
+                if (!buffer) {
+                    if (this.customGetVertexBufferFn) buffer = this.customGetVertexBufferFn(this, info);
+                    if (!buffer && this.link) buffer = this.link.getVertexBuffer(gl, info);
                 }
             }
 
-            if (!buffer && this.customGetVertexBufferFn) buffer = this.customGetVertexBufferFn(this, info);
             return buffer;
         }
 
         public getDrawIndexBuffer(gl: GL): GLIndexBuffer {
             let buffer = this.drawIndexBuffer;
-            if (!buffer && this.drawIndexSource) {
-                buffer = this.drawIndexSource.createBuffer(gl);
-                if (buffer) this.drawIndexBuffer = buffer;
+            if (!buffer) {
+                if (this.drawIndexSource) {
+                    buffer = this.drawIndexSource.createBuffer(gl);
+                    if (buffer) this.drawIndexBuffer = buffer;
+                }
+
+                if (!buffer) {
+                    if (this.customGetDrawIndexBufferFn) buffer = this.customGetDrawIndexBufferFn(this);
+                    if (!buffer && this.link) buffer = this.link.getDrawIndexBuffer(gl);
+                }
             }
-            if (!buffer && this.customGetDrawIndexBufferFn) buffer = this.customGetDrawIndexBufferFn(this);
+            
             return buffer;
         }
 
@@ -80,6 +95,8 @@ namespace Aurora {
 
             this.customGetVertexBufferFn = null;
             this.customGetDrawIndexBufferFn = null;
+
+            this.link = null;
         }
     }
 }

@@ -1,15 +1,7 @@
 namespace Aurora {
     export class ShaderUniforms {
-        public next: ShaderUniforms = null;
-        
         public _uniforms: { [key: string]: ShaderUniforms.Value } = {};
         protected _count: uint = 0;
-
-        public get tail(): ShaderUniforms {
-            let rst: ShaderUniforms = this;
-            while (rst.next) rst = rst.next;
-            return rst;
-        }
 
         public clone(): ShaderUniforms {
             const u = new ShaderUniforms();
@@ -27,17 +19,7 @@ namespace Aurora {
         }
 
         public getValue(name: string): ShaderUniforms.Value {
-            let v: ShaderUniforms.Value = null;
-            let u: ShaderUniforms = this;
-            do {
-                v = u._uniforms[name];
-                if (v) {
-                    break;
-                } else {
-                    u = u.next;
-                }
-            } while (u);
-            return v;
+            return this._uniforms[name];
         }
 
         public static isEqual(v0: ShaderUniforms, v1: ShaderUniforms, info: GLProgramUniformInfo[] = null): boolean {
@@ -65,7 +47,7 @@ namespace Aurora {
             return !v1;
         }
 
-        public setNumber(name: string, x: number = 0, y: number = 0, z: number = 0, w: number = 0): void {
+        public setNumbers(name: string, x: number = 0, y: number = 0, z: number = 0, w: number = 0): void {
             const v = this._getOrCreateUniform(name);
             v.type = ShaderUniforms.ValueType.NUMBER;
             if (v.vec4) {

@@ -11,7 +11,7 @@ class SimpleWorld {
 
         let mat = new Aurora.Material(env.shaderStore.createShader(env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
         mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
-        mat.uniforms.setNumber(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
+        mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
 
         let mesh = modelNode.addComponent(new Aurora.Mesh());
         mesh.renderer = env.forwardRenderer;

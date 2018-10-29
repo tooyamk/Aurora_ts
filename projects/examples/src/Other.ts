@@ -224,7 +224,7 @@ class Other {
         mat.defines.setDefine(Aurora.ShaderPredefined.LIGHTING, true);
         mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, false);
         mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
-        mat.uniforms.setNumber(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1.0);
+        mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1.0);
         //mat.defines.setDefine(MITOIA.ShaderPredefined.SPECULAR_COLOR, true);
         //mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_SpecularColor, 0.5, 0, 0);
         mat.defines.setDefine(Aurora.ShaderPredefined.LIGHTING_SPECULAR, Aurora.ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);

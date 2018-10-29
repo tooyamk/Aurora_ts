@@ -191,7 +191,7 @@ namespace Aurora {
                         this._updateColors(Sprite._sharedQuadColors, 16);
 
                         renderingData.out.asset = Sprite._sharedQuadAsset;
-                        renderingData.out.uniforms = this._uniforms;
+                        renderingData.out.uniformsStack.pushBack(this._uniforms);
                     }
                 }
             } else if (this._texture) {
@@ -210,7 +210,7 @@ namespace Aurora {
                     this._updateColors(Sprite._sharedQuadColors, 16);
 
                     renderingData.out.asset = Sprite._sharedQuadAsset;
-                    renderingData.out.uniforms = this._uniforms;
+                    renderingData.out.uniformsStack.pushBack(this._uniforms);
                 }
             }
         }

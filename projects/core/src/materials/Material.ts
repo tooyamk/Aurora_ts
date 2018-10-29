@@ -34,25 +34,25 @@ namespace Aurora {
             this.shader = shader;
         }
 
-        public static canCombine(value0: Material, value1: Material, info: GLProgramUniformInfo[] = null): boolean {
-            if (value0 === value1) return true;
-            if (value0) {
-                if (value1) {
-                    if (value0.shader !== value1.shader ||
-                        value0.drawMode !== value1.drawMode ||
-                        value0.cullFace !== value1.cullFace ||
-                        value0.depthTest !== value1.depthTest ||
-                        value0.depthWrite !== value1.depthWrite) return false;
-                    if (!GLBlend.isEqual(value0.blend, value1.blend)) return false;
-                    if (!GLColorWrite.isEqual(value0.colorWrite, value1.colorWrite)) return false;
-                    if (!GLStencil.isEqual(value0.stencilFront, value1.stencilBack)) return false;
-                    if (!GLStencil.isEqual(value0.stencilBack, value1.stencilBack)) return false;
-                    if (!ShaderUniforms.isEqual(value0.uniforms, value1.uniforms, info)) return false;
+        public static canCombine(m0: Material, m1: Material): boolean {
+            if (m0 === m1) return true;
+            if (m0) {
+                if (m1) {
+                    if (m0.shader !== m1.shader ||
+                        m0.drawMode !== m1.drawMode ||
+                        m0.cullFace !== m1.cullFace ||
+                        m0.depthTest !== m1.depthTest ||
+                        m0.depthWrite !== m1.depthWrite) return false;
+                    if (!GLBlend.isEqual(m0.blend, m1.blend)) return false;
+                    if (!GLColorWrite.isEqual(m0.colorWrite, m1.colorWrite)) return false;
+                    if (!GLStencil.isEqual(m0.stencilFront, m1.stencilBack)) return false;
+                    if (!GLStencil.isEqual(m0.stencilBack, m1.stencilBack)) return false;
+                    //if (!ShaderUniforms.isEqual(m0.uniforms, m1.uniforms, info)) return false;
                 } else {
                     return false;
                 }
             }
-            return !value1;
+            return !m1;
         }
 
         public clone(): Material {
@@ -75,24 +75,13 @@ namespace Aurora {
             return m;
         }
 
-        public ready(defines: ShaderDefines): GLProgram {
-            if (this.shader) {
-                if (this.defines) {
-                    const tail = this.defines.tail;
-                    tail.next = defines;
-                    const rst = this.shader.ready(this.defines);
-                    tail.next = null;
-                    return rst;
-                } else {
-                    return this.shader.ready(defines);
-                }
-            }
-
-            return null;
+        public ready(definesStack: ShaderDefinesStack): GLProgram {
+            return this.shader ? this.shader.ready(definesStack) : null;
         }
 
-        public use(uniforms: ShaderUniforms): GLProgram {
+        public use(uniformsStack: ShaderUniformsStack): GLProgram {
             const gl = this.shader.gl;
+            
             gl.setBlend(this.blend);
             gl.setCullFace(this.cullFace);
             gl.setDepthTest(this.depthTest);
@@ -100,15 +89,7 @@ namespace Aurora {
             gl.setColorWrite(this.colorWrite);
             gl.setStencil(this.stencilFront, this.stencilBack);
 
-            if (this.uniforms) {
-                const tail = this.uniforms.tail;
-                tail.next = uniforms;
-                const rst = this.shader.use(this.uniforms);
-                tail.next = null;
-                return rst;
-            } else {
-                return this.shader.use(uniforms);
-            }
+            return this.shader.use(uniformsStack);
         }
 
         public destroy(destroyShader: boolean): void {

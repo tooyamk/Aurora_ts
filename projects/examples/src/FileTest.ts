@@ -36,7 +36,7 @@ class FileTest {
 
             let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
             mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
-            mat.uniforms.setNumber(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
+            mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
 
             let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.Mesh());
             mesh.renderer = this._env.forwardRenderer;
@@ -61,7 +61,7 @@ class FileTest {
 
             let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
             mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
-            mat.uniforms.setNumber(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
+            mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
 
             let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.Mesh());
             mesh.renderer = this._env.forwardRenderer;
@@ -106,8 +106,8 @@ class FileTest {
             mat.cullFace = Aurora.GLCullFace.NONE;
             mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
             mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
-            mat.uniforms.setNumber(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
-            mat.uniforms.setNumber(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
+            mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
+            mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
             mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
 
             let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());

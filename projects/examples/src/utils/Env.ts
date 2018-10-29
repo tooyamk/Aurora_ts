@@ -44,7 +44,13 @@ class Env {
 
         new Aurora.FrameLooper(this.platform, 1000 / 60).start((delta: number) => {
             if (stretcher.execute() && canvasSizeChangedhandler) canvasSizeChangedhandler();
-            if (loopHandler) loopHandler(delta);
+            
+            if (loopHandler) {
+                //const t0 = this.platform.duration();
+                loopHandler(delta);
+                //console.log(this.platform.duration() - t0);
+            }
+            
             stats.update();
             stats.reset();
         });

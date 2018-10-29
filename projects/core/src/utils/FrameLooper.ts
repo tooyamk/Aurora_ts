@@ -1,18 +1,13 @@
 namespace Aurora {
-    export const enum FrameLooperType {
-        STANDARD,
-        ANIMATION_FRAME
-    }
-
     export class FrameLooper {
         private _platform: IPlatform;
         private _callback: (delta: number) => void = null;
         private _prevTime: number = null;
         private _delta: number;
-        private _type: FrameLooperType = FrameLooperType.STANDARD;
+        private _type: FrameLooper.Type = FrameLooper.Type.STANDARD;
         private _timerID: number = null;
 
-        constructor(platform: IPlatform, delta: number, type: FrameLooperType = FrameLooperType.STANDARD) {
+        constructor(platform: IPlatform, delta: number, type: FrameLooper.Type = FrameLooper.Type.STANDARD) {
             this._platform = platform;
             this._delta = delta;
             this._type = type;
@@ -33,21 +28,21 @@ namespace Aurora {
             if (callback) {
                 this._prevTime = this._platform.duration();
 
-                if (this._type === FrameLooperType.STANDARD) {
+                if (this._type === FrameLooper.Type.STANDARD) {
                     this._timerID = setTimeout(() => { this._timeoutTick(); }, this._delta);
-                } else if (this._type === FrameLooperType.ANIMATION_FRAME) {
+                } else if (this._type === FrameLooper.Type.ANIMATION_FRAME) {
                     this._timerID = requestAnimationFrame(() => { this._animationFrameTick(); });
                 }
             }
         }
 
         public stop(): void {
-            if (this._type === FrameLooperType.STANDARD) {
+            if (this._type === FrameLooper.Type.STANDARD) {
                 if (this._timerID !== null) {
                     if (this._timerID !== undefined) clearTimeout(this._timerID);
                     this._timerID = null;
                 }
-            } else if (this._type === FrameLooperType.ANIMATION_FRAME) {
+            } else if (this._type === FrameLooper.Type.ANIMATION_FRAME) {
                 if (this._timerID !== null) {
                     if (this._timerID !== undefined) cancelAnimationFrame(this._timerID);
                     this._timerID = null;
@@ -79,6 +74,13 @@ namespace Aurora {
             this._callback(d);
 
             if (this._timerID === undefined) this._timerID = requestAnimationFrame(() => { this._animationFrameTick(); });
+        }
+    }
+
+    export namespace FrameLooper {
+        export const enum Type {
+            STANDARD,
+            ANIMATION_FRAME
         }
     }
 }

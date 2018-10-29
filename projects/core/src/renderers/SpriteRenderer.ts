@@ -14,6 +14,10 @@ namespace Aurora {
         protected _numAllicatedIndex = 0;
         protected _curMaterial: Material = null;
 
+        protected _definesStack = new ShaderDataStack<ShaderDefines, ShaderDefines.Value>();
+        protected _activeUniformsStack = new ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>();
+        protected _compareUniformsStack = new ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>();
+
         protected _defaultMaterial: Material;
         protected _defaultShader: Shader;
 
@@ -87,24 +91,19 @@ namespace Aurora {
         public render(renderingData: RenderingData, renderingObjects: RenderingObject[], start: int, end: int): void {
             this._curMaterial = null;
             let atts: GLProgramAttribInfo[] = null;
-            let curShaderUniforms: ShaderUniforms = null;
+            let uniformInfos: GLProgramUniformInfo[] = null;
 
-            let activeMaterialFn = (material: Material, u0: ShaderUniforms, u1: ShaderUniforms) => {
-                let su: ShaderUniforms;
-                let tail: ShaderUniforms = null;
-                if (u0) {
-                    su = u0;
-                    tail = su.tail;
-                    tail.next = u1;
-                } else {
-                    su = u1;
-                }
-                let p = this.useShader(material, su);
-                if (tail) tail.next = null;
+            let activeMaterialFn = (material: Material, stack: ShaderUniformsStack, u1: ShaderUniforms) => {
+                this._activeUniformsStack.pushBackByStack(stack).pushBack(material.uniforms).pushBack(u1);
+                this._definesStack.pushBack(material.defines);
+                const p = this._renderingMgr.useShader(material, this._definesStack, this._activeUniformsStack);
+                this._definesStack.clear();
                 if (p) {
                     this._curMaterial = material;
                     atts = p.attributes;
-                    curShaderUniforms = u0;
+                    uniformInfos = p.uniforms;
+                } else {
+                    this._activeUniformsStack.clear();
                 }
             };
 
@@ -115,9 +114,9 @@ namespace Aurora {
                 const as = renderingData.out.asset;
                 if (as && as.drawIndexSource) {
                     const mat = obj.material;
-                    const uniforms = renderingData.out.uniforms;
+                    const uniformsStack = renderingData.out.uniformsStack;
 
-                    if (!atts) activeMaterialFn(mat, uniforms, obj.alternativeUniforms);
+                    if (!atts) activeMaterialFn(mat, uniformsStack, obj.alternativeUniforms);
                     
                     let len = -1;
                     let needFlush = false;
@@ -146,7 +145,7 @@ namespace Aurora {
                     if (len > 0 && len <= this._maxVertexSize) {
                         if (needFlush) {
                             this.flush();
-                            activeMaterialFn(mat, uniforms, obj.alternativeUniforms);
+                            activeMaterialFn(mat, uniformsStack, obj.alternativeUniforms);
 
                             for (let i = 0; i < this._reformatsLen; ++i) {
                                 let idx = this._reformats[i];
@@ -157,11 +156,21 @@ namespace Aurora {
                                 vs1.normalized = vs0.normalized;
                             }
                             this._reformatsLen = 0;
-                        } else if (!Material.canCombine(this._curMaterial, mat) || !ShaderUniforms.isEqual(curShaderUniforms, uniforms)) {
-                            this.flush();
-                            activeMaterialFn(mat, uniforms, obj.alternativeUniforms);
-                        } else if (this._numCombinedVertex + len > this._maxVertexSize) {
-                            this.flush();
+                        } else {
+                            if (Material.canCombine(this._curMaterial, mat)) {
+                                this._compareUniformsStack.pushBackByStack(uniformsStack).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms);
+                                const b = ShaderDataStack.isUnifromsEqual(this._activeUniformsStack, this._compareUniformsStack, uniformInfos);
+                                this._compareUniformsStack.clear();
+                                if (b) {
+                                    if (this._numCombinedVertex + len > this._maxVertexSize) this.flush();
+                                } else {
+                                    this.flush();
+                                    activeMaterialFn(mat, uniformsStack, obj.alternativeUniforms);
+                                }
+                            } else {
+                                this.flush();
+                                activeMaterialFn(mat, uniformsStack, obj.alternativeUniforms);
+                            }
                         }
 
                         this._combine(as.drawIndexSource);
@@ -222,10 +231,11 @@ namespace Aurora {
                     ib.uploadSub(is.data);
                 }
 
-                this.draw(this._asset, this._curMaterial, this._numCombinedIndex);
+                this._renderingMgr.draw(this._asset, this._curMaterial, this._numCombinedIndex);
 
                 this._numCombinedVertex = 0;
                 this._numCombinedIndex = 0;
+                this._activeUniformsStack.clear();
             }
         }
 
@@ -249,6 +259,21 @@ namespace Aurora {
             if (this._defaultShader) {
                 this._defaultShader.destroy();
                 this._defaultShader = null;
+            }
+
+            if (this._definesStack) {
+                this._definesStack.clear();
+                this._defaultShader = null;
+            }
+
+            if (this._activeUniformsStack) {
+                this._activeUniformsStack.clear();
+                this._activeUniformsStack = null;
+            }
+
+            if (this._compareUniformsStack) {
+                this._compareUniformsStack.clear();
+                this._compareUniformsStack = null;
             }
         }
 
@@ -279,12 +304,11 @@ namespace Aurora {
 
         private _combine(drawIndexSource: DrawIndexSource): void {
             const idx = this._numCombinedVertex;
-            for (let i = 0; i < this._numVertexSources; i += 2) {
+            for (let i = 0; i < this._numVertexSources; ++i) {
                 const vs = this._vertexSources[i];
                 const src = vs.data;
-                const dst = this._vertexSources[i + 1].data;
+                const dst = this._vertexSources[++i].data;
 
-                const offset = idx * vs.size;
                 for (let j = 0, n = src.length; j < n; ++j) dst[idx + j] = src[j];
             }
 

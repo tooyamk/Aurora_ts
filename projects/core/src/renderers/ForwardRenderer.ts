@@ -12,6 +12,12 @@ namespace Aurora {
         protected _localToProjM44Array: number[] = [];
         protected _localToViewM44Array: number[] = [];
 
+        protected _shaderDefines: ShaderDefines = new ShaderDefines();
+        protected _shaderUniforms: ShaderUniforms = new ShaderUniforms();
+
+        protected _definesStack = new ShaderDataStack<ShaderDefines, ShaderDefines.Value>();
+        protected _uniformsStack = new ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>();
+
         public get enabledLighting(): boolean {
             return this._enalbedLighting;
         }
@@ -49,8 +55,8 @@ namespace Aurora {
             }
         }
 
-        public preRender(shaderDefines: ShaderDefines, shaderUniforms: ShaderUniforms, lights: AbstractLight[]): void {
-            super.preRender(shaderDefines, shaderUniforms, lights);
+        public preRender(renderingMgr: RenderingManager, lights: AbstractLight[]): void {
+            super.preRender(renderingMgr, lights);
 
             if (lights) {
                 for (let i = 0, n = lights.length; i < n; ++i) {
@@ -87,25 +93,35 @@ namespace Aurora {
                 obj.renderable.visit(renderingData);
                 const as = renderingData.out.asset;
                 if (as) {
-                    let su = renderingData.out.uniforms;
-                    let tail: ShaderUniforms = null;
-                    if (su) {
-                        tail = su.tail;
-                        tail.next = obj.alternativeUniforms;
-                    } else {
-                        su = obj.alternativeUniforms;
-                    }
-                    this.useAndDraw(as, obj.material, su, () => {
-                        const shader = obj.material.shader;
+                    const mat = obj.material;
+                    this._definesStack.pushBack(mat.defines).pushBack(this._shaderDefines);
+                    this._uniformsStack.pushBackByStack(renderingData.out.uniformsStack).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(this._shaderUniforms);
+                    this._renderingMgr.useAndDraw(as, mat, this._definesStack, this._uniformsStack, () => {
+                        const shader = mat.shader;
 
                         if (shader.hasUniform(ShaderPredefined.u_M33_L2W)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M33_L2W, obj.localToWorld.toArray33(false, this._localToWorldM33Array));
                         if (shader.hasUniform(ShaderPredefined.u_M44_L2P)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2P, obj.localToProj.toArray44(false, this._localToProjM44Array));
                         if (shader.hasUniform(ShaderPredefined.u_M44_L2V)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2V, obj.localToView.toArray44(false, this._localToViewM44Array));
                         if (shader.hasUniform(ShaderPredefined.u_M44_L2W)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2W, obj.localToWorld.toArray44(false, this._localToWorldM44Array));
                     });
-                    if (tail) tail.next = null;
+                    this._definesStack.clear();
+                    this._uniformsStack.clear();
                 }
                 renderingData.out.clear();
+            }
+        }
+
+        public destroy() {
+            super.destroy();
+
+            if (this._shaderDefines) {
+                this._shaderDefines.destroy();
+                this._shaderDefines = null;
+            }
+
+            if (this._shaderUniforms) {
+                this._shaderUniforms.destroy();
+                this._shaderUniforms = null;
             }
         }
     }

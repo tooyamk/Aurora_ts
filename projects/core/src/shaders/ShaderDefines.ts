@@ -1,18 +1,10 @@
 namespace Aurora {
     export class ShaderDefines {
-        public next: ShaderDefines = null;
-
         private _defines: { [key: string]: ShaderDefines.Value } = {};
         private _count: uint = 0;
 
         public get count(): uint {
             return this._count;
-        }
-
-        public get tail(): ShaderDefines {
-            let rst: ShaderDefines = this;
-            while (rst.next) rst = rst.next;
-            return rst;
         }
 
         public clone(): ShaderDefines {
@@ -30,22 +22,19 @@ namespace Aurora {
         }
 
         public getValue(name: string): ShaderDefines.Value {
-            let v: ShaderDefines.Value = null;
-            let u: ShaderDefines = this;
-            do {
-                v = u._defines[name];
-                if (v) {
-                    break;
-                } else {
-                    u = u.next;
-                }
-            } while (u);
-            return v;
+            return this._defines[name];
         }
 
         public clear(): void {
             if (this._count > 0) {
                 this._defines = {};
+                this._count = 0;
+            }
+        }
+
+        public destroy(): void {
+            if (this._defines) {
+                this._defines = null;
                 this._count = 0;
             }
         }
