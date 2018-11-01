@@ -11,7 +11,7 @@ class Helper {
         let tmpVec3 = new Aurora.Vector3();
 
         let printChildFn = (indent: string, node: Aurora.Node) => {
-            if (s.length > 0) s += "\n";
+            if (s) s += "\n";
             s += indent + (node.name.length ? node.name : "(Empty Name)");
 
             let pos = node.getLocalPositon(tmpVec3);

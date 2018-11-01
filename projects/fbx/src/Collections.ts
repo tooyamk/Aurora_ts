@@ -2,6 +2,7 @@ namespace Aurora.FBX {
     export class ParseResult {
         public meshes: MeshAsset[] = null;
         public skeleton: Skeleton = null;
+        public animationClips: SkeletonAnimationClip[] = null;
     }
 
     class SkeletonData {
@@ -165,9 +166,9 @@ namespace Aurora.FBX {
                 ske.bones = skeleton.bones;
                 ske.rootBoneIndices = skeleton.rootBoneIndices;
                 result.skeleton = ske;
-            }
 
-            this._parseAnimations();
+                result.animationClips = this._parseAnimations(skeleton);
+            }
 
             if (meshes) {
                 for (let i = 0, n = meshes.length; i < n; ++i) {
@@ -272,8 +273,8 @@ namespace Aurora.FBX {
                     const values = <number[]>p.value;
                     return new Matrix44(
                         values[0], values[2], values[1], values[3],
-                        values[4], values[6], values[5], values[7],
                         values[8], values[10], values[9], values[11],
+                        values[4], values[6], values[5], values[7],
                         values[12], values[14], values[13], values[15]
                     );
                 }
@@ -281,10 +282,38 @@ namespace Aurora.FBX {
             return null;
         }
 
-        private _parseAnimations(): void {
+        private _getOrCreateBoneData(map: Map<number, SkeletonAnimationClip.Frame>, time: number, boneIdx: uint): SkeletonAnimationClip.BoneData {
+            let frame = map.get(time);
+            if (!frame) {
+                frame = new SkeletonAnimationClip.Frame();
+                frame.time = time;
+                frame.data = [];
+                map.set(time, frame);
+            }
+            let bd = frame.data[boneIdx];
+            if (!bd) {
+                bd = new SkeletonAnimationClip.BoneData();
+                frame.data[boneIdx] = bd;
+            }
+            return bd;
+        }
+
+        private _parseAnimations(skeleton: SkeletonData): SkeletonAnimationClip[]  {
+            let clips: SkeletonAnimationClip[] = null;
+
             if (this._animationStacks) {
+                const framesMap = new Map<number, SkeletonAnimationClip.Frame>();
+                const rots: Quaternion[] = [];
+
                 for (let i0 = 0, n0 = this._animationStacks.length; i0 < n0; ++i0) {
                     const stack = this._animationStacks[i0];
+                    
+                    const clip = new SkeletonAnimationClip();
+                    const frames: SkeletonAnimationClip.Frame[] = [];
+                    clip.frames = frames;
+                    clip.name = stack.attribName;
+                    (clips || (clips = [])).push(clip);
+
                     const layers = this.findConnectionChildrenNodes(stack.id, NodeName.ANIMATION_LAYER);
                     if (!layers) continue;
 
@@ -328,14 +357,149 @@ namespace Aurora.FBX {
                                 if (times && values) {
                                     times = times.concat();
                                     for (let j = 0, m = times.length; j < m; ++j) times[j] /= 46186158000;
-                                    console.log(bone.attribName + "    " + attribName + "    " + relationship);
-                                    console.log(values);
+
+                                    const boneIdx = skeleton.getIndexByName(bone.attribName);
+                                    if (boneIdx >= 0) {
+                                        switch (attribName) {
+                                            case NodeAttribType.T: {
+                                                switch (relationship) {
+                                                    case NodePropertyType.D_X: {
+                                                        for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
+                                                            const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
+                                                            if (!bd.translation) bd.translation = new Vector3();
+                                                            bd.translation.x = values[k];
+                                                        }
+
+                                                        break;
+                                                    }
+                                                    case NodePropertyType.D_Y: {
+                                                        for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
+                                                            const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
+                                                            if (!bd.translation) bd.translation = new Vector3();
+                                                            bd.translation.y = values[k];
+                                                        }
+
+                                                        break;
+                                                    }
+                                                    case NodePropertyType.D_Z: {
+                                                        for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
+                                                            const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
+                                                            if (!bd.translation) bd.translation = new Vector3();
+                                                            bd.translation.z = values[k];
+                                                        }
+
+                                                        break;
+                                                    }
+                                                    default:
+                                                        break;
+                                                }
+
+                                                break;
+                                            }
+                                            case NodeAttribType.R: {
+                                                switch (relationship) {
+                                                    case NodePropertyType.D_X: {
+                                                        for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
+                                                            const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
+                                                            if (!bd.rotation) {
+                                                                const q = new Quaternion();
+                                                                bd.rotation = q;
+                                                                rots.push(q);
+                                                            }
+                                                            bd.rotation.x = values[k] * MathUtils.DEG_2_RAD;
+                                                        }
+
+                                                        break;
+                                                    }
+                                                    case NodePropertyType.D_Y: {
+                                                        for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
+                                                            const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
+                                                            if (!bd.rotation) {
+                                                                const q = new Quaternion();
+                                                                bd.rotation = q;
+                                                                rots.push(q);
+                                                            }
+                                                            bd.rotation.y = values[k] * MathUtils.DEG_2_RAD;
+                                                        }
+
+                                                        break;
+                                                    }
+                                                    case NodePropertyType.D_Z: {
+                                                        for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
+                                                            const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
+                                                            if (!bd.rotation) {
+                                                                const q = new Quaternion();
+                                                                bd.rotation = q;
+                                                                rots.push(q);
+                                                            }
+                                                            bd.rotation.z = values[k] * MathUtils.DEG_2_RAD;
+                                                        }
+
+                                                        break;
+                                                    }
+                                                    default:
+                                                        break;
+                                                }
+
+                                                break;
+                                            }
+                                            case NodeAttribType.S: {
+                                                switch (relationship) {
+                                                    case NodePropertyType.D_X: {
+                                                        for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
+                                                            const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
+                                                            if (!bd.scale) bd.scale = Vector3.One;
+                                                            bd.scale.x = values[k];
+                                                        }
+
+                                                        break;
+                                                    }
+                                                    case NodePropertyType.D_Y: {
+                                                        for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
+                                                            const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
+                                                            if (!bd.scale) bd.scale = Vector3.One;
+                                                            bd.scale.y = values[k];
+                                                        }
+
+                                                        break;
+                                                    }
+                                                    case NodePropertyType.D_Z: {
+                                                        for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
+                                                            const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
+                                                            if (!bd.scale) bd.scale = Vector3.One;
+                                                            bd.scale.z = values[k];
+                                                        }
+
+                                                        break;
+                                                    }
+                                                    default:
+                                                        break;
+                                                }
+
+                                                break;
+                                            }
+                                            default:
+                                                break;
+                                        }
+                                    }
+                                    //console.log(bone.attribName + "    " + attribName + "    " + relationship);
+                                    //console.log(values);
                                 }
                             }
                         }
                     }
+
+                    for (let kv of framesMap) frames.push(kv[1]);
+                    for (let i = 0, q: Quaternion; q = rots[i++];) Quaternion.createFromEulerXYZ(q.x, q.y, q.z, q);
+                    framesMap.clear();
+                    rots.length = 0;
+                    Sort.Merge.sort(frames, (f0: SkeletonAnimationClip.Frame, f1: SkeletonAnimationClip.Frame) => {
+                        return f0.time < f1.time;
+                    });
                 }
             }
+
+            return clips;
         }
 
         private _parseGeometry(geometry: Node, skeleton: SkeletonData): MeshAsset {

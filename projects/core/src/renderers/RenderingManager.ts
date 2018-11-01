@@ -207,13 +207,11 @@ namespace Aurora {
             }
         }
 
-        public useShader(material: Material, definesStack: ShaderDefinesStack, uniformsStack: ShaderUniformsStack, onShaderPreUse: () => void = null): GLProgram {
+        public useShader(material: Material, definesStack: ShaderDefinesStack, uniformsStack: ShaderUniformsStack): GLProgram {
             definesStack.pushBack(this._shaderDefines);
             const b = material.ready(definesStack);
             definesStack.eraseTail();
             if (b) {
-                if (onShaderPreUse) onShaderPreUse();
-
                 uniformsStack.pushBack(this._shaderUniforms);
                 const p = material.use(uniformsStack);
                 uniformsStack.eraseTail();
@@ -227,8 +225,8 @@ namespace Aurora {
             this._draw(asset, material, material.shader.currentProgram, count, offset);
         }
 
-        public useAndDraw(asset: MeshAsset, material: Material, definesStack: ShaderDefinesStack, uniformsStack: ShaderUniformsStack, onShaderPreUse: () => void = null, count: uint = null, offset: uint = 0): void {
-            const p = this.useShader(material, definesStack, uniformsStack, onShaderPreUse);
+        public useAndDraw(asset: MeshAsset, material: Material, definesStack: ShaderDefinesStack, uniformsStack: ShaderUniformsStack, count: uint = null, offset: uint = 0): void {
+            const p = this.useShader(material, definesStack, uniformsStack);
             if (p) this._draw(asset, material, p, count, offset);
         }
 

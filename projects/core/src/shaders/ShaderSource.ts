@@ -50,7 +50,7 @@ namespace Aurora {
                     let ext2Str: string = null;
                     for (let i = 0, n = excludeDefines.length; i < n; ++i) {
                         const n = excludeDefines[i];
-                        if (n && n.length > 0) {
+                        if (n) {
                             if (n.charAt(n.length - 1) === "*") {
                                 if (ext2Str) {
                                     ext2Str += "|" + n;

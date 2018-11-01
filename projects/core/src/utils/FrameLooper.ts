@@ -6,11 +6,15 @@ namespace Aurora {
         private _delta: number;
         private _type: FrameLooper.Type = FrameLooper.Type.STANDARD;
         private _timerID: number = null;
+        private _timeoutTickFn: () => void;
+        private _animationFrameTickFn: () => void;
 
         constructor(platform: IPlatform, delta: number, type: FrameLooper.Type = FrameLooper.Type.STANDARD) {
             this._platform = platform;
             this._delta = delta;
             this._type = type;
+            this._timeoutTickFn = this._timeoutTick.bind(this);
+            this._animationFrameTickFn = this._animationFrameTick.bind(this);
         }
 
         public get delta(): number {
@@ -29,9 +33,9 @@ namespace Aurora {
                 this._prevTime = this._platform.duration();
 
                 if (this._type === FrameLooper.Type.STANDARD) {
-                    this._timerID = setTimeout(() => { this._timeoutTick(); }, this._delta);
+                    this._timerID = setTimeout(this._timeoutTickFn, this._delta);
                 } else if (this._type === FrameLooper.Type.ANIMATION_FRAME) {
-                    this._timerID = requestAnimationFrame(() => { this._animationFrameTick(); });
+                    this._timerID = requestAnimationFrame(this._animationFrameTickFn);
                 }
             }
         }
@@ -62,7 +66,7 @@ namespace Aurora {
             if (this._timerID === undefined) {
                 t = this._delta - this._platform.duration() + t;
                 if (t < 0) t = 0;
-                this._timerID = setTimeout(() => { this._timeoutTick(); }, t | 0);
+                this._timerID = setTimeout(this._timeoutTickFn, t | 0);
             }
         }
 
@@ -73,7 +77,7 @@ namespace Aurora {
             this._prevTime = t;
             this._callback(d);
 
-            if (this._timerID === undefined) this._timerID = requestAnimationFrame(() => { this._animationFrameTick(); });
+            if (this._timerID === undefined) this._timerID = requestAnimationFrame(this._animationFrameTickFn);
         }
     }
 

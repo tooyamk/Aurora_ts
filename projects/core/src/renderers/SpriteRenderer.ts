@@ -12,7 +12,10 @@ namespace Aurora {
         protected _numCombinedIndex = 0;
         protected _numAllicatedVertex = 0;
         protected _numAllicatedIndex = 0;
+
         protected _curMaterial: Material = null;
+        protected _curProgramAtts: GLProgramAttribInfo[] = null;
+        protected _curUniformInfos: GLProgramUniformInfo[] = null;
 
         protected _definesStack = new ShaderDataStack<ShaderDefines, ShaderDefines.Value>();
         protected _activeUniformsStack = new ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>();
@@ -88,24 +91,24 @@ namespace Aurora {
             }
         }
 
+        protected _activeMaterial(material: Material, stack: ShaderUniformsStack, u1: ShaderUniforms): void {
+            this._activeUniformsStack.pushBackByStack(stack).pushBack(material.uniforms).pushBack(u1);
+            this._definesStack.pushBack(material.defines);
+            const p = this._renderingMgr.useShader(material, this._definesStack, this._activeUniformsStack);
+            this._definesStack.clear();
+            if (p) {
+                this._curMaterial = material;
+                this._curProgramAtts = p.attributes;
+                this._curUniformInfos = p.uniforms;
+            } else {
+                this._activeUniformsStack.clear();
+            }
+        }
+
         public render(renderingData: RenderingData, renderingObjects: RenderingObject[], start: int, end: int): void {
             this._curMaterial = null;
-            let atts: GLProgramAttribInfo[] = null;
-            let uniformInfos: GLProgramUniformInfo[] = null;
-
-            let activeMaterialFn = (material: Material, stack: ShaderUniformsStack, u1: ShaderUniforms) => {
-                this._activeUniformsStack.pushBackByStack(stack).pushBack(material.uniforms).pushBack(u1);
-                this._definesStack.pushBack(material.defines);
-                const p = this._renderingMgr.useShader(material, this._definesStack, this._activeUniformsStack);
-                this._definesStack.clear();
-                if (p) {
-                    this._curMaterial = material;
-                    atts = p.attributes;
-                    uniformInfos = p.uniforms;
-                } else {
-                    this._activeUniformsStack.clear();
-                }
-            };
+            this._curProgramAtts = null;
+            this._curUniformInfos = null;
 
             for (let i = start; i <= end; ++i) {
                 const obj = renderingObjects[i];
@@ -116,14 +119,14 @@ namespace Aurora {
                     const mat = obj.material;
                     const uniformsStack = renderingData.out.uniformsStack;
 
-                    if (!atts) activeMaterialFn(mat, uniformsStack, obj.alternativeUniforms);
+                    if (!this._curProgramAtts) this._activeMaterial(mat, uniformsStack, obj.alternativeUniforms);
                     
                     let len = -1;
                     let needFlush = false;
-                    if (atts) {
+                    if (this._curProgramAtts) {
                         this._numVertexSources = 0;
-                        for (let i = 0, n = atts.length; i < n; ++i) {
-                            const att = atts[i];
+                        for (let i = 0, n = this._curProgramAtts.length; i < n; ++i) {
+                            const att = this._curProgramAtts[i];
                             const vs = as.getVertexSource(att.name);
                             if (vs) {
                                 const numElements = vs.data.length / vs.size;
@@ -145,7 +148,7 @@ namespace Aurora {
                     if (len > 0 && len <= this._maxVertexSize) {
                         if (needFlush) {
                             this.flush();
-                            activeMaterialFn(mat, uniformsStack, obj.alternativeUniforms);
+                            this._activeMaterial(mat, uniformsStack, obj.alternativeUniforms);
 
                             for (let i = 0; i < this._reformatsLen; ++i) {
                                 let idx = this._reformats[i];
@@ -159,17 +162,17 @@ namespace Aurora {
                         } else {
                             if (Material.canCombine(this._curMaterial, mat)) {
                                 this._compareUniformsStack.pushBackByStack(uniformsStack).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms);
-                                const b = ShaderDataStack.isUnifromsEqual(this._activeUniformsStack, this._compareUniformsStack, uniformInfos);
+                                const b = ShaderDataStack.isUnifromsEqual(this._activeUniformsStack, this._compareUniformsStack, this._curUniformInfos);
                                 this._compareUniformsStack.clear();
                                 if (b) {
                                     if (this._numCombinedVertex + len > this._maxVertexSize) this.flush();
                                 } else {
                                     this.flush();
-                                    activeMaterialFn(mat, uniformsStack, obj.alternativeUniforms);
+                                    this._activeMaterial(mat, uniformsStack, obj.alternativeUniforms);
                                 }
                             } else {
                                 this.flush();
-                                activeMaterialFn(mat, uniformsStack, obj.alternativeUniforms);
+                                this._activeMaterial(mat, uniformsStack, obj.alternativeUniforms);
                             }
                         }
 
@@ -194,6 +197,8 @@ namespace Aurora {
             }
             this._numVertexSources = 0;
             this._curMaterial = null;
+            this._curProgramAtts = null;
+            this._curUniformInfos = null;
         }
 
         public flush(): void {

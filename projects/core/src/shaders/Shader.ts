@@ -94,10 +94,10 @@ namespace Aurora {
         }
 
         private _createProgram(appendDefines: string): GLProgram {
-            const finalAppendDefines = appendDefines.length > 0 ? appendDefines.replace(/\n/g, "\n#define ") + "\n" : "";
+            const finalAppendDefines = appendDefines ? appendDefines.replace(/\n/g, "\n#define ") + "\n" : "";
             const p = new GLProgram(this._gl);
             p.compileAndLink(finalAppendDefines + this._vert.source, finalAppendDefines + this._frag.source);
-            if (appendDefines.length > 0) {
+            if (appendDefines) {
                 this._cachedPrograms[appendDefines] = p;
             } else {
                 this._cachedNoDefineProgram = p;
@@ -310,7 +310,7 @@ namespace Aurora {
         }
 
         protected _getProgramFromCache(key: string): GLProgram {
-            return key && key.length > 0 ? this._cachedPrograms[key] : this._cachedNoDefineProgram;
+            return key ? this._cachedPrograms[key] : this._cachedNoDefineProgram;
         }
     }
 }

@@ -30,11 +30,7 @@ namespace Aurora {
          * @param json TexturePacker Json(Hash) Format.
          */
         public parse(ns: string, json: any, tex: GLTexture2D): void {
-            if (ns) {
-                if (ns.length > 0) ns += "/";
-            } else {
-                ns = "";
-            }
+            if (!ns) ns = "";
             
             const frames = json.frames;
             const meta = json.meta;

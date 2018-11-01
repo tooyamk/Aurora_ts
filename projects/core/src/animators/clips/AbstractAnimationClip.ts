@@ -1,5 +1,7 @@
 namespace Aurora {
     export abstract class AbstractAnimationClip {
+        public name: string = null;
+
         protected _elapsed: number = 0;
         protected _duration: number = 0;
         protected _wrap: AnimatorWrapType = AnimatorWrap.Clamp;

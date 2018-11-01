@@ -93,17 +93,18 @@ namespace Aurora {
                 obj.renderable.visit(renderingData);
                 const as = renderingData.out.asset;
                 if (as) {
+                    const su = this._shaderUniforms;
                     const mat = obj.material;
                     this._definesStack.pushBack(mat.defines).pushBack(this._shaderDefines);
-                    this._uniformsStack.pushBackByStack(renderingData.out.uniformsStack).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(this._shaderUniforms);
-                    this._renderingMgr.useAndDraw(as, mat, this._definesStack, this._uniformsStack, () => {
-                        const shader = mat.shader;
-
-                        if (shader.hasUniform(ShaderPredefined.u_M33_L2W)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M33_L2W, obj.localToWorld.toArray33(false, this._localToWorldM33Array));
-                        if (shader.hasUniform(ShaderPredefined.u_M44_L2P)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2P, obj.localToProj.toArray44(false, this._localToProjM44Array));
-                        if (shader.hasUniform(ShaderPredefined.u_M44_L2V)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2V, obj.localToView.toArray44(false, this._localToViewM44Array));
-                        if (shader.hasUniform(ShaderPredefined.u_M44_L2W)) this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_L2W, obj.localToWorld.toArray44(false, this._localToWorldM44Array));
-                    });
+                    this._uniformsStack.pushBackByStack(renderingData.out.uniformsStack).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(su);
+                    
+                    const shader = mat.shader;
+                    if (shader.hasUniform(ShaderPredefined.u_M33_L2W)) su.setNumberArray(ShaderPredefined.u_M33_L2W, obj.localToWorld.toArray33(false, this._localToWorldM33Array));
+                    if (shader.hasUniform(ShaderPredefined.u_M44_L2P)) su.setNumberArray(ShaderPredefined.u_M44_L2P, obj.localToProj.toArray44(false, this._localToProjM44Array));
+                    if (shader.hasUniform(ShaderPredefined.u_M44_L2V)) su.setNumberArray(ShaderPredefined.u_M44_L2V, obj.localToView.toArray44(false, this._localToViewM44Array));
+                    if (shader.hasUniform(ShaderPredefined.u_M44_L2W)) su.setNumberArray(ShaderPredefined.u_M44_L2W, obj.localToWorld.toArray44(false, this._localToWorldM44Array));
+                    
+                    this._renderingMgr.useAndDraw(as, mat, this._definesStack, this._uniformsStack);
                     this._definesStack.clear();
                     this._uniformsStack.clear();
                 }

@@ -17,12 +17,14 @@ namespace Aurora {
 
         public link: MeshAsset = null;
 
+        public autoGenerateNormal: boolean = true;
+
         public getVertexSource(name: string): VertexSource {
             return this.vertexSources ? this.vertexSources.get(name) : null;
         }
 
         public addVertexSource(source: VertexSource): boolean {
-            if (source && source.name && source.name.length > 0) {
+            if (source && source.name) {
                 if (!this.vertexSources) this.vertexSources = new Map();
                 this.vertexSources.set(source.name, source);
                 return true;
@@ -38,10 +40,17 @@ namespace Aurora {
                     if (src) {
                         buffer = src.createBuffer(gl);
                     } else {
-                        if (info.name === ShaderPredefined.a_Normal0) {
-                            const vs = this.vertexSources.get(ShaderPredefined.a_Position0);
-                            if (vs && vs.data && this.drawIndexSource && this.drawIndexSource.data) {
-                                const ns = MeshAssetHelper.createNormals(this.drawIndexSource.data, vs.data);
+                        if (this.autoGenerateNormal && info.name === ShaderPredefined.a_Normal0) {
+                            let vs = this.vertexSources.get(ShaderPredefined.a_Position0);
+                            let is = this.drawIndexSource;
+
+                            if (this.link) {
+                                if ((!vs || !vs.data) && this.link.vertexSources) vs = this.link.vertexSources.get(ShaderPredefined.a_Position0);
+                                if (!is || !is.data) is = this.link.drawIndexSource; 
+                            }
+                            
+                            if (vs && vs.data && is && is.data) {
+                                const ns = MeshAssetHelper.createNormals(is.data, vs.data);
                                 if (this.addVertexSource(ns)) buffer = ns.createBuffer(gl);
                             }
                         }

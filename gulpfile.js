@@ -12,8 +12,8 @@ function build(tsConfig, isWatch = false) {
     if (isWatch) {
         console.log("watch : " + tsConfig);
         const p = spawn.exec("tsc -b " + tsConfig + " -w --verbose", (error, stdout, stderr) => {
-            if (stdout && stdout.length > 0) console.log(stdout);
-            if (stderr && stderr.length > 0) console.log(stderr);
+            if (stdout) console.log(stdout);
+            if (stderr) console.log(stderr);
             if (error) console.log(`exec error: ${error}`);
         });
         p.stdout.pipe(split())
@@ -22,8 +22,8 @@ function build(tsConfig, isWatch = false) {
         });
     } else {
         spawn.exec("tsc -b " + tsConfig + " --verbose", (error, stdout, stderr) => {
-            if (stdout && stdout.length > 0) console.log(stdout);
-            if (stderr && stderr.length > 0) console.log(stderr);
+            if (stdout) console.log(stdout);
+            if (stderr) console.log(stderr);
             if (error) console.log(`exec error: ${error}`);
         });
     }

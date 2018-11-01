@@ -8,11 +8,16 @@ namespace Aurora {
     }
 
     export namespace SkeletonAnimationClip {
-        export class Frame {
-            public time: number = 0;
+        export class BoneData {
             public translation: Vector3 = null;
             public rotation: Quaternion = null;
             public scale: Vector3 = null;
+        }
+
+        export class Frame {
+            public time: number = 0;
+            public data: BoneData[] = null;
+            
         }
     }
 }

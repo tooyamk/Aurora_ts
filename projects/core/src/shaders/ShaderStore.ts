@@ -62,9 +62,7 @@ namespace Aurora {
         }
 
         private _addLibrary(name: string, source: string): void {
-            if (name && name.length > 0 && source && source.length > 0) {
-                this._libs[name] = this.doInclude(ShaderSource.deleteUnnecessaryContent(source));
-            }
+            if (name && source) this._libs[name] = this.doInclude(ShaderSource.deleteUnnecessaryContent(source));
         }
 
         public getShaderSource(name: string, type: GLShaderType): ShaderSource {
@@ -104,7 +102,7 @@ namespace Aurora {
                     let parenthesisStart = substring.lastIndexOf("(");
                     if (parenthesisStart > 0 && parenthesisStart < parenthesisEnd) {
                         let paramsContent = substring.substring(parenthesisStart + 1, parenthesisEnd).replace(/[  ]/g, "");
-                        if (paramsContent.length > 0) params = paramsContent.split(",");
+                        if (paramsContent) params = paramsContent.split(",");
                     }
                 }
                 let name = substring.replace(/[  ]*#include[  ]*<[  ]*|[  ]*>/g, "");

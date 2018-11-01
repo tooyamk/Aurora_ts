@@ -44,7 +44,10 @@ namespace Aurora.FBX {
         CLUSTER = "Cluster",
         LIMB_NODE = "LimbNode",
         MESH = "Mesh",
-        SKIN = "Skin"
+        SKIN = "Skin",
+        T = "T",
+        R = "R",
+        S = "S"
     }
 
     export const enum NodeName {

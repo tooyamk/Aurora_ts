@@ -113,7 +113,7 @@ namespace Aurora {
         }
 
         public on(type: string, caller: any, callback: HandlerType, once: boolean = false): void {
-            if (type && type.length > 0 && callback) {
+            if (type && callback) {
                 if (caller === undefined) caller = null;
                 const arr = this._map[type];
                 if (arr) {
@@ -130,7 +130,7 @@ namespace Aurora {
         }
 
         public off(type: string, caller: any, callback: HandlerType): boolean {
-            if (type && type.length > 0 && callback) {
+            if (type && callback) {
                 if (caller === undefined) caller = null;
                 const arr = this._map[type];
                 if (arr) {
