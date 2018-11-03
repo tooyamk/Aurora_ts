@@ -158,9 +158,9 @@ namespace Aurora {
                         if (value === 0) {
                             switch (a.material.renderingSort) {
                                 case RenderingSort.FAR_TO_NEAR:
-                                    return a.localToView.m32 >= b.localToView.m32;
+                                    return a.l2v.m32 >= b.l2v.m32;
                                 case RenderingSort.NEAR_TO_FAR:
-                                    return a.localToView.m32 <= b.localToView.m32;
+                                    return a.l2v.m32 <= b.l2v.m32;
                                 default:
                                     return true;
                             }
@@ -201,9 +201,9 @@ namespace Aurora {
                 queueNode.material = material;
                 queueNode.renderable = renderable;
                 queueNode.alternativeUniforms = alternativeUniforms;
-                renderable.node.getWorldMatrix(queueNode.localToWorld);
-                queueNode.localToWorld.append34(this._worldToViewMatrix, queueNode.localToView);
-                queueNode.localToWorld.append44(this._worldToProjMatrix, queueNode.localToProj);
+                renderable.node.getWorldMatrix(queueNode.l2w);
+                queueNode.l2w.append34(this._worldToViewMatrix, queueNode.l2v);
+                queueNode.l2w.append44(this._worldToProjMatrix, queueNode.l2p);
             }
         }
 

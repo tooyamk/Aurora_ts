@@ -12,6 +12,9 @@ namespace Aurora {
         public vertexBuffers: Map<string, GLVertexBuffer> = null;
         public drawIndexBuffer: GLIndexBuffer = null;
 
+        public vertexDirty: Set<string> = null;
+        public drawIndexDirty = false;
+
         public customGetVertexBufferFn: (asset: MeshAsset, info: GLProgramAttribInfo) => GLVertexBuffer = null;
         public customGetDrawIndexBufferFn: (asset: MeshAsset) => GLIndexBuffer = null;
 
@@ -21,6 +24,17 @@ namespace Aurora {
 
         public getVertexSource(name: string): VertexSource {
             return this.vertexSources ? this.vertexSources.get(name) : null;
+        }
+
+        public setVertexDirty(name: string, dirty: boolean = true): void {
+            if (name) {
+                if (dirty) {
+                    if (!this.vertexDirty) this.vertexDirty = new Set();
+                    this.vertexDirty.add(name);
+                } else if (this.vertexDirty) {
+                    this.vertexDirty.delete(name);
+                }
+            }
         }
 
         public addVertexSource(source: VertexSource): boolean {
@@ -34,7 +48,16 @@ namespace Aurora {
 
         public getVertexBuffer(gl: GL, info: GLProgramAttribInfo): GLVertexBuffer {
             let buffer: GLVertexBuffer = this.vertexBuffers ? this.vertexBuffers.get(info.name) : null;
-            if (!buffer) {
+            if (buffer) {
+                if (this.vertexSources && this.vertexDirty && this.vertexDirty.has(info.name)) {
+                    const src = this.vertexSources.get(info.name);
+                    if (src) {
+                        buffer.resetDataAttrib(src.size, src.type, src.normalized);
+                        buffer.uploadSub(src.data);
+                        this.vertexDirty.delete(info.name);
+                    }
+                }
+            } else {
                 if (this.vertexSources) {
                     const src = this.vertexSources.get(info.name);
                     if (src) {
@@ -66,6 +89,8 @@ namespace Aurora {
                     if (this.customGetVertexBufferFn) buffer = this.customGetVertexBufferFn(this, info);
                     if (!buffer && this.link) buffer = this.link.getVertexBuffer(gl, info);
                 }
+
+                if (buffer && this.vertexDirty) this.vertexDirty.delete(info.name);
             }
 
             return buffer;
@@ -101,6 +126,8 @@ namespace Aurora {
                 this.drawIndexBuffer.destroy();
                 this.drawIndexBuffer = null;
             }
+
+            this.vertexDirty = null;
 
             this.customGetVertexBufferFn = null;
             this.customGetDrawIndexBufferFn = null;
