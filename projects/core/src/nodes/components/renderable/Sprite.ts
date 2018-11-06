@@ -26,9 +26,65 @@ namespace Aurora {
         }
     }
 
+    /*
+     *00, 01, 02, 03
+     *04, 05, 06, 07
+     *08, 09, 10, 11
+     *12, 13, 14, 15
+     */
+    class SharedGrid9 {
+        public readonly asset: MeshAsset;
+        public readonly vertices: number[];
+        public readonly uvs: number[];
+        public readonly colors: number[];
+
+        constructor() {
+            this.asset = new MeshAsset();
+
+            this.vertices = [];
+            this.vertices.length = 16;
+            this.asset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, this.vertices, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
+
+            this.uvs = [];
+            this.uvs.length = 16;
+            this.asset.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, this.uvs, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
+
+            this.colors = [];
+            this.colors.length = 32;
+            this.asset.addVertexSource(new VertexSource(ShaderPredefined.a_Color0, this.colors, GLVertexBufferSize.FOUR, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
+
+            this.asset.drawIndexSource = new DrawIndexSource([
+                0, 1, 5, 0, 5, 4,
+                1, 2, 6, 1, 6, 5,
+                2, 3, 7, 2, 7, 6,
+                4, 5, 9, 4, 9, 8,
+                5, 6, 10, 5, 10, 9,
+                6, 7, 11, 6, 11, 10,
+                8, 9, 13, 8, 13, 12,
+                10, 11, 15, 10, 15, 14
+            ], GLIndexDataType.UNSIGNED_SHORT, GLUsageType.DYNAMIC_DRAW);
+        }
+    }
+
+    class Grid9 {
+        public enabled = true;
+        public top = 0;
+        public right = 0;
+        public bottom = 0;
+        public left = 0;
+
+        public set(top: number, right: number, bottom: number, left: number): void {
+            this.top = top;
+            this.right = right;
+            this.bottom = bottom;
+            this.left = left;
+        }
+    }
+
     export class Sprite extends AbstractRenderable {
         protected static readonly _tmpVec2: Vector2 = new Vector2();
         protected static _sharedQuad = new SharedQuad();
+        protected static _sharedGrid9 = new SharedGrid9();
 
         protected _frame: SpriteFrame = null;
         protected _texture: GLTexture2D = null;
@@ -36,14 +92,15 @@ namespace Aurora {
         protected _uniforms: ShaderUniforms;
 
         protected _anchor: Vector2;
-        protected _scale: Vector2;
         protected _color: Color4;
+        protected _width: number = null;
+        protected _height: number = null;
+        protected _grid9: Grid9 = null;
 
         constructor() {
             super();
 
             this._anchor = new Vector2(0.5, 0.5);
-            this._scale = Vector2.One;
             this._color = Color4.WHITE;
             this._uniforms = new ShaderUniforms();
         }
@@ -101,34 +158,6 @@ namespace Aurora {
             this._anchor.y = y;
         }
 
-        public get scaleX(): number {
-            return this._scale.x;
-        }
-
-        public set scaleX(x: number) {
-            this._scale.x = x;
-        }
-
-        public get scaleY(): number {
-            return this._scale.y;
-        }
-
-        public set scaleY(y: number) {
-            this._scale.y;
-        }
-
-        public get readonlyScale(): Vector2 {
-            return this._scale;
-        }
-
-        public getScale(rst: Vector2 = null): Vector2 {
-            return rst ? rst.set(this._scale) : this._scale.clone();
-        }
-
-        public setScale(s: Vector2 | Vector3 | Vector4) {
-            if (s) this._scale.set(s);
-        }
-
         public get readonlyAnchor(): Vector2 {
             return this._anchor;
         }
@@ -145,6 +174,35 @@ namespace Aurora {
             this._anchor.setFromNumbers(x, y);
         }
 
+        public get width(): number {
+            return this._width === null ? this.sourceWidth : this._width;
+        }
+
+        public set width(w: number) {
+            this._width = w === undefined ? null : w;
+        }
+
+        public get height(): number {
+            return this._height === null ? this.sourceHeight : this._height;
+        }
+
+        public set height(h: number) {
+            this._height = h === undefined ? null : h;
+        }
+
+        public setGrid9(top: number, right: number, bottom: number, left: number): void {
+            if (this._grid9) {
+                this._grid9.enabled = true;
+            } else {
+                this._grid9 = new Grid9();
+            }
+            this._grid9.set(top, right, bottom, left);
+        }
+
+        public clearGrid9(): void {
+            if (this._grid9) this._grid9.enabled = false;
+        }
+
         public checkRenderable(): boolean {
             return this._texture && this._texture.width > 0 && this._texture.height > 0 && this._color.a > 0 && this._node.readonlyCascadeColor.a > 0;
         }
@@ -155,11 +213,11 @@ namespace Aurora {
                     const f = this._frame;
 
                     const w = f.sourceWidth, h = f.sourceHeight;
+                    const sx = this._width === null ? 1 : this._width / w;
+                    const sy = this._height === null ? 1 : this._height / h;
 
                     const lx = -w * this._anchor.x + f.offsetX, ty = -h * this._anchor.y + h - f.offsetY;
                     const rx = lx + f.width, by = ty - f.height;
-
-                    const sx = this._scale.x, sy = this._scale.y;
 
                     Sprite._updateQuadVertices(Sprite._sharedQuad.vertices, lx * sx, rx * sx, by * sy, ty * sy, renderingData.in.renderingObject.l2p);
                     if (Sprite.isInViewport(Sprite._sharedQuad.vertices)) {
@@ -182,11 +240,11 @@ namespace Aurora {
                 }
             } else if (this._texture) {
                 const w = this._texture.width, h = this._texture.height;
+                const sx = this._width === null ? 1 : this._width / w;
+                const sy = this._height === null ? 1 : this._height / h;
 
                 const lx = -w * this._anchor.x, by = -h * this._anchor.y;
                 const rx = lx + w, ty = by + h;
-
-                const sx = this._scale.x, sy = this._scale.y;
 
                 Sprite._updateQuadVertices(Sprite._sharedQuad.vertices, lx * sx, rx * sx, by * sy, ty * sy, renderingData.in.renderingObject.l2p);
                 if (Sprite.isInViewport(Sprite._sharedQuad.vertices)) {
@@ -310,6 +368,7 @@ namespace Aurora {
 
             this.texture = null;
             this.frame = null;
+            this._grid9 = null;
 
             if (this._uniforms) {
                 this._uniforms.destroy();
