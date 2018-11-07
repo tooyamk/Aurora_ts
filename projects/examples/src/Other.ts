@@ -85,17 +85,17 @@ class Other {
 
     public createModel(node: Aurora.Node, gl: Aurora.GL, shaderStore: Aurora.ShaderStore, vert: string, frag: string) {
         let vertexBuffer = new Aurora.GLVertexBuffer(gl);
-        vertexBuffer.upload([-150, -100, 0.0, -100.0, 100, 0.0, 100, -100, 0.0], Aurora.GLVertexBufferSize.THREE, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
-        //vertexBuffer.upload([-0.5, -0.5, 0.0, -0.5, 0.5, 0.0, 0.5, -0.5, 0.0], MITOIA.GLVertexBufferSize.THREE, MITOIA.GLVertexBufferDataType.FLOAT, false, MITOIA.GLUsageType.STATIC_DRAW);
+        vertexBuffer.upload([-150, -100, 0.0, -100.0, 100, 0.0, 100, -100, 0.0], 0, -1, Aurora.GLVertexBufferSize.THREE, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
+        //vertexBuffer.upload([-0.5, -0.5, 0.0, -0.5, 0.5, 0.0, 0.5, -0.5, 0.0], 0, -1, Aurora.GLVertexBufferSize.THREE, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
     
         let colorBuffer = new Aurora.GLVertexBuffer(gl);
-        colorBuffer.upload([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0], Aurora.GLVertexBufferSize.THREE, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
+        colorBuffer.upload([1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0], 0, -1, Aurora.GLVertexBufferSize.THREE, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
     
         let uvBuffer = new Aurora.GLVertexBuffer(gl);
-        uvBuffer.upload([0, 1, 0, 0, 1, 1], Aurora.GLVertexBufferSize.TWO, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
+        uvBuffer.upload([0, 1, 0, 0, 1, 1], 0, -1, Aurora.GLVertexBufferSize.TWO, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
     
         let indexBuffer = new Aurora.GLIndexBuffer(gl);
-        indexBuffer.upload([0, 1, 2], Aurora.GLIndexDataType.UNSIGNED_BYTE, Aurora.GLUsageType.STATIC_DRAW);
+        indexBuffer.upload([0, 1, 2], 0, -1, Aurora.GLIndexDataType.UNSIGNED_BYTE, Aurora.GLUsageType.STATIC_DRAW);
     
         let asset = new Aurora.MeshAsset();
         asset.vertexBuffers = new Map();

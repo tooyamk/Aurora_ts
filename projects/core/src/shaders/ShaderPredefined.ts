@@ -23,6 +23,20 @@ namespace Aurora {
         LIGHTING_SPECULAR_BANK_BRDF = 2,
         LIGHTING_SPECULAR_BLINN_PHONE = 3,
 
+        VERTEX_COLOR = "VERTEX_COLOR",
+
+        REFLECTION = "REFLECTION",
+
+        AMBIENT_COLOR = "AMBIENT_COLOR",
+
+        DIFFUSE_TEX = "DIFFUSE_TEX",
+        DIFFUSE_COLOR = "DIFFUSE_COLOR",
+
+        SPECULAR_TEX = "SPECULAR_TEX",
+        SPECULAR_COLOR = "SPECULAR_COLOR",
+
+        REFLECTION_COLOR = "REFLECTION_COLOR",
+
         u_LightColor0 = "u_LightColor0",
         u_LightPosW0 = "u_LightPosW0",
         u_LightDirW0 = "u_LightDirW0",
@@ -42,19 +56,7 @@ namespace Aurora {
 
         u_LighitngSpecularShininess = "u_LighitngSpecularShininess",
 
-        REFLECTION = "REFLECTION",
-
         u_CamPosW = "u_CamPosW",
-
-        AMBIENT_COLOR = "AMBIENT_COLOR",
-
-        DIFFUSE_TEX = "DIFFUSE_TEX",
-        DIFFUSE_COLOR = "DIFFUSE_COLOR",
-
-        SPECULAR_TEX = "SPECULAR_TEX",
-        SPECULAR_COLOR = "SPECULAR_COLOR",
-
-        REFLECTION_COLOR = "REFLECTION_COLOR",
 
         a_Position0 = "a_Position0",
         a_Normal0 = "a_Normal0",
@@ -84,7 +86,8 @@ namespace Aurora {
         u_SpecularSampler = "u_SpecularSampler",
         u_ReflectionSampler = "u_ReflectionSampler",
 
-        v_TexCoord0 = "v_TexCoord0",
+        v_UV0 = "v_UV0",
+        v_Color0 = "v_Color0",
         v_WorldNormal0 = "v_WorldNormal0",
         v_WorldPos0 = "v_WorldPos0",
 

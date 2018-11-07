@@ -1,4 +1,5 @@
 ///<reference path="Types.ts" />
+///<reference path="Ref.ts" />
 ///<reference path="math/Color.ts" />
 ///<reference path="math/Rect.ts" />
 
@@ -7,32 +8,37 @@ interface WebGLRenderingContext {
     /** **WebGL Version:** 2.0 */
     drawBuffers(buffers: number[]): void;
 
+    //bufferSubData(target: GLenum, offset: GLintptr, data: BufferSource): void;
+
+    ///** **WebGL Version:** 2.0 */
+    //bufferSubData(target: GLenum, dstByteOffset: GLuint, srcData: ArrayBufferView, srcOffset: GLuint, length: GLuint): void;
+
     /** **WebGL Version:** 2.0 */
     renderbufferStorageMultisample(target: number, samples: number, internalformat: number, width: number, height: number): void;
 
-    texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, pixels: ArrayBufferView | null): void;
-    texImage2D(target: number, level: number, internalformat: number, format: number, type: number, pixels: Aurora.GLImage): void;
+    texImage2D(target: GLenum, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, pixels: ArrayBufferView | null): void;
+    texImage2D(target: GLenum, level: number, internalformat: number, format: number, type: number, pixels: Aurora.GLImage): void;
 
     /** **WebGL Version:** 2.0 */
-    texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, offset: GLintptr): void;
+    texImage2D(target: GLenum, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, offset: GLintptr): void;
 
     /** **WebGL Version:** 2.0 */
-    texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, source: Aurora.GLImage): void;
+    texImage2D(target: GLenum, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, source: Aurora.GLImage): void;
 
     /** **WebGL Version:** 2.0 */
-    texImage2D(target: number, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, srcData: ArrayBufferView | null, srcOffset: number): void;
+    texImage2D(target: GLenum, level: number, internalformat: number, width: number, height: number, border: number, format: number, type: number, srcData: ArrayBufferView | null, srcOffset: number): void;
 
-    texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, pixels: ArrayBufferView | null): void;
-    texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, format: number, type: number, pixels: Aurora.GLImage): void;
-
-    /** **WebGL Version:** 2.0 */
-    texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, format: number, type: number, offset: GLintptr): void;
+    texSubImage2D(target: GLenum, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, pixels: ArrayBufferView | null): void;
+    texSubImage2D(target: GLenum, level: number, xoffset: number, yoffset: number, format: number, type: number, pixels: Aurora.GLImage): void;
 
     /** **WebGL Version:** 2.0 */
-    texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, source: Aurora.GLImage): void;
+    texSubImage2D(target: GLenum, level: number, xoffset: number, yoffset: number, format: number, type: number, offset: GLintptr): void;
 
     /** **WebGL Version:** 2.0 */
-    texSubImage2D(target: number, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, srcData: ArrayBufferView | null, srcOffset: number): void;
+    texSubImage2D(target: GLenum, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, source: Aurora.GLImage): void;
+
+    /** **WebGL Version:** 2.0 */
+    texSubImage2D(target: GLenum, level: number, xoffset: number, yoffset: number, width: number, height: number, format: number, type: number, srcData: ArrayBufferView | null, srcOffset: number): void;
 }
 
 namespace Aurora {
@@ -95,15 +101,23 @@ namespace Aurora {
         }
     }
 
-    export abstract class AbstractGLObject {
+    export abstract class AbstractGLObject extends Ref {
         protected _gl: GL;
 
         constructor(gl: GL) {
+            super();
+
             this._gl = gl;
         }
 
         public get gl(): GL {
             return this._gl;
+        }
+
+        public abstract destroy(): void;
+
+        protected _refDestroy() {
+            this.destroy();
         }
     }
 
@@ -166,6 +180,100 @@ namespace Aurora {
         public bind(): boolean {
             return this._gl.bindBuffer(this);
         }
+
+        
+
+        /**
+         * @param dstOffset unit is element
+         * @param srcOffset unit is element
+         * @param length unit is element
+         */
+        protected _uploadSub(data: GLVertexBufferData | GLIndexBufferData, dataType: GLenum ,dstOffset: uint = 0, srcOffset: uint = 0, length: int = -1): boolean {
+            if (this._buffer && dstOffset < this._numElements && length !== 0) {
+                const gl = this._gl.context;
+
+                this.bind();
+
+                const byteOffset = dstOffset * this._sizePerElement;
+
+                if (data instanceof Array) {
+                    const dataLen = data.length;
+                    if (srcOffset >= dataLen) return false;
+                    if (length < 0) {
+                        length = srcOffset > 0 ? dataLen - srcOffset : dataLen;
+                    } else if (srcOffset + length > dataLen) {
+                        length = dataLen - srcOffset;
+                    }
+                    if (dstOffset + length > this._numElements) length = this._numElements - dstOffset;
+                    if (srcOffset > 0 || srcOffset + length < dataLen) data = data.slice(srcOffset, srcOffset + length);
+
+                    let src: ArrayBufferView;
+                    switch (dataType) {
+                        case GLEnum.BYTE:
+                            src = new Int8Array(data);
+                            break;
+                        case GLEnum.UNSIGNED_BYTE:
+                            src = new Uint8Array(data);
+                            break;
+                        case GLEnum.SHORT:
+                            src = new Int16Array(data);
+                            break;
+                        case GLEnum.UNSIGNED_SHORT:
+                            src = new Uint16Array(data);
+                            break;
+                        case GLEnum.INT:
+                            src = new Uint32Array(data);
+                            break;
+                        case GLEnum.UNSIGNED_INT:
+                            src = new Uint32Array(data);
+                            break;
+                        case GLEnum.FLOAT:
+                            src = new Float32Array(data);
+                            break;
+                        default:
+                            break;
+                    }
+
+                    gl.bufferSubData(this._bufferType, byteOffset, src);
+                } else {
+                    const dataLen = data.byteLength;
+                    srcOffset *= this._sizePerElement;
+                    if (srcOffset >= dataLen) return false;
+                    if (length < 0) {
+                        length = srcOffset > 0 ? dataLen - srcOffset : dataLen;
+                    } else {
+                        length *= this._sizePerElement;
+                        if (srcOffset + length > dataLen) length = dataLen - srcOffset;
+                    }
+                    if (this._sizePerElement === 2) {
+                        if (!(length & 0b1)) --length;
+                    } else if (this._sizePerElement === 4) {
+                        const r = length & 0b11;
+                        if (!r) length -= r;
+                    }
+                    dstOffset *= this._sizePerElement;
+                    if (dstOffset + length > this._memSize) length = this._memSize - dstOffset;
+
+                    if (data instanceof ArrayBuffer) {
+                        if (srcOffset > 0 || srcOffset + length < dataLen) {
+                            gl.bufferSubData(this._bufferType, byteOffset, new DataView(data, srcOffset, length));
+                        } else {
+                            gl.bufferSubData(this._bufferType, byteOffset, data);
+                        }
+                    } else {
+                        if (srcOffset > 0 || srcOffset + length < dataLen) {
+                            gl.bufferSubData(this._bufferType, byteOffset, new DataView(data.buffer, data.byteOffset + srcOffset, length));
+                        } else {
+                            gl.bufferSubData(this._bufferType, byteOffset, data);
+                        }
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        }
     }
 
     export class GLVertexBuffer extends AbstractGLBuffer {
@@ -182,23 +290,6 @@ namespace Aurora {
             super(gl, GLBufferType.ARRAY_BUFFER);
 
             this._id = ++GLVertexBuffer._idGenerator;
-        }
-
-        public static calcSizePerElement(type: GLVertexBufferDataType): uint {
-            switch (type) {
-                case GLVertexBufferDataType.BYTE:
-                case GLVertexBufferDataType.UNSIGNED_BYTE:
-                    return 1;
-                case GLVertexBufferDataType.SHORT:
-                case GLVertexBufferDataType.UNSIGNED_SHORT:
-                    return 2;
-                case GLVertexBufferDataType.INT:
-                case GLVertexBufferDataType.UNSIGNED_INT:
-                case GLVertexBufferDataType.FLOAT:
-                    return 4
-                default:
-                    return 0;
-            }
         }
 
         public get id(): number {
@@ -241,7 +332,7 @@ namespace Aurora {
                 this._size = size;
                 this._dataType = type;
 
-                this._sizePerElement = GLVertexBuffer.calcSizePerElement(this._dataType);
+                this._sizePerElement = GL.calcMemSize(this._dataType);
                 this._numElements = (this._memSize / this._sizePerElement) | 0;
             }
 
@@ -261,14 +352,14 @@ namespace Aurora {
 
                 this.bind();
 
-                this._sizePerElement = GLVertexBuffer.calcSizePerElement(this._dataType);
+                this._sizePerElement = GL.calcMemSize(this._dataType);
                 this._memSize = numElements * this._sizePerElement;
 
-                gl.bufferData(GLEnum.ARRAY_BUFFER, this._memSize, usage);
+                gl.bufferData(this._bufferType, this._memSize, usage);
             }
         }
-
-        public upload(data: GLVertexBufferData, size: GLVertexBufferSize = GLVertexBufferSize.FOUR, type: GLVertexBufferDataType = GLVertexBufferDataType.FLOAT, normalized: boolean = false, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
+        
+        public upload(data: GLVertexBufferData, offset: uint = 0, length: int = -1, size: GLVertexBufferSize = GLVertexBufferSize.FOUR, type: GLVertexBufferDataType = GLVertexBufferDataType.FLOAT, normalized: boolean = false, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
             if (this._buffer) {
                 ++this._uploadCount;
                 this._size = size;
@@ -281,6 +372,19 @@ namespace Aurora {
                 this.bind();
 
                 if (data instanceof Array) {
+                    const dataLen = data.length;
+                    if (offset >= dataLen) {
+                        if (dataLen > 0) data = [];
+                        length = 0;
+                    } else {
+                        if (length < 0) {
+                            length = offset > 0 ? dataLen - offset : dataLen;
+                        } else if (offset + length > dataLen) {
+                            length = dataLen - offset;
+                        }
+                        if (offset > 0 || offset + length < dataLen) data = data.slice(offset, offset + length);
+                    }
+
                     let src: ArrayBufferView;
                     switch (type) {
                         case GLVertexBufferDataType.BYTE: {
@@ -309,7 +413,7 @@ namespace Aurora {
                         }
                         case GLVertexBufferDataType.INT: {
                             this._sizePerElement = 4;
-                            src = new Uint32Array(data);
+                            src = new Int32Array(data);
 
                             break;
                         }
@@ -330,60 +434,67 @@ namespace Aurora {
                             break;
                     }
 
-                    this._numElements = data.length;
-                    this._memSize = this._numElements * this._sizePerElement;
+                    this._numElements = length;
+                    const memSize = this._numElements * this._sizePerElement;
 
-                    gl.bufferData(GLEnum.ARRAY_BUFFER, src, usage);
+                    if (this._memSize === memSize) {
+                        gl.bufferSubData(this._bufferType, 0, src);
+                    } else {
+                        this._memSize = memSize;
+                        gl.bufferData(this._bufferType, src, usage);
+                    }
                 } else {
-                    this._memSize = data.byteLength;
-                    this._sizePerElement = GLVertexBuffer.calcSizePerElement(this._dataType);
-                    this._numElements = (this._memSize / this._sizePerElement) | 0;
+                    this._sizePerElement = GL.calcMemSize(this._dataType);
 
-                    gl.bufferData(GLEnum.ARRAY_BUFFER, <ArrayBuffer>data, usage);
+                    const dataLen = data.byteLength;
+                    offset *= this._sizePerElement;
+                    if (offset >= dataLen) {
+                        offset = 0;
+                        length = 0;
+                    } else {
+                        if (length < 0) {
+                            length = offset > 0 ? dataLen - offset : dataLen;
+                        } else {
+                            length *= this._sizePerElement;
+                            if (offset + length > dataLen) length = dataLen - offset;
+                        }
+                        if (this._sizePerElement === 2) {
+                            if (!(length & 0b1))--length;
+                        } else if (this._sizePerElement === 4) {
+                            const r = length & 0b11;
+                            if (!r) length -= r;
+                        }
+                    }
+
+                    this._numElements = (length / this._sizePerElement) | 0;
+
+                    if (length === data.byteLength) {
+                        if (this._memSize === length) {
+                            gl.bufferSubData(this._bufferType, 0, data);
+                        } else {
+                            this._memSize = length;
+                            gl.bufferData(this._bufferType, data, usage);
+                        }
+                    } else {
+                        let view = data instanceof ArrayBuffer ? new DataView(data, offset, length) : new DataView(data.buffer, data.byteOffset + offset, length);
+                        if (this._memSize === length) {
+                            gl.bufferSubData(this._bufferType, 0, view);
+                        } else {
+                            this._memSize = length;
+                            gl.bufferData(this._bufferType, view, usage);
+                        }
+                    }
                 }
             }
         }
 
-        public uploadSub(data: GLVertexBufferData, offsetElements: int = 0): void {
-            if (this._buffer) {
-                ++this._uploadCount;
-                const gl = this._gl.context;
-
-                this.bind();
-
-                if (data instanceof Array) {
-                    let src: ArrayBufferView;
-                    switch (this._dataType) {
-                        case GLVertexBufferDataType.BYTE:
-                            src = new Int8Array(data);
-                            break;
-                        case GLVertexBufferDataType.UNSIGNED_BYTE:
-                            src = new Uint8Array(data);
-                            break;
-                        case GLVertexBufferDataType.SHORT:
-                            src = new Int16Array(data);
-                            break;
-                        case GLVertexBufferDataType.UNSIGNED_SHORT:
-                            src = new Uint16Array(data);
-                            break;
-                        case GLVertexBufferDataType.INT:
-                            src = new Uint32Array(data);
-                            break;
-                        case GLVertexBufferDataType.UNSIGNED_INT:
-                            src = new Uint32Array(data);
-                            break;
-                        case GLVertexBufferDataType.FLOAT:
-                            src = new Float32Array(data);
-                            break;
-                        default:
-                            break;
-                    }
-
-                    gl.bufferSubData(GLEnum.ARRAY_BUFFER, offsetElements * this._sizePerElement, src);
-                } else {
-                    gl.bufferSubData(GLEnum.ARRAY_BUFFER, offsetElements * this._sizePerElement, <ArrayBuffer>data);
-                }
-            }
+        /**
+         * @param dstOffset unit is element
+         * @param srcOffset unit is element
+         * @param length unit is element
+         */
+        public uploadSub(data: GLVertexBufferData, dstOffset: uint = 0, srcOffset: uint = 0, length: int = -1): void {
+            if (this._uploadSub(data, this._dataType, dstOffset, srcOffset, length)) ++this._uploadCount;
         }
 
         public use(location: uint): void {
@@ -437,11 +548,11 @@ namespace Aurora {
 
                 this._memSize = numElements * this._sizePerElement;
 
-                gl.bufferData(GLEnum.ELEMENT_ARRAY_BUFFER, this._memSize, usage);
+                gl.bufferData(this._bufferType, this._memSize, usage);
             }
         }
 
-        public upload(data: uint[] | Uint32Array | Uint16Array | Uint8Array | ArrayBuffer, type: GLIndexDataType = GLIndexDataType.AUTO, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
+        public upload(data: GLIndexBufferData, offset: uint = 0, length: int = -1, type: GLIndexDataType = GLIndexDataType.AUTO, usage: GLUsageType = GLUsageType.STATIC_DRAW): void {
             if (this._buffer) {
                 this._usage = usage;
 
@@ -449,93 +560,70 @@ namespace Aurora {
 
                 this.bind();
 
-                if (data instanceof ArrayBuffer) {
-                    this._dataType = type;
-
-                    switch (this._dataType) {
-                        case GLIndexDataType.UNSIGNED_BYTE:
-                            this._sizePerElement = 1;
-                            break;
-                        case GLIndexDataType.UNSIGNED_SHORT:
-                            this._sizePerElement = 2;
-                            break;
-                        case GLIndexDataType.UNSIGNED_INT:
-                            this._sizePerElement = 4;
-                            break;
-                        default:
-                            throw new Error("type cannot set AUTO");
-                            break;
+                if (data instanceof Array) {
+                    const dataLen = data.length;
+                    if (offset >= dataLen) {
+                        if (dataLen > 0) data = [];
+                        length = 0;
+                    } else {
+                        if (length < 0) {
+                            length = offset > 0 ? dataLen - offset : dataLen;
+                        } else if (offset + length > dataLen) {
+                            length = dataLen - offset;
+                        }
+                        if (offset > 0 || offset + length < dataLen) data = data.slice(offset, offset + length);
                     }
+                    
+                    let src: ArrayBufferView;
 
-                    this._numElements = (data.byteLength / this._sizePerElement) | 0;
-                    this._memSize = data.byteLength;
-
-                    gl.bufferData(GLEnum.ELEMENT_ARRAY_BUFFER, data, usage);
-                } else {
-                    let src;
-
-                    if (data instanceof Uint8Array) {
-                        src = data;
+                    if (type == GLIndexDataType.AUTO) {
                         this._dataType = GLIndexDataType.UNSIGNED_BYTE;
-                    } else if (data instanceof Uint16Array) {
-                        src = data;
-                        this._dataType = GLIndexDataType.UNSIGNED_SHORT;
-                    } else if (data instanceof Uint32Array) {
-                        if (this._gl.supprotUintIndexes) {
-                            src = data;
-                            this._dataType = GLIndexDataType.UNSIGNED_INT;
-                        } else {
+                        let isUint8 = true;
+                        for (let i = data.length - 1; i >= 0; --i) {
+                            const v = data[i];
+                            if (v > 0xFFFF) {
+                                this._dataType = GLIndexDataType.UNSIGNED_INT;
+                                break;
+                            } else if (isUint8 && v > 0xFF) {
+                                this._dataType = GLIndexDataType.UNSIGNED_SHORT;
+                                isUint8 = false;
+                            }
+                        }
+
+                        if (this._dataType === GLIndexDataType.UNSIGNED_INT) {
+                            if (this._gl.supprotUintIndexes) {
+                                src = new Uint32Array(data);
+                            } else {
+                                src = new Uint16Array(data);
+                                this._dataType = GLIndexDataType.UNSIGNED_SHORT;
+                            }
+                        } else if (this._dataType === GLIndexDataType.UNSIGNED_SHORT) {
                             src = new Uint16Array(data);
-                            this._dataType = GLIndexDataType.UNSIGNED_SHORT;
+                        } else {
+                            src = new Uint8Array(data);
                         }
                     } else {
-                        if (type == GLIndexDataType.AUTO) {
-                            this._dataType = GLIndexDataType.UNSIGNED_BYTE;
-                            for (let i = data.length - 1; i >= 0; --i) {
-                                const v = data[i];
-                                if (v > 0xFFFF) {
-                                    this._dataType = GLIndexDataType.UNSIGNED_INT;
-                                    break;
-                                } else if (this._dataType === GLIndexDataType.UNSIGNED_BYTE && v > 0xFF) {
-                                    this._dataType = GLIndexDataType.UNSIGNED_SHORT;
-                                }
-                            }
-
-                            if (this._dataType === GLIndexDataType.UNSIGNED_INT) {
+                        this._dataType = type;
+                        switch (this._dataType) {
+                            case GLIndexDataType.UNSIGNED_BYTE:
+                                src = new Uint8Array(data);
+                                break;
+                            case GLIndexDataType.UNSIGNED_SHORT:
+                                src = new Uint16Array(data);
+                                break;
+                            case GLIndexDataType.UNSIGNED_INT: {
                                 if (this._gl.supprotUintIndexes) {
                                     src = new Uint32Array(data);
                                 } else {
-                                    src = new Uint16Array(data);
                                     this._dataType = GLIndexDataType.UNSIGNED_SHORT;
-                                }
-                            } else if (this._dataType === GLIndexDataType.UNSIGNED_SHORT) {
-                                src = new Uint16Array(data);
-                            } else {
-                                src = new Uint8Array(data);
-                            }
-                        } else {
-                            this._dataType = type;
-                            switch (this._dataType) {
-                                case GLIndexDataType.UNSIGNED_BYTE:
-                                    src = new Uint8Array(data);
-                                    break;
-                                case GLIndexDataType.UNSIGNED_SHORT:
                                     src = new Uint16Array(data);
-                                    break;
-                                case GLIndexDataType.UNSIGNED_INT: {
-                                    if (this._gl.supprotUintIndexes) {
-                                        src = new Uint32Array(data);
-                                    } else {
-                                        this._dataType = GLIndexDataType.UNSIGNED_SHORT;
-                                        src = new Uint16Array(data);
-                                    }
-
-                                    break;
                                 }
-                                default:
-                                    throw new Error("invalid type");
-                                    break;
+
+                                break;
                             }
+                            default:
+                                throw new Error("GLIndexBuffer upload error: invalid type");
+                                break;
                         }
                     }
 
@@ -550,38 +638,107 @@ namespace Aurora {
                             this._sizePerElement = 4;
                             break;
                         default:
-                            throw new Error("invalid type");
+                            throw new Error("GLIndexBuffer upload error: invalid type");
                             break;
                     }
 
-                    this._numElements = src.length;
-                    this._memSize = this._numElements * this._sizePerElement;
+                    this._numElements = length;
+                    const memSize = this._numElements * this._sizePerElement;
 
-                    gl.bufferData(GLEnum.ELEMENT_ARRAY_BUFFER, src, usage);
+                    if (this._memSize === memSize) {
+                        gl.bufferSubData(this._bufferType, 0, src);
+                    } else {
+                        this._memSize = memSize;
+                        gl.bufferData(this._bufferType, src, usage);
+                    }
+                } else {
+                    this._dataType = type;
+
+                    const isArrBuf = data instanceof ArrayBuffer;
+                    if (isArrBuf) {
+                        switch (this._dataType) {
+                            case GLIndexDataType.UNSIGNED_BYTE:
+                                this._sizePerElement = 1;
+                                break;
+                            case GLIndexDataType.UNSIGNED_SHORT:
+                                this._sizePerElement = 2;
+                                break;
+                            case GLIndexDataType.UNSIGNED_INT:
+                                this._sizePerElement = 4;
+                                break;
+                            default:
+                                throw new Error("GLIndexBuffer upload error: type cannot set AUTO");
+                                break;
+                        }
+                    } else {
+                        if (data instanceof Uint8Array) {
+                            this._dataType = GLIndexDataType.UNSIGNED_BYTE;
+                            this._sizePerElement = 1;
+                        } else if (data instanceof Uint16Array) {
+                            this._dataType = GLIndexDataType.UNSIGNED_SHORT;
+                            this._sizePerElement = 2;
+                        } else if (data instanceof Uint32Array) {
+                            if (this._gl.supprotUintIndexes) {
+                                this._dataType = GLIndexDataType.UNSIGNED_INT;
+                                this._sizePerElement = 4;
+                            } else {
+                                this._dataType = GLIndexDataType.UNSIGNED_SHORT;
+                                this._sizePerElement = 2;
+                            }
+                        } else {
+                            throw new Error("GLIndexBuffer upload error: invalid data");
+                        }
+                    }
+
+                    const dataLen = data.byteLength;
+                    offset *= this._sizePerElement;
+                    if (offset >= dataLen) {
+                        offset = 0;
+                        length = 0;
+                    } else {
+                        if (length < 0) {
+                            length = offset > 0 ? dataLen - offset : dataLen;
+                        } else {
+                            length *= this._sizePerElement;
+                            if (offset + length > dataLen) length = dataLen - offset;
+                        }
+                        if (this._sizePerElement === 2) {
+                            if (!(length & 0b1))--length;
+                        } else if (this._sizePerElement === 4) {
+                            const r = length & 0b11;
+                            if (!r) length -= r;
+                        }
+                    }
+
+                    this._numElements = (length / this._sizePerElement) | 0;
+
+                    if (length === data.byteLength) {
+                        if (this._memSize === length) {
+                            gl.bufferSubData(this._bufferType, 0, data);
+                        } else {
+                            this._memSize = length;
+                            gl.bufferData(this._bufferType, data, usage);
+                        }
+                    } else {
+                        let view = isArrBuf ? new DataView(<ArrayBuffer>data, offset, length) : new DataView((<ArrayBufferView>data).buffer, (<ArrayBufferView>data).byteOffset + offset, length);
+                        if (this._memSize === length) {
+                            gl.bufferSubData(this._bufferType, 0, view);
+                        } else {
+                            this._memSize = length;
+                            gl.bufferData(this._bufferType, view, usage);
+                        }
+                    }
                 }
             }
         }
 
-        public uploadSub(data: number[] | Uint32Array | Uint16Array | Uint8Array, offsetElements: int = 0): void {
-            if (this._buffer) {
-                const gl = this._gl.context;
-
-                this.bind();
-
-                if (data instanceof Array) {
-                    let arrayBuffer;
-                    if (this._dataType === GLIndexDataType.UNSIGNED_BYTE) {
-                        arrayBuffer = new Uint8Array(data);
-                    } else if (this._dataType === GLIndexDataType.UNSIGNED_SHORT) {
-                        arrayBuffer = new Uint16Array(data);
-                    } else {
-                        arrayBuffer = new Uint32Array(data);
-                    }
-                    gl.bufferSubData(GLEnum.ELEMENT_ARRAY_BUFFER, offsetElements * this._sizePerElement, arrayBuffer);
-                } else {
-                    gl.bufferSubData(GLEnum.ELEMENT_ARRAY_BUFFER, offsetElements * this._sizePerElement, data);
-                }
-            }
+        /**
+         * @param dstOffset unit is element
+         * @param srcOffset unit is element
+         * @param length unit is element
+         */
+        public uploadSub(data: GLIndexBufferData, dstOffset: uint = 0, srcOffset: uint = 0, length: int = -1): void {
+            this._uploadSub(data, this._dataType, dstOffset, srcOffset, length);
         }
 
         public draw(mode: GLDrawMode = null, count: uint = null, offset: uint = 0): void {
@@ -2396,6 +2553,23 @@ namespace Aurora {
 
         public printConstant(msg: string, value: number): void {
             console.log(msg + value + "(" + value.toString(16).toUpperCase() + ")");
+        }
+
+        public static calcMemSize(type: GLenum): uint {
+            switch (type) {
+                case GLEnum.BYTE:
+                case GLEnum.UNSIGNED_BYTE:
+                    return 1;
+                case GLEnum.SHORT:
+                case GLEnum.UNSIGNED_SHORT:
+                    return 2;
+                case GLEnum.INT:
+                case GLEnum.UNSIGNED_INT:
+                case GLEnum.FLOAT:
+                    return 4
+                default:
+                    return 0;
+            }
         }
     }
 }

@@ -8,8 +8,6 @@ namespace Aurora {
     }
 
     export class Material {
-        public shader: Shader = null;
-
         public renderingPriority: int = 0;
         public renderingSort: RenderingSort = RenderingSort.MIDDLE;
 
@@ -27,18 +25,26 @@ namespace Aurora {
         public stencilFront: GLStencil = null;
         public stencilBack: GLStencil = null;
 
-        public defines: ShaderDefines = new ShaderDefines();
-        public uniforms: ShaderUniforms = new ShaderUniforms();
+        protected _shader: Shader = null;
+
+        protected _defines: ShaderDefines = null;
+        protected _uniforms: ShaderUniforms = null;
 
         constructor(shader: Shader = null) {
             this.shader = shader;
+
+            this._defines = new ShaderDefines();
+            this._defines.retain();
+
+            this._uniforms = new ShaderUniforms();
+            this._uniforms.retain();
         }
 
         public static canCombine(m0: Material, m1: Material): boolean {
             if (m0 === m1) return true;
             if (m0) {
                 if (m1) {
-                    if (m0.shader !== m1.shader ||
+                    if (m0._shader !== m1._shader ||
                         m0.drawMode !== m1.drawMode ||
                         m0.cullFace !== m1.cullFace ||
                         m0.depthTest !== m1.depthTest ||
@@ -56,7 +62,7 @@ namespace Aurora {
         }
 
         public clone(): Material {
-            const m = new Material(this.shader);
+            const m = new Material(this._shader);
 
             m.renderingPriority = this.renderingPriority;
             m.renderingSort = this.renderingSort;
@@ -69,18 +75,54 @@ namespace Aurora {
             if (this.colorWrite) m.colorWrite = this.colorWrite.clone();
             if (this.stencilFront) m.stencilFront = this.stencilFront.clone();
             if (this.stencilBack) m.stencilBack = this.stencilBack.clone();
-            if (this.defines) m.defines = this.defines.clone();
-            if (this.uniforms) m.uniforms = this.uniforms.clone();
+            if (this._defines) m.defines = this._defines.clone();
+            if (this._uniforms) m.uniforms = this._uniforms.clone();
 
             return m;
         }
 
+        public get shader(): Shader {
+            return this._shader;
+        }
+
+        public set shader(s: Shader) {
+            if (this._shader !== s) {
+                if (s) s.retain();
+                if (this._shader) this._shader.release();
+                this._shader = s;
+            }
+        }
+
+        public get defines(): ShaderDefines {
+            return this._defines;
+        }
+
+        public set defines(d: ShaderDefines) {
+            if (this._defines !== d) {
+                if (d) d.retain();
+                if (this._defines) this._defines.release();
+                this._defines = d;
+            }
+        }
+
+        public get uniforms(): ShaderUniforms {
+            return this._uniforms;
+        }
+
+        public set uniforms(u: ShaderUniforms) {
+            if (this._uniforms !== u) {
+                if (u) u.retain();
+                if (this._uniforms) this._uniforms.release();
+                this._uniforms = u;
+            }
+        }
+
         public ready(definesStack: ShaderDefinesStack): GLProgram {
-            return this.shader ? this.shader.ready(definesStack) : null;
+            return this._shader ? this._shader.ready(definesStack) : null;
         }
 
         public use(uniformsStack: ShaderUniformsStack): GLProgram {
-            const gl = this.shader.gl;
+            const gl = this._shader.gl;
             
             gl.setBlend(this.blend);
             gl.setCullFace(this.cullFace);
@@ -89,11 +131,13 @@ namespace Aurora {
             gl.setColorWrite(this.colorWrite);
             gl.setStencil(this.stencilFront, this.stencilBack);
 
-            return this.shader.use(uniformsStack);
+            return this._shader.use(uniformsStack);
         }
 
-        public destroy(destroyShader: boolean): void {
-            if (destroyShader && this.shader) this.shader.destroy();
+        public destroy(): void {
+            if (this._shader) {
+                this._shader.destroy();
+            }
 
             this.shader = null;
             this.blend = null;

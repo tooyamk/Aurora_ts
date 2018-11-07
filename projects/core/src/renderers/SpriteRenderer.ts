@@ -41,6 +41,7 @@ namespace Aurora {
             this._asset.drawIndexBuffer = ib;
 
             this._defaultShader = new Shader(gl, new ShaderSource(BuiltinShader.DefaultSprite.VERTEX), new ShaderSource(BuiltinShader.DefaultSprite.FRAGMENT));
+            this._defaultShader.retain();
             this._defaultMaterial = new Material(this._defaultShader);
             this._defaultMaterial.blend = new GLBlend(null, new GLBlendFunc().set(GLBlendFactorValue.SRC_ALPHA, GLBlendFactorValue.ONE_MINUS_SRC_ALPHA));
             this._defaultMaterial.cullFace = GLCullFace.NONE;
@@ -116,6 +117,9 @@ namespace Aurora {
                 obj.renderable.visit(renderingData);
                 const as = renderingData.out.asset;
                 if (as && as.drawIndexSource) {
+                    const drawIdxLen = as.drawIndexSource.getDataLength();
+                    if (!drawIdxLen) continue;
+
                     const mat = obj.material;
                     const uniformsStack = renderingData.out.uniformsStack;
 
@@ -129,7 +133,7 @@ namespace Aurora {
                             const att = this._curProgramAtts[i];
                             const vs = as.getVertexSource(att.name);
                             if (vs) {
-                                const numElements = vs.data.length / vs.size;
+                                const numElements = vs.getDataLength() / vs.size;
                                 if (len < 0) {
                                     len = numElements;
                                 } else if (len !== numElements) {
@@ -176,9 +180,9 @@ namespace Aurora {
                             }
                         }
 
-                        this._combine(as.drawIndexSource);
+                        this._combine(as.drawIndexSource, drawIdxLen);
                         this._numCombinedVertex += len;
-                        this._numCombinedIndex += as.drawIndexSource.data.length;
+                        this._numCombinedIndex += drawIdxLen;
                         while (this._numCombinedVertex > this._numAllicatedVertex) this._numAllicatedVertex <<= 1;
                         while (this._numCombinedIndex > this._numAllicatedIndex) this._numAllicatedIndex <<= 1;
                     }
@@ -212,8 +216,7 @@ namespace Aurora {
                         const vs = as.vertexSources.get(name);
                         let vb = as.vertexBuffers.get(name);
                         if (vb) {
-                            if (vb.memSize !== this._numAllicatedVertex * vs.size * GLVertexBuffer.calcSizePerElement(vs.type)) {
-                                vb.reCreate();
+                            if (vb.memSize !== this._numAllicatedVertex * vs.size * GL.calcMemSize(vs.type)) {
                                 vb.allocate(this._numAllicatedVertex * vs.size, vs.size, vs.type, vs.normalized, GLUsageType.DYNAMIC_DRAW);
                             } else {
                                 vb.resetDataAttrib(vs.size, vs.type, vs.normalized);
@@ -229,10 +232,7 @@ namespace Aurora {
 
                     const is = as.drawIndexSource;
                     const ib = as.drawIndexBuffer;
-                    if (ib.numElements !== this._numAllicatedIndex) {
-                        ib.reCreate();
-                        ib.allocate(this._numAllicatedIndex, GLIndexDataType.UNSIGNED_SHORT, GLUsageType.DYNAMIC_DRAW);
-                    }
+                    if (ib.numElements !== this._numAllicatedIndex) ib.allocate(this._numAllicatedIndex, GLIndexDataType.UNSIGNED_SHORT, GLUsageType.DYNAMIC_DRAW);
                     ib.uploadSub(is.data);
                 }
 
@@ -257,12 +257,12 @@ namespace Aurora {
             this._gl = null;
 
             if (this._defaultMaterial) {
-                this._defaultMaterial.destroy(false);
+                this._defaultMaterial.destroy();
                 this._defaultMaterial = null;
             }
 
             if (this._defaultShader) {
-                this._defaultShader.destroy();
+                this._defaultShader.release();
                 this._defaultShader = null;
             }
 
@@ -307,20 +307,20 @@ namespace Aurora {
             return needFlush;
         }
 
-        private _combine(drawIndexSource: DrawIndexSource): void {
+        private _combine(drawIndexSource: DrawIndexSource, drawIndexLen: uint): void {
             const idx = this._numCombinedVertex;
             for (let i = 0; i < this._numVertexSources; ++i) {
                 const vs = this._vertexSources[i];
                 const src = vs.data;
                 const dst = this._vertexSources[++i].data;
 
-                for (let j = 0, n = src.length; j < n; ++j) dst[idx + j] = src[j];
+                for (let j = vs.getDataOffset(), n = vs.getDataLength(); j < n; ++j) dst[idx + j] = src[j];
             }
 
             const idx2 = this._numCombinedIndex;
             const src = drawIndexSource.data;
             const dst = this._asset.drawIndexSource.data;
-            for (let i = 0, n = src.length; i < n; ++i) dst[idx2 + i] = src[idx + i];
+            for (let i = drawIndexSource.getDataOffset(); i < drawIndexLen; ++i) dst[idx2 + i] = src[idx + i];
         }
     }
 }

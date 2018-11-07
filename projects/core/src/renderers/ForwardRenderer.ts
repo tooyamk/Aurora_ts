@@ -12,11 +12,21 @@ namespace Aurora {
         protected _l2pM44Array: number[] = [];
         protected _l2vM44Array: number[] = [];
 
-        protected _shaderDefines = new ShaderDefines();
-        protected _shaderUniforms = new ShaderUniforms();
+        protected _shaderDefines: ShaderDefines = null;
+        protected _shaderUniforms: ShaderUniforms = null;
 
         protected _definesStack = new ShaderDataStack<ShaderDefines, ShaderDefines.Value>();
         protected _uniformsStack = new ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>();
+
+        constructor() {
+            super();
+
+            this._shaderDefines = new ShaderDefines();
+            this._shaderDefines.retain();
+
+            this._shaderUniforms = new ShaderUniforms();
+            this._shaderUniforms.retain();
+        }
 
         public get enabledLighting(): boolean {
             return this._enalbedLighting;
@@ -116,12 +126,12 @@ namespace Aurora {
             super.destroy();
 
             if (this._shaderDefines) {
-                this._shaderDefines.destroy();
+                this._shaderDefines.release();
                 this._shaderDefines = null;
             }
 
             if (this._shaderUniforms) {
-                this._shaderUniforms.destroy();
+                this._shaderUniforms.release();
                 this._shaderUniforms = null;
             }
         }

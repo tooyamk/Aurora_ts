@@ -1,5 +1,5 @@
 namespace Aurora {
-    export class SpriteFrame {
+    export class SpriteFrame extends Ref {
         public x = 0;
         public y = 0;
         public width = 0;
@@ -19,12 +19,34 @@ namespace Aurora {
         public texWidth = -1;
         public texHeight = -1;
 
-        public texture: GLTexture2D = null;
+        protected _tex: GLTexture2D = null;
+
+        public get texture(): GLTexture2D {
+            return this._tex;
+        }
+
+        public set texture(tex: GLTexture2D) {
+            if (this._tex !== tex) {
+                if (tex) tex.retain();
+                if (this._tex) this._tex.release();
+                this._tex = tex;
+            }
+        }
+
+        public destroy(): void {
+            if (this._tex) {
+                this._tex.release();
+                this._tex = null;
+            }
+        }
+
+        protected _refDestroy(): void {
+            this.destroy();
+        }
     }
 
     export class SpriteAtlas {
-        protected _frames: { [key: string]: SpriteFrame } = {};
-        protected _numFrames = 0;
+        protected _frames = new RefMap<string, SpriteFrame>();
 
         /**
          * @param json TexturePacker Json(Hash) Format.
@@ -82,26 +104,19 @@ namespace Aurora {
         }
 
         public addFrame(name: string, frame: SpriteFrame): void {
-            const old = this._frames[name];
-            if (old !== frame) {
-                if (old) {
-                    if (frame) {
-                        this._frames[name] = frame;
-                    } else {
-                        delete this._frames[name];
-                        --this._numFrames;
-                    }
-                } else {
-                    if (frame) {
-                        this._frames[name] = frame;
-                        ++this._numFrames;
-                    }
-                }
-            }
+            this._frames.set(name, frame);
         }
 
         public getFrame(name: string): SpriteFrame {
-            return this._frames[name];
+            return this._frames.get(name);
+        }
+
+        public removeFrame(name: string): void {
+            this._frames.delete(name);
+        }
+
+        public clearFrames(): void {
+            this._frames.clear();
         }
     }
 }

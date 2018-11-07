@@ -1247,7 +1247,25 @@ namespace Aurora {
 
     export const enum GLBufferType {
         ARRAY_BUFFER = GLEnum.ARRAY_BUFFER,
-        ELEMENT_ARRAY_BUFFER = GLEnum.ELEMENT_ARRAY_BUFFER
+        ELEMENT_ARRAY_BUFFER = GLEnum.ELEMENT_ARRAY_BUFFER,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        COPY_READ_BUFFER = GLEnum.COPY_READ_BUFFER,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        COPY_WRITE_BUFFER = GLEnum.COPY_WRITE_BUFFER,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        TRANSFORM_FEEDBACK_BUFFER = GLEnum.TRANSFORM_FEEDBACK_BUFFER,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        UNIFORM_BUFFER = GLEnum.UNIFORM_BUFFER,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        PIXEL_PACK_BUFFER = GLEnum.PIXEL_PACK_BUFFER,
+
+        /** **WebGL Version:** WebGL 2.0. */
+        PIXEL_UNPACK_BUFFER = GLEnum.PIXEL_UNPACK_BUFFER
     }
 
     export const enum GLTexType {

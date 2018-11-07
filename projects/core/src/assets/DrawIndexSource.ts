@@ -1,10 +1,13 @@
+///<reference path="MeshBufferSource.ts" />
+
 namespace Aurora {
-    export class DrawIndexSource {
-        public data: uint[];
+    export class DrawIndexSource extends MeshBufferSource<uint[]> {
         public type: GLIndexDataType;
         public usage: GLUsageType;
 
         constructor(data: uint[] = null, type: GLIndexDataType = GLIndexDataType.AUTO, usage: GLUsageType = GLUsageType.STATIC_DRAW) {
+            super();
+            
             this.data = data;
             this.type = type;
             this.usage = usage;
@@ -79,7 +82,7 @@ namespace Aurora {
         public createBuffer(gl: GL): GLIndexBuffer {
             if (this.data && gl) {
                 const buffer = new GLIndexBuffer(gl);
-                buffer.upload(this.data, this.type, this.usage);
+                buffer.upload(this.data, this.offset, this.length, this.type, this.usage);
                 return buffer;
             }
 

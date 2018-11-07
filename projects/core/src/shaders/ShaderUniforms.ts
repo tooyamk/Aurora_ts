@@ -1,5 +1,5 @@
 namespace Aurora {
-    export class ShaderUniforms {
+    export class ShaderUniforms extends Ref {
         public _uniforms: { [key: string]: ShaderUniforms.Value } = {};
         protected _count: uint = 0;
 
@@ -99,6 +99,10 @@ namespace Aurora {
             }
         }
 
+        protected _refDestroy(): void {
+            this.destroy();
+        }
+
         private _getOrCreateUniform(name: string): ShaderUniforms.Value {
             let v = this._uniforms[name];
             if (v) {
@@ -124,7 +128,19 @@ namespace Aurora {
             public type: ValueType;
             public vec4: number[] = null;
             public array: number[] | Float32Array | Int32Array = null;
-            public sampler: AbstractGLTexture = null;
+            private _sampler: AbstractGLTexture = null;
+
+            public get sampler(): AbstractGLTexture {
+                return this._sampler;
+            }
+
+            public set sampler(tex: AbstractGLTexture) {
+                if (this._sampler !== tex) {
+                    if (tex) tex.retain();
+                    if (this._sampler) this._sampler.release();
+                    this._sampler = tex;
+                }
+            }
 
             public clear(): void {
                 this.type = ValueType.NONE;
@@ -145,9 +161,9 @@ namespace Aurora {
                         }
                     } else if (this.array) {
                         if (this.array instanceof Float32Array) {
-                            uv.array = this.array.slice(0);
+                            uv.array = this.array.slice();
                         } else if (this.array instanceof Int32Array) {
-                            uv.array = this.array.slice(0);
+                            uv.array = this.array.slice();
                         } else {
                             uv.array = this.array.concat();
                         }

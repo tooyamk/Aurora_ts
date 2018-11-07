@@ -1,3 +1,5 @@
+///<reference path="../Ref.ts" />
+
 namespace Aurora {
     class StackNode {
         private static _tail: StackNode = null;
@@ -27,7 +29,7 @@ namespace Aurora {
         }
     }
 
-    export class ShaderDataStack<S, T> {
+    export class ShaderDataStack<S extends Ref, T> {
         private _head: StackNode = null;
         private _tail: StackNode = null;
 
@@ -35,6 +37,7 @@ namespace Aurora {
             if (value) {
                 const node = StackNode.create();
 
+                value.retain();
                 node.value = value;
                 if (this._head) {
                     node.prev = this._tail;
@@ -65,6 +68,7 @@ namespace Aurora {
             if (value) {
                 const node = StackNode.create();
 
+                value.retain();
                 node.value = value;
                 if (this._head) {
                     node.next = this._head;
@@ -84,6 +88,7 @@ namespace Aurora {
                 let node = this._head;
                 while (node) {
                     const next = node.next;
+                    if (node.value) node.value.release();
                     node.release();
                     node = next;
                 }
@@ -124,6 +129,7 @@ namespace Aurora {
                 }
             }
 
+            if (node.value) node.value.release();
             node.release();
         }
 

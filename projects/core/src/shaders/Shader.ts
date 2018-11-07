@@ -1,7 +1,7 @@
 ///<reference path="ShaderSource.ts" />
 
 namespace Aurora {
-    export class Shader {
+    export class Shader extends Ref {
         protected _gl: GL;
         protected _vert: ShaderSource;
         protected _frag: ShaderSource;
@@ -9,7 +9,7 @@ namespace Aurora {
         protected _defines: string[] = [];
 
         protected _cachedNoDefineProgram: GLProgram = null;
-        protected _cachedPrograms: { [key: string]: GLProgram } = {};
+        protected _cachedPrograms = new RefMap<string, GLProgram>();
         protected _numCachedPrograms = 0;
 
         protected _curProgram: GLProgram = null;
@@ -17,6 +17,8 @@ namespace Aurora {
         protected _uniforms: GLProgramUniformInfo[] = null;
 
         constructor(gl: GL, vert: ShaderSource, frag: ShaderSource) {
+            super();
+
             this._gl = gl;
             this._vert = vert;
             this._frag = frag;
@@ -98,8 +100,10 @@ namespace Aurora {
             const p = new GLProgram(this._gl);
             p.compileAndLink(finalAppendDefines + this._vert.source, finalAppendDefines + this._frag.source);
             if (appendDefines) {
-                this._cachedPrograms[appendDefines] = p;
+                this._cachedPrograms.set(appendDefines, p);
             } else {
+                p.retain();
+                if (this._cachedNoDefineProgram) this._cachedNoDefineProgram.release();
                 this._cachedNoDefineProgram = p;
             }
             ++this._numCachedPrograms;
@@ -299,18 +303,24 @@ namespace Aurora {
 
         public destroy(): void {
             if (this._cachedNoDefineProgram) {
-                this._cachedNoDefineProgram.destroy();
+                this._cachedNoDefineProgram.release();
                 this._cachedNoDefineProgram = null;
             }
 
-            for (const key in this._cachedPrograms) this._cachedPrograms[key].destroy();
-            this._cachedPrograms = {};
+            if (this._cachedPrograms) {
+                this._cachedPrograms.clear();
+                this._cachedPrograms = null;
+            }
 
             this._curProgram = null;
         }
 
+        protected _refDestroy(): void {
+            this.destroy();
+        }
+
         protected _getProgramFromCache(key: string): GLProgram {
-            return key ? this._cachedPrograms[key] : this._cachedNoDefineProgram;
+            return key ? this._cachedPrograms.get(key) : this._cachedNoDefineProgram;
         }
     }
 }

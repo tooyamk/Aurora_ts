@@ -1,7 +1,7 @@
 ///<reference path="DrawIndexSource.ts" />
 
 namespace Aurora {
-    export class MeshAsset {
+    export class MeshAsset extends Ref {
         public name: string = "";
 
         public bindMatrices: Matrix44[] = null;
@@ -9,7 +9,7 @@ namespace Aurora {
         public vertexSources: Map<string, VertexSource> = null;
         public drawIndexSource: DrawIndexSource = null;
 
-        public vertexBuffers: Map<string, GLVertexBuffer> = null;
+        public vertexBuffers: RefMap<string, GLVertexBuffer> = null;
         public drawIndexBuffer: GLIndexBuffer = null;
 
         public vertexDirty: Set<string> = null;
@@ -52,8 +52,7 @@ namespace Aurora {
                 if (this.vertexSources && this.vertexDirty && this.vertexDirty.has(info.name)) {
                     const src = this.vertexSources.get(info.name);
                     if (src) {
-                        buffer.resetDataAttrib(src.size, src.type, src.normalized);
-                        buffer.uploadSub(src.data);
+                        buffer.upload(src.data, src.offset, src.length, src.size, src.type, src.normalized, src.usage);
                         this.vertexDirty.delete(info.name);
                     }
                 }
@@ -118,12 +117,12 @@ namespace Aurora {
             this.drawIndexSource = null;
 
             if (this.vertexBuffers) {
-                for (const itr of this.vertexBuffers) itr[1].destroy();
+                this.vertexBuffers.clear();
                 this.vertexBuffers = null;
             }
 
             if (this.drawIndexBuffer) {
-                this.drawIndexBuffer.destroy();
+                this.drawIndexBuffer.release();
                 this.drawIndexBuffer = null;
             }
 
@@ -133,6 +132,10 @@ namespace Aurora {
             this.customGetDrawIndexBufferFn = null;
 
             this.link = null;
+        }
+
+        protected _refDestroy(): void {
+            this.destroy();
         }
     }
 }

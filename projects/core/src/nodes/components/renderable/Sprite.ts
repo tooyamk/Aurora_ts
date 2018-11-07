@@ -103,6 +103,7 @@ namespace Aurora {
             this._anchor = new Vector2(0.5, 0.5);
             this._color = Color4.WHITE;
             this._uniforms = new ShaderUniforms();
+            this._uniforms.retain();
         }
 
         public get color(): Color4 {
@@ -371,7 +372,7 @@ namespace Aurora {
             this._grid9 = null;
 
             if (this._uniforms) {
-                this._uniforms.destroy();
+                this._uniforms.release();
                 this._uniforms = null;
             }
         }

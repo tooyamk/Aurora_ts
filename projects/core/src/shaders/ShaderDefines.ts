@@ -1,5 +1,5 @@
 namespace Aurora {
-    export class ShaderDefines {
+    export class ShaderDefines extends Ref {
         private _defines: { [key: string]: ShaderDefines.Value } = {};
         private _count: uint = 0;
 
@@ -89,6 +89,10 @@ namespace Aurora {
                 v.type = ShaderDefines.VlaueType.NONE;
                 --this._count;
             }
+        }
+
+        protected _refDestroy(): void {
+            this.destroy();
         }
     }
 

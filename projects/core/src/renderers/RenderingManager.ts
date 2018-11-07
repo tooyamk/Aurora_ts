@@ -11,8 +11,8 @@ namespace Aurora {
 
         protected _renderers: AbstractRenderer[] = [];
 
-        protected _shaderDefines: ShaderDefines = new ShaderDefines();
-        protected _shaderUniforms: ShaderUniforms = new ShaderUniforms();
+        protected _shaderDefines: ShaderDefines = null;
+        protected _shaderUniforms: ShaderUniforms = null;
 
         protected _cameraWorldMatrix: Matrix44 = new Matrix44();
         protected _viewToProjMatrix: Matrix44 = new Matrix44();
@@ -34,6 +34,12 @@ namespace Aurora {
         protected _appendRenderingObjectFn: (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms) => void = null;
 
         constructor() {
+            this._shaderDefines = new ShaderDefines();
+            this._shaderDefines.retain();
+
+            this._shaderUniforms = new ShaderUniforms();
+            this._shaderUniforms.retain();
+
             this._shaderDefines.setDefine(ShaderPredefined.LIGHTING_SPECULAR, ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
 
             this._shaderUniforms.setNumbers(ShaderPredefined.u_AlphaTestCompareValue, 1);
@@ -53,16 +59,16 @@ namespace Aurora {
 
         public dispose(): void {
             if (this._defaultPPVertexBuffer) {
-                this._defaultPPVertexBuffer.destroy();
+                this._defaultPPVertexBuffer.release();
                 this._defaultPPVertexBuffer = null;
 
-                this._defaultPPUVBuffer.destroy();
+                this._defaultPPUVBuffer.release();
                 this._defaultPPUVBuffer = null;
 
-                this._defaultPPIndexBuffer.destroy();
+                this._defaultPPIndexBuffer.release();
                 this._defaultPPIndexBuffer = null;
 
-                this._defaultPPShader.destroy();
+                this._defaultPPShader.release();
                 this._defaultPPShader = null;
 
                 this._defaultPPDefinesStack.clear();
@@ -73,12 +79,12 @@ namespace Aurora {
             }
 
             if (this._shaderDefines) {
-                this._shaderDefines.destroy();
+                this._shaderDefines.release();
                 this._shaderDefines = null;
             }
 
             if (this._shaderUniforms) {
-                this._shaderUniforms.destroy();
+                this._shaderUniforms.release();
                 this._shaderUniforms = null;
             }
 
@@ -243,7 +249,7 @@ namespace Aurora {
                         vb.use(att.location);
                     } else {
                         valid = false;
-                        console.log("draw not found attribute : " + att.name);
+                        console.log("draw not found attribute: " + att.name);
                         //p.gl.deactiveVertexAttrib(att.location);
                     }
                 }
@@ -347,15 +353,19 @@ namespace Aurora {
         private _createDefaultPPAssets(gl: GL): void {
             if (!this._defaultPPVertexBuffer) {
                 this._defaultPPVertexBuffer = new GLVertexBuffer(gl);
-                this._defaultPPVertexBuffer.upload([-1, -1, -1, 1, 1, 1, 1, -1], GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW);
+                this._defaultPPVertexBuffer.retain();
+                this._defaultPPVertexBuffer.upload([-1, -1, -1, 1, 1, 1, 1, -1], 0, -1, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW);
 
                 this._defaultPPUVBuffer = new GLVertexBuffer(gl);
-                this._defaultPPUVBuffer.upload([0, 0, 0, 1, 1, 1, 1, 0], GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW);
+                this._defaultPPUVBuffer.retain();
+                this._defaultPPUVBuffer.upload([0, 0, 0, 1, 1, 1, 1, 0], 0, -1, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW);
 
                 this._defaultPPIndexBuffer = new GLIndexBuffer(gl);
-                this._defaultPPIndexBuffer.upload([0, 1, 2, 0, 2, 3], GLIndexDataType.UNSIGNED_BYTE, GLUsageType.STATIC_DRAW);
+                this._defaultPPIndexBuffer.retain();
+                this._defaultPPIndexBuffer.upload([0, 1, 2, 0, 2, 3], 0, -1, GLIndexDataType.UNSIGNED_BYTE, GLUsageType.STATIC_DRAW);
 
                 this._defaultPPShader = new Shader(gl, new ShaderSource(BuiltinShader.PostProcess.Default.VERTEX), new ShaderSource(BuiltinShader.PostProcess.Default.FRAGMENT));
+                this._defaultPPShader.retain();
 
                 this._defaultPPDefinesStack = new ShaderDataStack<ShaderDefines, ShaderDefines.Value>();
                 this._defaultPPUniformsStack = new ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>();
