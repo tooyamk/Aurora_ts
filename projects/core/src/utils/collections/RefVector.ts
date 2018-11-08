@@ -60,34 +60,35 @@ namespace Aurora {
             }
         }
 
-        public erase(idx: uint): void;
-        public erase(idx: uint, length: int): void;
+        public erase(idx: uint, length: int = 1): void {
+            const len = this._arr.length;
+            if (idx < len) {
+                if (length !== 1) {
+                    const end = length < 0 ? len : idx + length;
 
-        public erase(...args: any[]): void {
-            const idx = <uint>args[0];
-            
-            if (args.length > 1) {
-                const len = this._arr.length;
-                let end = <int>args[1];
-                end = end < 0 ? len : end + idx;
-
-                if (end >= len) {
-                    for (let i = idx; i < len; ++i) {
-                        const v = this._arr[i];
-                        if (v) v.release();
+                    if (end >= len) {
+                        for (let i = idx; i < len; ++i) {
+                            const v = this._arr[i];
+                            if (v) v.release();
+                        }
+                        this._arr.length = idx;
+                    } else {
+                        for (let i = idx; i < end; ++i) {
+                            const v = this._arr[i];
+                            if (v) v.release();
+                        }
+                        this._arr.splice(idx, end - idx);
                     }
-                    this._arr.length = idx;
                 } else {
-                    for (let i = idx; i < end; ++i) {
-                        const v = this._arr[i];
-                        if (v) v.release();
+                    const v = this._arr[idx];
+                    if (v) v.release();
+
+                    if (idx + 1 === len) {
+                        this._arr.length = idx;
+                    } else {
+                        this._arr.splice(idx, 1);
                     }
-                    this._arr.splice(idx, end - idx);
                 }
-            } else {
-                const v = this._arr[idx];
-                if (v) v.release();
-                this._arr.splice(idx, 1);
             }
         }
 
