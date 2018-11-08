@@ -37,29 +37,29 @@ namespace Aurora {
         }
 
         public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void {
-            const mats = renderable.materials;
+            const mats = renderable.getMaterials();
             if (mats) {
-                const len = mats.length;
+                const len = mats.size;
                 if (len > 0) {
                     if (replaceMaterials) {
                         const len1 = replaceMaterials.length;
                         if (len >= len1) {
                             for (let i = 0; i < len1; ++i) {
-                                const m = mats[i];
+                                const m = mats.at(i);
                                 appendFn(renderable, replaceMaterials[i], m ? m.uniforms : null);
                             }
                         } else if (len === 1) {
-                            const m = mats[0];
+                            const m = mats.at(0);
                             const u = m ? m.uniforms : null;
                             for (let i = 0; i < len1; ++i) appendFn(renderable, replaceMaterials[i], u);
                         } else {
                             for (let i = 0; i < len; ++i) {
-                                const m = mats[i];
+                                const m = mats.at(i);
                                 appendFn(renderable, replaceMaterials[i], m ? m.uniforms : null);
                             }
                         }
                     } else {
-                        for (let i = 0; i < len; ++i) appendFn(renderable, mats[i], null);
+                        for (let i = 0; i < len; ++i) appendFn(renderable, mats.at(i), null);
                     }
                 }
             }

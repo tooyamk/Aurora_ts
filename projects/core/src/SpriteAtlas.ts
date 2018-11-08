@@ -104,15 +104,15 @@ namespace Aurora {
         }
 
         public addFrame(name: string, frame: SpriteFrame): void {
-            this._frames.set(name, frame);
+            this._frames.insert(name, frame);
         }
 
         public getFrame(name: string): SpriteFrame {
-            return this._frames.get(name);
+            return this._frames.find(name);
         }
 
         public removeFrame(name: string): void {
-            this._frames.delete(name);
+            this._frames.erase(name);
         }
 
         public clearFrames(): void {

@@ -100,7 +100,7 @@ namespace Aurora {
             const p = new GLProgram(this._gl);
             p.compileAndLink(finalAppendDefines + this._vert.source, finalAppendDefines + this._frag.source);
             if (appendDefines) {
-                this._cachedPrograms.set(appendDefines, p);
+                this._cachedPrograms.insert(appendDefines, p);
             } else {
                 p.retain();
                 if (this._cachedNoDefineProgram) this._cachedNoDefineProgram.release();
@@ -320,7 +320,7 @@ namespace Aurora {
         }
 
         protected _getProgramFromCache(key: string): GLProgram {
-            return key ? this._cachedPrograms.get(key) : this._cachedNoDefineProgram;
+            return key ? this._cachedPrograms.find(key) : this._cachedNoDefineProgram;
         }
     }
 }

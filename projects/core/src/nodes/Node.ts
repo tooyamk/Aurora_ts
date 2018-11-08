@@ -1,5 +1,5 @@
 namespace Aurora {
-    export class Node {
+    export class Node extends Ref {
         protected static _tmpVec3: Vector3 = Vector3.Zero;
         protected static _tmpMat: Matrix44 = new Matrix44();
 
@@ -46,6 +46,8 @@ namespace Aurora {
         protected _dirty: uint = 0;
 
         constructor() {
+            super();
+
             this._root = this;
         }
 
@@ -62,6 +64,7 @@ namespace Aurora {
          */
         public addChild(c: Node): Node {
             if (c && c._parent === null && c !== this._root) {
+                c.retain();
                 this._addNode(c);
                 c._parentChanged(this._root);
                 return c;
@@ -83,6 +86,7 @@ namespace Aurora {
                             this._insertNode(c, before);
                             return c;
                         } else if (c._parent === null) {
+                            c.retain();
                             this._insertNode(c, before);
                             return c;
                         }
@@ -97,8 +101,9 @@ namespace Aurora {
 
         public removeChild(c: Node): boolean {
             if (c && c._parent === this) {
-                this._removeNode(null);
+                this._removeNode(c);
                 c._parentChanged(c);
+                c.release();
                 return true;
             }
             return false;
@@ -243,6 +248,7 @@ namespace Aurora {
                     node._next = null;
                     node._parent = null;
                     node._parentChanged(node);
+                    node.release();
 
                     node = next;
                 } while (node);
@@ -429,8 +435,9 @@ namespace Aurora {
         public addComponent<T extends Node.AbstractComponent>(component: T): T {
             if (component && component.node !== this) {
                 if (!this._components) this._components = [];
+                component.retain();
                 if (component.node) component.node._removeComponent(component);
-                this._components.push(component);
+                this._components[this._components.length] = component;
                 component._setNode(this);
             }
 
@@ -438,7 +445,7 @@ namespace Aurora {
         }
 
         public removeComponent(component: Node.AbstractComponent): void {
-            if (component && this._components && component.node === this) {
+            if (component && component.node === this) {
                 component._setNode(null);
                 this._removeComponent(component);
             }
@@ -446,11 +453,15 @@ namespace Aurora {
 
         protected _removeComponent(component: Node.AbstractComponent): void {
             this._components.splice(this._components.indexOf(component), 1);
+            component.release();
         }
 
         public remvoeAllComponents(): void {
             if (this._components) {
-                for (let i = 0, n = this._components.length; i < n; ++i) this._components[i]._setNode(null);
+                for (let i = 0, val: Node.AbstractComponent; val = this._components[i++];) {
+                    val._setNode(null);
+                    val.release();
+                }
                 this._components.length = 0;
             }
         }
@@ -838,10 +849,18 @@ namespace Aurora {
                 return -1;
             }
         }
+
+        public destroy(): void {
+            this.removeAllChildren();
+        }
+
+        protected _refDestroy(): void {
+            this.destroy();
+        }
     }
 
     export namespace Node {
-        export abstract class AbstractComponent {
+        export abstract class AbstractComponent extends Ref {
             protected _node: Node = null;
             protected _enabled: boolean = true;
 
@@ -870,6 +889,10 @@ namespace Aurora {
 
             public destroy(): void {
                 if (this._node) this._node.removeComponent(this);
+            }
+
+            protected _refDestroy(): void {
+                this.destroy();
             }
 
             protected _nodeChanged(old: Node): void {

@@ -7,7 +7,7 @@ namespace Aurora {
         FINALLY
     }
 
-    export class Material {
+    export class Material extends Ref {
         public renderingPriority: int = 0;
         public renderingSort: RenderingSort = RenderingSort.MIDDLE;
 
@@ -31,6 +31,8 @@ namespace Aurora {
         protected _uniforms: ShaderUniforms = null;
 
         constructor(shader: Shader = null) {
+            super();
+
             this.shader = shader;
 
             this._defines = new ShaderDefines();
@@ -135,10 +137,6 @@ namespace Aurora {
         }
 
         public destroy(): void {
-            if (this._shader) {
-                this._shader.destroy();
-            }
-
             this.shader = null;
             this.blend = null;
             this.colorWrite = null;
@@ -146,6 +144,10 @@ namespace Aurora {
             this.stencilBack = null;
             this.defines = null;
             this.uniforms = null;
+        }
+
+        protected _refDestroy(): void {
+            this.destroy();
         }
     }
 }

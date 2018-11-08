@@ -9,8 +9,8 @@ namespace Aurora {
         public vertexSources: Map<string, VertexSource> = null;
         public drawIndexSource: DrawIndexSource = null;
 
-        public vertexBuffers: RefMap<string, GLVertexBuffer> = null;
-        public drawIndexBuffer: GLIndexBuffer = null;
+        protected _vertexBuffers: RefMap<string, GLVertexBuffer> = null;
+        protected _drawIndexBuffer: GLIndexBuffer = null;
 
         public vertexDirty: Set<string> = null;
         public drawIndexDirty = false;
@@ -21,6 +21,30 @@ namespace Aurora {
         public link: MeshAsset = null;
 
         public autoGenerateNormal: boolean = true;
+
+        public get vertexBuffers(): RefMap<string, GLVertexBuffer> {
+            return this._vertexBuffers;
+        }
+
+        public set vertexBuffers(bufs: RefMap<string, GLVertexBuffer>) {
+            if (this._vertexBuffers !== bufs) {
+                if (bufs) bufs.retain();
+                if (this._vertexBuffers) this._vertexBuffers.release();
+                this._vertexBuffers = bufs;
+            }
+        }
+
+        public get drawIndexBuffer(): GLIndexBuffer {
+            return this._drawIndexBuffer;
+        }
+
+        public set drawIndexBuffer(buf: GLIndexBuffer) {
+            if (this._drawIndexBuffer !== buf) {
+                if (buf) buf.retain();
+                if (this._drawIndexBuffer) this._drawIndexBuffer.release();
+                this._drawIndexBuffer = buf;
+            }
+        }
 
         public getVertexSource(name: string): VertexSource {
             return this.vertexSources ? this.vertexSources.get(name) : null;
@@ -47,7 +71,7 @@ namespace Aurora {
         }
 
         public getVertexBuffer(gl: GL, info: GLProgramAttribInfo): GLVertexBuffer {
-            let buffer: GLVertexBuffer = this.vertexBuffers ? this.vertexBuffers.get(info.name) : null;
+            let buffer: GLVertexBuffer = this._vertexBuffers ? this._vertexBuffers.find(info.name) : null;
             if (buffer) {
                 if (this.vertexSources && this.vertexDirty && this.vertexDirty.has(info.name)) {
                     const src = this.vertexSources.get(info.name);
@@ -79,8 +103,11 @@ namespace Aurora {
                     }
 
                     if (buffer) {
-                        if (!this.vertexBuffers) this.vertexBuffers = new Map();
-                        this.vertexBuffers.set(info.name, buffer);
+                        if (!this._vertexBuffers) {
+                            this._vertexBuffers = new RefMap();
+                            this._vertexBuffers.retain();
+                        }
+                        this._vertexBuffers.insert(info.name, buffer);
                     }
                 }
 
@@ -96,11 +123,14 @@ namespace Aurora {
         }
 
         public getDrawIndexBuffer(gl: GL): GLIndexBuffer {
-            let buffer = this.drawIndexBuffer;
+            let buffer = this._drawIndexBuffer;
             if (!buffer) {
                 if (this.drawIndexSource) {
                     buffer = this.drawIndexSource.createBuffer(gl);
-                    if (buffer) this.drawIndexBuffer = buffer;
+                    if (buffer) {
+                        this._drawIndexBuffer = buffer;
+                        this._drawIndexBuffer.retain();
+                    }
                 }
 
                 if (!buffer) {
@@ -116,15 +146,8 @@ namespace Aurora {
             this.vertexSources = null;
             this.drawIndexSource = null;
 
-            if (this.vertexBuffers) {
-                this.vertexBuffers.clear();
-                this.vertexBuffers = null;
-            }
-
-            if (this.drawIndexBuffer) {
-                this.drawIndexBuffer.release();
-                this.drawIndexBuffer = null;
-            }
+            this.vertexBuffers = null;
+            this.drawIndexBuffer = null;
 
             this.vertexDirty = null;
 

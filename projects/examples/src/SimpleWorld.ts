@@ -9,7 +9,7 @@ class SimpleWorld {
         modelNode.localTranslate(0, 0, 500);
         light.node.localTranslate(-500, 0, 0);
 
-        modelNode.addComponent(this._createModel2(env));
+        modelNode.addComponent(this._createModel(env));
         modelNode.localRotate(Aurora.Quaternion.createFromEulerX(-Math.PI / 6));
 
         env.start(() => {
@@ -32,7 +32,7 @@ class SimpleWorld {
         mesh.renderer = env.forwardRenderer;
         //renderable.asset = MITOIA.MeshBuilder.createSphere(100, 100, true, true);
         mesh.asset = Aurora.MeshBuilder.createBox(100, 100, 100, 1, 1, 1, true, true);
-        mesh.materials = [mat];
+        mesh.setMaterials(mat);
 
         return mesh;
     }
@@ -49,14 +49,14 @@ class SimpleWorld {
         mesh.renderer = env.forwardRenderer;
 
         let asset = new Aurora.MeshAsset();
-        asset.vertexBuffers = new Map();
+        asset.vertexBuffers = new Aurora.RefMap();
 
         let w = 100, h = 200;
 
         let vertices = new Aurora.GLVertexBuffer(env.gl);
         vertices.allocate(12, Aurora.GLVertexBufferSize.THREE, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
         vertices.uploadSub([-w, h, 0, w, h, 0, w, -h, 0, -w, -h, 0]);
-        asset.vertexBuffers.set(Aurora.ShaderPredefined.a_Position0, vertices);
+        asset.vertexBuffers.insert(Aurora.ShaderPredefined.a_Position0, vertices);
 
         let colors = new Aurora.GLVertexBuffer(env.gl);
         colors.allocate(10, Aurora.GLVertexBufferSize.FOUR, Aurora.GLVertexBufferDataType.FLOAT, false, Aurora.GLUsageType.STATIC_DRAW);
@@ -68,7 +68,7 @@ class SimpleWorld {
             1, 1, 1, 1]);
         colors.uploadSub([
             0], 20);
-        asset.vertexBuffers.set(Aurora.ShaderPredefined.a_Color0, colors);
+        asset.vertexBuffers.insert(Aurora.ShaderPredefined.a_Color0, colors);
 
         let indices = new Aurora.GLIndexBuffer(env.gl);
         indices.allocate(6, Aurora.GLIndexDataType.UNSIGNED_BYTE, Aurora.GLUsageType.STATIC_DRAW);
@@ -76,7 +76,7 @@ class SimpleWorld {
         asset.drawIndexBuffer = indices;
 
         mesh.asset = asset;
-        mesh.materials = [mat];
+        mesh.setMaterials(mat);
 
         return mesh;
     }

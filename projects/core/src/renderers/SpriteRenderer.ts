@@ -30,7 +30,7 @@ namespace Aurora {
             this._gl = gl;
 
             this._asset.vertexSources = new Map();
-            this._asset.vertexBuffers = new Map();
+            this._asset.vertexBuffers = new RefMap();
 
             this._numAllicatedVertex = 256;
             this._numAllicatedIndex = 256;
@@ -58,21 +58,21 @@ namespace Aurora {
         }
 
         public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void {
-            const mats = renderable.materials;
-            let len = mats ? mats.length : 1;
+            const mats = renderable.getMaterials();
+            let len = mats ? mats.size : 1;
             if (len === 0) len = 1;
 
             if (replaceMaterials) {
                 const len1 = replaceMaterials.length;
                 if (len >= len1) {
                     for (let i = 0; i < len1; ++i) {
-                        const m = mats ? mats[i] : null;
+                        const m = mats ? mats.at(i) : null;
                         appendFn(renderable, replaceMaterials[i], m ? m.uniforms : this._defaultMaterial.uniforms);
                     }
                 } else if (len === 1) {
                     let u: ShaderUniforms;
                     if (mats) {
-                        const m = mats[0];
+                        const m = mats.at(0);
                         u = m ? m.uniforms : this._defaultMaterial.uniforms;
                     } else {
                         u = this._defaultMaterial.uniforms;
@@ -80,13 +80,13 @@ namespace Aurora {
                     for (let i = 0; i < len1; ++i) appendFn(renderable, replaceMaterials[i], u);
                 } else {
                     for (let i = 0; i < len; ++i) {
-                        const m = mats ? mats[i] : null;
+                        const m = mats ? mats.at(i) : null;
                         appendFn(renderable, replaceMaterials[i], m ? m.uniforms : this._defaultMaterial.uniforms);
                     }
                 }
             } else {
                 for (let i = 0; i < len; ++i) {
-                    const m = mats ? mats[i] : null;
+                    const m = mats ? mats.at(i) : null;
                     appendFn(renderable, m ? m : this._defaultMaterial, this._defaultMaterial.uniforms);
                 }
             }
@@ -214,7 +214,7 @@ namespace Aurora {
                     for (let i = 0, n = atts.length; i < n; ++i) {
                         const name = atts[i].name;
                         const vs = as.vertexSources.get(name);
-                        let vb = as.vertexBuffers.get(name);
+                        let vb = as.vertexBuffers.find(name);
                         if (vb) {
                             if (vb.memSize !== this._numAllicatedVertex * vs.size * GL.calcMemSize(vs.type)) {
                                 vb.allocate(this._numAllicatedVertex * vs.size, vs.size, vs.type, vs.normalized, GLUsageType.DYNAMIC_DRAW);
@@ -224,7 +224,7 @@ namespace Aurora {
                         } else {
                             vb = new GLVertexBuffer(this._gl);
                             vb.allocate(this._numAllicatedVertex * vs.size, vs.size, vs.type, vs.normalized, GLUsageType.DYNAMIC_DRAW);
-                            as.vertexBuffers.set(name, vb);
+                            as.vertexBuffers.insert(name, vb);
                         }
 
                         vb.uploadSub(vs.data);

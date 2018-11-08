@@ -9,6 +9,7 @@ namespace Aurora {
 
         constructor() {
             this.asset = new MeshAsset();
+            this.asset.retain();
 
             this.vertices = [];
             this.vertices.length = 8;
@@ -40,6 +41,7 @@ namespace Aurora {
 
         constructor() {
             this.asset = new MeshAsset();
+            this.asset.retain();
 
             this.vertices = [];
             this.vertices.length = 16;
@@ -121,6 +123,9 @@ namespace Aurora {
         public set frame(f: SpriteFrame) {
             if (this._frame !== f) {
                 const oldTex = this._frame ? this._frame.texture : null;
+
+                if (f) f.retain();
+                if (this._frame) this._frame.release();
                 this._frame = f;
 
                 if (oldTex === this._texture) this._setTex(f ? f.texture : null);
@@ -365,8 +370,6 @@ namespace Aurora {
         }
 
         public destroy(): void {
-            super.destroy();
-
             this.texture = null;
             this.frame = null;
             this._grid9 = null;
@@ -375,10 +378,14 @@ namespace Aurora {
                 this._uniforms.release();
                 this._uniforms = null;
             }
+
+            super.destroy();
         }
 
         protected _setTex(tex: GLTexture2D): void {
             if (this._texture !== tex) {
+                if (tex) tex.retain();
+                if (this._texture) this._texture.release();
                 this._texture = tex;
 
                 tex ? this._uniforms.setTexture(ShaderPredefined.u_DiffuseSampler, tex) : this._uniforms.delete(ShaderPredefined.u_DiffuseSampler);

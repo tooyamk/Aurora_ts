@@ -41,7 +41,7 @@ class FileTest {
             let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.Mesh());
             mesh.renderer = this._env.forwardRenderer;
             mesh.asset = file.meshes[0];
-            mesh.materials = [mat];
+            mesh.setMaterials(mat);
 
             mesh.node.setLocalScale(100, 100, 100);
         });
@@ -66,7 +66,7 @@ class FileTest {
             let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.Mesh());
             mesh.renderer = this._env.forwardRenderer;
             mesh.asset = file.meshes[0];
-            mesh.materials = [mat];
+            mesh.setMaterials(mat);
 
             mesh.node.setLocalScale(100, 100, 100);
         });
@@ -113,7 +113,7 @@ class FileTest {
             let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
             mesh.renderer = this._env.forwardRenderer;
             mesh.asset = result.meshes[0];
-            mesh.materials = [mat];
+            mesh.setMaterials(mat);
 
             Helper.printNodeHierarchy([result.skeleton.bones[result.skeleton.rootBoneIndices[0]]]);
 

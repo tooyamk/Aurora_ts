@@ -98,10 +98,10 @@ class Other {
         indexBuffer.upload([0, 1, 2], 0, -1, Aurora.GLIndexDataType.UNSIGNED_BYTE, Aurora.GLUsageType.STATIC_DRAW);
     
         let asset = new Aurora.MeshAsset();
-        asset.vertexBuffers = new Map();
-        asset.vertexBuffers.set(Aurora.ShaderPredefined.a_Position0, vertexBuffer);
-        asset.vertexBuffers.set(Aurora.ShaderPredefined.a_UV0, uvBuffer);
-        asset.vertexBuffers.set(Aurora.ShaderPredefined.a_Color0, colorBuffer);
+        asset.vertexBuffers = new Aurora.RefMap();
+        asset.vertexBuffers.insert(Aurora.ShaderPredefined.a_Position0, vertexBuffer);
+        asset.vertexBuffers.insert(Aurora.ShaderPredefined.a_UV0, uvBuffer);
+        asset.vertexBuffers.insert(Aurora.ShaderPredefined.a_Color0, colorBuffer);
         asset.drawIndexBuffer = indexBuffer;
     
         asset = Aurora.MeshBuilder.createSphere(100, 40, true, true);
@@ -219,7 +219,7 @@ class Other {
         //mat.blend.func.setSeparate(MITOIA.GLBlendFactorValue.SRC_ALPHA, MITOIA.GLBlendFactorValue.ONE_MINUS_SRC_ALPHA, MITOIA.GLBlendFactorValue.ONE, MITOIA.GLBlendFactorValue.ONE_MINUS_SRC_ALPHA);
         //mat.stencilFront = stencil;
         //mat.stencilBack = stencil2;
-        mesh.materials = [mat];
+        mesh.setMaterials(mat);
         mesh.enabled = false;
         mat.defines.setDefine(Aurora.ShaderPredefined.LIGHTING, true);
         mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, false);
@@ -305,7 +305,7 @@ class Other {
     
         mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
     
-        mesh.materials = [mat];
+        mesh.setMaterials(mat);
     
         let tex = new Aurora.GLTextureCube(gl);
         let count = 0;
