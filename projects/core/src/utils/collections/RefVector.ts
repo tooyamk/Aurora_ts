@@ -27,13 +27,20 @@ namespace Aurora {
             }
         }
 
+        public get raw(): I[] {
+            return this._arr;
+        }
+
         public get size(): uint {
             return this._arr.length;
         }
 
-        public pushBack(value: I): void {
-            if (value) value.retain();
-            this._arr[this._arr.length] = value;
+        public pushBack(...items: I[]): void {
+            for (let i = 0, n = items.length; i < n; ++i) {
+                const v = items[i];
+                if (v) v.retain();
+            }
+            this._arr.push(...items);
         }
 
         public popBack(): I {
@@ -51,13 +58,21 @@ namespace Aurora {
             return this._arr[idx];
         }
 
-        public insert(idx: uint, value: I): void {
+        public set(idx: uint, value: I): void {
             const old = this._arr[idx];
             if (old !== value) {
                 if (value) value.retain();
                 if (old) old.release();
                 this._arr[idx] = value;
             }
+        }
+
+        public insert(idx: uint, ...items: any[]): void {
+            for (let i = 0, n = items.length; i < n; ++i) {
+                const v = items[i];
+                if (v) v.retain();
+            }
+            this._arr.splice(idx, 0, ...items);
         }
 
         public erase(idx: uint, length: int = 1): void {

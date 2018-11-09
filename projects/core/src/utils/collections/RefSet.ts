@@ -2,6 +2,10 @@ namespace Aurora {
     export class RefSet<I extends IRef> extends Ref {
         private _set = new Set<I>();
 
+        public get raw(): Set<I> {
+            return this._set;
+        }
+
         public get size(): uint {
             return this._set.size;
         }

@@ -5,9 +5,7 @@ namespace Aurora {
         public readonly color: Color3 = Color3.WHITE;
         public intensity: number = 1;
 
-        public ready(defines: ShaderDefines, uniforms: ShaderUniforms): void {
-            //override
-        }
+        public abstract ready(defines: ShaderDefines, uniforms: ShaderUniforms): void;
 
         protected _generalReady(defines: ShaderDefines, uniforms: ShaderUniforms): void {
             const wm = this.node.readonlyWorldMatrix;

@@ -18,7 +18,7 @@ namespace Aurora {
                     if (m !== mats) {
                         m.retain();
                         this._materials.erase(1, -1);
-                        this._materials.insert(0, m);
+                        this._materials.set(0, m);
                     } else {
                         this._materials.erase(1, -1);
                     }
@@ -55,14 +55,8 @@ namespace Aurora {
             }
         }
 
-        public checkRenderable(): boolean {
-            //override
-            return false;
-        }
-
-        public visit(renderingData: RenderingData): void {
-            //override
-        }
+        public abstract checkRenderable(): boolean;
+        public abstract visit(renderingData: RenderingData): void;
 
         public destroy(): void {
             this.setMaterials(null);

@@ -2,6 +2,10 @@ namespace Aurora {
     export class RefMap<K, V extends IRef> extends Ref {
         private _map = new Map<K, V>();
 
+        public get raw(): Map<K, V> {
+            return this._map;
+        }
+
         public get size(): uint {
             return this._map.size;
         }

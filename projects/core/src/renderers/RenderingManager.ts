@@ -265,7 +265,7 @@ namespace Aurora {
                     for (let i = 0; i < num; ++i) {
                         let renderable = this._renderables[i];
                         if (renderable.renderer && renderable.checkRenderable()) {
-                            renderable.renderer.collectRenderingObjects(renderable, replaceMaterials, this._appendRenderingObjectFn);
+                            renderable.renderer.collect(renderable, replaceMaterials, this._appendRenderingObjectFn);
                         }
                     }
                 }

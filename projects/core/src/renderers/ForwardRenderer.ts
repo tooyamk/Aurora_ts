@@ -36,7 +36,7 @@ namespace Aurora {
             this._enalbedLighting = value;
         }
 
-        public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void {
+        public collect(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void {
             const mats = renderable.getMaterials();
             if (mats) {
                 const len = mats.size;
@@ -123,8 +123,6 @@ namespace Aurora {
         }
 
         public destroy() {
-            super.destroy();
-
             if (this._shaderDefines) {
                 this._shaderDefines.release();
                 this._shaderDefines = null;
@@ -134,6 +132,8 @@ namespace Aurora {
                 this._shaderUniforms.release();
                 this._shaderUniforms = null;
             }
+
+            super.destroy();
         }
     }
 }

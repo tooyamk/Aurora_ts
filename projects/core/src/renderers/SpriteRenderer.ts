@@ -57,7 +57,7 @@ namespace Aurora {
             return this._defaultShader;
         }
 
-        public collectRenderingObjects(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void {
+        public collect(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void {
             const mats = renderable.getMaterials();
             let len = mats ? mats.size : 1;
             if (len === 0) len = 1;
@@ -245,8 +245,6 @@ namespace Aurora {
         }
 
         public destroy(): void {
-            super.destroy();
-
             if (this._asset) {
                 this._asset.destroy();
                 this._asset = null;
@@ -280,6 +278,8 @@ namespace Aurora {
                 this._compareUniformsStack.clear();
                 this._compareUniformsStack = null;
             }
+
+            super.destroy();
         }
 
         private _pushVertexSource(name: string, reference: VertexSource): boolean {

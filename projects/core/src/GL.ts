@@ -1541,19 +1541,19 @@ namespace Aurora {
     export class GLBlend {
         public equation: GLBlendEquation = null;
         public func: GLBlendFunc = null;
-        public constantColor: Color4 = null;
+        public constColor: Color4 = null;
 
         constructor(equation: GLBlendEquation = null, func: GLBlendFunc = null, color: Color4 = null) {
             this.equation = equation || new GLBlendEquation();
             this.func = func || new GLBlendFunc();
-            this.constantColor = color || Color4.TRANSPARENT_BLACK;
+            this.constColor = color || Color4.TRANSPARENT_BLACK;
         }
 
         public clone() : GLBlend {
             const b = new GLBlend();
             if (this.equation) b.equation = this.equation.clone();
             if (this.func) b.func = this.func.clone();
-            if (this.constantColor) b.constantColor = this.constantColor.clone();
+            if (this.constColor) b.constColor = this.constColor.clone();
             return b;
         }
 
@@ -1561,25 +1561,27 @@ namespace Aurora {
             if (v0 === v1) return true;
             if (v0) {
                 return v1 ? GLBlendEquation.isEqual(v0.equation, v1.equation) && GLBlendFunc.isEqual(v0.func, v1.func) && 
-                Color4.isEqual(v0.constantColor, v1.constantColor) : false;
+                Color4.isEqual(v0.constColor, v1.constColor) : false;
             }
             return !v1;
         }
     }
 
     export class GLColorWrite {
-        public r: boolean = true;
-        public g: boolean = true;
-        public b: boolean = true;
-        public a: boolean = true;
+        public r: boolean;
+        public g: boolean;
+        public b: boolean;
+        public a: boolean;
+
+        constructor(r: boolean = true, g: boolean = true, b: boolean = true, a: boolean = true) {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
+        }
 
         public clone() : GLColorWrite {
-            const cw = new GLColorWrite();
-            cw.r = this.r;
-            cw.g = this.g;
-            cw.b = this.b;
-            cw.a = this.a;
-            return cw;
+            return new GLColorWrite(this.r, this.g, this.b, this.a);
         }
 
         public isEqual(target: GLColorWrite): boolean {
@@ -1855,7 +1857,7 @@ namespace Aurora {
             this._blend.func.dstAlpha = this._gl.getParameter(GLEnum.BLEND_DST_ALPHA);
 
             const blendColor = this._gl.getParameter(GLEnum.BLEND_COLOR);
-            this._blend.constantColor.setFromNumbers(blendColor[0], blendColor[1], blendColor[2], blendColor[3]);
+            this._blend.constColor.setFromNumbers(blendColor[0], blendColor[1], blendColor[2], blendColor[3]);
         }
 
         private _initCullFace(): void {
@@ -2054,9 +2056,9 @@ namespace Aurora {
         }
 
         public setBlendColor(color: Color4): void {
-            color = color || this._defaultBlend.constantColor;
-            if (!this._blend.constantColor.isEqualColor4(color)) {
-                this._blend.constantColor.set(color);
+            color = color || this._defaultBlend.constColor;
+            if (!this._blend.constColor.isEqualColor4(color)) {
+                this._blend.constColor.set(color);
 
                 this._gl.blendColor(color.r, color.g, color.b, color.a);
             }
@@ -2077,7 +2079,7 @@ namespace Aurora {
                 this.enableBlend(true);
                 this.setBlendEquation(blend.equation);
                 this.setBlendFunc(blend.func);
-                this.setBlendColor(blend.constantColor);
+                this.setBlendColor(blend.constColor);
             } else {
                 this.enableBlend(false);
             }
