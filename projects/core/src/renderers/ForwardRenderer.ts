@@ -15,8 +15,8 @@ namespace Aurora {
         protected _shaderDefines: ShaderDefines = null;
         protected _shaderUniforms: ShaderUniforms = null;
 
-        protected _definesStack = new ShaderDataStack<ShaderDefines, ShaderDefines.Value>();
-        protected _uniformsStack = new ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>();
+        protected _definesList = new ShaderDataList<ShaderDefines, ShaderDefines.Value>();
+        protected _uniformsList = new ShaderDataList<ShaderUniforms, ShaderUniforms.Value>();
 
         constructor() {
             super();
@@ -91,9 +91,9 @@ namespace Aurora {
         }
 
         public postRender(): void {
-            super.postRender();
-
             this._light = null;
+
+            super.postRender();
         }
 
         private _renderByQueue(renderingData: RenderingData, renderingObjects: RenderingObject[], start: int, end: int): void {
@@ -105,8 +105,8 @@ namespace Aurora {
                 if (as) {
                     const su = this._shaderUniforms;
                     const mat = obj.material;
-                    this._definesStack.pushBack(mat.defines).pushBack(this._shaderDefines);
-                    this._uniformsStack.pushBackByStack(renderingData.out.uniformsStack).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(su);
+                    this._definesList.pushBack(mat.defines).pushBack(this._shaderDefines);
+                    this._uniformsList.pushBackByStack(renderingData.out.uniformsList).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(su);
                     
                     const shader = mat.shader;
                     if (shader.hasUniform(ShaderPredefined.u_M33_L2W)) su.setNumberArray(ShaderPredefined.u_M33_L2W, obj.l2w.toArray33(false, this._l2wM33Array));
@@ -114,9 +114,9 @@ namespace Aurora {
                     if (shader.hasUniform(ShaderPredefined.u_M44_L2V)) su.setNumberArray(ShaderPredefined.u_M44_L2V, obj.l2v.toArray44(false, this._l2vM44Array));
                     if (shader.hasUniform(ShaderPredefined.u_M44_L2W)) su.setNumberArray(ShaderPredefined.u_M44_L2W, obj.l2w.toArray44(false, this._l2wM44Array));
                     
-                    this._renderingMgr.useAndDraw(as, mat, this._definesStack, this._uniformsStack);
-                    this._definesStack.clear();
-                    this._uniformsStack.clear();
+                    this._renderingMgr.useAndDraw(as, mat, this._definesList, this._uniformsList);
+                    this._definesList.clear();
+                    this._uniformsList.clear();
                 }
                 renderingData.out.clear();
             }

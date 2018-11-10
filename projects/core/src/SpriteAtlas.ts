@@ -1,23 +1,23 @@
 namespace Aurora {
     export class SpriteFrame extends Ref {
-        public x = 0;
-        public y = 0;
-        public width = 0;
-        public height = 0;
+        public x: number = 0;
+        public y: number = 0;
+        public width: number = 0;
+        public height: number = 0;
 
-        public offsetX = 0;
-        public offsetY = 0;
+        public offsetX: number = 0;
+        public offsetY: number = 0;
 
-        public sourceWidth = 0;
-        public sourceHeight = 0;
+        public sourceWidth: number = 0;
+        public sourceHeight: number = 0;
 
         /**
          * -1 = ccw, 0 = none, 1 = cw.
          */
-        public rotated = 0;
+        public rotated: int = 0;
 
-        public texWidth = -1;
-        public texHeight = -1;
+        public texWidth: number = -1;
+        public texHeight: number = -1;
 
         protected _tex: GLTexture2D = null;
 

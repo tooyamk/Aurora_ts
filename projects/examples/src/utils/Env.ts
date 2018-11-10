@@ -42,7 +42,7 @@ class Env {
         let stretcher = new Aurora.CanvasAutoStretcher(this.gl.canvas);
         if (canvasSizeChangedhandler) canvasSizeChangedhandler();
 
-        new Aurora.FrameLooper(this.platform, 1000 / 60).start((delta: number) => {
+        new Aurora.FrameLooper(this.platform, 1000 / 60).start(Aurora.Handler.create(null, (delta: number) => {
             if (stretcher.execute() && canvasSizeChangedhandler) canvasSizeChangedhandler();
             
             if (loopHandler) {
@@ -53,6 +53,6 @@ class Env {
             
             stats.update();
             stats.reset();
-        });
+        }));
     }
 }

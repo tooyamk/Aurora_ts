@@ -4,12 +4,30 @@ namespace Aurora {
         private _delay: number = 0;
         private _timeoutID: number = null;
         private _count: uint = 0;
+        private _tickFn: () => void;
 
-        public callback: () => void = null;
+        private _onTick: Handler = null;
 
-        constructor(delay: number, callback: () => void = null) {
+        /**
+         * @param onTick (timer: Timer) => void.
+         */
+        constructor(delay: number, onTick: Handler = null) {
             this._delay = delay;
-            this.callback = callback;
+            this.onTick = onTick;
+
+            this._tickFn = this._tick.bind(this);
+        }
+
+        public get onTick(): Handler {
+            return this._onTick;
+        }
+
+        public set onTick(onTick: Handler) {
+            if (this._onTick !== onTick) {
+                if (onTick) onTick.retain();
+                if (this._onTick) this._onTick.release();
+                this._onTick = onTick;
+            }
         }
 
         public get delay(): number {
@@ -29,7 +47,7 @@ namespace Aurora {
                 this._isRunning = true;
                 this._count = count === null || count === undefined || count <= 0 ? null : count;
                 
-                this._timeoutID = setTimeout(() => { this._standardTick() }, this._delay);
+                this._timeoutID = setTimeout(this._tickFn, this._delay);
             }
         }
 
@@ -44,12 +62,12 @@ namespace Aurora {
             }
         }
 
-        private _standardTick(): void {
+        private _tick(): void {
             this._timeoutID = null;
             if (this._isRunning) {
                 if (this._count !== null && --this._count <= 0) this.stop();
-                if (this.callback) this.callback();
-                if (this._timeoutID === null && this._isRunning) this._timeoutID = setTimeout(() => { this._standardTick() }, this._delay);
+                if (this._onTick) this._onTick.emit(this);
+                if (this._timeoutID === null && this._isRunning) this._timeoutID = setTimeout(this._tickFn, this._delay);
             }
         }
     }

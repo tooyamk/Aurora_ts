@@ -58,14 +58,14 @@ namespace Aurora {
             return false;
         }
 
-        public precompile(definesStack: ShaderDefinesStack): boolean {
-            const appendDefines = this._collectDefines(definesStack);
+        public precompile(definesList: ShaderDefinesList): boolean {
+            const appendDefines = this._collectDefines(definesList);
             const p = this._getProgramFromCache(appendDefines);
             return p ? true : this._createProgram(appendDefines).status === GLProgramStatus.SUCCESSED;
         }
 
-        public ready(definesStack: ShaderDefinesStack): GLProgram {
-            const appendDefines = this._collectDefines(definesStack);
+        public ready(definesList: ShaderDefinesList): GLProgram {
+            const appendDefines = this._collectDefines(definesList);
             this._curProgram = this._getProgramFromCache(appendDefines);
             if (!this._curProgram) this._curProgram = this._createProgram(appendDefines);
 
@@ -75,13 +75,13 @@ namespace Aurora {
             return this._curProgram.status === GLProgramStatus.SUCCESSED ? this._curProgram : null;
         }
 
-        private _collectDefines(definesStack: ShaderDefinesStack): string {
+        private _collectDefines(definesList: ShaderDefinesList): string {
             let appendDefines = "";
 
-            if (definesStack) {
+            if (definesList) {
                 for (let i = 0, n = this._defines.length; i < n; ++i) {
                     const name = this._defines[i];
-                    const v = definesStack.getValue(name);
+                    const v = definesList.getValue(name);
                     if (v) {
                         if (v.type === ShaderDefines.VlaueType.BOOL) {
                             if (v.value) appendDefines += "\n" + name;
@@ -111,19 +111,19 @@ namespace Aurora {
             return p;
         }
 
-        public use(uniformsStack: ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>): GLProgram {
+        public use(uniformsList: ShaderDataList<ShaderUniforms, ShaderUniforms.Value>): GLProgram {
             if (this._curProgram && this._curProgram.status === GLProgramStatus.SUCCESSED) {
                 this._curProgram.use();
 
                 if (this._curProgram.uniforms) {
                     const infos = this._curProgram.uniforms;
                     const numInfos = infos.length;
-                    if (numInfos > 0 && uniformsStack) {
+                    if (numInfos > 0 && uniformsList) {
                         const gl = this._gl.context;
                         let samplerIndex = 0;
                         for (let i = 0, n = infos.length; i < n; ++i) {
                             const info = infos[i];
-                            const v = uniformsStack.getValue(info.name);
+                            const v = uniformsList.getValue(info.name);
                             switch (info.type) {
                                 case GLUniformType.FLOAT: {
                                     if (v && v.type === ShaderUniforms.ValueType.NUMBER) {

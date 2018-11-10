@@ -17,6 +17,6 @@ namespace Aurora {
     export type AnimatorWrapType = (elapsed:number, duration:number) => number;
     export type AppendRenderingObjectFn = (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms) => void;
 
-    export type ShaderDefinesStack = ShaderDataStack<ShaderDefines, ShaderDefines.Value>;
-    export type ShaderUniformsStack = ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>;
+    export type ShaderDefinesList = ShaderDataList<ShaderDefines, ShaderDefines.Value>;
+    export type ShaderUniformsList = ShaderDataList<ShaderUniforms, ShaderUniforms.Value>;
 }

@@ -26,8 +26,8 @@ namespace Aurora {
         protected _defaultPPUVBuffer: GLVertexBuffer = null;
         protected _defaultPPIndexBuffer: GLIndexBuffer = null;
         protected _defaultPPShader: Shader = null;
-        protected _defaultPPDefinesStack: ShaderDefinesStack = null;
-        protected _defaultPPUniformsStack: ShaderUniformsStack = null;
+        protected _defaultPPDefinesList: ShaderDefinesList = null;
+        protected _defaultPPUniformsList: ShaderUniformsList = null;
 
         protected _renderingData: RenderingData;
 
@@ -71,11 +71,11 @@ namespace Aurora {
                 this._defaultPPShader.release();
                 this._defaultPPShader = null;
 
-                this._defaultPPDefinesStack.clear();
-                this._defaultPPDefinesStack = null;
+                this._defaultPPDefinesList.clear();
+                this._defaultPPDefinesList = null;
 
-                this._defaultPPUniformsStack.clear();
-                this._defaultPPUniformsStack = null;
+                this._defaultPPUniformsList.clear();
+                this._defaultPPUniformsList = null;
             }
 
             if (this._shaderDefines) {
@@ -213,14 +213,14 @@ namespace Aurora {
             }
         }
 
-        public useShader(material: Material, definesStack: ShaderDefinesStack, uniformsStack: ShaderUniformsStack): GLProgram {
-            definesStack.pushBack(this._shaderDefines);
-            const b = material.ready(definesStack);
-            definesStack.eraseTail();
+        public useShader(material: Material, definesList: ShaderDefinesList, uniformsList: ShaderUniformsList): GLProgram {
+            definesList.pushBack(this._shaderDefines);
+            const b = material.ready(definesList);
+            definesList.eraseTail();
             if (b) {
-                uniformsStack.pushBack(this._shaderUniforms);
-                const p = material.use(uniformsStack);
-                uniformsStack.eraseTail();
+                uniformsList.pushBack(this._shaderUniforms);
+                const p = material.use(uniformsList);
+                uniformsList.eraseTail();
                 return p;
             }
 
@@ -231,8 +231,8 @@ namespace Aurora {
             this._draw(asset, material, material.shader.currentProgram, count, offset);
         }
 
-        public useAndDraw(asset: MeshAsset, material: Material, definesStack: ShaderDefinesStack, uniformsStack: ShaderUniformsStack, count: uint = null, offset: uint = 0): void {
-            const p = this.useShader(material, definesStack, uniformsStack);
+        public useAndDraw(asset: MeshAsset, material: Material, definesList: ShaderDefinesList, uniformsList: ShaderUniformsList, count: uint = null, offset: uint = 0): void {
+            const p = this.useShader(material, definesList, uniformsList);
             if (p) this._draw(asset, material, p, count, offset);
         }
 
@@ -311,19 +311,19 @@ namespace Aurora {
                 for (let i = 0, n = postProcesses.length; i < n; ++i) {
                     const pp = postProcesses[i];
                     if (pp && pp.enabled && pp.material) {
-                        const useDefaultShader = pp.material.shader === null;
+                        const useDefaultShader = !!pp.material.shader;
                         if (useDefaultShader) pp.material.shader = this._defaultPPShader;
 
                         const mat = pp.material;
-                        this._defaultPPDefinesStack.pushBack(mat.defines);
-                        const b = mat.ready(this._defaultPPDefinesStack);
-                        this._defaultPPDefinesStack.clear();
+                        this._defaultPPDefinesList.pushBack(mat.defines);
+                        const b = mat.ready(this._defaultPPDefinesList);
+                        this._defaultPPDefinesList.clear();
                         if (b) {
                             this.begin(gl, pp);
 
-                            this._defaultPPUniformsStack.pushBack(mat.uniforms).pushBack(this._shaderUniforms);
-                            const p = mat.use(this._defaultPPUniformsStack);
-                            this._defaultPPUniformsStack.clear();
+                            this._defaultPPUniformsList.pushBack(mat.uniforms).pushBack(this._shaderUniforms);
+                            const p = mat.use(this._defaultPPUniformsList);
+                            this._defaultPPUniformsList.clear();
 
                             const atts = p.attributes;
                             for (let i = 0, n = atts.length; i < n; ++i) {
@@ -367,8 +367,8 @@ namespace Aurora {
                 this._defaultPPShader = new Shader(gl, new ShaderSource(BuiltinShader.PostProcess.Default.VERTEX), new ShaderSource(BuiltinShader.PostProcess.Default.FRAGMENT));
                 this._defaultPPShader.retain();
 
-                this._defaultPPDefinesStack = new ShaderDataStack<ShaderDefines, ShaderDefines.Value>();
-                this._defaultPPUniformsStack = new ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>();
+                this._defaultPPDefinesList = new ShaderDataList<ShaderDefines, ShaderDefines.Value>();
+                this._defaultPPUniformsList = new ShaderDataList<ShaderUniforms, ShaderUniforms.Value>();
             }
         }
     }

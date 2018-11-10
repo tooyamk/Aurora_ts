@@ -4,7 +4,7 @@ namespace Aurora {
         private _logicLen: uint = 0;
         private _rawLen: uint = 0;
         private _raw: DataView;
-        private _little: boolean = true;
+        private _little = true;
 
         constructor(data: ArrayBuffer | uint | null = null, offset: uint = 0, logicLength: uint = null, rawLength: uint = null) {
             if (data instanceof ArrayBuffer) {

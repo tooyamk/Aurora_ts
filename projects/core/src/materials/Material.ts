@@ -119,11 +119,11 @@ namespace Aurora {
             }
         }
 
-        public ready(definesStack: ShaderDefinesStack): GLProgram {
-            return this._shader ? this._shader.ready(definesStack) : null;
+        public ready(definesList: ShaderDefinesList): GLProgram {
+            return this._shader ? this._shader.ready(definesList) : null;
         }
 
-        public use(uniformsStack: ShaderUniformsStack): GLProgram {
+        public use(uniformsList: ShaderUniformsList): GLProgram {
             const gl = this._shader.gl;
             
             gl.setBlend(this.blend);
@@ -133,7 +133,7 @@ namespace Aurora {
             gl.setColorWrite(this.colorWrite);
             gl.setStencil(this.stencilFront, this.stencilBack);
 
-            return this._shader.use(uniformsStack);
+            return this._shader.use(uniformsList);
         }
 
         public destroy(): void {

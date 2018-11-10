@@ -17,9 +17,9 @@ namespace Aurora {
         protected _curProgramAtts: GLProgramAttribInfo[] = null;
         protected _curUniformInfos: GLProgramUniformInfo[] = null;
 
-        protected _definesStack = new ShaderDataStack<ShaderDefines, ShaderDefines.Value>();
-        protected _activeUniformsStack = new ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>();
-        protected _compareUniformsStack = new ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>();
+        protected _definesList = new ShaderDataList<ShaderDefines, ShaderDefines.Value>();
+        protected _activeUniformsList = new ShaderDataList<ShaderUniforms, ShaderUniforms.Value>();
+        protected _compareUniformsList = new ShaderDataList<ShaderUniforms, ShaderUniforms.Value>();
 
         protected _defaultMaterial: Material;
         protected _defaultShader: Shader;
@@ -43,6 +43,7 @@ namespace Aurora {
             this._defaultShader = new Shader(gl, new ShaderSource(BuiltinShader.DefaultSprite.VERTEX), new ShaderSource(BuiltinShader.DefaultSprite.FRAGMENT));
             this._defaultShader.retain();
             this._defaultMaterial = new Material(this._defaultShader);
+            this._defaultMaterial.retain();
             this._defaultMaterial.blend = new GLBlend(null, new GLBlendFunc().set(GLBlendFactorValue.SRC_ALPHA, GLBlendFactorValue.ONE_MINUS_SRC_ALPHA));
             this._defaultMaterial.cullFace = GLCullFace.NONE;
             this._defaultMaterial.depthWrite = false;
@@ -92,17 +93,17 @@ namespace Aurora {
             }
         }
 
-        protected _activeMaterial(material: Material, stack: ShaderUniformsStack, u1: ShaderUniforms): void {
-            this._activeUniformsStack.pushBackByStack(stack).pushBack(material.uniforms).pushBack(u1);
-            this._definesStack.pushBack(material.defines);
-            const p = this._renderingMgr.useShader(material, this._definesStack, this._activeUniformsStack);
-            this._definesStack.clear();
+        protected _activeMaterial(material: Material, stack: ShaderUniformsList, u1: ShaderUniforms): void {
+            this._activeUniformsList.pushBackByStack(stack).pushBack(material.uniforms).pushBack(u1);
+            this._definesList.pushBack(material.defines);
+            const p = this._renderingMgr.useShader(material, this._definesList, this._activeUniformsList);
+            this._definesList.clear();
             if (p) {
                 this._curMaterial = material;
                 this._curProgramAtts = p.attributes;
                 this._curUniformInfos = p.uniforms;
             } else {
-                this._activeUniformsStack.clear();
+                this._activeUniformsList.clear();
             }
         }
 
@@ -121,9 +122,9 @@ namespace Aurora {
                     if (!drawIdxLen) continue;
 
                     const mat = obj.material;
-                    const uniformsStack = renderingData.out.uniformsStack;
+                    const uniformsList = renderingData.out.uniformsList;
 
-                    if (!this._curProgramAtts) this._activeMaterial(mat, uniformsStack, obj.alternativeUniforms);
+                    if (!this._curProgramAtts) this._activeMaterial(mat, uniformsList, obj.alternativeUniforms);
                     
                     let len = -1;
                     let needFlush = false;
@@ -152,7 +153,7 @@ namespace Aurora {
                     if (len > 0 && len <= this._maxVertexSize) {
                         if (needFlush) {
                             this.flush();
-                            this._activeMaterial(mat, uniformsStack, obj.alternativeUniforms);
+                            this._activeMaterial(mat, uniformsList, obj.alternativeUniforms);
 
                             for (let i = 0; i < this._reformatsLen; ++i) {
                                 let idx = this._reformats[i];
@@ -165,18 +166,18 @@ namespace Aurora {
                             this._reformatsLen = 0;
                         } else {
                             if (Material.canCombine(this._curMaterial, mat)) {
-                                this._compareUniformsStack.pushBackByStack(uniformsStack).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms);
-                                const b = ShaderDataStack.isUnifromsEqual(this._activeUniformsStack, this._compareUniformsStack, this._curUniformInfos);
-                                this._compareUniformsStack.clear();
+                                this._compareUniformsList.pushBackByStack(uniformsList).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms);
+                                const b = ShaderDataList.isUnifromsEqual(this._activeUniformsList, this._compareUniformsList, this._curUniformInfos);
+                                this._compareUniformsList.clear();
                                 if (b) {
                                     if (this._numCombinedVertex + len > this._maxVertexSize) this.flush();
                                 } else {
                                     this.flush();
-                                    this._activeMaterial(mat, uniformsStack, obj.alternativeUniforms);
+                                    this._activeMaterial(mat, uniformsList, obj.alternativeUniforms);
                                 }
                             } else {
                                 this.flush();
-                                this._activeMaterial(mat, uniformsStack, obj.alternativeUniforms);
+                                this._activeMaterial(mat, uniformsList, obj.alternativeUniforms);
                             }
                         }
 
@@ -240,7 +241,7 @@ namespace Aurora {
 
                 this._numCombinedVertex = 0;
                 this._numCombinedIndex = 0;
-                this._activeUniformsStack.clear();
+                this._activeUniformsList.clear();
             }
         }
 
@@ -264,19 +265,19 @@ namespace Aurora {
                 this._defaultShader = null;
             }
 
-            if (this._definesStack) {
-                this._definesStack.clear();
+            if (this._definesList) {
+                this._definesList.clear();
                 this._defaultShader = null;
             }
 
-            if (this._activeUniformsStack) {
-                this._activeUniformsStack.clear();
-                this._activeUniformsStack = null;
+            if (this._activeUniformsList) {
+                this._activeUniformsList.clear();
+                this._activeUniformsList = null;
             }
 
-            if (this._compareUniformsStack) {
-                this._compareUniformsStack.clear();
-                this._compareUniformsStack = null;
+            if (this._compareUniformsList) {
+                this._compareUniformsList.clear();
+                this._compareUniformsList = null;
             }
 
             super.destroy();

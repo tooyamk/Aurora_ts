@@ -11,11 +11,11 @@ namespace Aurora {
 
     export class RenderingDataOut {
         public asset: MeshAsset = null;
-        public readonly uniformsStack = new ShaderDataStack<ShaderUniforms, ShaderUniforms.Value>();
+        public readonly uniformsList = new ShaderDataList<ShaderUniforms, ShaderUniforms.Value>();
 
         public clear(): void {
             this.asset = null;
-            this.uniformsStack.clear();
+            this.uniformsList.clear();
         }
     }
 

@@ -1,7 +1,7 @@
 namespace Aurora {
     export class FrameLooper {
         private _platform: IPlatform;
-        private _callback: (delta: number) => void = null;
+        private _onTick: Handler = null;
         private _prevTime: number = null;
         private _delta: number;
         private _type: FrameLooper.Type = FrameLooper.Type.STANDARD;
@@ -25,18 +25,32 @@ namespace Aurora {
             this._delta = value;
         }
 
-        public start(callback: (delta: number) => void): void {
+        public get onTick(): Handler {
+            return this._onTick;
+        }
+
+        public set onTick(onTick: Handler) {
+            if (this._onTick !== onTick) {
+                if (onTick) onTick.retain();
+                if (this._onTick) this._onTick.release();
+                this._onTick = onTick;
+            }
+        }
+
+        /**
+         * @param callback (delta: numbe) => void.
+         */
+        public start(onTick: Handler): void {
             this.stop();
+            
+            this.onTick = onTick;
+            
+            this._prevTime = this._platform.duration();
 
-            this._callback = callback;
-            if (callback) {
-                this._prevTime = this._platform.duration();
-
-                if (this._type === FrameLooper.Type.STANDARD) {
-                    this._timerID = setTimeout(this._timeoutTickFn, this._delta);
-                } else if (this._type === FrameLooper.Type.ANIMATION_FRAME) {
-                    this._timerID = requestAnimationFrame(this._animationFrameTickFn);
-                }
+            if (this._type === FrameLooper.Type.STANDARD) {
+                this._timerID = setTimeout(this._timeoutTickFn, this._delta);
+            } else if (this._type === FrameLooper.Type.ANIMATION_FRAME) {
+                this._timerID = requestAnimationFrame(this._animationFrameTickFn);
             }
         }
 
@@ -53,7 +67,7 @@ namespace Aurora {
                 }
             }
 
-            this._callback = null;
+            this.onTick = null;
         }
 
         private _timeoutTick(): void {
@@ -61,7 +75,7 @@ namespace Aurora {
             let t = this._platform.duration();
             const d = t - this._prevTime;
             this._prevTime = t;
-            this._callback(d);
+            if (this._onTick) this._onTick.emit(d);
 
             if (this._timerID === undefined) {
                 t = this._delta - this._platform.duration() + t;
@@ -75,7 +89,7 @@ namespace Aurora {
             const t = this._platform.duration();
             const d = t - this._prevTime;
             this._prevTime = t;
-            this._callback(d);
+            if (this._onTick) this._onTick.emit(d);
 
             if (this._timerID === undefined) this._timerID = requestAnimationFrame(this._animationFrameTickFn);
         }

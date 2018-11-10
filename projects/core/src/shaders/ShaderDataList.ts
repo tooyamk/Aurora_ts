@@ -29,11 +29,11 @@ namespace Aurora {
         }
     }
 
-    export class ShaderDataStack<S extends Ref, T> {
+    export class ShaderDataList<S extends Ref, T> {
         private _head: StackNode = null;
         private _tail: StackNode = null;
 
-        public pushBack(value: S): ShaderDataStack<S, T> {
+        public pushBack(value: S): ShaderDataList<S, T> {
             if (value) {
                 const node = StackNode.create();
 
@@ -52,7 +52,7 @@ namespace Aurora {
             return this;
         }
 
-        public pushBackByStack(stack: ShaderDataStack<S, T>): ShaderDataStack<S, T> {
+        public pushBackByStack(stack: ShaderDataList<S, T>): ShaderDataList<S, T> {
             if (stack) {
                 let node = stack._head;
                 while (node) {
@@ -64,7 +64,7 @@ namespace Aurora {
             return this;
         }  
 
-        public pushFront(value: S): ShaderDataStack<S, T> {
+        public pushFront(value: S): ShaderDataList<S, T> {
             if (value) {
                 const node = StackNode.create();
 
@@ -133,7 +133,7 @@ namespace Aurora {
             node.release();
         }
 
-        public static isUnifromsEqual(s0: ShaderUniformsStack, s1: ShaderUniformsStack, info: GLProgramUniformInfo[]): boolean {
+        public static isUnifromsEqual(s0: ShaderUniformsList, s1: ShaderUniformsList, info: GLProgramUniformInfo[]): boolean {
             if (s0 === s1) return true;
             if (s0) {
                 if (s1) {

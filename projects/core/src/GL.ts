@@ -43,7 +43,7 @@ interface WebGLRenderingContext {
 
 namespace Aurora {
     export class GLClear {
-        public readonly color: Color4 = Color4.BLACK;
+        public readonly color = Color4.BLACK;
         public depth = 1.0;
         public stencil = 0;
 
@@ -282,9 +282,9 @@ namespace Aurora {
         private _id: number;
         private _uploadCount: number = 0;
 
-        private _size: GLVertexBufferSize = GLVertexBufferSize.FOUR;
-        private _dataType: GLVertexBufferDataType = GLVertexBufferDataType.FLOAT;
-        private _normalized: boolean = false;
+        private _size = GLVertexBufferSize.FOUR;
+        private _dataType = GLVertexBufferDataType.FLOAT;
+        private _normalized = false;
 
         constructor(gl: GL) {
             super(gl, GLBufferType.ARRAY_BUFFER);
@@ -503,7 +503,7 @@ namespace Aurora {
     }
 
     export class GLIndexBuffer extends AbstractGLBuffer {
-        private _dataType: GLIndexDataType = GLIndexDataType.UNSIGNED_SHORT;
+        private _dataType = GLIndexDataType.UNSIGNED_SHORT;
 
         constructor(gl: GL) {
             super(gl, GLBufferType.ELEMENT_ARRAY_BUFFER);
@@ -1453,10 +1453,10 @@ namespace Aurora {
      * In the WebGL, constant color and constant alpha cannot be used together as source and destination factors in the blend function.
      */
     export class GLBlendFunc {
-        public srcRGB: GLBlendFactorValue = GLBlendFactorValue.ONE;
-        public srcAlpha: GLBlendFactorValue = GLBlendFactorValue.ONE;
-        public dstRGB: GLBlendFactorValue = GLBlendFactorValue.ZERO;
-        public dstAlpha: GLBlendFactorValue = GLBlendFactorValue.ZERO;
+        public srcRGB = GLBlendFactorValue.ONE;
+        public srcAlpha = GLBlendFactorValue.ONE;
+        public dstRGB = GLBlendFactorValue.ZERO;
+        public dstAlpha = GLBlendFactorValue.ZERO;
 
         public set(sfactor: GLBlendFactorValue, dfactor: GLBlendFactorValue): GLBlendFunc {
             this.srcRGB = sfactor;
@@ -1505,8 +1505,8 @@ namespace Aurora {
     }
 
     export class GLBlendEquation {
-        public rgb: GLBlendEquationType = GLBlendEquationType.FUNC_ADD;
-        public alpha: GLBlendEquationType = GLBlendEquationType.FUNC_ADD;
+        public rgb = GLBlendEquationType.FUNC_ADD;
+        public alpha = GLBlendEquationType.FUNC_ADD;
 
         public clone(): GLBlendEquation {
             const be = new GLBlendEquation();
@@ -1609,16 +1609,16 @@ namespace Aurora {
         public writeMask: uint = 0xFFFFFFF;
 
         //func
-        public func: GLStencilFunc = GLStencilFunc.ALWAYS;
+        public func = GLStencilFunc.ALWAYS;
         /** In the WebGL, Front and Back must be consistent. */
         public ref: uint = 0;
         /** In the WebGL, Front and Back must be consistent. */
         public funcMask: uint = 0xFFFFFFFF;
 
         //op
-        public stenciFail: GLStencilOpType = GLStencilOpType.KEEP;
-        public depthlFail: GLStencilOpType = GLStencilOpType.KEEP;
-        public pass: GLStencilOpType = GLStencilOpType.KEEP;
+        public stenciFail = GLStencilOpType.KEEP;
+        public depthlFail = GLStencilOpType.KEEP;
+        public pass = GLStencilOpType.KEEP;
 
         public copyFunc(target: GLStencil): void {
             this.func = target.func;
@@ -1700,9 +1700,9 @@ namespace Aurora {
         private _gl: WebGLRenderingContext = null;
 
         private _version: number;
-        private _versionFullInfo: string = "";
-        private _vendor: string = "";
-        private _renderer: string = "";
+        private _versionFullInfo = "";
+        private _vendor = "";
+        private _renderer = "";
 
         private _maxVertexAttributes: uint = 0;
         private _maxVaryingVectors: uint = 0;
@@ -1712,18 +1712,18 @@ namespace Aurora {
         private _maxTexutreImageUnits: uint = 0;
         private _stencilBits: uint = 0;
 
-        private _supportUintIndexes: boolean = false;
+        private _supportUintIndexes = false;
 
-        private _defaultClear: GLClear = new GLClear();
-        private _clear: GLClear = new GLClear();
+        private _defaultClear = new GLClear();
+        private _clear = new GLClear();
 
         private _usedProgram: WebGLProgram = null;
         private _boundVertexBuffer: WebGLBuffer = null;
         private _boundIndexBuffer: WebGLBuffer = null;
 
-        private _enabledBlend: boolean = false;
-        private _defaultBlend: GLBlend = new GLBlend();
-        private _blend: GLBlend = new GLBlend();
+        private _enabledBlend = false;
+        private _defaultBlend = new GLBlend();
+        private _blend = new GLBlend();
 
         private _enabledCullFace: boolean;
         private _cullFace: GLCullFace;
@@ -1733,15 +1733,15 @@ namespace Aurora {
 
         private _depthWrite: boolean;
 
-        private _viewport: Rect = new Rect();
+        private _viewport = new Rect();
 
         private _enabledStencilTest: boolean;
-        private _defaultStencil: GLStencil = new GLStencil();
-        private _stencilFrontFace: GLStencil = new GLStencil();
-        private _stencilBackFace: GLStencil = new GLStencil();
+        private _defaultStencil = new GLStencil();
+        private _stencilFrontFace = new GLStencil();
+        private _stencilBackFace = new GLStencil();
 
-        private _defaultColorWrite: GLColorWrite = new GLColorWrite();
-        private _colorWrite: GLColorWrite = new GLColorWrite();
+        private _defaultColorWrite = new GLColorWrite();
+        private _colorWrite = new GLColorWrite();
 
         private _bindingTexture2D: WebGLTexture = null;
         private _bindingTextureCube: WebGLTexture = null;

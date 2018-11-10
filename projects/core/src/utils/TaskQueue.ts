@@ -1,21 +1,24 @@
 namespace Aurora {
     export class Task {
         private _running: boolean = false;
-        private _onStart: (task: Task) => void = null;
+        private _onStart: Handler = null;
         private _onFinish: Handler = null;
 
-        constructor(onStart: (task: Task) => void = null) {
+        constructor(onStart: Handler = null) {
             this._onStart = onStart;
+            if (onStart) onStart.retain();
         }
 
         public start(onFinish: Handler): void {
             if (!this._running) {
                 this._running = true;
                 this._onFinish = onFinish;
+                if (onFinish) onFinish.retain();
                 if (this._onStart) {
                     const func = this._onStart;
                     this._onStart = null;
-                    func(this);
+                    func.emit(this);
+                    func.release();
                 }
             }
         }
@@ -25,7 +28,8 @@ namespace Aurora {
                 this._running = false;
 
                 if (this._onFinish) {
-                    this._onFinish.emit(null);
+                    this._onFinish.emit();
+                    this._onFinish.release();
                     this._onFinish = null;
                 }
             }
@@ -37,16 +41,23 @@ namespace Aurora {
         private _running: boolean = false;
         private _cur: int = -1;
         private _process: number = 0;
-        private _onFinish: () => void = null;
+        private _onFinish: Handler = null;
 
-        public createTask(onStart: (task: Task) => void = null): void {
-            this._tasks.push(new Task(onStart));
+        /**
+         * @param onStart (task: Task) => void.
+         */
+        public createTask(onStart: Handler): void {
+            this._tasks[this._tasks.length] = new Task(onStart);
         }
 
-        public start(onFinish: () => void = null): void {
+        /**
+         * @param onFinish (taskQueue: TaskQueue) => void.
+         */
+        public start(onFinish: Handler = null): void {
             if (!this._running) {
                 this._running = true;
                 this._onFinish = onFinish;
+                if (onFinish) onFinish.retain();
                 this._cur = 0;
 
                 this._taskFinish();
@@ -63,7 +74,8 @@ namespace Aurora {
                     if (this._onFinish) {
                         let func = this._onFinish;
                         this._onFinish = null;
-                        func();
+                        func.emit(this);
+                        func.release();
                     }
                 } else {
                     this._tasks[this._cur++].start(Handler.create(this, this._taskFinish, true));

@@ -80,7 +80,7 @@ class FileTest {
         let img: HTMLImageElement = null;
 
         let taskQueue = new Aurora.TaskQueue();
-        taskQueue.createTask((task: Aurora.Task) => {
+        taskQueue.createTask(Aurora.Handler.create(null, (task: Aurora.Task) => {
             let request = new XMLHttpRequest();
             request.addEventListener("loadend", () => {
                 result = Aurora.FBX.parse(new Aurora.ByteArray(request.response));
@@ -90,15 +90,15 @@ class FileTest {
             request.open("GET", Helper.getURL("all.FBX"), true);
             request.responseType = "arraybuffer";
             request.send();
-        });
-        taskQueue.createTask((task: Aurora.Task) => {
+        }));
+        taskQueue.createTask(Aurora.Handler.create(null, (task: Aurora.Task) => {
             img = new Image();
             img.onload = () => {
                 task.finish();
             }
             img.src = Helper.getURL("skinPeople/tex.png");
-        });
-        taskQueue.start(() => {
+        }));
+        taskQueue.start(Aurora.Handler.create(null, () => {
             let tex = new Aurora.GLTexture2D(this._env.gl);
             tex.upload(0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
 
@@ -118,7 +118,6 @@ class FileTest {
             Helper.printNodeHierarchy([result.skeleton.bones[result.skeleton.rootBoneIndices[0]]]);
 
             mesh.node.setLocalScale(30, 30, 30);
-        });
-        
+        }));
     }
 }

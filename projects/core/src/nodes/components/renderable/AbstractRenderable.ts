@@ -37,22 +37,6 @@ namespace Aurora {
                     this._isInternalMaterialsVector = false;
                 }
             }
-
-            if (this._materials !== mats) {
-                if (mats) mats.retain();
-                
-                if (mats instanceof Material) {
-                    if (this._isInternalMaterialsVector) {
-
-                    } else {
-                        if (this._materials) this._materials.release();
-                    }
-                } else {
-                    if (this._materials) this._materials.release();
-                    this._materials = mats;
-                    this._isInternalMaterialsVector = false;
-                }
-            }
         }
 
         public abstract checkRenderable(): boolean;
