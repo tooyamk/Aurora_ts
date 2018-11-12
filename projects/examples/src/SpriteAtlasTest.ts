@@ -32,8 +32,7 @@ class SpriteAtlasTest {
                 tex.upload(0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
                 atlas.parse(JSON.parse(request.responseText), tex);
 
-                let s = new Aurora.Node().addComponent(new Aurora.Sprite());
-                s.frame = atlas.getFrame("equipment_bg");
+                let s = new Aurora.Node().addComponent(new Aurora.Sprite(atlas.getFrame("equipment_bg")));
                 s.meshMaker = new Aurora.Grid9SpriteMeshMaker(10, 10, 10, 10);
                 s.width = 800;
                 s.height = 600;

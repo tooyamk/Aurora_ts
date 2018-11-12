@@ -24,13 +24,15 @@ namespace Aurora {
         protected _height: number = null;
         protected _meshMaker: ISpriteMeshMaker = null;
 
-        constructor() {
+        constructor(frame: SpriteFrame = null) {
             super();
 
             this._anchor = new Vector2(0.5, 0.5);
             this._color = Color4.WHITE;
             this._uniforms = new ShaderUniforms();
             this._uniforms.retain();
+
+            this.frame = frame;
         }
 
         public get meshMaker(): ISpriteMeshMaker {
