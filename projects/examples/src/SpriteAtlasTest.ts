@@ -16,6 +16,8 @@ class SpriteAtlasTest {
             env.renderingManager.render(env.gl, env.camera, env.world, null);
         });
 
+        Aurora.Node.AbstractComponent;
+
         this._createSprites();
     }
 
@@ -28,10 +30,13 @@ class SpriteAtlasTest {
             img.onload = () => {
                 let tex = new Aurora.GLTexture2D(this._env.gl);
                 tex.upload(0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
-                atlas.parse("", JSON.parse(request.responseText), tex);
+                atlas.parse(JSON.parse(request.responseText), tex);
 
                 let s = new Aurora.Node().addComponent(new Aurora.Sprite());
-                s.frame = atlas.getFrame("discharge");
+                s.frame = atlas.getFrame("equipment_bg");
+                s.meshMaker = new Aurora.Grid9SpriteMeshMaker(10, 10, 10, 10);
+                s.width = 800;
+                s.height = 600;
                 s.renderer = this._env.spriteRenderer;
                 s.node.localTranslate(0, 0, 100);
                 this._env.camera.node.addChild(s.node);

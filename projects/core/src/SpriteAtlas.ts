@@ -45,14 +45,21 @@ namespace Aurora {
         }
     }
 
-    export class SpriteAtlas {
-        protected _frames = new RefMap<string, SpriteFrame>();
+    export class SpriteAtlas extends Ref {
+        protected _frames: RefMap<string, SpriteFrame>;
+
+        constructor() {
+            super();
+
+            this._frames = new RefMap<string, SpriteFrame>();
+            this._frames.retain();
+        }
 
         /**
          * @param json TexturePacker Json(Hash) Format.
          */
-        public parse(ns: string, json: any, tex: GLTexture2D): void {
-            if (!ns) ns = "";
+        public parse(json: any, tex: GLTexture2D, ns: string = "", outputNames: string[] = null): void {
+            if (ns === null || ns === undefined) ns = "";
             
             const frames = json.frames;
             const meta = json.meta;
@@ -67,6 +74,8 @@ namespace Aurora {
                     texH = size.h * scale;
                 }
             }
+
+            let opLen = outputNames ? outputNames.length : 0;
 
             for (const key in frames) {
                 const data = frames[key];
@@ -84,7 +93,7 @@ namespace Aurora {
                 sf.sourceHeight = ss.h;
                 sf.offsetX = sss.x;
                 sf.offsetY = sss.y;
-                sf.rotated = data.roteted ? 1 : 0;
+                sf.rotated = data.rotated ? 1 : 0;
                 sf.texWidth = texW;
                 sf.texHeight = texH;
 
@@ -99,7 +108,9 @@ namespace Aurora {
                     sf.offsetY *= scale;
                 }
 
-                this.addFrame(ns + key, sf);
+                const fullName = ns + key;
+                if (outputNames) outputNames[opLen++] = fullName;
+                this.addFrame(fullName, sf);
             }
         }
 
@@ -115,8 +126,21 @@ namespace Aurora {
             this._frames.erase(name);
         }
 
+        public removeFrames(names: string[]): void {
+            if (names) {
+                for (let i = 0, n = names.length; i < n; ++i) this._frames.erase(names[i]);
+            }
+        }
+
         public clearFrames(): void {
             this._frames.clear();
+        }
+
+        protected _refDestroy(): void {
+            if (this._frames) {
+                this._frames.release();
+                this._frames = null;
+            }
         }
     }
 }

@@ -32,4 +32,20 @@ namespace Aurora {
 
         protected abstract _refDestroy(): void;
     }
+
+    export class RefPtr<T extends IRef> {
+        protected _value: T = null;
+
+        public get value(): T {
+            return this._value;
+        }
+
+        public set value(v: T) {
+            if (this._value !== v) {
+                if (v) v.retain();
+                if (this._value) this._value.release();
+                this._value = v;
+            }
+        }
+    }
 }

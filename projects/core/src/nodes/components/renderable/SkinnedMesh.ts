@@ -22,7 +22,7 @@ namespace Aurora {
             return !!this.asset;
         }
 
-        public visit(renderingData: RenderingData): void {
+        public render(renderingData: RenderingData): void {
             renderingData.out.asset = this.asset;
         }
 

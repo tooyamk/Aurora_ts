@@ -100,7 +100,7 @@ namespace Aurora {
             for (let i = start; i <= end; ++i) {
                 const obj = renderingObjects[i];
                 renderingData.in.renderingObject = obj;
-                obj.renderable.visit(renderingData);
+                obj.renderable.render(renderingData);
                 const as = renderingData.out.asset;
                 if (as) {
                     const su = this._shaderUniforms;

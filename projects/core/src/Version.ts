@@ -1,3 +1,3 @@
 namespace Aurora {
-    export const Version: string = "0.0.2 alpha";
+    export const Version: string = "0.1.0";
 }

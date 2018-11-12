@@ -40,7 +40,7 @@ namespace Aurora {
         }
 
         public abstract checkRenderable(): boolean;
-        public abstract visit(renderingData: RenderingData): void;
+        public abstract render(renderingData: RenderingData): void;
 
         public destroy(): void {
             this.setMaterials(null);
