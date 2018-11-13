@@ -852,6 +852,17 @@ namespace Aurora {
 
         public destroy(): void {
             this.removeAllChildren();
+            this.remvoeAllComponents();
+            this._components = null;
+            this._localRot = null;
+            this._localScale = null;
+            this._localMatrix = null;
+            this._worldRot = null;
+            this._worldMatrix = null;
+            this._inverseWorldMatrix = null;
+            this._color = null;
+            this._cascadeColor = null;
+            this._traversingStack = null;
         }
 
         protected _refDestroy(): void {

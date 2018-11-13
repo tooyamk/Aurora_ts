@@ -1,5 +1,5 @@
 namespace Aurora.FBX {
-    export class ParseResult {
+    export class Data {
         public meshes: MeshAsset[] = null;
         public skeleton: Skeleton = null;
         public animationClips: SkeletonAnimationClip[] = null;
@@ -133,8 +133,8 @@ namespace Aurora.FBX {
             return parents ? parents : null;
         }
 
-        public parse(): ParseResult {
-            const result = new ParseResult();
+        public parse(): Data {
+            const result = new Data();
 
             let meshes: Node[] = null;
             let skeleton: SkeletonData = null;

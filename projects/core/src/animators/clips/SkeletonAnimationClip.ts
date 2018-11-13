@@ -17,7 +17,6 @@ namespace Aurora {
         export class Frame {
             public time: number = 0;
             public data: BoneData[] = null;
-            
         }
     }
 }

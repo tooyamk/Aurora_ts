@@ -76,14 +76,14 @@ class FileTest {
     }
 
     private _loadFBX(): void {
-        let result: Aurora.FBX.ParseResult = null;
+        let data: Aurora.FBX.Data = null;
         let img: HTMLImageElement = null;
 
         let taskQueue = new Aurora.TaskQueue();
         taskQueue.createTask(Aurora.Handler.create(null, (task: Aurora.Task) => {
             let request = new XMLHttpRequest();
             request.addEventListener("loadend", () => {
-                result = Aurora.FBX.parse(new Aurora.ByteArray(request.response));
+                data = Aurora.FBX.parse(new Aurora.ByteArray(request.response));
                 task.finish();
             });
             //request.open("GET", Helper.getURL("people/model.FBX"), true);
@@ -112,10 +112,10 @@ class FileTest {
 
             let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
             mesh.renderer = this._env.forwardRenderer;
-            mesh.asset = result.meshes[0];
+            mesh.asset = data.meshes[0];
             mesh.setMaterials(mat);
 
-            Helper.printNodeHierarchy([result.skeleton.bones[result.skeleton.rootBoneIndices[0]]]);
+            Helper.printNodeHierarchy([data.skeleton.bones[data.skeleton.rootBoneIndices[0]]]);
 
             mesh.node.setLocalScale(30, 30, 30);
         }));

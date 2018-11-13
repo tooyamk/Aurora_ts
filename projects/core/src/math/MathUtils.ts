@@ -58,13 +58,10 @@ namespace Aurora {
             const dx = end.x - begin.x;
             const dy = end.y - begin.y;
             const dz = end.z - begin.z;
-            if (Math.abs(dx) < MathUtils.ZERO_TOLERANCE && Math.abs(dy) < MathUtils.ZERO_TOLERANCE && Math.abs(dz) < MathUtils.ZERO_TOLERANCE) {
-                rst.setFromNumbers(NaN, NaN, NaN);
-                return rst;
-            }
+            const lenSq = dx * dx + dy * dy + dz * dz;
+            if (this.isEqual(lenSq, 0)) return null;
 
-            let u = (begin.x - pt.x) * dx + (begin.y - pt.y) * dy + (begin.z - pt.z) * dz;
-            u = u / (dx * dx + dy * dy + dz * dz);
+            const u = ((begin.x - pt.x) * dx + (begin.y - pt.y) * dy + (begin.z - pt.z) * dz) / lenSq;
 
             rst.x = begin.x - u * dx;
             rst.y = begin.y - u * dy;
@@ -92,18 +89,18 @@ namespace Aurora {
             return rst ? rst.setFromNumbers(x, y, z) : new Vector3(x, y, z);
         }
 
-        public static getLinesIntersectionPoint(line1Point1: Vector3, line1Point2: Vector3, line2Point1: Vector3, line2Point2: Vector3, rst: Vector3 = null, tolerance: number = Number.EPSILON): Vector3 {
-            const x1 = line1Point2.x - line1Point1.x;
-            const x2 = line2Point1.x - line1Point1.x;
-            const x3 = line2Point2.x - line1Point1.x;
+        public static getLinesIntersectionPoint(point1: Vector3, vector1: Vector3, point2: Vector3, vector2: Vector3, rst: Vector3 = null, tolerance: number = Number.EPSILON): Vector3 {
+            const x1 = vector1.x;
+            const x2 = point2.x - point1.x;
+            const x3 = point2.x + vector2.x - point1.x;
 
-            const y1 = line1Point2.y - line1Point1.y;
-            const y2 = line2Point1.y - line1Point1.y;
-            const y3 = line2Point2.y - line1Point1.y;
+            const y1 = vector1.y;
+            const y2 = point2.y - point1.y;
+            const y3 = point2.y + vector2.y - point1.y;
 
-            const z1 = line1Point2.z - line1Point1.z;
-            const z2 = line2Point1.z - line1Point1.z;
-            const z3 = line2Point2.z - line1Point1.z;
+            const z1 = vector1.z;
+            const z2 = point2.z - point1.z;
+            const z3 = point2.z + vector2.z - point1.z;
 
             const x1y2 = x1 * y2;
             const x1y3 = x1 * y3;
@@ -113,7 +110,7 @@ namespace Aurora {
 
             const isEqual = MathUtils.isEqual;
 
-            if (isEqual(x1y2, x2y1, tolerance) && isEqual(x1y3, x3y1, tolerance) && isEqual(x1y3, x3y1, tolerance) && isEqual(x1 * z3, x3z1, tolerance)) {
+            if (isEqual(x1y2, x2y1, tolerance) && isEqual(x1y3, x3y1, tolerance) && isEqual(x1 * z3, x3z1, tolerance)) {
                 return null;
             } else {
                 const x2y3 = x2 * y3;
@@ -124,9 +121,9 @@ namespace Aurora {
                     return null;
                 } else {
                     const len = x3y1 + y2 * x1 - y3 * x1 - x2y1;
-                    const x = (x1 * x3y2 - x1 * x2y3) / len + line1Point1.x;
-                    const y = (x3y1 * y2 - x2y1 * y3) / len + line1Point1.y;
-                    const z = (x3z1 * y2 - x2y1 * y3) / len + line1Point1.z;
+                    const x = (x1 * x3y2 - x1 * x2y3) / len + point1.x;
+                    const y = (x3y1 * y2 - x2y1 * y3) / len + point1.y;
+                    const z = (x3z1 * y2 - x2y1 * y3) / len + point1.z;
 
                     return rst ? rst.setFromNumbers(x, y, z) : new Vector3(x, y, z);
                 }

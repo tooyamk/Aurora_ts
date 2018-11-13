@@ -15,8 +15,9 @@ namespace Aurora {
             this._lights = null;
         }
 
-        public abstract render(renderingData: RenderingData, renderingObjects: RenderingObject[], start: int, end: int): void;
         public abstract collect(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void;
+        public abstract render(renderingData: RenderingData, renderingObjects: RenderingObject[], start: int, end: int): void;
+        public abstract flush(): void;        
 
         public destroy(): void {
             //override

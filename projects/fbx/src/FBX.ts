@@ -1,5 +1,5 @@
 namespace Aurora.FBX {
-    export function parse(data: ByteArray): ParseResult {
+    export function parse(data: ByteArray): Data {
         data.position += 23;
         const ver = data.readUint32();
 

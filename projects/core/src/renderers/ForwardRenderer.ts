@@ -90,6 +90,9 @@ namespace Aurora {
             this._renderByQueue(renderingData, renderingObjects, start, end);
         }
 
+        public flush(): void {
+        }
+
         public postRender(): void {
             this._light = null;
 
