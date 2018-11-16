@@ -9,17 +9,17 @@ namespace Aurora {
 
     export class Material extends Ref {
         public renderingPriority: int = 0;
-        public renderingSort: RenderingSort = RenderingSort.MIDDLE;
+        public renderingSort = RenderingSort.MIDDLE;
 
-        public drawMode: GLDrawMode = GLDrawMode.TRIANGLES;
+        public drawMode = GLDrawMode.TRIANGLES;
 
         public blend: GLBlend = null;
 
-        public cullFace: GLCullFace = GLCullFace.BACK;
+        public cullFace = GLCullFace.BACK;
 
-        public depthTest: GLDepthTest = GLDepthTest.LESS;
+        public depthTest = GLDepthTest.LESS;
 
-        public depthWrite: boolean = true;
+        public depthWrite = true;
         public colorWrite: GLColorWrite = null;
 
         public stencilFront: GLStencil = null;

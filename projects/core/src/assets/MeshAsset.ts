@@ -2,7 +2,7 @@
 
 namespace Aurora {
     export class MeshAsset extends Ref {
-        public name: string = "";
+        public name = "";
 
         public bindMatrices: Matrix44[] = null;
 

@@ -1,16 +1,16 @@
 namespace Aurora {
     export class SpriteRenderer extends AbstractRenderer {
-        protected _maxVertexSize = 65536;
+        protected _maxVertexSize: uint = 65536;
 
         protected _gl: GL;
-        protected _asset: MeshAsset = new MeshAsset();
+        protected _asset = new MeshAsset();
         protected _vertexSources: VertexSource[] = [];
         protected _reformats: uint[] = [];
-        protected _reformatsLen = 0;
-        protected _numVertexSources = 0;
-        protected _numCombinedVertex = 0;
-        protected _numCombinedIndex = 0;
-        protected _numAllicatedVertex = 0;
+        protected _reformatsLen: uint = 0;
+        protected _numVertexSources: uint = 0;
+        protected _numCombinedVertex: uint = 0;
+        protected _numCombinedIndex: uint = 0;
+        protected _numAllicatedVertex: uint = 0;
         protected _numAllicatedIndex = 0;
 
         protected _curMaterial: Material = null;
@@ -93,8 +93,8 @@ namespace Aurora {
             }
         }
 
-        protected _activeMaterial(material: Material, stack: ShaderUniformsList, u1: ShaderUniforms): void {
-            this._activeUniformsList.pushBackByStack(stack).pushBack(material.uniforms).pushBack(u1);
+        protected _activeMaterial(material: Material, list: ShaderUniformsList, u1: ShaderUniforms): void {
+            this._activeUniformsList.pushBackByStack(list).pushBack(material.uniforms).pushBack(u1);
             this._definesList.pushBack(material.defines);
             const p = this._renderingMgr.useShader(material, this._definesList, this._activeUniformsList);
             this._definesList.clear();

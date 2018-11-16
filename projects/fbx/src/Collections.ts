@@ -10,8 +10,8 @@ namespace Aurora.FBX {
         public rootBoneIndices: uint[] = [];
 
         private _numBones = 0;
-        private _bonesByName: Map<string, uint> = new Map();
-        private _bonesByID: Map<uint, uint> = new Map();
+        private _bonesByName = new Map<string, uint>();
+        private _bonesByID = new Map<uint, uint>();
 
         private _boneIDs: uint[] = [];
 
@@ -54,9 +54,9 @@ namespace Aurora.FBX {
         private _animationStacks: Node[] = null;
         private _models: Node[] = [];
 
-        private _objects: Map<uint, Node> = new Map();
-        private _parentsMap: Map<uint, Connection[]> = new Map();
-        private _childrenMap: Map<uint, Connection[]> = new Map();
+        private _objects = new Map<uint, Node>();
+        private _parentsMap = new Map<uint, Connection[]>();
+        private _childrenMap = new Map<uint, Connection[]>();
 
         public addNode(node: Node): void {
             switch (node.name) {

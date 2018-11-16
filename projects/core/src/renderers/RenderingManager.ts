@@ -14,10 +14,10 @@ namespace Aurora {
         protected _shaderDefines: ShaderDefines = null;
         protected _shaderUniforms: ShaderUniforms = null;
 
-        protected _cameraWorldMatrix: Matrix44 = new Matrix44();
-        protected _viewToProjMatrix: Matrix44 = new Matrix44();
-        protected _worldToViewMatrix: Matrix44 = new Matrix44();
-        protected _worldToProjMatrix: Matrix44 = new Matrix44();
+        protected _cameraWorldMatrix = new Matrix44();
+        protected _viewToProjMatrix = new Matrix44();
+        protected _worldToViewMatrix = new Matrix44();
+        protected _worldToProjMatrix = new Matrix44();
         protected _viewToProjM44Array: number[] = [];
         protected _worldToViewM44Array: number[] = [];
         protected _worldToProjM44Array: number[] = [];

@@ -2,8 +2,8 @@
 
 namespace Aurora {
     export class BoundBox implements IBoundShape {
-        public readonly center: Vector3 = Vector3.Zero;
-        public readonly size: Vector3 = Vector3.One;
+        public readonly center = Vector3.Zero;
+        public readonly size = Vector3.One;
 
         constructor(center: Vector3 = Vector3.Zero, size: Vector3 = Vector3.One) {
             if (center) this.center.set(center);

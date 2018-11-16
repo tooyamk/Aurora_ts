@@ -3,7 +3,7 @@ namespace Aurora {
         public distance: number;
         public distanceSquared: number;
         public collider: Collider;
-        public readonly normal: Vector3 = Vector3.Zero;
+        public readonly normal = Vector3.Zero;
 
         constructor() {
             this.clear();

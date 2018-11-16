@@ -1,11 +1,11 @@
 namespace Aurora {
     export class BoundFrustum {
-        public readonly left: Vector4 = new Vector4();
-        public readonly right: Vector4 = new Vector4();
-        public readonly far: Vector4 = new Vector4();
-        public readonly near: Vector4 = new Vector4();
-        public readonly top: Vector4 = new Vector4();
-        public readonly bottom: Vector4 = new Vector4();
+        public readonly left = new Vector4();
+        public readonly right = new Vector4();
+        public readonly far = new Vector4();
+        public readonly near = new Vector4();
+        public readonly top = new Vector4();
+        public readonly bottom = new Vector4();
         
         constructor(m: Matrix44 = null) {
             if (m) this.matrix = m;

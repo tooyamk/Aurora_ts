@@ -2,7 +2,7 @@
 
 namespace Aurora {
     export abstract class AbstractLight extends Node.AbstractComponent {
-        public readonly color: Color3 = Color3.WHITE;
+        public readonly color = Color3.WHITE;
         public intensity: number = 1;
 
         public abstract ready(defines: ShaderDefines, uniforms: ShaderUniforms): void;

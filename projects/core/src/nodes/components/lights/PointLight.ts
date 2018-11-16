@@ -2,7 +2,6 @@
 
 namespace Aurora {
     export class PointLight extends AbstractLight {
-        
         protected _attenConstant: number;
         protected _attenLinear: number;
         protected _attenQuadratic: number;

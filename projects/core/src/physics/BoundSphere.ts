@@ -1,6 +1,7 @@
 namespace Aurora {
     export class BoundSphere implements IBoundShape {
-        public readonly center: Vector3 = Vector3.Zero;
+        public readonly center = Vector3.Zero;
+        
         protected _radius: number;
         protected _radiusSquared: number;
 

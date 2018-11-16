@@ -1,6 +1,6 @@
 namespace Aurora {
     export class Task {
-        private _running: boolean = false;
+        private _running = false;
         private _onStart: Handler = null;
         private _onFinish: Handler = null;
 
@@ -38,7 +38,7 @@ namespace Aurora {
 
     export class TaskQueue {
         private _tasks: Task[] = [];
-        private _running: boolean = false;
+        private _running = false;
         private _cur: int = -1;
         private _process: number = 0;
         private _onFinish: Handler = null;

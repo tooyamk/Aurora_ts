@@ -4,8 +4,8 @@
 
 namespace Aurora {
     export class Ray {
-        public readonly origin: Vector3 = Vector3.Zero;
-        public readonly direction: Vector3 = Vector3.Front;
+        public readonly origin = Vector3.Zero;
+        public readonly direction = Vector3.Front;
 
         constructor(origin: Vector3 = Vector3.Zero, direction: Vector3 = Vector3.Front) {
             if (origin) this.origin.set(origin);

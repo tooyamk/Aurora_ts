@@ -1,7 +1,7 @@
 namespace Aurora {
     export class Node extends Ref {
-        protected static _tmpVec3: Vector3 = Vector3.Zero;
-        protected static _tmpMat: Matrix44 = new Matrix44();
+        protected static _tmpVec3 = Vector3.Zero;
+        protected static _tmpMat = new Matrix44();
 
         protected static readonly LOCAL_MATRIX_DIRTY: uint = 0b1;
         protected static readonly WORLD_MATRIX_DIRTY: uint = 0b10;
@@ -15,9 +15,9 @@ namespace Aurora {
 
         protected static readonly CASCADE_COLOR_DIRTY: uint = 0b10000;
 
-        public name: string = "";
+        public name = "";
         public layer: uint = 0x7FFFFFFF;
-        public active: boolean = true;
+        public active = true;
 
         protected _parent: Node = null;
         protected _root: Node = null;
@@ -31,14 +31,14 @@ namespace Aurora {
 
         protected _components: Node.AbstractComponent[] = null;
 
-        protected _localRot: Quaternion = new Quaternion();
-        protected _localScale: Vector3 = Vector3.One;
+        protected _localRot = new Quaternion();
+        protected _localScale = Vector3.One;
 
-        protected _localMatrix: Matrix44 = new Matrix44();
+        protected _localMatrix = new Matrix44();
 
-        protected _worldRot: Quaternion = new Quaternion();
-        protected _worldMatrix: Matrix44 = new Matrix44();
-        protected _inverseWorldMatrix: Matrix44 = new Matrix44();
+        protected _worldRot = new Quaternion();
+        protected _worldMatrix = new Matrix44();
+        protected _inverseWorldMatrix = new Matrix44();
 
         protected _color: Color4 = null;
         protected _cascadeColor: Color4 = null;
@@ -836,7 +836,7 @@ namespace Aurora {
                 } else if (depth > 1) {
                     let child = this._childHead;
                     while (child) {
-                        let lv = child.isContains(node, depth - 1);
+                        const lv = child.isContains(node, depth - 1);
                         if (lv !== -1) return lv + 1;
                         child = child._next;
                     }
@@ -853,6 +853,7 @@ namespace Aurora {
         public destroy(): void {
             this.removeAllChildren();
             this.remvoeAllComponents();
+
             this._components = null;
             this._localRot = null;
             this._localScale = null;
@@ -873,7 +874,7 @@ namespace Aurora {
     export namespace Node {
         export abstract class AbstractComponent extends Ref {
             protected _node: Node = null;
-            protected _enabled: boolean = true;
+            protected _enabled = true;
 
             public get node(): Node {
                 return this._node;
