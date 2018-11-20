@@ -1539,14 +1539,14 @@ namespace Aurora {
     }
 
     export class GLBlend {
-        public equation: GLBlendEquation = null;
-        public func: GLBlendFunc = null;
-        public constColor: Color4 = null;
+        public equation: GLBlendEquation;
+        public func: GLBlendFunc;
+        public constColor: Color4;
 
         constructor(equation: GLBlendEquation = null, func: GLBlendFunc = null, constColor: Color4 = null) {
-            this.equation = equation;
-            this.func = func;
-            this.constColor = constColor;
+            this.equation = equation || new GLBlendEquation();
+            this.func = func || new GLBlendFunc();
+            this.constColor = constColor || Color4.TRANSPARENT_BLACK;
         }
 
         public clone() : GLBlend {

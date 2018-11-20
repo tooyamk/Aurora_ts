@@ -16,6 +16,7 @@ namespace Aurora {
         protected _curMaterial: Material = null;
         protected _curProgramAtts: GLProgramAttribInfo[] = null;
         protected _curUniformInfos: GLProgramUniformInfo[] = null;
+        protected _curShaderNumDefines: uint = 0;
 
         protected _definesList = new ShaderDataList<ShaderDefines, ShaderDefines.Value>();
         protected _activeUniformsList = new ShaderDataList<ShaderUniforms, ShaderUniforms.Value>();
@@ -94,7 +95,7 @@ namespace Aurora {
         }
 
         protected _activeMaterial(material: Material, list: ShaderUniformsList, u1: ShaderUniforms): void {
-            this._activeUniformsList.pushBackByStack(list).pushBack(material.uniforms).pushBack(u1);
+            this._activeUniformsList.pushBackByList(list).pushBack(material.uniforms).pushBack(u1);
             this._definesList.pushBack(material.defines);
             const p = this._renderingMgr.useShader(material, this._definesList, this._activeUniformsList);
             this._definesList.clear();
@@ -102,6 +103,7 @@ namespace Aurora {
                 this._curMaterial = material;
                 this._curProgramAtts = p.attributes;
                 this._curUniformInfos = p.uniforms;
+                this._curShaderNumDefines = material.shader.defines.length;
             } else {
                 this._activeUniformsList.clear();
             }
@@ -111,6 +113,7 @@ namespace Aurora {
             this._curMaterial = null;
             this._curProgramAtts = null;
             this._curUniformInfos = null;
+            this._curShaderNumDefines = 0;
 
             for (let i = start; i <= end; ++i) {
                 const obj = renderingObjects[i];
@@ -165,17 +168,33 @@ namespace Aurora {
                             }
                             this._reformatsLen = 0;
                         } else {
-                            if (Material.canCombine(this._curMaterial, mat)) {
-                                this._compareUniformsList.pushBackByStack(uniformsList).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms);
-                                const b = ShaderDataList.isUnifromsEqual(this._activeUniformsList, this._compareUniformsList, this._curUniformInfos);
-                                this._compareUniformsList.clear();
+                            let canCombine = true;
+                            if (Material.isEqual(this._curMaterial, mat)) {
+                                let b: boolean = true;
+                                if (this._curShaderNumDefines > 0) {
+                                    this._definesList.pushBack(mat.defines).pushBack(this._renderingMgr.shaderDefines);
+                                    b = this._curMaterial.shader.isEqual(this._definesList);
+                                    this._definesList.clear();
+                                }
                                 if (b) {
-                                    if (this._numCombinedVertex + len > this._maxVertexSize) this.flush();
+                                    if (this._curUniformInfos.length > 0) {
+                                        this._compareUniformsList.pushBackByList(uniformsList).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(this._renderingMgr.shaderUniforms);
+                                        b = ShaderDataList.isUnifromsEqual(this._activeUniformsList, this._compareUniformsList, this._curUniformInfos);
+                                        this._compareUniformsList.clear();
+                                    }
+                                    if (b) {
+                                        if (this._numCombinedVertex + len > this._maxVertexSize) this.flush();
+                                    } else {
+                                        canCombine = false;
+                                    }
                                 } else {
-                                    this.flush();
-                                    this._activeMaterial(mat, uniformsList, obj.alternativeUniforms);
+                                    canCombine = false;
                                 }
                             } else {
+                                canCombine = false;
+                            }
+
+                            if (!canCombine) {
                                 this.flush();
                                 this._activeMaterial(mat, uniformsList, obj.alternativeUniforms);
                             }
@@ -204,6 +223,7 @@ namespace Aurora {
             this._curMaterial = null;
             this._curProgramAtts = null;
             this._curUniformInfos = null;
+            this._curShaderNumDefines = 0;
         }
 
         public flush(): void {

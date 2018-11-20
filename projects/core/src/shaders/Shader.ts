@@ -1,6 +1,53 @@
 ///<reference path="ShaderSource.ts" />
 
 namespace Aurora {
+    class RWShaderDefineInfo {
+        public index: uint;
+        public value: int;
+
+        public set(index: uint, value: int): void {
+            this.index = index;
+            this.value = value;
+        }
+    }
+
+    export class ShaderDefineInfo {
+        public readonly index: uint;
+        public readonly value: int;
+
+        constructor(index: uint, value: int) {
+            this.index = index;
+            this.value = value;
+        }
+    }
+
+    export class ShaderProgram extends GLProgram {
+        private _usedDefines: ShaderDefineInfo[];
+        private _unusedDefines: string[];
+
+        constructor(gl: GL, usedDefines: ShaderDefineInfo[], unusedDefines: string[]) {
+            super(gl);
+
+            this._usedDefines = usedDefines;
+            this._unusedDefines = unusedDefines;
+        }
+
+        public get usedDefines(): ShaderDefineInfo[] {
+            return this._usedDefines;
+        }
+
+        public get unusedDefines(): string[] {
+            return this._unusedDefines;
+        }
+
+        public destroy() {
+            this._usedDefines = null;
+            this._unusedDefines = null;
+
+            super.destroy();
+        }
+    }
+
     export class Shader extends Ref {
         protected _gl: GL;
         protected _vert: ShaderSource;
@@ -8,13 +55,16 @@ namespace Aurora {
 
         protected _defines: string[] = [];
 
-        protected _cachedNoDefineProgram: GLProgram = null;
-        protected _cachedPrograms = new RefMap<string, GLProgram>();
+        protected _cachedNoDefineProgram: ShaderProgram = null;
+        protected _cachedPrograms = new RefMap<string, ShaderProgram>();
         protected _numCachedPrograms = 0;
 
-        protected _curProgram: GLProgram = null;
+        protected _curProgram: ShaderProgram = null;
         protected _attributes: GLProgramAttribInfo[] = null;
         protected _uniforms: GLProgramUniformInfo[] = null;
+
+        protected _usedDefines: RWShaderDefineInfo[];
+        protected _numUsedDefines: uint = 0;
 
         constructor(gl: GL, vert: ShaderSource, frag: ShaderSource) {
             super();
@@ -32,13 +82,60 @@ namespace Aurora {
             Sort.Merge.sort(this._defines, (a: string, b: string) => {
                 return a < b;
             });
+            this._usedDefines = [];
+            this._usedDefines.length = idx;
+            for (let i = 0; i < idx; ++i) this._usedDefines[i] = new RWShaderDefineInfo();
+        }
+
+        public get defines(): string[] {
+            return this._defines;
+        }
+
+        public isEqual(definesList: ShaderDefinesList): boolean {
+            const p = this._curProgram;
+            if (p) {
+                const usedDefines = p.usedDefines;
+                if (definesList) {
+                    for (let i = 0, n = usedDefines.length; i < n; ++i) {
+                        const d = usedDefines[i];
+                        const v = definesList.getValue(this._defines[d.index]);
+                        if (v) {
+                            if (d.value === null) {
+                                if (v.type !== ShaderDefines.VlaueType.BOOL || !v.value) return false;
+                            } else {
+                                if (v.type !== ShaderDefines.VlaueType.INT || v.value !== d.value) return false;
+                            }
+                        } else {
+                            return false;
+                        }
+                    }
+                } else {
+                    if (usedDefines.length > 0) return false;
+                }
+
+                const unusedDefines = p.unusedDefines;
+                for (let i = 0, n = unusedDefines.length; i < n; ++i) {
+                    const v = definesList.getValue(unusedDefines[i]);
+                    if (v) {
+                        if (v.type == ShaderDefines.VlaueType.BOOL) {
+                            if (v.value) return false;
+                        } else if (v.type !== ShaderDefines.VlaueType.INT) {
+                            return false;
+                        }
+                    }
+                }
+
+                return true;
+            } else {
+                return false;
+            }
         }
 
         public get gl(): GL {
             return this._gl;
         }
 
-        public get currentProgram(): GLProgram {
+        public get currentProgram(): ShaderProgram {
             return this._curProgram;
         }
 
@@ -60,11 +157,11 @@ namespace Aurora {
         }
 
         public precompile(definesList: ShaderDefinesList): boolean {
-            return this._getOrCreateProgram(this._collectDefines(definesList)).status === GLProgramStatus.SUCCESSED;
+            return this._getOrCreateProgram(this._collectDefinesKey(definesList)).status === GLProgramStatus.SUCCESSED;
         }
 
-        public ready(definesList: ShaderDefinesList): GLProgram {
-            this._curProgram = this._getOrCreateProgram(this._collectDefines(definesList));
+        public ready(definesList: ShaderDefinesList): ShaderProgram {
+            this._curProgram = this._getOrCreateProgram(this._collectDefinesKey(definesList));
 
             this._attributes = this._curProgram.attributes;
             this._uniforms = this._curProgram.uniforms;
@@ -72,8 +169,9 @@ namespace Aurora {
             return this._curProgram.status === GLProgramStatus.SUCCESSED ? this._curProgram : null;
         }
 
-        private _collectDefines(definesList: ShaderDefinesList): string {
-            let appendDefines = "";
+        private _collectDefinesKey(definesList: ShaderDefinesList): string {
+            let key = "";
+            this._numUsedDefines = 0;
 
             if (definesList) {
                 for (let i = 0, n = this._defines.length; i < n; ++i) {
@@ -81,29 +179,50 @@ namespace Aurora {
                     const v = definesList.getValue(name);
                     if (v) {
                         if (v.type === ShaderDefines.VlaueType.BOOL) {
-                            if (v.value) appendDefines += "\n" + name;
+                            if (v.value) {
+                                key += "\n" + i;
+                                this._usedDefines[this._numUsedDefines++].set(i, null);
+                            }
                         } else if (v.type === ShaderDefines.VlaueType.INT) {
-                            appendDefines += "\n" + name + " " + v.value;
+                            key += "\n" + i + " " + v.value;
+                            this._usedDefines[this._numUsedDefines++].set(i, <int>v.value);
                         }
                     }
                 }
             }
 
-            return appendDefines;
+            return key;
         }
 
-        private _getOrCreateProgram(appendDefines: string): GLProgram {
-            let p = this._getProgramFromCache(appendDefines);
-            if (!p) p = this._createProgram(appendDefines);
+        private _getOrCreateProgram(key: string): ShaderProgram {
+            let p = this._getProgramFromCache(key);
+            if (!p) p = this._createProgram(key);
             return p;
         }
 
-        private _createProgram(appendDefines: string): GLProgram {
-            const defines = appendDefines ? appendDefines.replace(/\n/g, "\n#define ") + "\n" : "";
-            const p = new GLProgram(this._gl);
+        private _createProgram(key: string): ShaderProgram {
+            const usedDefines: ShaderDefineInfo[] = [];
+            const unusedDefines: string[] = [];
+            let unusedIdx: uint = 0;
+            let defines = "";
+            for (let i = 0, n = this._numUsedDefines; i < n; ++i) {
+                const info = this._usedDefines[i];
+                const idx = info.index;
+
+                for (let j = unusedIdx; j < idx; ++j) unusedDefines[unusedDefines.length] = this._defines[j];
+                unusedIdx = i + 1;
+
+                defines += "#define " + this._defines[idx];
+                if (info.value !== null) defines += " " + info.value;
+                usedDefines[usedDefines.length] = new ShaderDefineInfo(info.index, info.value);
+                defines += "\n";
+            }
+            for (let j = unusedIdx, n = this._defines.length; j < n; ++j) unusedDefines[unusedDefines.length] = this._defines[j];
+
+            const p = new ShaderProgram(this._gl, usedDefines, unusedDefines);
             p.compileAndLink(defines + this._vert.source, defines + this._frag.source);
-            if (appendDefines) {
-                this._cachedPrograms.insert(appendDefines, p);
+            if (key) {
+                this._cachedPrograms.insert(key, p);
             } else {
                 p.retain();
                 if (this._cachedNoDefineProgram) this._cachedNoDefineProgram.release();
@@ -114,7 +233,7 @@ namespace Aurora {
             return p;
         }
 
-        public use(uniformsList: ShaderDataList<ShaderUniforms, ShaderUniforms.Value>): GLProgram {
+        public use(uniformsList: ShaderDataList<ShaderUniforms, ShaderUniforms.Value>): ShaderProgram {
             if (this._curProgram && this._curProgram.status === GLProgramStatus.SUCCESSED) {
                 this._curProgram.use();
 
@@ -315,6 +434,7 @@ namespace Aurora {
                 this._cachedPrograms = null;
             }
 
+            this._usedDefines = null;
             this._curProgram = null;
         }
 
@@ -322,7 +442,7 @@ namespace Aurora {
             this.destroy();
         }
 
-        protected _getProgramFromCache(key: string): GLProgram {
+        protected _getProgramFromCache(key: string): ShaderProgram {
             return key ? this._cachedPrograms.find(key) : this._cachedNoDefineProgram;
         }
     }

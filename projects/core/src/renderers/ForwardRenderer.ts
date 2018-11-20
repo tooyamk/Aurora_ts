@@ -109,7 +109,7 @@ namespace Aurora {
                     const su = this._shaderUniforms;
                     const mat = obj.material;
                     this._definesList.pushBack(mat.defines).pushBack(this._shaderDefines);
-                    this._uniformsList.pushBackByStack(renderingData.out.uniformsList).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(su);
+                    this._uniformsList.pushBackByList(renderingData.out.uniformsList).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(su);
                     
                     const shader = mat.shader;
                     if (shader.hasUniform(ShaderPredefined.u_M33_L2W)) su.setNumberArray(ShaderPredefined.u_M33_L2W, obj.l2w.toArray33(false, this._l2wM33Array));

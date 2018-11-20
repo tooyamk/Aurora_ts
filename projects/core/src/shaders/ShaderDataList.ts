@@ -52,7 +52,7 @@ namespace Aurora {
             return this;
         }
 
-        public pushBackByStack(stack: ShaderDataList<S, T>): ShaderDataList<S, T> {
+        public pushBackByList(stack: ShaderDataList<S, T>): ShaderDataList<S, T> {
             if (stack) {
                 let node = stack._head;
                 while (node) {
