@@ -27,7 +27,8 @@ namespace Aurora {
             for (const n of vert.defines) defines[n] = true;
             for (const n of frag.defines) defines[n] = true;
 
-            for (const n in defines) this._defines.push(n);
+            let idx: uint = 0;
+            for (const n in defines) this._defines[idx++] = n;
             Sort.Merge.sort(this._defines, (a: string, b: string) => {
                 return a < b;
             });
@@ -59,15 +60,11 @@ namespace Aurora {
         }
 
         public precompile(definesList: ShaderDefinesList): boolean {
-            const appendDefines = this._collectDefines(definesList);
-            const p = this._getProgramFromCache(appendDefines);
-            return p ? true : this._createProgram(appendDefines).status === GLProgramStatus.SUCCESSED;
+            return this._getOrCreateProgram(this._collectDefines(definesList)).status === GLProgramStatus.SUCCESSED;
         }
 
         public ready(definesList: ShaderDefinesList): GLProgram {
-            const appendDefines = this._collectDefines(definesList);
-            this._curProgram = this._getProgramFromCache(appendDefines);
-            if (!this._curProgram) this._curProgram = this._createProgram(appendDefines);
+            this._curProgram = this._getOrCreateProgram(this._collectDefines(definesList));
 
             this._attributes = this._curProgram.attributes;
             this._uniforms = this._curProgram.uniforms;
@@ -95,10 +92,16 @@ namespace Aurora {
             return appendDefines;
         }
 
+        private _getOrCreateProgram(appendDefines: string): GLProgram {
+            let p = this._getProgramFromCache(appendDefines);
+            if (!p) p = this._createProgram(appendDefines);
+            return p;
+        }
+
         private _createProgram(appendDefines: string): GLProgram {
-            const finalAppendDefines = appendDefines ? appendDefines.replace(/\n/g, "\n#define ") + "\n" : "";
+            const defines = appendDefines ? appendDefines.replace(/\n/g, "\n#define ") + "\n" : "";
             const p = new GLProgram(this._gl);
-            p.compileAndLink(finalAppendDefines + this._vert.source, finalAppendDefines + this._frag.source);
+            p.compileAndLink(defines + this._vert.source, defines + this._frag.source);
             if (appendDefines) {
                 this._cachedPrograms.insert(appendDefines, p);
             } else {

@@ -26,7 +26,7 @@ namespace Aurora {
         public _next: Node = null;
 
         public _childHead: Node = null;
-        protected _numChildren: number = 0;
+        protected _numChildren: uint = 0;
         protected _traversingStack: Node[] = null;
 
         protected _components: Node.AbstractComponent[] = null;

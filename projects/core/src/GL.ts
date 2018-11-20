@@ -1543,10 +1543,10 @@ namespace Aurora {
         public func: GLBlendFunc = null;
         public constColor: Color4 = null;
 
-        constructor(equation: GLBlendEquation = null, func: GLBlendFunc = null, color: Color4 = null) {
-            this.equation = equation || new GLBlendEquation();
-            this.func = func || new GLBlendFunc();
-            this.constColor = color || Color4.TRANSPARENT_BLACK;
+        constructor(equation: GLBlendEquation = null, func: GLBlendFunc = null, constColor: Color4 = null) {
+            this.equation = equation;
+            this.func = func;
+            this.constColor = constColor;
         }
 
         public clone() : GLBlend {
