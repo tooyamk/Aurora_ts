@@ -1,4 +1,4 @@
-///<reference path="../../Node.ts" />
+///<reference path="../../Node.ts"/>
 
 namespace Aurora {
     export abstract class AbstractRenderable extends Node.AbstractComponent {

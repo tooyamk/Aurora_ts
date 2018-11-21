@@ -1,4 +1,4 @@
-///<reference path="IBoundShape.ts" />
+///<reference path="IBoundShape.ts"/>
 
 namespace Aurora {
     export class BoundBox implements IBoundShape {

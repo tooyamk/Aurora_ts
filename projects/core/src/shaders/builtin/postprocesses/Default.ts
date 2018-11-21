@@ -1,4 +1,4 @@
-///<reference path="../General.ts" />
+///<reference path="../General.ts"/>
 
 namespace Aurora.BuiltinShader.PostProcess.Default {
     export const VERTEX: string = `

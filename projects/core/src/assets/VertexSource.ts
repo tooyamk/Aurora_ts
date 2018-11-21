@@ -1,4 +1,4 @@
-///<reference path="MeshBufferSource.ts" />
+///<reference path="MeshBufferSource.ts"/>
 
 namespace Aurora {
     export class VertexSource extends MeshBufferSource<number[]> {

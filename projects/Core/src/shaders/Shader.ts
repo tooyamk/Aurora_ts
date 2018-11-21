@@ -1,4 +1,4 @@
-///<reference path="ShaderSource.ts" />
+///<reference path="ShaderSource.ts"/>
 
 namespace Aurora {
     class RWShaderDefineInfo {

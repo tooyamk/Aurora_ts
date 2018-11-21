@@ -1,4 +1,4 @@
-///<reference path="../ShaderPredefined.ts" />
+///<reference path="../ShaderPredefined.ts"/>
 
 namespace Aurora.BuiltinShader.General {
     export const PRECISION_HEAD: string = `

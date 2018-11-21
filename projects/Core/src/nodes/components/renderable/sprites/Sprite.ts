@@ -1,5 +1,5 @@
-///<reference path="RectSpriteMeshMaker.ts" />
-///<reference path="../AbstractRenderable.ts" />
+///<reference path="RectSpriteMeshMaker.ts"/>
+///<reference path="../AbstractRenderable.ts"/>
 
 namespace Aurora {
     const createDefaultSpriteFrame = () => {

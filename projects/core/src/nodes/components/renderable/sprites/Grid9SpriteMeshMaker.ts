@@ -1,4 +1,4 @@
-///<reference path="ISpriteMeshMaker.ts" />
+///<reference path="ISpriteMeshMaker.ts"/>
 
 namespace Aurora {
     /*
@@ -92,47 +92,47 @@ namespace Aurora {
             ], GLIndexDataType.UNSIGNED_SHORT, GLUsageType.DYNAMIC_DRAW);
         }
 
-        public updateVertices(w: number, h: number, anchor: Vector2, f: SpriteFrame, m: Matrix44, grid9: Grid9SpriteMeshMaker): boolean {
+        public updateVertices(width: number, height: number, anchor: Vector2, frame: SpriteFrame, m: Matrix44, grid9: Grid9SpriteMeshMaker): boolean {
             const v = SharedGrid9._tmpVec2;
 
-            let lxTrim = -f.sourceWidth * anchor.x + f.offsetX;
-            let tyTrim = -f.sourceHeight * anchor.y + f.sourceHeight - f.offsetY;
-            let rxTrim = lxTrim + f.width;
-            let byTrim = tyTrim - f.height;
+            let lxTrim = -frame.sourceWidth * anchor.x + frame.offsetX;
+            let tyTrim = -frame.sourceHeight * anchor.y + frame.sourceHeight - frame.offsetY;
+            let rxTrim = lxTrim + frame.width;
+            let byTrim = tyTrim - frame.height;
 
-            if (w === null) {
-                w = f.sourceWidth;
+            if (width === null) {
+                width = frame.sourceWidth;
             } else {
-                const s = w / f.sourceWidth;
+                const s = width / frame.sourceWidth;
                 lxTrim *= s;
                 rxTrim *= s;
             }
-            if (h === null) {
-                h = f.sourceHeight;
+            if (height === null) {
+                height = frame.sourceHeight;
             } else {
-                const s = h / f.sourceHeight;
+                const s = height / frame.sourceHeight;
                 tyTrim *= s;
                 byTrim *= s;
             }
 
-            const lx = -w * anchor.x;
-            const by = -h * anchor.y;
-            const rx = lx + w;
-            const ty = by + h;
+            const lx = -width * anchor.x;
+            const by = -height * anchor.y;
+            const rx = lx + width;
+            const ty = by + height;
 
             let mlx: number, mrx: number, mby: number, mty: number;
-            if (w > grid9.width) {
+            if (width > grid9.width) {
                 mlx = lx + grid9.left;
                 mrx = rx - grid9.right;
             } else {
-                mlx = lx + grid9.leftRatio * w;
+                mlx = lx + grid9.leftRatio * width;
                 mrx = mlx;
             }
-            if (h > grid9.height) {
+            if (height > grid9.height) {
                 mby = by + grid9.bottom;
                 mty = ty - grid9.top;
             } else {
-                mby = by + grid9.bottomRatio * h;
+                mby = by + grid9.bottomRatio * height;
                 mty = mty;
             }
 
@@ -209,8 +209,8 @@ namespace Aurora {
             return Sprite.isInViewportRect(this.vertices, 0, elementsPerRow - 2, n - elementsPerRow, n - 2);
         }
 
-        public updateAsset(f: SpriteFrame, tex: GLTexture2D, color: Color4): MeshAsset {
-            this._updateUVs(f, tex);
+        public updateAsset(frame: SpriteFrame, tex: GLTexture2D, color: Color4): MeshAsset {
+            this._updateUVs(frame, tex);
             this._updateColors(color);
 
             let asset = this.asset;

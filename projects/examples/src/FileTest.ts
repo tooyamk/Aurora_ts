@@ -32,6 +32,7 @@ class FileTest {
         this._loadFBX();
     }
 
+    /*
     private _loadMesh(): void {
         let request = new XMLHttpRequest();
         request.addEventListener("loadend", () => {
@@ -77,6 +78,7 @@ class FileTest {
         request.responseType = "arraybuffer";
         request.send();
     }
+    */
 
     private _loadFBX(): void {
         let data: Aurora.FbxFile.Data = null;
@@ -124,6 +126,7 @@ class FileTest {
             mesh.renderer = this._env.forwardRenderer;
             mesh.asset = data.meshes[0];
             mesh.setMaterials(mat);
+            mesh.skeleton = data.skeleton;
 
             Helper.printNodeHierarchy([data.skeleton.bones[data.skeleton.rootBoneIndices[0]]]);
 

@@ -1,9 +1,9 @@
-///<reference path="Shader.ts" />
-///<reference path="builtin/libs/Lighting.ts" />
-///<reference path="builtin/libs/Reflection.ts" />
-///<reference path="builtin/DefaultMesh.ts" />
-///<reference path="builtin/DefaultSkyBox.ts" />
-///<reference path="../GL.ts" />
+///<reference path="Shader.ts"/>
+///<reference path="builtin/libs/Lighting.ts"/>
+///<reference path="builtin/libs/Reflection.ts"/>
+///<reference path="builtin/DefaultMesh.ts"/>
+///<reference path="builtin/DefaultSkyBox.ts"/>
+///<reference path="../GL.ts"/>
 
 namespace Aurora {
     export interface ShaderLib {

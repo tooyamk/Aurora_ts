@@ -1,5 +1,5 @@
-///<reference path="../General.ts" />
-///<reference path="../../ShaderStore.ts" />
+///<reference path="../General.ts"/>
+///<reference path="../../ShaderStore.ts"/>
 
 namespace Aurora.BuiltinShader.Lib.AlphaTest {
     export const NAME = "_AlphaTest";

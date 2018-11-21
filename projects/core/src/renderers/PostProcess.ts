@@ -1,5 +1,5 @@
-///<reference path="IRenderPass.ts" />
-///<reference path="../assets/MeshAsset.ts" />
+///<reference path="IRenderPass.ts"/>
+///<reference path="../assets/MeshAsset.ts"/>
 
 namespace Aurora {
     export class PostProcess implements IRenderPass {

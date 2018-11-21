@@ -1,4 +1,4 @@
-///<reference path="ISpriteMeshMaker.ts" />
+///<reference path="ISpriteMeshMaker.ts"/>
 
 namespace Aurora {
     class SharedRect {
@@ -28,21 +28,21 @@ namespace Aurora {
             this.asset.drawIndexSource = new DrawIndexSource([0, 1, 2, 0, 2, 3], GLIndexDataType.UNSIGNED_SHORT, GLUsageType.DYNAMIC_DRAW);
         }
 
-        public updateVertices(w: number, h: number, anchor: Vector2, f: SpriteFrame, m: Matrix44): boolean {
+        public updateVertices(width: number, height: number, anchor: Vector2, frame: SpriteFrame, m: Matrix44): boolean {
             const v = SharedRect._tmpVec2;
 
-            let lx = -f.sourceWidth * anchor.x + f.offsetX;
-            let ty = -f.sourceHeight * anchor.y + f.sourceHeight - f.offsetY;
-            let rx = lx + f.width;
-            let by = ty - f.height;
+            let lx = -frame.sourceWidth * anchor.x + frame.offsetX;
+            let ty = -frame.sourceHeight * anchor.y + frame.sourceHeight - frame.offsetY;
+            let rx = lx + frame.width;
+            let by = ty - frame.height;
 
-            if (w !== null) {
-                const s = w / f.sourceWidth;
+            if (width !== null) {
+                const s = width / frame.sourceWidth;
                 lx *= s;
                 rx *= s;
             }
-            if (h !== null) {
-                const s = h / f.sourceHeight;
+            if (height !== null) {
+                const s = height / frame.sourceHeight;
                 by *= s;
                 ty *= s;
             }
@@ -80,19 +80,19 @@ namespace Aurora {
             return asset;
         }
 
-        private _updateUVs(f: SpriteFrame, tex: GLTexture2D): void {
+        private _updateUVs(frame: SpriteFrame, tex: GLTexture2D): void {
             const uvs = this.uvs;
 
-            const texW = f.texWidth < 0 ? tex.width : f.texWidth, texH = f.texHeight < 0 ? tex.height : f.texHeight;
+            const texW = frame.texWidth < 0 ? tex.width : frame.texWidth, texH = frame.texHeight < 0 ? tex.height : frame.texHeight;
 
-            const lu = f.x / texW;
-            const tv = f.y / texH;
+            const lu = frame.x / texW;
+            const tv = frame.y / texH;
 
-            const rotated = f.rotated;
+            const rotated = frame.rotated;
 
             if (rotated === 0) {
-                const ru = lu + f.width / texW;
-                const bv = tv + f.height / texH;
+                const ru = lu + frame.width / texW;
+                const bv = tv + frame.height / texH;
 
                 uvs[0] = lu;
                 uvs[1] = tv;
@@ -106,8 +106,8 @@ namespace Aurora {
                 uvs[6] = lu;
                 uvs[7] = bv;
             } else {
-                const ru = lu + f.height / texW;
-                const bv = tv + f.width / texH;
+                const ru = lu + frame.height / texW;
+                const bv = tv + frame.width / texH;
 
                 if (rotated > 0) {
                     uvs[0] = ru;

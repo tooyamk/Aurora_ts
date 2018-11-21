@@ -1,5 +1,5 @@
-///<reference path="../Node.ts" />
-///<reference path="../../renderers/IRenderPass.ts" />
+///<reference path="../Node.ts"/>
+///<reference path="../../renderers/IRenderPass.ts"/>
 
 namespace Aurora {
     export class Camera extends Node.AbstractComponent implements IRenderPass {

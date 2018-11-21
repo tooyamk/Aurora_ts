@@ -1,4 +1,4 @@
-///<reference path="AbstractRenderable.ts" />
+///<reference path="AbstractRenderable.ts"/>
 
 namespace Aurora {
     export class Mesh extends AbstractRenderable {

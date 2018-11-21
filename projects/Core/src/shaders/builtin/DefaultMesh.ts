@@ -1,6 +1,6 @@
-///<reference path="libs/AlphaTest.ts" />
-///<reference path="libs/Lighting.ts" />
-///<reference path="libs/Reflection.ts" />
+///<reference path="libs/AlphaTest.ts"/>
+///<reference path="libs/Lighting.ts"/>
+///<reference path="libs/Reflection.ts"/>
 
 namespace Aurora.BuiltinShader.DefaultMesh {
     export const NAME = "_Built-in_DefaultMesh";

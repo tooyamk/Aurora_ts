@@ -1,4 +1,4 @@
-///<reference path="Tools.ts" />
+///<reference path="Tools.ts"/>
 
 class Other {
     constructor() {

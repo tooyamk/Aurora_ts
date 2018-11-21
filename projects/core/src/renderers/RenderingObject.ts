@@ -1,4 +1,4 @@
-///<reference path="../math/Matrix44.ts" />
+///<reference path="../math/Matrix44.ts"/>
 
 namespace Aurora {
     export class RenderingObject {

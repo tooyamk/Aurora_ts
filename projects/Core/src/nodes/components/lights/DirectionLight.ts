@@ -1,4 +1,4 @@
-///<reference path="AbstractLight.ts" />
+///<reference path="AbstractLight.ts"/>
 
 namespace Aurora {
     export class DirectionLight extends AbstractLight {

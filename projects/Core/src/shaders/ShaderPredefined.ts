@@ -1,4 +1,4 @@
-///<reference path="../Types.ts" />
+///<reference path="../Types.ts"/>
 
 namespace Aurora {
     export const enum ShaderPredefined {

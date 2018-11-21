@@ -1,5 +1,5 @@
 
-///<reference path="Vector.ts" />
+///<reference path="Vector.ts"/>
 
 namespace Aurora {
     export abstract class MathUtils {
@@ -36,13 +36,33 @@ namespace Aurora {
             return value;
         }
 
-        public static powerOfTow(value: uint, toLarger: boolean = true): uint {
-            let pot: uint;
-            if ((value & (value - 1)) === 0) {
-                pot = value;
-            } else {
-                pot = Math.pow(2, (Math.log(value) / Math.LN2) | 0);
-                if (toLarger) pot <<= 1;
+        public static isPowOfTow(n: uint): boolean {
+            return !(n & (n - 1));
+        }
+
+        /**
+         * @param mode 0 = nearest, 1 = larger, 2 = smaller.
+         */
+        public static powOfTow(n: uint, mode: uint = 0): uint {
+            let pot: uint = n;
+            if ((n & (n - 1))) {
+                if (n !== 0) {
+                    --n;
+                    n |= n >> 1;
+                    n |= n >> 2;
+                    n |= n >> 4;
+                    n |= n >> 8;
+                    n |= n >> 16;
+                    pot = n + 1;
+
+                    if (mode !== 1) {
+                        if (mode === 2) {
+                            pot >>= 1;
+                        } else {
+                            if (pot - (n >> 1) > n - pot) pot >>= 1;
+                        }
+                    }
+                }
             }
 
             return pot;

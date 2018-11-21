@@ -1,4 +1,6 @@
 namespace Aurora.FbxFile {
+    export const Version = "0.1.0";
+
     export function parse(data: ByteArray): Data {
         data.position += 23;
         const ver = data.readUint32();

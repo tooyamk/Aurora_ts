@@ -1,5 +1,5 @@
-///<reference path="VertexSource.ts" />
-///<reference path="../math/MathUtils.ts" />
+///<reference path="VertexSource.ts"/>
+///<reference path="../math/MathUtils.ts"/>
 
 namespace Aurora {
     export abstract class MeshAssetHelper {

@@ -1,4 +1,4 @@
-///<reference path="DrawIndexSource.ts" />
+///<reference path="DrawIndexSource.ts"/>
 
 namespace Aurora {
     export class MeshAsset extends Ref {

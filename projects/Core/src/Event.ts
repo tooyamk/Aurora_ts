@@ -1,4 +1,4 @@
-///<reference path="Ref.ts" />
+///<reference path="Ref.ts"/>
 
 namespace Aurora {
     export class Event implements IRef {

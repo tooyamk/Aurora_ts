@@ -1,6 +1,6 @@
-///<reference path="BoundMesh.ts" />
-///<reference path="RaycastHit.ts" />
-///<reference path="../nodes/components/Collider.ts" />
+///<reference path="BoundMesh.ts"/>
+///<reference path="RaycastHit.ts"/>
+///<reference path="../nodes/components/Collider.ts"/>
 
 namespace Aurora {
     export class Ray {

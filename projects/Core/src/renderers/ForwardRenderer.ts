@@ -1,6 +1,6 @@
-///<reference path="../materials/Material.ts" />
-///<reference path="../shaders/ShaderPredefined.ts" />
-///<reference path="../utils/sort/Merge.ts" />
+///<reference path="../materials/Material.ts"/>
+///<reference path="../shaders/ShaderPredefined.ts"/>
+///<reference path="../utils/sort/Merge.ts"/>
 
 namespace Aurora {
     export class ForwardRenderer extends AbstractRenderer {

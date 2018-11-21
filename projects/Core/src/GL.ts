@@ -1,7 +1,7 @@
-///<reference path="Types.ts" />
-///<reference path="Ref.ts" />
-///<reference path="math/Color.ts" />
-///<reference path="math/Rect.ts" />
+///<reference path="Types.ts"/>
+///<reference path="Ref.ts"/>
+///<reference path="math/Color.ts"/>
+///<reference path="math/Rect.ts"/>
 
 //WebGL 2.0
 interface WebGLRenderingContext {

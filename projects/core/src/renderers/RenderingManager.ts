@@ -1,5 +1,5 @@
-///<reference path="PostProcess.ts" />
-///<reference path="../shaders/builtin/postprocesses/Default.ts" />
+///<reference path="PostProcess.ts"/>
+///<reference path="../shaders/builtin/postprocesses/Default.ts"/>
 
 namespace Aurora {
     export class RenderingManager {

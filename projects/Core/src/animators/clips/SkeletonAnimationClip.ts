@@ -1,5 +1,5 @@
-///<reference path="../../math/Quaternion.ts" />
-///<reference path="../../math/Vector.ts" />
+///<reference path="../../math/Quaternion.ts"/>
+///<reference path="../../math/Vector.ts"/>
 
 namespace Aurora {
     export class SkeletonAnimationClip extends AbstractAnimationClip {

@@ -1,4 +1,4 @@
-///<reference path="Quaternion.ts" />
+///<reference path="Quaternion.ts"/>
 
 namespace Aurora {
     /**

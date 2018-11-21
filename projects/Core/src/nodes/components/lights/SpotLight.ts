@@ -1,4 +1,4 @@
-///<reference path="PointLight.ts" />
+///<reference path="PointLight.ts"/>
 
 namespace Aurora {
     export class SpotLight extends PointLight {
