@@ -2,50 +2,50 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build-core",
+            "label": "build-Core",
             "type": "shell",
-            "command": "gulp build-core"
+            "command": "gulp build-Core"
         },
         {
-            "label": "build-core-watch",
+            "label": "build-Core-watch",
             "type": "shell",
-            "command": "gulp build-core-watch",
+            "command": "gulp build-Core-watch",
             "isBackground": true,
             "problemMatcher": "$tsc-watch"
         },
         {
-            "label": "build-wxplatform",
+            "label": "build-WxPlatform",
             "type": "shell",
-            "command": "gulp build-wxplatform"
+            "command": "gulp build-WxPlatform"
         },
         {
-            "label": "build-wxplatform-watch",
+            "label": "build-WxPlatform-watch",
             "type": "shell",
-            "command": "gulp build-wxplatform-watch",
+            "command": "gulp build-WxPlatform-watch",
             "isBackground": true,
             "problemMatcher": "$tsc-watch"
         },
         {
-            "label": "build-fbx",
+            "label": "build-FbxFile",
             "type": "shell",
-            "command": "gulp build-fbx"
+            "command": "gulp build-FbxFile"
         },
         {
-            "label": "build-fbx-watch",
+            "label": "build-FbxFile-watch",
             "type": "shell",
-            "command": "gulp build-fbx-watch",
+            "command": "gulp build-FbxFile-watch",
             "isBackground": true,
             "problemMatcher": "$tsc-watch"
         },
         {
-            "label": "build-examples",
+            "label": "build-Examples",
             "type": "shell",
-            "command": "gulp build-examples"
+            "command": "gulp build-Examples"
         },
         {
-            "label": "build-examples-watch",
+            "label": "build-Examples-watch",
             "type": "shell",
-            "command": "gulp build-examples-watch",
+            "command": "gulp build-Examples-watch",
             "isBackground": true,
             "problemMatcher": "$tsc-watch"
         }

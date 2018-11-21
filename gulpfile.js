@@ -3,10 +3,10 @@ const gulp = require("gulp");
 const spawn = require('child_process');
 const split = require('split');
 
-const coreTsConfig = "projects/core/tsconfig.json";
-const fbxTsConfig = "projects/fbx/tsconfig.json";
-const wxplatformTsConfig = "projects/wxplatform/tsconfig.json";
-const examplesTsConfig = "projects/examples/tsconfig.json";
+const coreTsConfig = "projects/Core/tsconfig.json";
+const fbxFileTsConfig = "projects/FbxFile/tsconfig.json";
+const wxplatformTsConfig = "projects/WxPlatform/tsconfig.json";
+const examplesTsConfig = "projects/Examples/tsconfig.json";
 
 function build(tsConfig, isWatch = false) {
     if (isWatch) {
@@ -29,34 +29,34 @@ function build(tsConfig, isWatch = false) {
     }
 }
 
-gulp.task("build-core", () => {
+gulp.task("build-Core", () => {
     build(coreTsConfig);
 });
 
-gulp.task("build-core-watch", () => {
+gulp.task("build-Core-watch", () => {
     build(coreTsConfig, true);
 });
 
-gulp.task("build-fbx", () => {
-    build(fbxTsConfig);
+gulp.task("build-FbxFile", () => {
+    build(fbxFileTsConfig);
 });
 
-gulp.task("build-fbx-watch", () => {
-    build(fbxTsConfig, true);
+gulp.task("build-FbxFile-watch", () => {
+    build(fbxFileTsConfig, true);
 });
 
-gulp.task("build-wxplatform", () => {
+gulp.task("build-WxPlatform", () => {
     build(wxplatformTsConfig);
 });
 
-gulp.task("build-wxplatform-watch", () => {
+gulp.task("build-WxPlatform-watch", () => {
     build(wxplatformTsConfig, true);
 });
 
-gulp.task("build-examples", () => {
+gulp.task("build-Examples", () => {
     build(examplesTsConfig);
 });
 
-gulp.task("build-examples-watch", () => {
+gulp.task("build-Examples-watch", () => {
     build(examplesTsConfig, true);
 });

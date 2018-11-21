@@ -10,7 +10,7 @@
             "file": "${workspaceFolder}/dist/index.html",
             "sourceMaps": true,
             "userDataDir": "${workspaceRoot}/.tempChromeProfileForDebug",
-            "preLaunchTask": "build-examples-watch",
+            "preLaunchTask": "build-Examples-watch",
             "cwd": "${workspaceRoot}",
             "webRoot": "${workspaceRoot}",
             "runtimeArgs": [
