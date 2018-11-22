@@ -43,6 +43,8 @@ namespace Aurora.FbxFile {
     export const enum NodeAttribType {
         CLUSTER = "Cluster",
         LIMB_NODE = "LimbNode",
+        ROOT = "Root",
+        NULL = "Null",
         MESH = "Mesh",
         SKIN = "Skin",
         T = "T",
@@ -91,7 +93,6 @@ namespace Aurora.FbxFile {
         public readonly id: int = null;
         public readonly attribType: string = null;
         public readonly attribName: string = null;
-        
 
         public readonly properties: NodeProperty[] = null;
         public readonly children: Node[] = [];

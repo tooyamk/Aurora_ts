@@ -16,7 +16,7 @@
         "preserveConstEnums": true,
         "listFiles": true,
         "listEmittedFiles": true,
-        "outFile": "../../dist/Aurora.FbxFile.js"
+        "outFile": "../../dist/codes/Aurora.FbxFile.js"
     },
     "files": [ "../ThirdPartyLibraries/zlib.d.ts" ],
     "include": [ "./**/*.ts" ],

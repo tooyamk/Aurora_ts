@@ -14,7 +14,7 @@
     "listFiles": true,
     "listEmittedFiles": true,
     "noResolve": true,
-    "outFile": "../../dist/examples.js",
+    "outFile": "../../dist/codes/Examples.js",
   },
   "include": [ "./**/*.ts" ],
   "exclude": [],

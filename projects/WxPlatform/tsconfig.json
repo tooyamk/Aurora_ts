@@ -16,7 +16,7 @@
     "preserveConstEnums": true,
     "listFiles": true,
     "listEmittedFiles": true,
-    "outFile": "../../dist/Aurora.WxPlatform.js"
+    "outFile": "../../dist/codes/Aurora.WxPlatform.js"
   },
   "files": [ "../ThirdPartyLibraries/wx.d.ts" ],
   "include": [ "./**/*.ts" ],

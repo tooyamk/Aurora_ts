@@ -16,7 +16,7 @@
     "preserveConstEnums": true,
     "listFiles": true,
     "listEmittedFiles": true,
-    "outFile": "../../dist/Aurora.Core.js"
+    "outFile": "../../dist/codes/Aurora.Core.js"
   },
   "include": [ "./**/*.ts" ],
   "exclude": [],

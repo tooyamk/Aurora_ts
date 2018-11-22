@@ -203,9 +203,7 @@ namespace Aurora {
         public clone(cloneChildren: boolean): Node {
             const n = new Node();
             n.name = this.name;
-            n.setLocalScale(this._localScale.x, this._localScale.y, this._localScale.z);
-            n.setLocalRotation(this._localRot);
-            n.setLocalPosition(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32);
+            n.setLocalTRS(Node._tmpVec3.setFromNumbers(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32), this._localRot, this._localScale);
             if (this._color) n.setColor4(this._color);
 
             if (cloneChildren) {

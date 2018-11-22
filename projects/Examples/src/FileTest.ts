@@ -23,7 +23,7 @@ class FileTest {
         (delta: number) => {
             if (this._animator) this._animator.update(delta);
 
-            modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.0005 * delta * Math.PI));
+            //modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.5 * delta * Math.PI));
             env.renderingManager.render(env.gl, env.camera, env.world, [light]);
         });
 
@@ -92,7 +92,8 @@ class FileTest {
                 task.finish();
             });
             //request.open("GET", Helper.getURL("people/model.FBX"), true);
-            request.open("GET", Helper.getURL("all.FBX"), true);
+            request.open("GET", Helper.getURL("skinnedMeshes/0/model.FBX"), true);
+            //request.open("GET", Helper.getURL("all.FBX"), true);
             request.responseType = "arraybuffer";
             request.send();
         }));
@@ -101,7 +102,7 @@ class FileTest {
             img.onload = () => {
                 task.finish();
             }
-            img.src = Helper.getURL("skinPeople/tex.png");
+            img.src = Helper.getURL("skinnedMeshes/0/tex.png");
         }));
         taskQueue.start(Aurora.Handler.create(this, () => {
             let tex = new Aurora.GLTexture2D(this._env.gl);
@@ -130,7 +131,8 @@ class FileTest {
 
             Helper.printNodeHierarchy([data.skeleton.bones[data.skeleton.rootBoneIndices[0]]]);
 
-            mesh.node.setLocalScale(30, 30, 30);
+            const scale = 10;
+            mesh.node.setLocalScale(scale, scale, scale);
         }));
     }
 }

@@ -23,10 +23,7 @@ bld/
 bin/
 .temp*/
 *_temp_*/
-dist/*.js
-dist/*.js.map
-dist/*.d.ts
-dist/*.d.ts.map
+dist/codes/
 package-lock.json
 
 # Roslyn cache directories
