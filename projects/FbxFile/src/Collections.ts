@@ -58,6 +58,8 @@ namespace Aurora.FbxFile {
         private _parentsMap = new Map<uint, Connection[]>();
         private _childrenMap = new Map<uint, Connection[]>();
 
+        private _bbb: Node[] = [];
+
         public addNode(node: Node): void {
             switch (node.name) {
                 case NodeName.ANIMATION_STACK: {
@@ -70,13 +72,19 @@ namespace Aurora.FbxFile {
                 case NodeName.ANIMATION_CURVE_NODE:
                 case NodeName.ANIMATION_CURVE:
                 case NodeName.GEOMETRY:
-                case NodeName.DEFORMER: 
+                case NodeName.DEFORMER:
                     this._objects.set(node.id, node);
                     break;
                 case NodeName.MODEL: {
                     this._objects.set(node.id, node);
                     this._models.push(node);
                     
+                    break;
+                }
+                case NodeName.P: {
+                    if (node.properties && node.properties.length > 0 && node.properties[0].type === NodePropertyValueType.STRING && (<string>(node.properties[0].value)).indexOf("Geometric") >= 0) {
+                        this._bbb.push(node);
+                    }
                     break;
                 }
                 case NodeName.C:
@@ -143,11 +151,11 @@ namespace Aurora.FbxFile {
                 const m = this._models[i];
 
                 switch (m.attribType) {
-                    case NodeAttribType.MESH:
+                    case NodeAttribValue.MESH:
                         (meshes || (meshes = [])).push(m);
                         break;
-                    case NodeAttribType.LIMB_NODE:
-                    case NodeAttribType.ROOT: {
+                    case NodeAttribValue.LIMB_NODE:
+                    case NodeAttribValue.ROOT: {
                         const bone = new Aurora.Node();
                         bone.name = m.attribName;
                         if (!skeleton) skeleton = new SkeletonData();
@@ -173,15 +181,8 @@ namespace Aurora.FbxFile {
 
             if (meshes) {
                 for (let i = 0, n = meshes.length; i < n; ++i) {
-                    const m = meshes[i];
-                    const g = this.findConnectionChildNode(m.id, NodeName.GEOMETRY);
-                    if (g) {
-                        const asset = this._parseGeometry(g, skeleton);
-                        if (asset) {
-                            asset.name = m.attribName;
-                            (result.meshes || (result.meshes = [])).push(asset);
-                        }
-                    }
+                    const asset = this._parseGeometry(meshes[i], skeleton);
+                    if (asset) (result.meshes || (result.meshes = [])).push(asset);
                 }
             }
 
@@ -326,7 +327,7 @@ namespace Aurora.FbxFile {
                         for (let i2 = 0, n2 = curveNodes.length; i2 < n2; ++i2) {
                             const curveNode = curveNodes[i2];
                             const attribName = curveNode.attribName;//R,T,S,DeformPercent?
-                            const bone = this.findConnectionParentNode(curveNode.id, NodeName.MODEL, NodeAttribType.LIMB_NODE);
+                            const bone = this.findConnectionParentNode(curveNode.id, NodeName.MODEL, NodeAttribValue.LIMB_NODE);
                             if (!bone) continue;
                             
                             const curves = this.findConnectionChildren(curveNode.id, NodeName.ANIMATION_CURVE);
@@ -362,9 +363,9 @@ namespace Aurora.FbxFile {
                                     const boneIdx = skeleton.getIndexByName(bone.attribName);
                                     if (boneIdx >= 0) {
                                         switch (attribName) {
-                                            case NodeAttribType.T: {
+                                            case NodeAttribValue.T: {
                                                 switch (relationship) {
-                                                    case NodePropertyType.D_X: {
+                                                    case NodePropertyValue.D_X: {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.translation) bd.translation = Vector3.Zero;
@@ -373,7 +374,7 @@ namespace Aurora.FbxFile {
 
                                                         break;
                                                     }
-                                                    case NodePropertyType.D_Y: {
+                                                    case NodePropertyValue.D_Y: {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.translation) bd.translation = Vector3.Zero;
@@ -382,7 +383,7 @@ namespace Aurora.FbxFile {
 
                                                         break;
                                                     }
-                                                    case NodePropertyType.D_Z: {
+                                                    case NodePropertyValue.D_Z: {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.translation) bd.translation = Vector3.Zero;
@@ -397,9 +398,9 @@ namespace Aurora.FbxFile {
 
                                                 break;
                                             }
-                                            case NodeAttribType.R: {
+                                            case NodeAttribValue.R: {
                                                 switch (relationship) {
-                                                    case NodePropertyType.D_X: {
+                                                    case NodePropertyValue.D_X: {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.rotation) {
@@ -412,7 +413,7 @@ namespace Aurora.FbxFile {
 
                                                         break;
                                                     }
-                                                    case NodePropertyType.D_Y: {
+                                                    case NodePropertyValue.D_Y: {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.rotation) {
@@ -425,7 +426,7 @@ namespace Aurora.FbxFile {
 
                                                         break;
                                                     }
-                                                    case NodePropertyType.D_Z: {
+                                                    case NodePropertyValue.D_Z: {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.rotation) {
@@ -444,9 +445,9 @@ namespace Aurora.FbxFile {
 
                                                 break;
                                             }
-                                            case NodeAttribType.S: {
+                                            case NodeAttribValue.S: {
                                                 switch (relationship) {
-                                                    case NodePropertyType.D_X: {
+                                                    case NodePropertyValue.D_X: {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.scale) bd.scale = Vector3.One;
@@ -455,7 +456,7 @@ namespace Aurora.FbxFile {
 
                                                         break;
                                                     }
-                                                    case NodePropertyType.D_Y: {
+                                                    case NodePropertyValue.D_Y: {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.scale) bd.scale = Vector3.One;
@@ -464,7 +465,7 @@ namespace Aurora.FbxFile {
 
                                                         break;
                                                     }
-                                                    case NodePropertyType.D_Z: {
+                                                    case NodePropertyValue.D_Z: {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.scale) bd.scale = Vector3.One;
@@ -505,7 +506,10 @@ namespace Aurora.FbxFile {
             return clips;
         }
 
-        private _parseGeometry(geometry: Node, skeleton: SkeletonData): MeshAsset {
+        private _parseGeometry(model: Node, skeleton: SkeletonData): MeshAsset {
+            const geometry = this.findConnectionChildNode(model.id, NodeName.GEOMETRY);
+            if (!geometry) return null;
+
             const sourceIndices: uint[] = [], faces: uint[] = [];
             let needTriangulate = false;
             const child = geometry.getChildByName(NodeName.POLYGON_VERTEX_INDEX);
@@ -539,6 +543,45 @@ namespace Aurora.FbxFile {
                     }
                 }
 
+                const p70 = model.getChildByName(NodeName.PROPERTIES70);
+                if (p70) {
+                    for (let i = 0, n = p70.children.length; i < n; ++i) {
+                        const child = p70.children[i];
+                        if (child.name !== NodeName.P) continue;
+
+                        const properties = child.properties;
+                        if (!properties) continue;
+
+                        const len = properties.length;
+                        if (len === 0) continue;
+
+                        const p = properties[0];
+                        if (p.type === NodePropertyValueType.STRING) {
+                            switch (p.value) {
+                                case NodePropertyValue.INHERIT_TYPE:
+                                    const type = <int>properties[len - 1].value;
+                                    break;
+                                case NodePropertyValue.LCL_TRANSLATION: {
+                                    const x = <number>properties[len - 3].value;
+                                    const y = <number>properties[len - 1].value;
+                                    const z = <number>properties[len - 2].value;
+                                    
+                                    break;
+                                }
+                                case NodePropertyValue.PPE_ROTATION: {
+                                    const x = <number>properties[len - 3].value;
+                                    const y = <number>properties[len - 1].value;
+                                    const z = <number>properties[len - 2].value;
+
+                                    break;
+                                }
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+                }
+
                 this._parseSkin(geometry, asset, skeleton, vertIdxMapping, numSourceVertices);
 
                 if (needTriangulate) asset.drawIndexSource.triangulate(faces);
@@ -549,12 +592,12 @@ namespace Aurora.FbxFile {
         }
 
         private _parseSkin(geometry: Node, asset: MeshAsset, skeleton: SkeletonData, vertIdxMapping: uint[], numSourceVertices: uint): void {
-            const skins = this.findConnectionChildrenNodes(geometry.id, NodeName.DEFORMER, NodeAttribType.SKIN);
+            const skins = this.findConnectionChildrenNodes(geometry.id, NodeName.DEFORMER, NodeAttribValue.SKIN);
             if (skins) {
                 const skinData: number[][] = [];
                 skinData.length = numSourceVertices;
                 for (let i = 0, n = skins.length; i < n; ++i) {
-                    const clusters = this.findConnectionChildrenNodes(skins[i].id, NodeName.DEFORMER, NodeAttribType.CLUSTER);
+                    const clusters = this.findConnectionChildrenNodes(skins[i].id, NodeName.DEFORMER, NodeAttribValue.CLUSTER);
                     if (!clusters) continue;
                     for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, clusters[j], skeleton, skinData);
                 }
@@ -646,10 +689,6 @@ namespace Aurora.FbxFile {
                             }
                         }
 
-                        if (boneIdx === 1) {
-                            let a = 1;
-                        }
-
                         transMat.invert(asset.bindMatrices[boneIdx]);
                         transLinkMat.invert(asset.bindPostMatrices[boneIdx]).append44(transMat);
                         //asset.bindMatrices[boneIdx].set34(transMat);
@@ -665,8 +704,8 @@ namespace Aurora.FbxFile {
         private _parseVertexSource(values: number[], indices: uint[], refType: string, mappingType: string, sourceIndices: uint[], numDataPerVertex: uint): number[] {
             if (values) {
                 const n = sourceIndices.length;
-                if (mappingType === NodePropertyType.BY_CONTROL_POINT) {
-                    if (refType === NodePropertyType.DIRECT) {
+                if (mappingType === NodePropertyValue.BY_CONTROL_POINT) {
+                    if (refType === NodePropertyValue.DIRECT) {
                         const vertices: number[] = [];
                         vertices.length = n * numDataPerVertex;
                         let vertIdx = 0;
@@ -675,7 +714,7 @@ namespace Aurora.FbxFile {
                             for (let j = 0; j < numDataPerVertex; ++j) vertices[vertIdx++] = values[idx + j];
                         }
                         return vertices;
-                    } else if (refType === NodePropertyType.INDEX_TO_DIRECT) {
+                    } else if (refType === NodePropertyValue.INDEX_TO_DIRECT) {
                         const vertices: number[] = [];
                         vertices.length = n * numDataPerVertex;
                         let vertIdx = 0;
@@ -685,10 +724,10 @@ namespace Aurora.FbxFile {
                         }
                         return vertices;
                     }
-                } else if (mappingType === NodePropertyType.BY_POLYGON_VERTEX) {
-                    if (refType === NodePropertyType.DIRECT) {
+                } else if (mappingType === NodePropertyValue.BY_POLYGON_VERTEX) {
+                    if (refType === NodePropertyValue.DIRECT) {
                         return values.concat();
-                    } else if (refType === NodePropertyType.INDEX_TO_DIRECT) {
+                    } else if (refType === NodePropertyValue.INDEX_TO_DIRECT) {
                         const vertices: number[] = [];
                         vertices.length = n * numDataPerVertex;
                         let vertIdx = 0;
@@ -722,19 +761,21 @@ namespace Aurora.FbxFile {
                     let vertIdx = 0;
 
                     for (let i = 0; i < n; ++i) {
-                        const idx = sourceIndices[i] * 3;
+                        let idx = sourceIndices[i];
+                        vertIdxMapping[i] = idx;
+
+                        idx *= 3;
                         vertices[vertIdx++] = sourceVertices[idx];
                         vertices[vertIdx++] = sourceVertices[idx + 2];
                         vertices[vertIdx++] = sourceVertices[idx + 1];
 
-                        vertIdxMapping[i] = idx;
                         indices[i] = i;
                     }
 
                     asset.drawIndexSource = new DrawIndexSource(indices, GLIndexDataType.AUTO, GLUsageType.STATIC_DRAW);
                     asset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
 
-                    return [vertIdxMapping, (n / 3) | 0];
+                    return [vertIdxMapping, (sourceVertices.length / 3) | 0];
                 }
             }
 

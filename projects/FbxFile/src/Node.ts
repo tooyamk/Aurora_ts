@@ -1,5 +1,5 @@
 namespace Aurora.FbxFile {
-    export const enum NodePropertyType {
+    export const enum NodePropertyValue {
         C = 0x43,
         D = 0x44,
         F = 0x46,
@@ -20,7 +20,17 @@ namespace Aurora.FbxFile {
         BY_POLYGON_VERTEX = "ByPolygonVertex",
         D_X = "d|X",
         D_Y = "d|Y",
-        D_Z = "d|Z"
+        D_Z = "d|Z",
+        GEOMETRIC_TRANSLATION = "GeometricTranslation",
+        GEOMETRIC_ROTATION = "GeometricRotation",
+        GEOMETRIC_SCALING = "GeometricScaling",
+        PPE_ROTATION = "PreRotation",
+        ROTATION_ACTIVE = "RotationActive",
+        INHERIT_TYPE = "InheritType",
+        SCALING_MAX = "ScalingMax",
+        DEFAULT_ATTRIBULE_INDEX = "DefaultAttributeIndex",
+        LCL_TRANSLATION = "Lcl Translation",
+        MAX_HANDLE = "MaxHandle"
     }
 
     export const enum NodePropertyValueType {
@@ -40,7 +50,7 @@ namespace Aurora.FbxFile {
         public value: boolean | long | number | string | boolean[] | long[] | number[] | ByteArray = null;
     }
 
-    export const enum NodeAttribType {
+    export const enum NodeAttribValue {
         CLUSTER = "Cluster",
         LIMB_NODE = "LimbNode",
         ROOT = "Root",

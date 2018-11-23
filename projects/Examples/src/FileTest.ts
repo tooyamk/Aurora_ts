@@ -21,9 +21,9 @@ class FileTest {
             env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLH(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
         },
         (delta: number) => {
-            if (this._animator) this._animator.update(delta);
+            if (this._animator) this._animator.update(0 * 0.5);
 
-            //modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.5 * delta * Math.PI));
+            modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.5 * delta * Math.PI));
             env.renderingManager.render(env.gl, env.camera, env.world, [light]);
         });
 
@@ -92,8 +92,8 @@ class FileTest {
                 task.finish();
             });
             //request.open("GET", Helper.getURL("people/model.FBX"), true);
-            request.open("GET", Helper.getURL("skinnedMeshes/0/model.FBX"), true);
-            //request.open("GET", Helper.getURL("all.FBX"), true);
+            //request.open("GET", Helper.getURL("skinnedMeshes/0/model.FBX"), true);
+            request.open("GET", Helper.getURL("all.FBX"), true);
             request.responseType = "arraybuffer";
             request.send();
         }));
@@ -111,9 +111,9 @@ class FileTest {
             let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
             mat.cullFace = Aurora.GLCullFace.NONE;
             mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
-            mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
+            //mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
             mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
-            mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
+            //mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
             mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
 
             const clip = data.animationClips[0];
@@ -126,6 +126,8 @@ class FileTest {
             let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
             mesh.renderer = this._env.forwardRenderer;
             mesh.asset = data.meshes[0];
+            mesh.asset.drawIndexSource.offset = 18;
+            mesh.asset.drawIndexSource.length = 6;
             mesh.setMaterials(mat);
             mesh.skeleton = data.skeleton;
 

@@ -53,60 +53,60 @@ namespace Aurora.FbxFile {
 
         const type = data.readUint8();
         switch (type) {
-            case NodePropertyType.C: {
+            case NodePropertyValue.C: {
                 property.type = NodePropertyValueType.BOOL;
                 property.value = data.readBool();
 
                 break;
             }
-            case NodePropertyType.D: {
+            case NodePropertyValue.D: {
                 property.type = NodePropertyValueType.NUMBER;
                 property.value = data.readFloat64();
 
                 break;
             }
-            case NodePropertyType.F: {
+            case NodePropertyValue.F: {
                 property.type = NodePropertyValueType.NUMBER;
                 property.value = data.readFloat32();
 
                 break;
             }
-            case NodePropertyType.I: {
+            case NodePropertyValue.I: {
                 property.type = NodePropertyValueType.INT;
                 property.value = data.readInt32();
 
                 break;
             }
-            case NodePropertyType.L: {
+            case NodePropertyValue.L: {
                 property.type = NodePropertyValueType.INT;
                 property.value = data.readUnsafeInt64();
 
                 break;
             }
-            case NodePropertyType.R: {
+            case NodePropertyValue.R: {
                 property.type = NodePropertyValueType.BYTES;
                 property.value = data.readBytes(data.readUint32());
 
                 break;
             }
-            case NodePropertyType.S: {
+            case NodePropertyValue.S: {
                 property.type = NodePropertyValueType.STRING;
                 property.value = data.readString(ByteArray.StringMode.FIXED_LENGTH, data.readUint32());
 
                 break;
             }
-            case NodePropertyType.Y: {
+            case NodePropertyValue.Y: {
                 property.type = NodePropertyValueType.INT;
                 property.value = data.readInt16();
 
                 break;
             }
-            case NodePropertyType.b:
-            case NodePropertyType.c:
-            case NodePropertyType.d:
-            case NodePropertyType.f:
-            case NodePropertyType.i:
-            case NodePropertyType.l: {
+            case NodePropertyValue.b:
+            case NodePropertyValue.c:
+            case NodePropertyValue.d:
+            case NodePropertyValue.f:
+            case NodePropertyValue.i:
+            case NodePropertyValue.l: {
                 const arrLen = data.readUint32();
                 const encoding = data.readUint32();
                 const compressedLength = data.readUint32();
@@ -128,8 +128,8 @@ namespace Aurora.FbxFile {
                 }
 
                 switch (type) {
-                    case NodePropertyType.b:
-                    case NodePropertyType.c: {
+                    case NodePropertyValue.b:
+                    case NodePropertyValue.c: {
                         property.type = NodePropertyValueType.BOOL_ARRAY;
                         const arr: boolean[] = [];
                         arr.length = arrLen;
@@ -138,7 +138,7 @@ namespace Aurora.FbxFile {
 
                         break;
                     }
-                    case NodePropertyType.d: {
+                    case NodePropertyValue.d: {
                         property.type = NodePropertyValueType.NUMBER_ARRAY;
                         const arr: number[] = [];
                         arr.length = arrLen;
@@ -147,7 +147,7 @@ namespace Aurora.FbxFile {
 
                         break;
                     }
-                    case NodePropertyType.f: {
+                    case NodePropertyValue.f: {
                         property.type = NodePropertyValueType.NUMBER_ARRAY;
                         const arr: number[] = [];
                         arr.length = arrLen;
@@ -156,7 +156,7 @@ namespace Aurora.FbxFile {
 
                         break;
                     }
-                    case NodePropertyType.i: {
+                    case NodePropertyValue.i: {
                         property.type = NodePropertyValueType.INT_ARRAY;
                         const arr: long[] = [];
                         arr.length = arrLen;
@@ -165,7 +165,7 @@ namespace Aurora.FbxFile {
 
                         break;
                     }
-                    case NodePropertyType.l: {
+                    case NodePropertyValue.l: {
                         property.type = NodePropertyValueType.INT_ARRAY;
                         const arr: long[] = [];
                         arr.length = arrLen;

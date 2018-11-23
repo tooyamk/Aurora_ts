@@ -18,14 +18,8 @@ namespace Aurora {
             this._convertedAsset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, [], GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
         }
 
-        public set asset(value: MeshAsset) {
-            if (this._asset !== value) {
-                if (value) value.retain();
-                if (this._asset) this._asset.release();
-                this._asset = value;
-
-                this._convertedAsset.link = value;
-            }
+        protected _chanedAsset(): void {
+            this._convertedAsset.link = this._asset;
         }
 
         public checkRenderable(): boolean {
