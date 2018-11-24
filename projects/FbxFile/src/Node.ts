@@ -14,6 +14,7 @@ namespace Aurora.FbxFile {
         f = 0x66,
         i = 0x69,
         l = 0x6C,
+        UP_AXIS = "UpAxis",
         DIRECT = "Direct",
         INDEX_TO_DIRECT = "IndexToDirect",
         BY_CONTROL_POINT = "ByControlVertex",

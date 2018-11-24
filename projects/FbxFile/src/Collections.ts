@@ -58,6 +58,10 @@ namespace Aurora.FbxFile {
         private _parentsMap = new Map<uint, Connection[]>();
         private _childrenMap = new Map<uint, Connection[]>();
 
+        private _globalSettings: Node = null;
+
+        private _upAxis: int = 2;
+
         private _bbb: Node[] = [];
 
         public addNode(node: Node): void {
@@ -121,6 +125,9 @@ namespace Aurora.FbxFile {
                     
                     break;
                 }
+                case NodeName.GLOBAL_SETTINGS:
+                    this._globalSettings = node;
+                    break;
                 default:
                     break;
             }
@@ -142,6 +149,8 @@ namespace Aurora.FbxFile {
         }
 
         public parse(): Data {
+            this._parseGlobalSettings();
+
             const result = new Data();
 
             let meshes: Node[] = null;
@@ -176,13 +185,73 @@ namespace Aurora.FbxFile {
                 ske.rootBoneIndices = skeleton.rootBoneIndices;
                 result.skeleton = ske;
 
-                result.animationClips = this._parseAnimations(skeleton);
+                const animationClips = this._parseAnimations(skeleton);
+
+                if (animationClips) {
+                    result.animationClips = animationClips;
+
+                    if (this._upAxis === 2) {
+                        const tmpVec3 = new Vector3();
+                        
+                        for (let i = 0, n = animationClips.length; i < n; ++i) {
+                            const clip = animationClips[i];
+                            if (!clip) continue;
+
+                            const frames = clip.frames;
+                            if (!frames) continue;
+
+                            for (let j = 0, n1 = frames.length; j < n1; ++j) {
+                                const f = frames[j];
+                                if (!f) continue;
+
+                                const data = f.data;
+                                if (!data) continue;
+
+                                for (let k = 0, n2 = data.length; k < n2; ++k) {
+                                    const d = data[k];
+                                    if (!d) continue;
+
+                                    if (d.translation) {
+                                        const tmp = d.translation.y;
+                                        d.translation.y = d.translation.z;
+                                        d.translation.z = tmp;
+                                    }
+
+                                    if (d.rotation) {
+                                        d.rotation.toEuler(tmpVec3);
+                                        const tmp = tmpVec3.y;
+                                        tmpVec3.y = tmpVec3.z;
+                                        tmpVec3.z = tmp;
+                                        Quaternion.createFromEulerVector3(tmpVec3, d.rotation);
+                                    }
+
+                                    if (d.scale) {
+                                        const tmp = d.scale.y;
+                                        d.scale.y = d.scale.z;
+                                        d.scale.z = tmp;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             if (meshes) {
                 for (let i = 0, n = meshes.length; i < n; ++i) {
                     const asset = this._parseGeometry(meshes[i], skeleton);
-                    if (asset) (result.meshes || (result.meshes = [])).push(asset);
+                    if (asset) {
+                        (result.meshes || (result.meshes = [])).push(asset);
+
+                        if (this._upAxis === 2) {
+                            this._transformVertexSourceXZY(asset.getVertexSource(ShaderPredefined.a_Position0));
+                            this._transformVertexSourceXZY(asset.getVertexSource(ShaderPredefined.a_Normal0));
+                            this._transformMatricesXZY(asset.bindMatrices);
+                            this._transformMatricesXZY(asset.bindPostMatrices);
+                        }
+
+                        asset.drawIndexSource.invert();
+                    }
                 }
             }
 
@@ -274,10 +343,10 @@ namespace Aurora.FbxFile {
                 if (p.type === NodePropertyValueType.NUMBER_ARRAY) {
                     const values = <number[]>p.value;
                     return new Matrix44(
-                        values[0], values[2], values[1], values[3],
-                        values[8], values[10], values[9], values[11],
-                        values[4], values[6], values[5], values[7],
-                        values[12], values[14], values[13], values[15]
+                        values[0], values[1], values[2], values[3],
+                        values[4], values[5], values[6], values[7],
+                        values[8], values[9], values[10], values[11],
+                        values[12], values[13], values[14], values[15]
                     );
                 }
             }
@@ -298,6 +367,35 @@ namespace Aurora.FbxFile {
                 frame.data[boneIdx] = bd;
             }
             return bd;
+        }
+
+        private _parseGlobalSettings(): void {
+            if (this._globalSettings) {
+                const p70 = this._globalSettings.getChildByName(NodeName.PROPERTIES70);
+                if (p70) {
+                    for (let i = 0, n = p70.children.length; i < n; ++i) {
+                        const child = p70.children[i];
+                        if (child.name !== NodeName.P) continue;
+
+                        const properties = child.properties;
+                        if (!properties) continue;
+
+                        const len = properties.length;
+                        if (len === 0) continue;
+
+                        const p = properties[0];
+                        if (p.type === NodePropertyValueType.STRING) {
+                            switch (p.value) {
+                                case NodePropertyValue.UP_AXIS:
+                                    this._upAxis = <int>properties[len - 1].value;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private _parseAnimations(skeleton: SkeletonData): SkeletonAnimationClip[]  {
@@ -378,7 +476,7 @@ namespace Aurora.FbxFile {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.translation) bd.translation = Vector3.Zero;
-                                                            bd.translation.z = values[k];
+                                                            bd.translation.y = values[k];
                                                         }
 
                                                         break;
@@ -387,7 +485,7 @@ namespace Aurora.FbxFile {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.translation) bd.translation = Vector3.Zero;
-                                                            bd.translation.y = values[k];
+                                                            bd.translation.z = values[k];
                                                         }
 
                                                         break;
@@ -421,7 +519,7 @@ namespace Aurora.FbxFile {
                                                                 bd.rotation = q;
                                                                 rots[numRots++] = q;
                                                             }
-                                                            bd.rotation.z = values[k] * MathUtils.DEG_2_RAD;
+                                                            bd.rotation.y = values[k] * MathUtils.DEG_2_RAD;
                                                         }
 
                                                         break;
@@ -434,7 +532,7 @@ namespace Aurora.FbxFile {
                                                                 bd.rotation = q;
                                                                 rots[numRots++] = q;
                                                             }
-                                                            bd.rotation.y = values[k] * MathUtils.DEG_2_RAD;
+                                                            bd.rotation.z = values[k] * MathUtils.DEG_2_RAD;
                                                         }
 
                                                         break;
@@ -460,7 +558,7 @@ namespace Aurora.FbxFile {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.scale) bd.scale = Vector3.One;
-                                                            bd.scale.z = values[k];
+                                                            bd.scale.y = values[k];
                                                         }
 
                                                         break;
@@ -469,7 +567,7 @@ namespace Aurora.FbxFile {
                                                         for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                             const bd = this._getOrCreateBoneData(framesMap, times[k], boneIdx);
                                                             if (!bd.scale) bd.scale = Vector3.One;
-                                                            bd.scale.y = values[k];
+                                                            bd.scale.z = values[k];
                                                         }
 
                                                         break;
@@ -545,6 +643,8 @@ namespace Aurora.FbxFile {
 
                 const p70 = model.getChildByName(NodeName.PROPERTIES70);
                 if (p70) {
+                    const m = new Matrix44();
+
                     for (let i = 0, n = p70.children.length; i < n; ++i) {
                         const child = p70.children[i];
                         if (child.name !== NodeName.P) continue;
@@ -563,15 +663,19 @@ namespace Aurora.FbxFile {
                                     break;
                                 case NodePropertyValue.LCL_TRANSLATION: {
                                     const x = <number>properties[len - 3].value;
-                                    const y = <number>properties[len - 1].value;
-                                    const z = <number>properties[len - 2].value;
-                                    
+                                    const y = <number>properties[len - 2].value;
+                                    const z = <number>properties[len - 1].value;
+
+                                    m.append44(Matrix44.createTranslation(x, y, z));
+
                                     break;
                                 }
                                 case NodePropertyValue.PPE_ROTATION: {
                                     const x = <number>properties[len - 3].value;
-                                    const y = <number>properties[len - 1].value;
-                                    const z = <number>properties[len - 2].value;
+                                    const y = <number>properties[len - 2].value;
+                                    const z = <number>properties[len - 1].value;
+
+                                    Quaternion.createFromEulerXYZ(x * MathUtils.DEG_2_RAD, y * MathUtils.DEG_2_RAD, z * MathUtils.DEG_2_RAD).toMatrix33().append44(m, m);
 
                                     break;
                                 }
@@ -580,15 +684,101 @@ namespace Aurora.FbxFile {
                             }
                         }
                     }
+
+                    const p = new Vector3();
+                    const vs = asset.getVertexSource(ShaderPredefined.a_Position0);
+                    if (vs) {
+                        const data = vs.data;
+                        for (let i = 0, n = data.length; i < n; i += 3) {
+                            const x = data[i];
+                            const y = data[i + 1];
+                            const z = data[i + 2];
+                            m.transform34XYZ(x, y, z, p);
+                            data[i] = p.x;
+                            data[i + 1] = p.y;
+                            data[i + 2] = p.z;
+                        }
+                    }
+
+                    let zzz = 1;
                 }
 
                 this._parseSkin(geometry, asset, skeleton, vertIdxMapping, numSourceVertices);
 
                 if (needTriangulate) asset.drawIndexSource.triangulate(faces);
-                asset.drawIndexSource.invert();
+
                 return asset;
             }
             return null;
+        }
+
+        private _transformVertexSourceXY_Z(vs: VertexSource): void {
+            if (vs) {
+                const data = vs.data;
+                for (let i = 2, n = data.length; i < n; i += 3) {
+                    data[i] = -data[i];
+                }
+            }
+        }
+
+        private _transformVertexSourceXZY(vs: VertexSource): void {
+            if (vs) {
+                const data = vs.data;
+                for (let i = 0, n = data.length; i < n; i += 3) {
+                    const tmp = data[i + 1];
+                    data[i + 1] = data[i + 2];
+                    data[i + 2] = tmp;
+                }
+            }
+        }
+
+        private _transformMatricesXY_Z(matrices: Matrix44[]): void {
+            if (matrices) {
+                for (let i = 0, n = matrices.length; i < n; ++i) {
+                    const m = matrices[i];
+                    if (!m) continue;
+
+                    m.m02 = -m.m02;
+                    m.m12 = -m.m12;
+                    m.m20 = -m.m20;
+                    m.m21 = -m.m21;
+                    m.m22 = -m.m22;
+                    m.m32 - -m.m32;
+                }
+            }
+        }
+
+        private _transformMatricesXZY(matrices: Matrix44[]): void {
+            if (matrices) {
+                for (let i = 0, n = matrices.length; i < n; ++i) {
+                    const m = matrices[i];
+                    if (!m) continue;
+
+                    let tmp = m.m10;
+                    m.m10 = m.m20;
+                    m.m20 = tmp;
+
+                    tmp = m.m01;
+                    m.m01 = m.m02;
+                    m.m02 = tmp;
+
+                    tmp = m.m11;
+                    m.m11 = m.m22;
+                    m.m22 = tmp;
+
+                    tmp = m.m21;
+                    m.m21 = m.m12;
+                    m.m12 = tmp;
+
+                    tmp = m.m31;
+                    m.m31 = m.m32;
+                    m.m32 = tmp;
+
+                    tmp = m.m13;
+                    m.m13 = m.m23;
+                    m.m23 = tmp;
+                }
+            }
         }
 
         private _parseSkin(geometry: Node, asset: MeshAsset, skeleton: SkeletonData, vertIdxMapping: uint[], numSourceVertices: uint): void {
@@ -689,11 +879,11 @@ namespace Aurora.FbxFile {
                             }
                         }
 
-                        transMat.invert(asset.bindMatrices[boneIdx]);
-                        transLinkMat.invert(asset.bindPostMatrices[boneIdx]).append44(transMat);
+                        transMat.invert(asset.bindPostMatrices[boneIdx]);
+                        //transLinkMat.invert(asset.bindPostMatrices[boneIdx]).append44(transMat);
                         //asset.bindMatrices[boneIdx].set34(transMat);
-                        //transLinkMat.invert(asset.bindPostMatrices[boneIdx]);
-                        //transMat.append34(transLinkMat.invert(asset.bindMatrices[boneIdx]), asset.bindMatrices[boneIdx]);
+                        //transLinkMat.invert(asset.bindMatrices[boneIdx]);
+                        transMat.append44(transLinkMat.invert(asset.bindMatrices[boneIdx]), asset.bindMatrices[boneIdx]);
                         //transMat.append44(transLinkMat, asset.bindMatrices[boneIdx]);
                         //transLinkMat.invert(asset.bindMatrices[boneIdx]).append44(transMat);
                     }
@@ -766,8 +956,8 @@ namespace Aurora.FbxFile {
 
                         idx *= 3;
                         vertices[vertIdx++] = sourceVertices[idx];
-                        vertices[vertIdx++] = sourceVertices[idx + 2];
                         vertices[vertIdx++] = sourceVertices[idx + 1];
+                        vertices[vertIdx++] = sourceVertices[idx + 2];
 
                         indices[i] = i;
                     }
@@ -802,15 +992,8 @@ namespace Aurora.FbxFile {
                 }
             }
 
-            const normals = this._parseVertexSource(values, null, refType, mappingType, sourceIndices, 3);
-            if (normals) {
-                for (let i = 1, n = normals.length; i < n; i += 3) {
-                    const y = normals[i];
-                    normals[i] = normals[i + 1];
-                    normals[i + 1] = y;
-                }
-                asset.addVertexSource(new VertexSource(ShaderPredefined.a_Normal0, normals, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
-            }
+            asset.addVertexSource(new VertexSource(ShaderPredefined.a_Normal0, this._parseVertexSource(values, null, refType, mappingType, sourceIndices, 3),
+                GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
         }
 
         private _parseUVs(node: Node, sourceIndices: uint[], asset: MeshAsset): void {
