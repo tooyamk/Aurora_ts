@@ -5,6 +5,7 @@ const split = require('split');
 
 const coreTsConfig = "projects/Core/tsconfig.json";
 const fbxFileTsConfig = "projects/FbxFile/tsconfig.json";
+const xFileTsConfig = "projects/XFile/tsconfig.json";
 const wxplatformTsConfig = "projects/WxPlatform/tsconfig.json";
 const examplesTsConfig = "projects/Examples/tsconfig.json";
 
@@ -43,6 +44,14 @@ gulp.task("build-FbxFile", () => {
 
 gulp.task("build-FbxFile-watch", () => {
     build(fbxFileTsConfig, true);
+});
+
+gulp.task("build-XFile", () => {
+    build(xFileTsConfig);
+});
+
+gulp.task("build-XFile-watch", () => {
+    build(xFileTsConfig, true);
 });
 
 gulp.task("build-WxPlatform", () => {

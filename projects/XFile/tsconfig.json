@@ -1,0 +1,28 @@
+{
+    "compilerOptions": {
+        "composite": true,
+        "declaration": true,
+        "declarationMap": true,
+        "noImplicitAny": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "noImplicitReturns": true,
+        "noEmitOnError": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "sourceMap": true,
+        "module": "amd",
+        "target": "es6",
+        "removeComments": false,
+        "preserveConstEnums": true,
+        "listFiles": true,
+        "listEmittedFiles": true,
+        "outFile": "../../dist/codes/Aurora.XFile.js"
+    },
+    "files": [ "../ThirdPartyLibraries/zlib.d.ts" ],
+    "include": [ "./**/*.ts" ],
+    "exclude": [],
+    "compileOnSave": true,
+    "references": [
+        { "path": "../Core" }
+    ]
+}

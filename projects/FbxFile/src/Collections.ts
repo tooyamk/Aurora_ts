@@ -799,6 +799,16 @@ namespace Aurora.FbxFile {
                 const boneWeights: number[] = [];
                 boneWeights.length = len;
 
+                let numDataPerElement = 0;
+                for (let i = 0; i < numSourceVertices; ++i) {
+                    const data = skinData[i];
+                    if (data) {
+                        let n = data.length >> 1;
+                        if (n > 4) n = 4;
+                        if (numDataPerElement < n) numDataPerElement = n;
+                    }
+                }
+
                 for (let i = 0; i < n; ++i) {
                     const idx = i << 2;
                     const data = skinData[vertIdxMapping[i]];
@@ -814,15 +824,15 @@ namespace Aurora.FbxFile {
                         }
                     }
 
-                    for (; j < 4; ++j) {
+                    for (; j < numDataPerElement; ++j) {
                         const idx1 = idx + j;
                         boneIndices[idx1] = 0;
                         boneWeights[idx1] = 0;
                     }
                 }
 
-                asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneIndex0, boneIndices, GLVertexBufferSize.FOUR, GLVertexBufferDataType.UNSIGNED_SHORT, false, GLUsageType.STATIC_DRAW));
-                asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneWeight0, boneWeights, GLVertexBufferSize.FOUR, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
+                asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneIndex0, boneIndices, numDataPerElement, GLVertexBufferDataType.UNSIGNED_SHORT, false, GLUsageType.STATIC_DRAW));
+                asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneWeight0, boneWeights, numDataPerElement, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
             }
         }
 

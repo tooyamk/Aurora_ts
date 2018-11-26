@@ -29,7 +29,8 @@ class FileTest {
 
         //this._loadMesh();
         //this._loadSkinnedMesh();
-        this._loadFBX();
+        //this._loadFbxFile();
+        this._loadXFile();
     }
 
     /*
@@ -80,7 +81,7 @@ class FileTest {
     }
     */
 
-    private _loadFBX(): void {
+    private _loadFbxFile(): void {
         let data: Aurora.FbxFile.Data = null;
         let img: HTMLImageElement = null;
 
@@ -139,6 +140,32 @@ class FileTest {
 
             const scale = 10;
             mesh.node.setLocalScale(scale, scale, scale);
+        }));
+    }
+
+    private _loadXFile(): void {
+        let data: Aurora.FbxFile.Data = null;
+        let img: HTMLImageElement = null;
+
+        let taskQueue = new Aurora.TaskQueue();
+        taskQueue.createTask(Aurora.Handler.create(null, (task: Aurora.Task) => {
+            let request = new XMLHttpRequest();
+            request.addEventListener("loadend", () => {
+                Aurora.XFile.parse(new Aurora.ByteArray(request.response));
+                task.finish();
+            });
+            request.open("GET", Helper.getURL("box_bin.X"), true);
+            request.responseType = "arraybuffer";
+            request.send();
+        }));
+        taskQueue.createTask(Aurora.Handler.create(null, (task: Aurora.Task) => {
+            img = new Image();
+            img.onload = () => {
+                task.finish();
+            }
+            img.src = Helper.getURL("skinnedMeshes/0/tex.png");
+        }));
+        taskQueue.start(Aurora.Handler.create(this, () => {
         }));
     }
 }

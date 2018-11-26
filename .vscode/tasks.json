@@ -13,6 +13,7 @@
             "isBackground": true,
             "problemMatcher": "$tsc-watch"
         },
+
         {
             "label": "build-WxPlatform",
             "type": "shell",
@@ -25,6 +26,7 @@
             "isBackground": true,
             "problemMatcher": "$tsc-watch"
         },
+
         {
             "label": "build-FbxFile",
             "type": "shell",
@@ -37,6 +39,20 @@
             "isBackground": true,
             "problemMatcher": "$tsc-watch"
         },
+
+        {
+            "label": "build-XFile",
+            "type": "shell",
+            "command": "gulp build-XFile"
+        },
+        {
+            "label": "build-XFile-watch",
+            "type": "shell",
+            "command": "gulp build-XFile-watch",
+            "isBackground": true,
+            "problemMatcher": "$tsc-watch"
+        },
+
         {
             "label": "build-Examples",
             "type": "shell",

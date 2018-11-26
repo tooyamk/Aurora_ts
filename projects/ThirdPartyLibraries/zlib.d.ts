@@ -3,9 +3,4 @@ declare module Zlib {
         constructor(data: any, opt?: any);
         decompress(): any;
     }
-
-    export class Deflate {
-        constructor(data: any);
-        compress(): any;
-    }
 }

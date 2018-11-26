@@ -22,6 +22,7 @@
   "references": [
     { "path": "../Core" },
     { "path": "../FbxFile" },
+    { "path": "../XFile" },
     { "path": "../WxPlatform" }
   ]
 }
