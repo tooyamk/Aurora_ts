@@ -52,6 +52,7 @@ namespace Aurora.XFile {
         MATERIAL = 'Material',
         MESH = 'Mesh',
         MESH_MATERIAL_LIST = 'MeshMaterialList',
+        MESH_NORMALS = 'MeshNormals',
         MESH_TEXTURE_COORDS = 'MeshTextureCoords',
         SKIN_WEIGHTS = 'SkinWeights',
         TEMPLATE = 'template',
@@ -66,6 +67,210 @@ namespace Aurora.XFile {
     class Token {
         public type: TokenType = null;
         public value: string | int | uint[] | number[] = null;
+    }
+
+    class Frame {
+        public root: Frame = null;
+        public parent: Frame = null;
+        public name: string = null;
+        public children: Frame[] = [];
+        public matrix: Matrix44 = null;
+
+        public addChild(c: Frame): void {
+            this.children[this.children.length] = c;
+            c.root = this.root;
+        }
+    }
+
+    class SkinWeights {
+        public boneName: string = null;
+        public indices: uint[] = null;
+        public weights: number[] = null;
+        public matrix: Matrix44 = null;
+    }
+
+    class SkinVertex {
+        public indices: uint[] = [];
+        public weights: number[] = [];
+    }
+
+    class ParsedData {
+        private _rootFrames: Frame[] = [];
+        private _frames: Frame[] = [];
+        private _framesMap: { [key: string]: Frame } = {};
+
+        private _skinWeightsMap: SkinWeights[][] = null;
+
+        private _meshes: MeshAsset[] = null;
+
+        public addFrame(frame: Frame, parent: Frame): void {
+            if (parent) {
+                frame.parent = parent;
+                parent.addChild(frame);
+            } else {
+                frame.root = frame;
+                this._rootFrames[this._rootFrames.length] = frame;
+            }
+            this._frames[this._frames.length] = frame;
+            this._framesMap[frame.name] = frame;
+        }
+
+        public addMesh(mesh: MeshAsset): uint {
+            if (!this._meshes) this._meshes = [];
+            const idx = this._meshes.length;
+            this._meshes[idx] = mesh;
+            return idx;
+        }
+
+        public addSkinWeights(idx: uint, sw: SkinWeights): void {
+            if (!this._skinWeightsMap) this._skinWeightsMap = [];
+            let arr = this._skinWeightsMap[idx];
+            if (!arr) {
+                arr = [];
+                this._skinWeightsMap[idx] = arr;
+            }
+            arr[arr.length] = sw;
+        }
+
+        public generate(data: Data): void {
+            const excludeBones: { [key: string]: boolean } = {};
+            const usedBones: { [key: string]: boolean } = {};
+
+            if (this._meshes) {
+                const n = this._meshes.length;
+                if (n > 0) {
+                    const meshes: MeshAsset[] = [];
+                    meshes.length = n;
+                    for (let i = 0; i < n; ++i) {
+                        const asset = this._meshes[i];
+                        meshes[i] = asset;
+
+                        excludeBones[asset.name] = true;
+
+                        if (!this._skinWeightsMap) continue;
+
+                        const swArr = this._skinWeightsMap[i];
+                        if (!swArr) continue;
+                        
+                        const vs = asset.getVertexSource(ShaderPredefined.a_Position0);
+                        if (!vs || !vs.data) continue;
+
+                        const numVertices = vs.getDataLength() / vs.size;
+
+                        let numBones: uint = 0;
+                        const bones: { [key: string]: uint } = {};
+                        const boneNames: string[] = [];
+
+                        const skinVertices: number[][] = [];
+                        skinVertices.length = numVertices;
+                        for (let i = 0; i < numVertices; ++i) skinVertices[i] = [];
+
+                        let numDataPerElement: uint = 0;
+
+                        const bindPreMatrices: Matrix44[] = [];
+
+                        for (let i = 0, sw: SkinWeights; sw = swArr[i++];) {
+                            usedBones[sw.boneName] = true;
+                            let boneIdx: uint = bones[sw.boneName];
+                            if (boneIdx === undefined) {
+                                boneIdx = numBones;
+                                bones[sw.boneName] = numBones++;
+                                boneNames[boneIdx] = sw.boneName;
+
+                                bindPreMatrices[boneIdx] = sw.matrix;
+                            }
+
+                            const indices = sw.indices;
+                            for (let j = 0, n = indices.length; j < n; ++j) {
+                                const vertIdx = indices[j];
+                                const sv = skinVertices[vertIdx];
+                                let n = sv.length;
+                                if (n < 8) {
+                                    if (numDataPerElement < n + 2) numDataPerElement = n + 2;
+                                    sv[n] = boneIdx;
+                                    sv[++n] = sw.weights[j];
+                                }
+                            }
+                        }
+                        numDataPerElement >>= 1;
+
+                        asset.boneNames = boneNames;
+                        asset.bindPreMatrices = bindPreMatrices;
+
+                        const len = numVertices * numDataPerElement;
+                        const boneIndices: number[] = [];
+                        boneIndices.length = len; 
+                        const boneWeights: number[] = [];
+                        boneWeights.length = len;
+                        for (let i = 0; i < numVertices; ++i) {
+                            const idx = i * numDataPerElement;
+                            const sv = skinVertices[i];
+                            let n = sv.length >> 1;
+                            let j = 0;
+                            for (; j < n; ++j) {
+                                const idx1 = idx + j;
+                                let idx2 = j << 1;
+                                boneIndices[idx1] = sv[idx2];
+                                boneWeights[idx1] = sv[++idx2];
+                            }
+
+                            for (; j < numDataPerElement; ++j) {
+                                const idx1 = idx + j;
+                                boneIndices[idx1] = 0;
+                                boneWeights[idx1] = 0;
+                            }
+                        }
+
+                        asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneIndex0, boneIndices, numDataPerElement, GLVertexBufferDataType.UNSIGNED_SHORT, false, GLUsageType.STATIC_DRAW));
+                        asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneWeight0, boneWeights, numDataPerElement, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
+                    }
+                    data.meshes = meshes;
+                }
+            }
+
+            for (let name in usedBones) delete excludeBones[name];
+            let numBones: uint = 0;
+            const bonesSortedMap: { [key: string]: uint } = {};
+            const rootBones: { [key: string]: boolean } = {};
+            for (let i = 0, n = this._frames.length; i < n; ++i) {
+                const f = this._frames[i];
+                if (!excludeBones[f.name]) {
+                    bonesSortedMap[bonesSortedMap.name] = numBones++;
+                    rootBones[f.root.name] = true;
+                }
+            }
+
+            if (numBones > 0) {
+                const skeleton = new Skeleton();
+
+                skeleton.bones.length = numBones;
+                for (let name in bonesSortedMap) {
+                    const bone = new Node();
+                    bone.name = name;
+                    skeleton.bones[bonesSortedMap[name]] = bone;
+                }
+
+                let num = 0;
+                for (let name in rootBones) {
+                    const idx = bonesSortedMap[name];
+                    skeleton.rootBoneIndices[num++] = idx;
+
+                    this._doBoneHierarchy(this._framesMap[name], skeleton.bones[idx], bonesSortedMap, skeleton.bones);
+                }
+
+                data.skeleton = skeleton;
+            }
+        }
+
+        private _doBoneHierarchy(parentFrame: Frame, parentBone: Node, bonesSortedMap: { [key: string]: uint }, bones: Node[]): void {
+            for (let i = 0, n = parentFrame.children.length; i < n; +i) {
+                const f = parentFrame.children[i];
+                const idx = bonesSortedMap[f.name];
+                const b = bones[idx];
+                parentBone.addChild(b);
+                this._doBoneHierarchy(f, b, bonesSortedMap, bones);
+            }
+        }
     }
 
     export class Data {
@@ -93,16 +298,16 @@ namespace Aurora.XFile {
                 const c3 = data.readUint8();
                 const floatBits = (c0 - 48) * 1000 + (c1 - 48) * 100 + (c2 - 48) * 10 + (c3 - 48);
 
-                const templates: { [key: string]: Template } = {};
+                const parsedData = new ParsedData();
 
                 while (data.bytesAvailable > 1) {
                     const token = _parseNextToken(data, floatBits);
                     switch (token.value) {
                         case TokenName.TEMPLATE:
-                            _parseTemplate(data, floatBits, templates);
+                            _parseTemplate(data, floatBits);
                             break;
                         case TokenName.FRAME:
-                            _parseFrame(data, floatBits);
+                            _parseFrame(data, floatBits, parsedData, null);
                             break;
                         case TokenName.MATERIAL:
                             _parseMaterial(data, floatBits);
@@ -112,6 +317,8 @@ namespace Aurora.XFile {
                             break;
                     }
                 }
+
+                parsedData.generate(result);
             } else {
 
             }
@@ -120,8 +327,12 @@ namespace Aurora.XFile {
         return result;
     }
 
-    function _parseFrame(data: ByteArray, floatBits: uint): void {
-        _parseHead(data, floatBits);
+    function _parseFrame(data: ByteArray, floatBits: uint, parsedData: ParsedData, parent: Frame): void {
+        const name =_parseHeadName(data, floatBits);
+
+        const f = new Frame();
+        f.name = name;
+        parsedData.addFrame(f, parent);
 
         let running = true;
         do {
@@ -131,13 +342,13 @@ namespace Aurora.XFile {
                     running = false;
                     break;
                 case TokenName.FRAME:
-                    _parseFrame(data, floatBits);
+                    _parseFrame(data, floatBits, parsedData, f);
                     break;
                 case TokenName.FRAME_TRANSFORM_MATRIX:
-                    _parseFrameTransformMatrix(data, floatBits);
+                    _parseFrameTransformMatrix(data, floatBits, f);
                     break;
                 case TokenName.MESH:
-                    _parseMesh(data, floatBits);
+                    _parseMesh(data, floatBits, parsedData);
                     break;
                 default:
                     _parseUnknownData(data, floatBits);
@@ -146,11 +357,13 @@ namespace Aurora.XFile {
         } while(running);
     }
 
-    function _parseMesh(data: ByteArray, floatBits: uint): void {
-        const name = _parseHead(data, floatBits);
+    function _parseMesh(data: ByteArray, floatBits: uint, parsedData: ParsedData): void {
+        const name = _parseHeadName(data, floatBits);
 
         const asset: MeshAsset = new MeshAsset();
         asset.name = name;
+
+        const idx = parsedData.addMesh(asset);
 
         const numToken = _parseNextToken(data, floatBits);
         const valuesToken = _parseNextToken(data, floatBits);
@@ -180,15 +393,21 @@ namespace Aurora.XFile {
                 case TokenName.CBRACE:
                     running = false;
                     break;
+                case TokenName.MESH_NORMALS:
+                    _parseMeshNormals(data, floatBits, asset);
+                    break;
                 case TokenName.MESH_TEXTURE_COORDS:
                     _parseMeshUVs(data, floatBits, asset);
                     break;
                 case TokenName.XSKIN_MESH_HEADER:
                     _parseSkinMeshHeader(data, floatBits);
                     break;
-                case TokenName.SKIN_WEIGHTS:
-                    _parseSkinWeights(data, floatBits, asset);
+                case TokenName.SKIN_WEIGHTS: {
+                    const sw = _parseSkinWeights(data, floatBits);
+                    if (sw) parsedData.addSkinWeights(idx, sw);
+
                     break;
+                }
                 case TokenName.MESH_MATERIAL_LIST:
                     _parseMeshMaterialList(data, floatBits);
                     break;
@@ -199,8 +418,18 @@ namespace Aurora.XFile {
         } while (running);
     }
 
+    function _parseMeshNormals(data: ByteArray, floatBits: uint, asset: MeshAsset): void {
+        _parseHeadName(data, floatBits);
+        const numToken = _parseNextToken(data, floatBits);
+        const valuesToken = _parseNextToken(data, floatBits);
+
+        asset.addVertexSource(new VertexSource(ShaderPredefined.a_Normal0, <number[]>valuesToken.value, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
+
+        _checkForClosingBrace(data, floatBits);
+    }
+
     function _parseMeshUVs(data: ByteArray, floatBits: uint, asset: MeshAsset): void {
-        _parseHead(data, floatBits);
+        _parseHeadName(data, floatBits);
         const numToken = _parseNextToken(data, floatBits);
         const valuesToken = _parseNextToken(data, floatBits);
 
@@ -210,64 +439,33 @@ namespace Aurora.XFile {
     }
 
     function _parseSkinMeshHeader(data: ByteArray, floatBits: uint): void {
-        _parseHead(data, floatBits);
+        _parseHeadName(data, floatBits);
         _parseNextToken(data, floatBits);
         _checkForClosingBrace(data, floatBits);
     }
 
-    function _parseSkinWeights(data: ByteArray, floatBits: uint, asset: MeshAsset): void {
-        _parseHead(data, floatBits);
-
-        /*
-        if (skinnedMeshAssets == null) skinnedMeshAssets = {};
-        var sma: SkinnedMeshAsset = skinnedMeshAssets[ma.name];
-        if (sma == null) {
-            sma = new SkinnedMeshAsset();
-            skinnedMeshAssets[ma.name] = sma;
-            sma.boneNames = new Vector.<String>();
-            sma.preOffsetMatrices = {};
-            sma.skinnedVertices = new Vector.<SkinnedVertex>(ma.getElement(MeshElementType.VERTEX).values.length / 3);
-        }
-        */
+    function _parseSkinWeights(data: ByteArray, floatBits: uint): SkinWeights {
+        _parseHeadName(data, floatBits);
 
         const boneNameToken = _parseNextToken(data, floatBits);
         const indicesToken = _parseNextToken(data, floatBits);
         const weightsToken = _parseNextToken(data, floatBits);
 
-        /*
-        const indices = <uint[]>indicesToken.value;
-        const num: uint = indices.shift();
-
         const weights = <number[]>weightsToken.value;
 
-        var boneIndex: uint = sma.boneNames.length;
-        sma.boneNames[boneIndex] = boneNameToken.value;
-        const m = new Matrix44().set44FromArray(weights.slice(weights.length - 16));
-
-        sma.preOffsetMatrices[boneNameToken.value] = m;
-
-        for (let i = 0; i < num; ++i) {
-            let index = indices[i];
-            var sv: SkinnedVertex = sma.skinnedVertices[index];
-            if (sv == null) {
-                sv = new SkinnedVertex();
-                sv.boneNameIndices = new Vector.<uint>();
-                sv.weights = new Vector.<Number>();
-                sma.skinnedVertices[index] = sv;
-            }
-
-            index = sv.boneNameIndices.length;
-
-            sv.boneNameIndices[index] = boneIndex;
-            sv.weights[index] = weights[i];
-        }
-        */
+        const sw = new SkinWeights();
+        sw.boneName = <string>boneNameToken.value;
+        sw.indices = (<uint[]>indicesToken.value).slice(1);
+        sw.weights = weights.slice(0, sw.indices.length);
+        sw.matrix = new Matrix44().set44FromArray(weights.slice(weights.length - 16));
 
         _checkForClosingBrace(data, floatBits);
+
+        return sw;
     }
 
     function _parseMeshMaterialList(data: ByteArray, floatBits: uint): void {
-        _parseHead(data, floatBits);
+        _parseHeadName(data, floatBits);
 
         const indexToken = _parseNextToken(data, floatBits);
         let indices = <uint[]>indexToken.value;
@@ -319,8 +517,8 @@ namespace Aurora.XFile {
                     const hex = data.readUint8().toString(16);
                     guid += hex.length === 1 ? "0" + hex : hex;
                 }
-
                 token.value = guid;
+
                 break;
             }
             case TokenType.INTEGER_LIST: {
@@ -328,6 +526,7 @@ namespace Aurora.XFile {
                 const arr: uint[] = [];
                 arr.length = n;
                 for (let i = 0; i < n; ++i) arr[i] = data.readUint32();
+                token.value = arr;
 
                 break;
             }
@@ -336,6 +535,7 @@ namespace Aurora.XFile {
                 const arr: number[] = [];
                 arr.length = n;
                 for (let i = 0; i < n; ++i) arr[i] = _parseFloat(data, floatBits);
+                token.value = arr;
 
                 break;
             }
@@ -364,7 +564,7 @@ namespace Aurora.XFile {
         }
     }
 
-    function _parseHead(data: ByteArray, floatBits: uint): string {
+    function _parseHeadName(data: ByteArray, floatBits: uint): string {
         let name: string = null;
         let token = _parseNextToken(data, floatBits);
         if (token.type != TokenType.OBRACE) {
@@ -377,7 +577,7 @@ namespace Aurora.XFile {
     }
 
     function _parseMaterial(data: ByteArray, floatBits: uint): void {
-        const name = _parseHead(data, floatBits);
+        const name = _parseHeadName(data, floatBits);
 
         _parseNextToken(data, floatBits);//diffuse rgba, specularExponent, specular rgb, emissive rgb
 
@@ -399,64 +599,21 @@ namespace Aurora.XFile {
     }
 
     function _parseTextureFileName(data: ByteArray, floatBits: uint): void {
-        _parseHead(data, floatBits);
+        _parseHeadName(data, floatBits);
         _parseNextToken(data, floatBits);
         _checkForClosingBrace(data, floatBits);
     }
 
-    function _parseTemplate(data: ByteArray, floatBits: uint, templates: { [key: string]: Template }): void {
-        const name = _parseNextToken(data, floatBits);
-        _parseNextToken(data, floatBits);
-        const guid = _parseNextToken(data, floatBits);
-
-        if (name.value === "MeshFace") {
-            let c = 1;
-        }
-
-        const members: Template.Member[] = [];
-
-        let member: Template.Member = null;
-        let restriction: Template.Restriction = null;
-
-        let memberPart: uint = 0;
-
-        do {
-            const token = _parseNextToken(data, floatBits);
-            if (token.type === TokenType.CBRACE) {
-                break;
-            } else if (token.type === TokenType.OBRACKET) {
-                let value = "";
-                do {
-                    let token = _parseNextToken(data, floatBits);
-                    if (token.type === TokenType.CBRACKET) {
-                        break;
-                    } else if (token.type === TokenType.DOT) {
-                        value += TokenName.DOT;
-                    } else {
-                        value += token.value;
-                    }
-                } while (true);
-                restriction = new Template.Restriction(value);
-            } else if (token.type === TokenType.SEMICOLON) {
-                memberPart = 0;
-                if (member) {
-                    members[members.length] = member;
-                    member = null;
-                }
-            } else {
-                if (memberPart === 0) {
-                    
-                }
-                let a = 1;
-            }
-        } while (true);
-
-        templates[<string>name.value] = new Template(<string>guid.value, members, restriction);
+    function _parseTemplate(data: ByteArray, floatBits: uint): void {
+        while (_parseNextToken(data, floatBits).type != TokenType.CBRACE) {}
     }
 
-    function _parseFrameTransformMatrix(data: ByteArray, floatBits: uint): void {
-        _parseHead(data, floatBits);
-        _parseNextToken(data, floatBits);
+    function _parseFrameTransformMatrix(data: ByteArray, floatBits: uint, frame: Frame): void {
+        _parseHeadName(data, floatBits);
+
+        const token = _parseNextToken(data, floatBits);
+        if (frame && token.type === TokenType.FLOAT_LIST) frame.matrix = new Matrix44().set44FromArray(<number[]>token.value);
+
         _checkForClosingBrace(data, floatBits);
     }
 

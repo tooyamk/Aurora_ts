@@ -4,7 +4,9 @@ namespace Aurora {
     export class MeshAsset extends Ref {
         public name = "";
 
-        public bindMatrices: Matrix44[] = null;
+        public boneNames: string[] = null;
+
+        public bindPreMatrices: Matrix44[] = null;
         public bindPostMatrices: Matrix44[] = null;
 
         public vertexSources: Map<string, VertexSource> = null;
@@ -19,7 +21,7 @@ namespace Aurora {
         public customGetVertexBufferFn: (asset: MeshAsset, info: GLProgramAttribInfo) => GLVertexBuffer = null;
         public customGetDrawIndexBufferFn: (asset: MeshAsset) => GLIndexBuffer = null;
 
-        public autoGenerateNormal: boolean = true;
+        public autoGenerateNormal = true;
 
         protected _link: MeshAsset = null;
 

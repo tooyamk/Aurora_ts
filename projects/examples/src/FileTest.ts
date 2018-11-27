@@ -23,7 +23,7 @@ class FileTest {
         (delta: number) => {
             if (this._animator) this._animator.update(delta * 0.5);
 
-            //modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.5 * delta * Math.PI));
+            modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.5 * delta * Math.PI));
             env.renderingManager.render(env.gl, env.camera, env.world, [light]);
         });
 
@@ -151,7 +151,7 @@ class FileTest {
         taskQueue.createTask(Aurora.Handler.create(null, (task: Aurora.Task) => {
             let request = new XMLHttpRequest();
             request.addEventListener("loadend", () => {
-                Aurora.XFile.parse(new Aurora.ByteArray(request.response));
+                data = Aurora.XFile.parse(new Aurora.ByteArray(request.response));
                 task.finish();
             });
             request.open("GET", Helper.getURL("box_bin.X"), true);
@@ -166,6 +166,38 @@ class FileTest {
             img.src = Helper.getURL("skinnedMeshes/0/tex.png");
         }));
         taskQueue.start(Aurora.Handler.create(this, () => {
+            let tex = new Aurora.GLTexture2D(this._env.gl);
+            tex.upload(0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
+
+            let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
+            mat.cullFace = Aurora.GLCullFace.NONE;
+            mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
+            //mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
+            mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
+            //mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
+            mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
+
+            if (data.animationClips && data.animationClips.length > 0) {
+                const clip = data.animationClips[0];
+                clip.wrap = Aurora.AnimatorWrap.Loop;
+                clip.skeleton = data.skeleton;
+
+                this._animator = new Aurora.Animator();
+                this._animator.setClip(clip);
+            }
+
+            let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
+            mesh.renderer = this._env.forwardRenderer;
+            mesh.asset = data.meshes[0];
+            //mesh.asset.drawIndexSource.offset = 18;
+            //mesh.asset.drawIndexSource.length = 6;
+            mesh.setMaterials(mat);
+            mesh.skeleton = data.skeleton;
+
+            if (data.skeleton) Helper.printNodeHierarchy([data.skeleton.bones[data.skeleton.rootBoneIndices[0]]]);
+
+            const scale = 10;
+            mesh.node.setLocalScale(scale, scale, scale);
         }));
     }
 }

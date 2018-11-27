@@ -64,8 +64,8 @@ namespace Aurora {
                         const vec3 = SkinnedMesh.TMP_VEC3;
                         const mat = SkinnedMesh.TMP_MAT;
 
-                        let bindMatrices = this._asset.bindMatrices;
-                        if (!bindMatrices) bindMatrices = [];
+                        let bindPreMatrices = this._asset.bindPreMatrices;
+                        if (!bindPreMatrices) bindPreMatrices = [];
                         let bindPostMatrices = this._asset.bindPostMatrices;
                         if (!bindPostMatrices) bindPostMatrices = [];
 
@@ -91,7 +91,7 @@ namespace Aurora {
                                     const bone = this.skeleton.bones[boneIdx];
                                     if (!bone) continue;
 
-                                    const bindMat = bindMatrices[boneIdx];
+                                    const bindMat = bindPreMatrices[boneIdx];
                                     const bindPostMat = bindPostMatrices[boneIdx];
 
                                     if (bindMat) {

@@ -246,7 +246,7 @@ namespace Aurora.FbxFile {
                         if (this._upAxis === 2) {
                             this._transformVertexSourceXZY(asset.getVertexSource(ShaderPredefined.a_Position0));
                             this._transformVertexSourceXZY(asset.getVertexSource(ShaderPredefined.a_Normal0));
-                            this._transformMatricesXZY(asset.bindMatrices);
+                            this._transformMatricesXZY(asset.bindPreMatrices);
                             this._transformMatricesXZY(asset.bindPostMatrices);
                         }
 
@@ -810,7 +810,7 @@ namespace Aurora.FbxFile {
                 }
 
                 for (let i = 0; i < n; ++i) {
-                    const idx = i << 2;
+                    const idx = i * numDataPerElement;
                     const data = skinData[vertIdxMapping[i]];
                     let j = 0;
                     if (data) {
@@ -819,8 +819,8 @@ namespace Aurora.FbxFile {
                         for (; j < nn; ++j) {
                             const idx1 = idx + j;
                             let idx2 = j << 1;
-                            boneIndices[idx1] = data[idx2++];
-                            boneWeights[idx1] = data[idx2];
+                            boneIndices[idx1] = data[idx2];
+                            boneWeights[idx1] = data[++idx2];
                         }
                     }
 
@@ -865,14 +865,14 @@ namespace Aurora.FbxFile {
                             }
                         }
 
-                        if (!asset.bindMatrices) {
-                            asset.bindMatrices = [];
+                        if (!asset.bindPreMatrices) {
+                            asset.bindPreMatrices = [];
                             asset.bindPostMatrices = [];
                             const n = skeleton.bones.length;
-                            asset.bindMatrices.length = n;
+                            asset.bindPreMatrices.length = n;
                             asset.bindPostMatrices.length = n;
                             for (let i = 0; i < n; ++i) {
-                                asset.bindMatrices[i] = new Matrix44();
+                                asset.bindPreMatrices[i] = new Matrix44();
                                 asset.bindPostMatrices[i] = new Matrix44();
                             }
                         }
@@ -893,7 +893,7 @@ namespace Aurora.FbxFile {
                         //transLinkMat.invert(asset.bindPostMatrices[boneIdx]).append44(transMat);
                         //asset.bindMatrices[boneIdx].set34(transMat);
                         //transLinkMat.invert(asset.bindMatrices[boneIdx]);
-                        transMat.append44(transLinkMat.invert(asset.bindMatrices[boneIdx]), asset.bindMatrices[boneIdx]);
+                        transMat.append44(transLinkMat.invert(asset.bindPreMatrices[boneIdx]), asset.bindPreMatrices[boneIdx]);
                         //transMat.append44(transLinkMat, asset.bindMatrices[boneIdx]);
                         //transLinkMat.invert(asset.bindMatrices[boneIdx]).append44(transMat);
                     }
