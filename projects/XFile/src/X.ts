@@ -1,6 +1,9 @@
 namespace Aurora.XFile {
     export const Version = "0.1.0";
 
+    const tmpMat0 = new Matrix44();
+    const tmpMat1 = new Matrix44();
+
     const enum FormatType {
         TXT = "txt ",
         TZIP = "tzip",
@@ -59,6 +62,10 @@ namespace Aurora.XFile {
         TEXTURE_FILE_NAME = 'TextureFilename',
         XSKIN_MESH_HEADER = 'XSkinMeshHeader',
 
+        R = "R",
+        S = "S",
+        T = "T",
+
         OBRACE = '{',
         CBRACE = '}',
         DOT = '.'
@@ -69,14 +76,14 @@ namespace Aurora.XFile {
         public value: string | int | uint[] | number[] = null;
     }
 
-    class Frame {
-        public root: Frame = null;
-        public parent: Frame = null;
+    class Container {
+        public root: Container = null;
+        public parent: Container = null;
         public name: string = null;
-        public children: Frame[] = [];
+        public children: Container[] = [];
         public matrix: Matrix44 = null;
 
-        public addChild(c: Frame): void {
+        public addChild(c: Container): void {
             this.children[this.children.length] = c;
             c.root = this.root;
         }
@@ -94,25 +101,34 @@ namespace Aurora.XFile {
         public weights: number[] = [];
     }
 
+    class Animation {
+        public name: string = null;
+        public frames = new Map<string, Map<number, SkeletonAnimationClip.Frame>>();
+    }
+
     class ParsedData {
-        private _rootFrames: Frame[] = [];
-        private _frames: Frame[] = [];
-        private _framesMap: { [key: string]: Frame } = {};
+        public ticksPerSecond: number = 0;
+
+        public animations: Animation[] = [];
+
+        private _rootContainers: Container[] = [];
+        private _containers: Container[] = [];
+        private _containersMap: { [key: string]: Container } = {};
 
         private _skinWeightsMap: SkinWeights[][] = null;
 
         private _meshes: MeshAsset[] = null;
 
-        public addFrame(frame: Frame, parent: Frame): void {
+        public addContainer(c: Container, parent: Container): void {
             if (parent) {
-                frame.parent = parent;
-                parent.addChild(frame);
+                c.parent = parent;
+                parent.addChild(c);
             } else {
-                frame.root = frame;
-                this._rootFrames[this._rootFrames.length] = frame;
+                c.root = c;
+                this._rootContainers[this._rootContainers.length] = c;
             }
-            this._frames[this._frames.length] = frame;
-            this._framesMap[frame.name] = frame;
+            this._containers[this._containers.length] = c;
+            this._containersMap[c.name] = c;
         }
 
         public addMesh(mesh: MeshAsset): uint {
@@ -145,7 +161,7 @@ namespace Aurora.XFile {
                         const asset = this._meshes[i];
                         meshes[i] = asset;
 
-                        excludeBones[asset.name] = true;
+                        this._recordExcludeBones(this._containersMap[asset.name], excludeBones);
 
                         if (!this._skinWeightsMap) continue;
 
@@ -228,47 +244,87 @@ namespace Aurora.XFile {
                 }
             }
 
-            for (let name in usedBones) delete excludeBones[name];
-            let numBones: uint = 0;
-            const bonesSortedMap: { [key: string]: uint } = {};
-            const rootBones: { [key: string]: boolean } = {};
-            for (let i = 0, n = this._frames.length; i < n; ++i) {
-                const f = this._frames[i];
-                if (!excludeBones[f.name]) {
-                    bonesSortedMap[bonesSortedMap.name] = numBones++;
-                    rootBones[f.root.name] = true;
+            for (let name in usedBones) {
+                let b = excludeBones[name];
+                if (b !== undefined) {
+                    delete excludeBones[name];
+                    let f = this._containersMap[name];
+                    if (f) {
+                        f = f.parent;
+                        while (f) {
+                            delete excludeBones[f.name];
+                            f = f.parent;
+                        }
+                    }
                 }
             }
 
-            if (numBones > 0) {
-                const skeleton = new Skeleton();
-
-                skeleton.bones.length = numBones;
-                for (let name in bonesSortedMap) {
+            const skeleton = new Skeleton();
+            const rootBones: { [key: string]: boolean } = {};
+            for (let i = 0, n = this._containers.length; i < n; ++i) {
+                const c = this._containers[i];
+                if (!excludeBones[c.name]) {
                     const bone = new Node();
-                    bone.name = name;
-                    skeleton.bones[bonesSortedMap[name]] = bone;
+                    bone.name = c.name;
+                    skeleton.bones.set(c.name, bone);
+
+                    if (!rootBones[c.root.name]) {
+                        rootBones[c.root.name] = true;
+                        skeleton.rootBoneNames[skeleton.rootBoneNames.length] = c.root.name;
+                    }
                 }
+            }
 
-                let num = 0;
-                for (let name in rootBones) {
-                    const idx = bonesSortedMap[name];
-                    skeleton.rootBoneIndices[num++] = idx;
-
-                    this._doBoneHierarchy(this._framesMap[name], skeleton.bones[idx], bonesSortedMap, skeleton.bones);
+            if (skeleton.bones.size > 0) {
+                for (let i = 0, n = skeleton.rootBoneNames.length; i < n; ++i) {
+                    const name = skeleton.rootBoneNames[i];
+                    this._doBoneHierarchy(this._containersMap[name], skeleton.bones.get(name), skeleton.bones);
                 }
 
                 data.skeleton = skeleton;
             }
+
+            if (this.animations.length > 0) {
+                const animClips: SkeletonAnimationClip[] = [];
+                for (let i = 0, n = this.animations.length; i < n; ++i) {
+                    const anim = this.animations[i];
+                    const clip = new SkeletonAnimationClip();
+                    clip.name = anim.name;
+                    animClips[animClips.length] = clip;
+
+                    const frames = new Map<string, SkeletonAnimationClip.Frame[]>();
+                    for (let itr of anim.frames) {
+                        const boneFramesMap = itr[1];
+                        const boneFrames: SkeletonAnimationClip.Frame[] = [];
+                        frames.set(itr[0], boneFrames);
+
+                        let n = 0;
+                        for (let itr1 of boneFramesMap) boneFrames[n++] = itr1[1];
+
+                        Sort.Merge.sort(boneFrames, (f0: SkeletonAnimationClip.Frame, f1: SkeletonAnimationClip.Frame) => {
+                            return f0.time < f1.time;
+                        });
+                    }
+
+                    clip.frames = frames;
+                }
+                data.animationClips = animClips;
+            }
         }
 
-        private _doBoneHierarchy(parentFrame: Frame, parentBone: Node, bonesSortedMap: { [key: string]: uint }, bones: Node[]): void {
-            for (let i = 0, n = parentFrame.children.length; i < n; +i) {
-                const f = parentFrame.children[i];
-                const idx = bonesSortedMap[f.name];
-                const b = bones[idx];
+        private _recordExcludeBones(c: Container, excludeBones: { [key: string]: boolean }): void {
+            if (c) {
+                excludeBones[c.name] = true;
+                for (let i = 0, n = c.children.length; i < n; ++i) this._recordExcludeBones(c.children[i], excludeBones);
+            }
+        }
+
+        private _doBoneHierarchy(parentContainer: Container, parentBone: Node, bones: Map<string, Node>): void {
+            for (let i = 0, n = parentContainer.children.length; i < n; ++i) {
+                const c = parentContainer.children[i];
+                const b = bones.get(c.name);
                 parentBone.addChild(b);
-                this._doBoneHierarchy(f, b, bonesSortedMap, bones);
+                this._doBoneHierarchy(c, b, bones);
             }
         }
     }
@@ -312,6 +368,12 @@ namespace Aurora.XFile {
                         case TokenName.MATERIAL:
                             _parseMaterial(data, floatBits);
                             break;
+                        case TokenName.ANIM_TICKS_PRE_SECOND:
+                            parsedData.ticksPerSecond = _parseAnimTicksPerSecond(data, floatBits);
+                            break;
+                        case TokenName.ANIMATION_SET:
+                            _parseAnimationSet(data, floatBits, parsedData);
+                            break;
                         default:
                             _parseUnknownData(data, floatBits);
                             break;
@@ -327,12 +389,12 @@ namespace Aurora.XFile {
         return result;
     }
 
-    function _parseFrame(data: ByteArray, floatBits: uint, parsedData: ParsedData, parent: Frame): void {
+    function _parseFrame(data: ByteArray, floatBits: uint, parsedData: ParsedData, parent: Container): void {
         const name =_parseHeadName(data, floatBits);
 
-        const f = new Frame();
-        f.name = name;
-        parsedData.addFrame(f, parent);
+        const c = new Container();
+        c.name = name;
+        parsedData.addContainer(c, parent);
 
         let running = true;
         do {
@@ -342,10 +404,10 @@ namespace Aurora.XFile {
                     running = false;
                     break;
                 case TokenName.FRAME:
-                    _parseFrame(data, floatBits, parsedData, f);
+                    _parseFrame(data, floatBits, parsedData, c);
                     break;
                 case TokenName.FRAME_TRANSFORM_MATRIX:
-                    _parseFrameTransformMatrix(data, floatBits, f);
+                    _parseFrameTransformMatrix(data, floatBits, c);
                     break;
                 case TokenName.MESH:
                     _parseMesh(data, floatBits, parsedData);
@@ -425,7 +487,7 @@ namespace Aurora.XFile {
 
         asset.addVertexSource(new VertexSource(ShaderPredefined.a_Normal0, <number[]>valuesToken.value, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
 
-        _checkForClosingBrace(data, floatBits);
+        _skipClosingBrace(data, floatBits);
     }
 
     function _parseMeshUVs(data: ByteArray, floatBits: uint, asset: MeshAsset): void {
@@ -435,13 +497,13 @@ namespace Aurora.XFile {
 
         asset.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, <number[]>valuesToken.value, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
         
-        _checkForClosingBrace(data, floatBits);
+        _skipClosingBrace(data, floatBits);
     }
 
     function _parseSkinMeshHeader(data: ByteArray, floatBits: uint): void {
         _parseHeadName(data, floatBits);
         _parseNextToken(data, floatBits);
-        _checkForClosingBrace(data, floatBits);
+        _skipClosingBrace(data, floatBits);
     }
 
     function _parseSkinWeights(data: ByteArray, floatBits: uint): SkinWeights {
@@ -459,7 +521,7 @@ namespace Aurora.XFile {
         sw.weights = weights.slice(0, sw.indices.length);
         sw.matrix = new Matrix44().set44FromArray(weights.slice(weights.length - 16));
 
-        _checkForClosingBrace(data, floatBits);
+        _skipClosingBrace(data, floatBits);
 
         return sw;
     }
@@ -479,7 +541,7 @@ namespace Aurora.XFile {
             switch (token.value) {
                 case TokenName.OBRACE:
                     _parseNextToken(data, floatBits);
-                    _checkForClosingBrace(data, floatBits);
+                    _skipClosingBrace(data, floatBits);
                     break;
                 case TokenName.CBRACE:
                     running = false;
@@ -601,27 +663,147 @@ namespace Aurora.XFile {
     function _parseTextureFileName(data: ByteArray, floatBits: uint): void {
         _parseHeadName(data, floatBits);
         _parseNextToken(data, floatBits);
-        _checkForClosingBrace(data, floatBits);
+        _skipClosingBrace(data, floatBits);
     }
 
     function _parseTemplate(data: ByteArray, floatBits: uint): void {
         while (_parseNextToken(data, floatBits).type != TokenType.CBRACE) {}
     }
 
-    function _parseFrameTransformMatrix(data: ByteArray, floatBits: uint, frame: Frame): void {
+    function _parseFrameTransformMatrix(data: ByteArray, floatBits: uint, frame: Container): void {
         _parseHeadName(data, floatBits);
 
         const token = _parseNextToken(data, floatBits);
         if (frame && token.type === TokenType.FLOAT_LIST) frame.matrix = new Matrix44().set44FromArray(<number[]>token.value);
 
-        _checkForClosingBrace(data, floatBits);
+        _skipClosingBrace(data, floatBits);
+    }
+
+    function _parseAnimTicksPerSecond(data: ByteArray, floatBits: uint): number {
+        _parseHeadName(data, floatBits);
+        const token = _parseNextToken(data, floatBits);
+        _skipClosingBrace(data, floatBits);
+        return <number>token.value;
+    }
+
+    function _parseAnimationSet(data: ByteArray, floatBits: uint, parsedData: ParsedData): void {
+        const name = _parseHeadName(data, floatBits);
+
+        const anim = new Animation();
+        anim.name = name;
+        parsedData.animations.push(anim);
+
+        let running = true;
+        do {
+            const token = _parseNextToken(data, floatBits);
+            switch (token.value) {
+                case TokenName.CBRACE:
+                    running = false;
+                    break;
+                case TokenName.ANIMATION:
+                    _parseAnimation(data, floatBits, parsedData.ticksPerSecond, anim);
+                    break;
+                default:
+                    _parseUnknownData(data, floatBits);
+                    break;
+            }
+        } while (running);
+    }
+
+    function _parseAnimation(data: ByteArray, floatBits: uint, ticksPerSecond: number, anim: Animation): void {
+        _parseHeadName(data, floatBits);
+
+        let boneName: string;
+
+        let running = true;
+        do {
+            const token = _parseNextToken(data, floatBits);
+            switch (token.value) {
+                case TokenName.OBRACE: {
+                    const boneNameToken = _parseNextToken(data, floatBits);
+                    boneName = <string>boneNameToken.value;
+                    _skipClosingBrace(data, floatBits);
+
+                    break;
+                }
+                case TokenName.CBRACE:
+                    running = false;
+                    break;
+                case TokenName.ANIMATION_KEY: {
+                    let frames = anim.frames.get(boneName);
+                    if (!frames) {
+                        frames = new Map();
+                        anim.frames.set(boneName, frames);
+                    }
+                    _parseAnimationKey(data, floatBits, ticksPerSecond, frames);
+
+                    break;
+                }
+                default:
+                    _parseUnknownData(data, floatBits);
+                    break;
+            }
+        } while (running);
+    }
+
+    function _parseAnimationKey(data: ByteArray, floatBits: uint, ticksPerSecond: number, frames: Map<number, SkeletonAnimationClip.Frame>): void {
+        _parseHeadName(data, floatBits);
+
+        let attribToken = _parseNextToken(data, floatBits);
+        const attrib = <int[]>attribToken.value;
+        const type = attrib[0];
+        const num = attrib[1];
+        
+        let info = attrib.slice(2);
+
+        for (let i = 0; i < num; ++i) {
+            if (info === null) info = <number[]>_parseNextToken(data, floatBits).value;
+            const values = <number[]>_parseNextToken(data, floatBits).value;
+
+            const t = info[0] / ticksPerSecond;
+            let f = frames.get(t);
+            if (!f) {
+                f = new SkeletonAnimationClip.Frame();
+                f.time = t;
+                frames.set(t, f);
+            }
+
+            switch (attrib[0]) {
+                case 0: //r
+                    f.rotation = new Quaternion().setFromArray(values);
+                    break;
+                case 1: //s
+                    f.scale = new Vector3().setFromArray(values);
+                    break;
+                case 2: //t
+                    f.translation = new Vector3().setFromArray(values);
+                    break;
+                case 4: {//m
+                    const scale = new Vector3();
+
+                    tmpMat0.set44FromArray(values);
+                    tmpMat0.decomposition(tmpMat1, scale);
+
+                    f.translation = new Vector3(tmpMat0.m30, tmpMat0.m31, tmpMat0.m32);
+                    f.rotation = tmpMat1.toQuaternion();
+                    f.scale = scale;
+
+                    break;
+                }
+                default:
+                    break;
+            }
+
+            info = null;
+        }
+
+        _skipClosingBrace(data, floatBits);
     }
 
     function _parseUnknownData(data: ByteArray, floatBits: uint): void {
         while (_parseNextToken(data, floatBits).type != TokenType.OBRACE) {}
 
         let count: uint = 1;
-
         do {
             const token = _parseNextToken(data, floatBits);
             if (token.type == TokenType.OBRACE) {
@@ -632,7 +814,15 @@ namespace Aurora.XFile {
         } while (count > 0);
     }
 
-    function _checkForClosingBrace(data: ByteArray, floatBits: uint): void {
-        if (_parseNextToken(data, floatBits).type != TokenType.CBRACE) console.warn();
+    function _skipClosingBrace(data: ByteArray, floatBits: uint): void {
+        let count: uint = 1;
+        do {
+            const token = _parseNextToken(data, floatBits);
+            if (token.type == TokenType.OBRACE) {
+                count++;
+            } else if (token.type == TokenType.CBRACE) {
+                count--;
+            }
+        } while (count > 0);
     }
 }

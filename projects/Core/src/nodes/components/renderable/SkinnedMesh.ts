@@ -27,7 +27,7 @@ namespace Aurora {
         }
 
         public render(renderingData: RenderingData): void {
-            if (this.skeleton) {
+            if (this.skeleton && this.skeleton.bones && this._asset.boneNames) {
                 const verticesSource = this._asset.getVertexSource(ShaderPredefined.a_Position0);
                 const boneIndicesSource = this._asset.getVertexSource(ShaderPredefined.a_BoneIndex0);
                 const boneWeightsSource = this._asset.getVertexSource(ShaderPredefined.a_BoneWeight0);
@@ -88,7 +88,7 @@ namespace Aurora {
 
                                 if (weight !== 0) {
                                     const boneIdx = boneIndices[idx3];
-                                    const bone = this.skeleton.bones[boneIdx];
+                                    const bone = this.skeleton.bones.get(this._asset.boneNames[boneIdx]);
                                     if (!bone) continue;
 
                                     const bindMat = bindPreMatrices[boneIdx];

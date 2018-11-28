@@ -23,7 +23,7 @@ class FileTest {
         (delta: number) => {
             if (this._animator) this._animator.update(delta * 0.5);
 
-            modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.5 * delta * Math.PI));
+            //modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.5 * delta * Math.PI));
             env.renderingManager.render(env.gl, env.camera, env.world, [light]);
         });
 
@@ -136,7 +136,7 @@ class FileTest {
             mesh.setMaterials(mat);
             mesh.skeleton = data.skeleton;
 
-            if (data.skeleton) Helper.printNodeHierarchy([data.skeleton.bones[data.skeleton.rootBoneIndices[0]]]);
+            if (data.skeleton) Helper.printNodeHierarchy([data.skeleton.bones.get(data.skeleton.rootBoneNames[0])]);
 
             const scale = 10;
             mesh.node.setLocalScale(scale, scale, scale);
@@ -144,7 +144,7 @@ class FileTest {
     }
 
     private _loadXFile(): void {
-        let data: Aurora.FbxFile.Data = null;
+        let data: Aurora.XFile.Data = null;
         let img: HTMLImageElement = null;
 
         let taskQueue = new Aurora.TaskQueue();
@@ -194,7 +194,7 @@ class FileTest {
             mesh.setMaterials(mat);
             mesh.skeleton = data.skeleton;
 
-            if (data.skeleton) Helper.printNodeHierarchy([data.skeleton.bones[data.skeleton.rootBoneIndices[0]]]);
+            if (data.skeleton) Helper.printNodeHierarchy([data.skeleton.bones.get(data.skeleton.rootBoneNames[0])]);
 
             const scale = 10;
             mesh.node.setLocalScale(scale, scale, scale);

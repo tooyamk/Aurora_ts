@@ -353,26 +353,26 @@ namespace Aurora {
             return this;
         }
 
-        public set44FromArray(numbers: number[]): Matrix44 {
-            this.m00 = numbers[0];
-            this.m01 = numbers[1];
-            this.m02 = numbers[2];
-            this.m03 = numbers[3];
+        public set44FromArray(numbers: number[], offset: int = 0): Matrix44 {
+            this.m00 = numbers[offset];
+            this.m01 = numbers[offset + 1];
+            this.m02 = numbers[offset + 2];
+            this.m03 = numbers[offset + 3];
 
-            this.m10 = numbers[4];
-            this.m11 = numbers[5];
-            this.m12 = numbers[6];
-            this.m13 = numbers[7];
+            this.m10 = numbers[offset + 4];
+            this.m11 = numbers[offset + 5];
+            this.m12 = numbers[offset + 6];
+            this.m13 = numbers[offset + 7];
 
-            this.m20 = numbers[8];
-            this.m21 = numbers[9];
-            this.m22 = numbers[10];
-            this.m23 = numbers[11];
+            this.m20 = numbers[offset + 8];
+            this.m21 = numbers[offset + 9];
+            this.m22 = numbers[offset + 10];
+            this.m23 = numbers[offset + 11];
 
-            this.m30 = numbers[12];
-            this.m31 = numbers[13];
-            this.m32 = numbers[14];
-            this.m33 = numbers[15];
+            this.m30 = numbers[offset + 12];
+            this.m31 = numbers[offset + 13];
+            this.m32 = numbers[offset + 14];
+            this.m33 = numbers[offset + 15];
 
             return this;
         }

@@ -161,6 +161,14 @@ namespace Aurora {
             return this;
         }
 
+        public setFromArray(numbers: number[], offset: int = 0): Vector3 {
+            this.x = numbers[offset];
+            this.y = numbers[offset + 1];
+            this.z = numbers[offset + 2];
+
+            return this;
+        }
+
         public set(vec: Vector3 | Vector4): Vector3 {
             this.x = vec.x;
             this.y = vec.y;

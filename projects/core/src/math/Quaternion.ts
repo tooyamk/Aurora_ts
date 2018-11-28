@@ -31,6 +31,15 @@ namespace Aurora {
             return this;
         }
 
+        public setFromArray(numbers: number[], offset: int = 0): Quaternion {
+            this.x = numbers[offset];
+            this.y = numbers[offset + 1];
+            this.z = numbers[offset + 2];
+            this.w = numbers[offset + 3];
+
+            return this;
+        }
+
         public set(q: Quaternion): Quaternion {
             this.x = q.x;
             this.y = q.y;
