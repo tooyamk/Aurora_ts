@@ -353,26 +353,48 @@ namespace Aurora {
             return this;
         }
 
-        public set44FromArray(numbers: number[], offset: int = 0): Matrix44 {
-            this.m00 = numbers[offset];
-            this.m01 = numbers[offset + 1];
-            this.m02 = numbers[offset + 2];
-            this.m03 = numbers[offset + 3];
+        public set44FromArray(numbers: number[], offset: int = 0, transpose: boolean = false): Matrix44 {
+            if (transpose) {
+                this.m00 = numbers[offset];
+                this.m10 = numbers[offset + 1];
+                this.m20 = numbers[offset + 2];
+                this.m30 = numbers[offset + 3];
 
-            this.m10 = numbers[offset + 4];
-            this.m11 = numbers[offset + 5];
-            this.m12 = numbers[offset + 6];
-            this.m13 = numbers[offset + 7];
+                this.m01 = numbers[offset + 4];
+                this.m11 = numbers[offset + 5];
+                this.m21 = numbers[offset + 6];
+                this.m31 = numbers[offset + 7];
 
-            this.m20 = numbers[offset + 8];
-            this.m21 = numbers[offset + 9];
-            this.m22 = numbers[offset + 10];
-            this.m23 = numbers[offset + 11];
+                this.m02 = numbers[offset + 8];
+                this.m12 = numbers[offset + 9];
+                this.m22 = numbers[offset + 10];
+                this.m32 = numbers[offset + 11];
 
-            this.m30 = numbers[offset + 12];
-            this.m31 = numbers[offset + 13];
-            this.m32 = numbers[offset + 14];
-            this.m33 = numbers[offset + 15];
+                this.m03 = numbers[offset + 12];
+                this.m13 = numbers[offset + 13];
+                this.m23 = numbers[offset + 14];
+                this.m33 = numbers[offset + 15];
+            } else {
+                this.m00 = numbers[offset];
+                this.m01 = numbers[offset + 1];
+                this.m02 = numbers[offset + 2];
+                this.m03 = numbers[offset + 3];
+
+                this.m10 = numbers[offset + 4];
+                this.m11 = numbers[offset + 5];
+                this.m12 = numbers[offset + 6];
+                this.m13 = numbers[offset + 7];
+
+                this.m20 = numbers[offset + 8];
+                this.m21 = numbers[offset + 9];
+                this.m22 = numbers[offset + 10];
+                this.m23 = numbers[offset + 11];
+
+                this.m30 = numbers[offset + 12];
+                this.m31 = numbers[offset + 13];
+                this.m32 = numbers[offset + 14];
+                this.m33 = numbers[offset + 15];
+            }
 
             return this;
         }

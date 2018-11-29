@@ -289,7 +289,7 @@ namespace Aurora {
         /**
          * @param t [0.0 - 1.0]
          */
-        public static lerp(from: Vector3, to: Vector3, t: number, rst: Vector3): Vector3 {
+        public static lerp(from: Vector3, to: Vector3, t: number, rst: Vector3 = null): Vector3 {
             const x = from.x + (to.x - from.x) * t;
             const y = from.y + (to.y - from.y) * t;
             const z = from.z + (to.z - from.z) * t;

@@ -81,7 +81,8 @@ namespace Aurora.XFile {
         public parent: Container = null;
         public name: string = null;
         public children: Container[] = [];
-        public matrix: Matrix44 = null;
+        public localMatrix = new Matrix44();
+        public worldMatrix = new Matrix44();
 
         public addChild(c: Container): void {
             this.children[this.children.length] = c;
@@ -152,6 +153,8 @@ namespace Aurora.XFile {
             const excludeBones: { [key: string]: boolean } = {};
             const usedBones: { [key: string]: boolean } = {};
 
+            for (let i = 0, n = this._rootContainers.length; i < n; ++i) this._calcWorldMatrix(this._rootContainers[i], null);
+
             if (this._meshes) {
                 const n = this._meshes.length;
                 if (n > 0) {
@@ -161,7 +164,17 @@ namespace Aurora.XFile {
                         const asset = this._meshes[i];
                         meshes[i] = asset;
 
-                        this._recordExcludeBones(this._containersMap[asset.name], excludeBones);
+                        const meshNode = this._containersMap[asset.name];
+
+                        if (meshNode) {
+                            this._recordExcludeBones(meshNode, excludeBones);
+
+                            const vs = asset.getVertexSource(ShaderPredefined.a_Position0);
+                            if (vs) {
+                                const data = vs.data;
+                                if (data) MeshAssetHelper.transformVertices(meshNode.worldMatrix, data, 0, -1, data, 0);
+                            }
+                        }
 
                         if (!this._skinWeightsMap) continue;
 
@@ -194,6 +207,7 @@ namespace Aurora.XFile {
                                 boneNames[boneIdx] = sw.boneName;
 
                                 bindPreMatrices[boneIdx] = sw.matrix;
+                                //bindPreMatrices[boneIdx] = this._containersMap[sw.boneName].worldMatrix.invert(new Matrix44()).append44(sw.matrix);
                             }
 
                             const indices = sw.indices;
@@ -304,6 +318,8 @@ namespace Aurora.XFile {
                         Sort.Merge.sort(boneFrames, (f0: SkeletonAnimationClip.Frame, f1: SkeletonAnimationClip.Frame) => {
                             return f0.time < f1.time;
                         });
+
+                        SkeletonAnimationClip.supplementLerpFrames(boneFrames);
                     }
 
                     clip.frames = frames;
@@ -326,6 +342,16 @@ namespace Aurora.XFile {
                 parentBone.addChild(b);
                 this._doBoneHierarchy(c, b, bones);
             }
+        }
+
+        private _calcWorldMatrix(c: Container, parent: Container): void {
+            if (parent) {
+                c.localMatrix.append44(parent.worldMatrix, c.worldMatrix);
+            } else {
+                c.worldMatrix.set44(c.localMatrix);
+            }
+
+            for (let i = 0, n = c.children.length; i < n; ++i) this._calcWorldMatrix(c.children[i], c);
         }
     }
 
@@ -674,7 +700,7 @@ namespace Aurora.XFile {
         _parseHeadName(data, floatBits);
 
         const token = _parseNextToken(data, floatBits);
-        if (frame && token.type === TokenType.FLOAT_LIST) frame.matrix = new Matrix44().set44FromArray(<number[]>token.value);
+        if (frame && token.type === TokenType.FLOAT_LIST) frame.localMatrix.set44FromArray(<number[]>token.value);
 
         _skipClosingBrace(data, floatBits);
     }
@@ -770,7 +796,7 @@ namespace Aurora.XFile {
 
             switch (attrib[0]) {
                 case 0: //r
-                    f.rotation = new Quaternion().setFromArray(values);
+                    f.rotation = new Quaternion(values[1], values[2], values[3], values[0]);
                     break;
                 case 1: //s
                     f.scale = new Vector3().setFromArray(values);

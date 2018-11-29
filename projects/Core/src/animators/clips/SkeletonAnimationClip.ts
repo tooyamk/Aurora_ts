@@ -41,7 +41,7 @@ namespace Aurora {
                     for (let itr of bones) {
                         const name = itr[0];
                         const frames = this._frames.get(name);
-                        if (frames) {
+                        if (frames && frames.length > 0) {
                             const start = this._findFrame(e, 0, frames.length - 1, frames);
                             this._updateBone(name, e, frames[start], frames[start + 1]);
                         }
@@ -131,6 +131,71 @@ namespace Aurora {
                 frame.translation ? frame.translation : Vector3.CONST_ZERO,
                 frame.rotation ? frame.rotation : Quaternion.CONST_IDENTITY,
                 frame.scale ? frame.scale : Vector3.CONST_ONE);
+        }
+
+        public static supplementLerpFrames(frames: SkeletonAnimationClip.Frame[]): void {
+            const numFrames = frames.length;
+            let ti = -1, ri = -1, si = -1;
+            for (let i = 0; i < numFrames; ++i) {
+                const f = frames[i];
+
+                if (f.translation) {
+                    if (ti >= 0 && ti + 1 !== i) {
+                        const f0 = frames[ti];
+                        const f1 = frames[i];
+                        const t = f1.time - f0.time;
+                        for (let j = ti + 1; j < i; ++j) {
+                            const f2 = frames[j];
+                            f2.translation = Vector3.lerp(f0.translation, f1.translation, (f2.time - f0.time) / t);
+                        }
+                    }
+
+                    ti = i;
+                }
+
+                if (f.rotation) {
+                    if (ri >= 0 && ri + 1 !== i) {
+                        const f0 = frames[ri];
+                        const f1 = frames[i];
+                        const t = f1.time - f0.time;
+                        for (let j = ri + 1; j < i; ++j) {
+                            const f2 = frames[j];
+                            f2.rotation = Quaternion.slerp(f0.rotation, f1.rotation, (f2.time - f0.time) / t);
+                        }
+                    }
+
+                    ri = i;
+                }
+
+                if (f.scale) {
+                    if (si >= 0 && si + 1 !== i) {
+                        const f0 = frames[si];
+                        const f1 = frames[i];
+                        const t = f1.time - f0.time;
+                        for (let j = si + 1; j < i; ++j) {
+                            const f2 = frames[j];
+                            f2.scale = Vector3.lerp(f0.scale, f1.scale, (f2.time - f0.time) / t);
+                        }
+                    }
+
+                    si = i;
+                }
+            }
+
+            if (ti >= 0 && ti + 1 < numFrames) {
+                const f = frames[ti];
+                for (let i = ti + 1; i < numFrames; ++i) frames[i].translation = f.translation.clone();
+            }
+
+            if (ri >= 0 && ri + 1 < numFrames) {
+                const f = frames[ri];
+                for (let i = ri + 1; i < numFrames; ++i) frames[i].rotation = f.rotation.clone();
+            }
+
+            if (si >= 0 && si + 1 < numFrames) {
+                const f = frames[si];
+                for (let i = si + 1; i < numFrames; ++i) frames[i].scale = f.scale.clone();
+            }
         }
     }
 

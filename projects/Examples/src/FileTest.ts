@@ -18,10 +18,10 @@ class FileTest {
         env.start(() => {
             let gl = env.gl;
             gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLH(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
+            env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLH(Math.PI / 6, gl.canvas.width / gl.canvas.height, 5, 10000));
         },
         (delta: number) => {
-            if (this._animator) this._animator.update(delta * 0.5);
+            if (this._animator) this._animator.update(delta * 0.25);
 
             //modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.5 * delta * Math.PI));
             env.renderingManager.render(env.gl, env.camera, env.world, [light]);
@@ -154,7 +154,8 @@ class FileTest {
                 data = Aurora.XFile.parse(new Aurora.ByteArray(request.response));
                 task.finish();
             });
-            request.open("GET", Helper.getURL("box_bin.X"), true);
+            //request.open("GET", Helper.getURL("box1_bin_trs.X"), true);
+            request.open("GET", Helper.getURL("skinnedMeshes/0/model.X"), true);
             request.responseType = "arraybuffer";
             request.send();
         }));
@@ -179,11 +180,12 @@ class FileTest {
 
             if (data.animationClips && data.animationClips.length > 0) {
                 const clip = data.animationClips[0];
-                clip.wrap = Aurora.AnimatorWrap.Loop;
+                clip.wrap = Aurora.AnimatorWrap.Clamp;
                 clip.skeleton = data.skeleton;
 
                 this._animator = new Aurora.Animator();
                 this._animator.setClip(clip);
+               // this._animator.elapsed = 0.9;
             }
 
             let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());

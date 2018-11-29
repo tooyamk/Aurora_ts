@@ -230,5 +230,17 @@ namespace Aurora {
 
             return new VertexSource(ShaderPredefined.a_Normal0, normals, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT);
         }
+
+        public static transformVertices(m: Matrix44, src: number[], srcOffset: uint, srcLength: int, dst: number[], dstOffset: uint): void {
+            srcLength = srcLength < 0 ? src.length : Math.min(srcOffset + srcLength, src.length);
+            const p = new Vector3();
+            let dstIdx = dstOffset;
+            for (let i = srcOffset; i < srcLength; i += 3) {
+                m.transform44XYZ(src[i], src[i + 1], src[i + 2], p);
+                dst[dstIdx++] = p.x;
+                dst[dstIdx++] = p.y;
+                dst[dstIdx++] = p.z;
+            }
+        }
     }
 }

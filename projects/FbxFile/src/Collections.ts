@@ -596,6 +596,8 @@ namespace Aurora.FbxFile {
                         Sort.Merge.sort(boneFrames, (f0: SkeletonAnimationClip.Frame, f1: SkeletonAnimationClip.Frame) => {
                             return f0.time < f1.time;
                         });
+
+                        SkeletonAnimationClip.supplementLerpFrames(boneFrames);
                     }
 
                     clip.frames = frames;
@@ -787,10 +789,12 @@ namespace Aurora.FbxFile {
             if (skins) {
                 const skinData: number[][] = [];
                 skinData.length = numSourceVertices;
+                asset.boneNames = [];
+                const usedBones: { [key: string]: uint } = {};
                 for (let i = 0, n = skins.length; i < n; ++i) {
                     const clusters = this.findConnectionChildrenNodes(skins[i].id, NodeName.DEFORMER, NodeAttribValue.CLUSTER);
                     if (!clusters) continue;
-                    for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, clusters[j], skeleton, skinData);
+                    for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, clusters[j], skeleton, skinData, usedBones);
                 }
 
                 const n = vertIdxMapping.length;
@@ -837,67 +841,72 @@ namespace Aurora.FbxFile {
             }
         }
 
-        private _parseCluster(asset: MeshAsset, cluster: Node, skeleton: SkeletonData, skinData: number[][]): void {
+        private _parseCluster(asset: MeshAsset, cluster: Node, skeleton: SkeletonData, skinData: number[][], usedBones: { [key: string]: uint }): void {
             const links = this.getConnectionChildren(cluster.id);
             if (links) {
                 const boneNode = this._objects.get(links[0].id);
                 if (boneNode) {
-                    const boneIdx = skeleton.getIndexByName(boneNode.attribName);
-                    if (boneIdx >= 0) {
-                        let transMat: Matrix44 = null, transLinkMat: Matrix44 = null;
-                        let indices: uint[] = null, weights: number[] = null;
-                        for (let i = 0, n = cluster.children.length; i < n; ++i) {
-                            const child = cluster.children[i];
-                            switch (child.name) {
-                                case NodeName.TRANSFORM:
-                                    transMat = this._getPropertyMatrix(child);
-                                    break;
-                                case NodeName.TRANSFORM_LINK:
-                                    transLinkMat = this._getPropertyMatrix(child);
-                                    break;
-                                case NodeName.INDEXES:
-                                    indices = this._getPropertyValue(child, NodePropertyValueType.INT_ARRAY);
-                                    break;
-                                case NodeName.WEIGHTS:
-                                    weights = this._getPropertyValue(child, NodePropertyValueType.NUMBER_ARRAY);
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
+                    let boneIdx = usedBones[boneNode.attribName];
+                    if (boneIdx === undefined) {
+                        boneIdx = asset.boneNames.length;
+                        asset.boneNames[boneIdx] = boneNode.attribName;
+                        usedBones[boneNode.attribName] = boneIdx;
 
                         if (!asset.bindPreMatrices) {
                             asset.bindPreMatrices = [];
                             asset.bindPostMatrices = [];
-                            const n = skeleton.bones.length;
-                            asset.bindPreMatrices.length = n;
-                            asset.bindPostMatrices.length = n;
-                            for (let i = 0; i < n; ++i) {
+                        }
+                        const numMatrices = asset.bindPreMatrices.length;
+                        const numBones = boneIdx + 1;
+                        if (numMatrices < numBones) {
+                            for (let i = numMatrices; i < numBones; ++i) {
                                 asset.bindPreMatrices[i] = new Matrix44();
                                 asset.bindPostMatrices[i] = new Matrix44();
                             }
                         }
-
-                        if (indices) {
-                            for (let i = 0, n = indices.length; i < n; ++i) {
-                                const idx = indices[i];
-                                let arr = skinData[idx];
-                                if (!arr) {
-                                    arr = [];
-                                    skinData[idx] = arr;
-                                }
-                                arr.push(boneIdx, weights[i]);
-                            }
-                        }
-
-                        transMat.invert(asset.bindPostMatrices[boneIdx]);
-                        //transLinkMat.invert(asset.bindPostMatrices[boneIdx]).append44(transMat);
-                        //asset.bindMatrices[boneIdx].set34(transMat);
-                        //transLinkMat.invert(asset.bindMatrices[boneIdx]);
-                        transMat.append44(transLinkMat.invert(asset.bindPreMatrices[boneIdx]), asset.bindPreMatrices[boneIdx]);
-                        //transMat.append44(transLinkMat, asset.bindMatrices[boneIdx]);
-                        //transLinkMat.invert(asset.bindMatrices[boneIdx]).append44(transMat);
                     }
+                    //const boneIdx = skeleton.getIndexByName(boneNode.attribName);
+                    let transMat: Matrix44 = null, transLinkMat: Matrix44 = null;
+                    let indices: uint[] = null, weights: number[] = null;
+                    for (let i = 0, n = cluster.children.length; i < n; ++i) {
+                        const child = cluster.children[i];
+                        switch (child.name) {
+                            case NodeName.TRANSFORM:
+                                transMat = this._getPropertyMatrix(child);
+                                break;
+                            case NodeName.TRANSFORM_LINK:
+                                transLinkMat = this._getPropertyMatrix(child);
+                                break;
+                            case NodeName.INDEXES:
+                                indices = this._getPropertyValue(child, NodePropertyValueType.INT_ARRAY);
+                                break;
+                            case NodeName.WEIGHTS:
+                                weights = this._getPropertyValue(child, NodePropertyValueType.NUMBER_ARRAY);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+
+                    if (indices) {
+                        for (let i = 0, n = indices.length; i < n; ++i) {
+                            const idx = indices[i];
+                            let arr = skinData[idx];
+                            if (!arr) {
+                                arr = [];
+                                skinData[idx] = arr;
+                            }
+                            arr.push(boneIdx, weights[i]);
+                        }
+                    }
+
+                    transMat.invert(asset.bindPostMatrices[boneIdx]);
+                    //transLinkMat.invert(asset.bindPostMatrices[boneIdx]).append44(transMat);
+                    //asset.bindMatrices[boneIdx].set34(transMat);
+                    //transLinkMat.invert(asset.bindMatrices[boneIdx]);
+                    transMat.append44(transLinkMat.invert(asset.bindPreMatrices[boneIdx]), asset.bindPreMatrices[boneIdx]);
+                    //transMat.append44(transLinkMat, asset.bindMatrices[boneIdx]);
+                    //transLinkMat.invert(asset.bindMatrices[boneIdx]).append44(transMat);
                 }
             }
         }

@@ -9,6 +9,8 @@ namespace Aurora {
 
         protected _convertedAsset: MeshAsset;
 
+        protected _finalMatrices: Matrix44[] = [];
+
         constructor() {
             super();
 
@@ -69,6 +71,43 @@ namespace Aurora {
                         let bindPostMatrices = this._asset.bindPostMatrices;
                         if (!bindPostMatrices) bindPostMatrices = [];
 
+                        const boneNames = this._asset.boneNames;
+                        const numBones = boneNames.length;
+                        if (numBones > this._finalMatrices.length) {
+                            for (let i = this._finalMatrices.length; i < numBones; ++i) this._finalMatrices[i] = new Matrix44();
+                        }
+                        for (let i = 0; i < numBones; ++i) {
+                            const bone = this.skeleton.bones.get(this._asset.boneNames[i]);
+                            if (!bone) continue;
+
+                            let ppp = bone.getWorldPosition();
+                            let rrr = bone.getWorldRotation().toEuler().mulNumber(MathUtils.RAD_2_DEG);
+                            let rr1 = bone.getLocalRotation().toEuler().mulNumber(MathUtils.RAD_2_DEG);
+
+                            let mmmm = bone.readonlyWorldMatrix;
+
+                            let tttt = new Vector3();
+                            let rrrr = new Matrix44();
+                            mmmm.decomposition(rrrr, tttt);
+                            let r = rrrr.toQuaternion().toEuler().mulNumber(MathUtils.RAD_2_DEG);
+
+                            const mat = this._finalMatrices[i];
+
+                            const bindPreMat = bindPreMatrices[i];
+                            const bindPostMat = bindPostMatrices[i];
+
+                            if (bindPreMat) {
+                                bindPreMat.append44(bone.readonlyWorldMatrix, mat);
+                                if (bindPostMat) mat.append44(bindPostMat);
+                            } else {
+                                if (bindPostMat) {
+                                    bone.readonlyWorldMatrix.append44(bindPostMat, mat);
+                                } else {
+                                    mat.set44(bone.readonlyWorldMatrix);
+                                }
+                            }
+                        }
+
                         //const m = new Matrix44();
 
                         for (let i = 0; i < numVertices; ++i) {
@@ -88,24 +127,7 @@ namespace Aurora {
 
                                 if (weight !== 0) {
                                     const boneIdx = boneIndices[idx3];
-                                    const bone = this.skeleton.bones.get(this._asset.boneNames[boneIdx]);
-                                    if (!bone) continue;
-
-                                    const bindMat = bindPreMatrices[boneIdx];
-                                    const bindPostMat = bindPostMatrices[boneIdx];
-
-                                    if (bindMat) {
-                                        bindMat.append34(bone.readonlyWorldMatrix, mat);
-                                        if (bindPostMat) mat.append34(bindPostMat);
-                                        mat.transform34XYZ(sx, sy, sz, vec3);
-                                    } else {
-                                        if (bindPostMat) {
-                                            bone.readonlyWorldMatrix.append34(bindPostMat, mat);
-                                            mat.transform34XYZ(sx, sy, sz, vec3);
-                                        } else {
-                                            bone.readonlyWorldMatrix.transform34XYZ(sx, sy, sz, vec3);
-                                        }
-                                    }
+                                    this._finalMatrices[boneIdx].transform44XYZ(sx, sy, sz, vec3);
                                     
                                     dx += vec3.x * weight;
                                     dy += vec3.y * weight;
@@ -133,6 +155,8 @@ namespace Aurora {
                 this._convertedAsset.release();
                 this._convertedAsset = null;
             }
+
+            this._finalMatrices = null;
 
             super.destroy();
         }
