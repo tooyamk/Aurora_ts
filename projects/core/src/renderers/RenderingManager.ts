@@ -127,8 +127,8 @@ namespace Aurora {
                 camera.node.getWorldMatrix(this._cameraWorldMatrix);
                 camera.node.getInverseWorldMatrix(this._worldToViewMatrix);
             } else {
-                this._cameraWorldMatrix.identity();
-                this._worldToViewMatrix.identity();
+                this._cameraWorldMatrix.identity44();
+                this._worldToViewMatrix.identity44();
             }
 
             this._renderingData.in.camera = camera;

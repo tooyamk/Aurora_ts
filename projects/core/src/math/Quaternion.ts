@@ -229,23 +229,16 @@ namespace Aurora {
             return q.append(this, rst || this);
         }
 
-        /*
         public append(quat: Quaternion, rst: Quaternion = null): Quaternion {
             let w1 = this.w * quat.w - this.x * quat.x - this.y * quat.y - this.z * quat.z;
             let x1 = this.w * quat.x + this.x * quat.w + this.y * quat.z - this.z * quat.y;
             let y1 = this.w * quat.y + this.y * quat.w + this.z * quat.x - this.x * quat.z;
             let z1 = this.w * quat.z + this.z * quat.w + this.x * quat.y - this.y * quat.x;
 
-            rst = rst || this;
-            rst.x = x1;
-            rst.y = y1;
-            rst.z = z1;
-            rst.w = w1;
-
-            return rst;
+            return rst ? rst.setFromNumbers(x1, y1, z1, w1) : new Quaternion(x1, y1, z1, w1);
         }
-        */
 
+        /*
         public append(q: Quaternion, rst: Quaternion = null): Quaternion {
             const w1 = this.w * q.w - this.x * q.x - this.y * q.y - this.z * q.z;
             const x1 = this.x * q.w + this.w * q.x + this.z * q.y - this.y * q.z;
@@ -254,6 +247,7 @@ namespace Aurora {
 
             return rst ? rst.setFromNumbers(x1, y1, z1, w1) : new Quaternion(x1, y1, z1, w1);
         }
+        */
 
         public rotateXYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
             //let m = this.toMatrix33();

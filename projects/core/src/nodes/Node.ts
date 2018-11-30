@@ -512,7 +512,7 @@ namespace Aurora {
             if (to && this._root === to._root) {
                 return this.readonlyWorldMatrix.append34(to.readonlyInverseWorldMatrix, rst);
             } else {
-                return rst ? rst.identity() : new Matrix44();
+                return rst ? rst.identity44() : new Matrix44();
             }
         }
 
@@ -520,7 +520,7 @@ namespace Aurora {
             if (camera) {
                 return this.getLocalToLocalMatrix(camera.node, rst).append44(camera.readonlyProjectionMatrix, rst);
             } else {
-                return rst ? rst.identity() : new Matrix44();
+                return rst ? rst.identity44() : new Matrix44();
             }
         }
 
@@ -600,7 +600,7 @@ namespace Aurora {
         }
 
         public localRotate(q: Quaternion): void {
-            this._localRot.prepend(q);
+            this._localRot.append(q);
 
             const old = this._dirty;
             this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
@@ -627,14 +627,14 @@ namespace Aurora {
 
         public worldRotate(q: Quaternion): void {
             const old = this._dirty;
-            this.readonlyWorldRotation.prepend(q);
+            this.readonlyWorldRotation.append(q);
 
             this._worldRotationChanged(old);
         }
 
         protected _worldRotationChanged(oldDirty: uint): void {
             if (this._parent) {
-                this._worldRot.append(this._parent.readonlyWorldRotation.invert(this._localRot), this._localRot);
+                this._worldRot.prepend(this._parent.readonlyWorldRotation.invert(this._localRot), this._localRot);
                 //this._parent.readonlyWorldRotation.append(this._worldRot, this._localRot);
             } else {
                 this._localRot.set(this._worldRot);
@@ -657,7 +657,7 @@ namespace Aurora {
                 rst.y = -rst.y;
                 rst.z = -rst.z;
 
-                rst.prepend(q);
+                rst.append(q);
             } else {
                 rst = rst ? rst.set(q) : q.clone();
             }
@@ -738,7 +738,7 @@ namespace Aurora {
 
         public identity(): void {
             if (!this._localRot.isIdentity || !this._localScale.isOne || this._localMatrix.m30 !== 0 || this._localMatrix.m31 !== 0 || this._localMatrix.m32 !== 0) {
-                this._localMatrix.identity();
+                this._localMatrix.identity44();
                 this._localRot.identity();
                 this._localScale.set(Vector3.CONST_ONE);
 
@@ -753,7 +753,7 @@ namespace Aurora {
                 this._dirty &= ~Node.WORLD_ROTATION_DIRTY;
 
                 if (this._parent) {
-                    this._localRot.append(this._parent.readonlyWorldRotation, this._worldRot);
+                    this._localRot.prepend(this._parent.readonlyWorldRotation, this._worldRot);
                 } else {
                     this._worldRot.set(this._localRot);
                 }

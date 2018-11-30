@@ -276,29 +276,65 @@ namespace Aurora {
         }
 
         public static createTRS(translation: Vector3, rotation: Quaternion, scale: Vector3, rst: Matrix44 = null): Matrix44 {
-            rst = rotation.toMatrix33(rst);
-
-            rst.m00 *= scale.x;
-            rst.m01 *= scale.x;
-            rst.m02 *= scale.x;
+            if (rotation) {
+                rst = rotation.toMatrix33(rst);
+            } else {
+                if (rst) {
+                    rst.identity33();
+                } else {
+                    rst = new Matrix44();
+                }
+            }
+            
             rst.m03 = 0;
-
-            rst.m10 *= scale.y;
-            rst.m11 *= scale.y;
-            rst.m12 *= scale.y;
             rst.m13 = 0;
-
-            rst.m20 *= scale.z;
-            rst.m21 *= scale.z;
-            rst.m22 *= scale.z;
             rst.m23 = 0;
-
-            rst.m30 = translation.x;
-            rst.m31 = translation.y;
-            rst.m32 = translation.z;
             rst.m33 = 1;
 
+            if (scale) {
+                rst.m00 *= scale.x;
+                rst.m01 *= scale.x;
+                rst.m02 *= scale.x;
+
+                rst.m10 *= scale.y;
+                rst.m11 *= scale.y;
+                rst.m12 *= scale.y;
+
+                rst.m20 *= scale.z;
+                rst.m21 *= scale.z;
+                rst.m22 *= scale.z;
+            }
+
+            if (translation) {
+                rst.m30 = translation.x;
+                rst.m31 = translation.y;
+                rst.m32 = translation.z;
+            } else {
+                rst.m30 = 0;
+                rst.m31 = 0;
+                rst.m32 = 0;
+            }
+            
             return rst;
+        }
+
+        public set33FromNumbers(
+            m00: number = 1, m01: number = 0, m02: number = 0,
+            m10: number = 0, m11: number = 1, m12: number = 0,
+            m20: number = 0, m21: number = 0, m22: number = 1): Matrix44 {
+            this.m00 = m00;
+            this.m01 = m01;
+            this.m02 = m02;
+
+            this.m10 = m10;
+            this.m11 = m11;
+            this.m12 = m12;
+
+            this.m20 = m20;
+            this.m21 = m21;
+            this.m22 = m22;
+
+            return this;
         }
 
         public set34FromNumbers(
@@ -451,7 +487,23 @@ namespace Aurora {
                 this.m30, this.m31, this.m32, this.m33);
         }
 
-        public identity(): Matrix44 {
+        public identity33(): Matrix44 {
+            return this.set33FromNumbers(
+                1, 0, 0,
+                0, 1, 0,
+                0, 0, 1
+            )
+        }
+
+        public identity34(): Matrix44 {
+            return this.set34FromNumbers(
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, 1, 0
+            )
+        }
+
+        public identity44(): Matrix44 {
             return this.set44FromNumbers(
                 1, 0, 0, 0,
                 0, 1, 0, 0,

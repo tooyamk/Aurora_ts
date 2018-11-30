@@ -31,6 +31,8 @@ namespace Aurora.FbxFile {
         SCALING_MAX = "ScalingMax",
         DEFAULT_ATTRIBULE_INDEX = "DefaultAttributeIndex",
         LCL_TRANSLATION = "Lcl Translation",
+        LCL_ROTATION = "Lcl Rotation",
+        LCL_SCALING = "Lcl Scaling",
         MAX_HANDLE = "MaxHandle"
     }
 

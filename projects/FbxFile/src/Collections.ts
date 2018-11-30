@@ -23,6 +23,10 @@ namespace Aurora.FbxFile {
             ++this._numBones;
         }
 
+        public getBoneByName(name: string): Aurora.Node {
+            return this.bones[this._bonesByName.get(name)];
+        }
+
         public getIndexByName(name: string): int {
             return this._bonesByName.has(name) ? this._bonesByName.get(name) : -1;
         }
@@ -167,6 +171,10 @@ namespace Aurora.FbxFile {
                     case NodeAttribValue.ROOT: {
                         const bone = new Aurora.Node();
                         bone.name = m.attribName;
+
+                        const p70 = m.getChildByName(NodeName.PROPERTIES70);
+                        if (p70) bone.setLocalMatrix(this._parseMatrixFromP70(p70));
+
                         if (!skeleton) skeleton = new SkeletonData();
                         skeleton.addBone(bone, m.id);
 
@@ -217,10 +225,7 @@ namespace Aurora.FbxFile {
 
                                     if (f.rotation) {
                                         f.rotation.toEuler(tmpVec3);
-                                        const tmp = tmpVec3.y;
-                                        tmpVec3.y = tmpVec3.z;
-                                        tmpVec3.z = tmp;
-                                        Quaternion.createFromEulerVector3(tmpVec3, f.rotation);
+                                        Quaternion.createFromEulerXYZ(-tmpVec3.x, -tmpVec3.z, -tmpVec3.y, f.rotation);
                                     }
 
                                     if (f.scale) {
@@ -398,6 +403,8 @@ namespace Aurora.FbxFile {
                 const rots: Quaternion[] = [];
                 let numRots: uint = 0;
 
+                const tmpMat0 = new Matrix44(), tmpMat1 = new Matrix44();
+
                 for (let i0 = 0, n0 = this._animationStacks.length; i0 < n0; ++i0) {
                     const stack = this._animationStacks[i0];
 
@@ -460,7 +467,7 @@ namespace Aurora.FbxFile {
                                                 case NodePropertyValue.D_X: {
                                                     for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                         const f = this._getOrCreateFrame(boneFramesMap, times[k]);
-                                                        if (!f.translation) f.translation = Vector3.Zero;
+                                                        if (!f.translation) f.translation = new Vector3(NaN, NaN, NaN);
                                                         f.translation.x = values[k];
                                                     }
 
@@ -469,7 +476,7 @@ namespace Aurora.FbxFile {
                                                 case NodePropertyValue.D_Y: {
                                                     for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                         const f = this._getOrCreateFrame(boneFramesMap, times[k]);
-                                                        if (!f.translation) f.translation = Vector3.Zero;
+                                                        if (!f.translation) f.translation = new Vector3(NaN, NaN, NaN);
                                                         f.translation.y = values[k];
                                                     }
 
@@ -478,7 +485,7 @@ namespace Aurora.FbxFile {
                                                 case NodePropertyValue.D_Z: {
                                                     for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                         const f = this._getOrCreateFrame(boneFramesMap, times[k]);
-                                                        if (!f.translation) f.translation = Vector3.Zero;
+                                                        if (!f.translation) f.translation = new Vector3(NaN, NaN, NaN);
                                                         f.translation.z = values[k];
                                                     }
 
@@ -496,7 +503,7 @@ namespace Aurora.FbxFile {
                                                     for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                         const f = this._getOrCreateFrame(boneFramesMap, times[k]);
                                                         if (!f.rotation) {
-                                                            const q = new Quaternion();
+                                                            const q = new Quaternion(NaN, NaN, NaN, 1);
                                                             f.rotation = q;
                                                             rots[numRots++] = q;
                                                         }
@@ -509,7 +516,7 @@ namespace Aurora.FbxFile {
                                                     for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                         const f = this._getOrCreateFrame(boneFramesMap, times[k]);
                                                         if (!f.rotation) {
-                                                            const q = new Quaternion();
+                                                            const q = new Quaternion(NaN, NaN, NaN, 1);
                                                             f.rotation = q;
                                                             rots[numRots++] = q;
                                                         }
@@ -522,7 +529,7 @@ namespace Aurora.FbxFile {
                                                     for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                         const f = this._getOrCreateFrame(boneFramesMap, times[k]);
                                                         if (!f.rotation) {
-                                                            const q = new Quaternion();
+                                                            const q = new Quaternion(NaN, NaN, NaN, 1);
                                                             f.rotation = q;
                                                             rots[numRots++] = q;
                                                         }
@@ -542,7 +549,7 @@ namespace Aurora.FbxFile {
                                                 case NodePropertyValue.D_X: {
                                                     for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                         const f = this._getOrCreateFrame(boneFramesMap, times[k]);
-                                                        if (!f.scale) f.scale = Vector3.One;
+                                                        if (!f.scale) f.scale = new Vector3(NaN, NaN, NaN);
                                                         f.scale.x = values[k];
                                                     }
 
@@ -551,7 +558,7 @@ namespace Aurora.FbxFile {
                                                 case NodePropertyValue.D_Y: {
                                                     for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                         const f = this._getOrCreateFrame(boneFramesMap, times[k]);
-                                                        if (!f.scale) f.scale = Vector3.One;
+                                                        if (!f.scale) f.scale = new Vector3(NaN, NaN, NaN);
                                                         f.scale.y = values[k];
                                                     }
 
@@ -560,7 +567,7 @@ namespace Aurora.FbxFile {
                                                 case NodePropertyValue.D_Z: {
                                                     for (let k = 0, numFrames = times.length; k < numFrames; ++k) {
                                                         const f = this._getOrCreateFrame(boneFramesMap, times[k]);
-                                                        if (!f.scale) f.scale = Vector3.One;
+                                                        if (!f.scale) f.scale = new Vector3(NaN, NaN, NaN);
                                                         f.scale.z = values[k];
                                                     }
 
@@ -587,11 +594,31 @@ namespace Aurora.FbxFile {
 
                     const frames = new Map<string, SkeletonAnimationClip.Frame[]>();
                     for (let itr of framesMap) {
+                        const boneName = itr[0];
                         const boneFramesMap = itr[1];
                         const boneFrames: SkeletonAnimationClip.Frame[] = [];
-                        frames.set(itr[0], boneFrames);
+                        frames.set(boneName, boneFrames);
+                        const bone = skeleton.getBoneByName(boneName);
+                        const m = bone ? bone.readonlyLocalMatrix : null;
                         let n = 0;
-                        for (let itr1 of boneFramesMap) boneFrames[n++] = itr1[1];
+                        for (let itr1 of boneFramesMap) {
+                            const f = itr1[1];
+                            if (m) {
+                                if (!f.translation) f.translation = new Vector3(m.m30, m.m31, m.m32);
+                                if (!f.rotation) f.rotation = bone.readonlyLocalRotation.clone();
+                                if (!f.scale) f.scale = bone.readonlyLocalScale.clone();
+                            }
+                            /*
+                            if (m) {
+                                Matrix44.createTRS(f.translation, f.rotation, f.scale, tmpMat0);
+                                m.append34(tmpMat0, tmpMat0);
+                                tmpMat0.decomposition(tmpMat1, f.scale);
+                                if (f.translation) f.translation.setFromNumbers(tmpMat0.m30, tmpMat0.m31, tmpMat0.m32);
+                                if (f.rotation) tmpMat1.toQuaternion(f.rotation);
+                            }
+                            */
+                            boneFrames[n++] = f;
+                        }
 
                         Sort.Merge.sort(boneFrames, (f0: SkeletonAnimationClip.Frame, f1: SkeletonAnimationClip.Frame) => {
                             return f0.time < f1.time;
@@ -646,51 +673,10 @@ namespace Aurora.FbxFile {
 
                 const p70 = model.getChildByName(NodeName.PROPERTIES70);
                 if (p70) {
-                    const m = new Matrix44();
-
-                    for (let i = 0, n = p70.children.length; i < n; ++i) {
-                        const child = p70.children[i];
-                        if (child.name !== NodeName.P) continue;
-
-                        const properties = child.properties;
-                        if (!properties) continue;
-
-                        const len = properties.length;
-                        if (len === 0) continue;
-
-                        const p = properties[0];
-                        if (p.type === NodePropertyValueType.STRING) {
-                            switch (p.value) {
-                                case NodePropertyValue.INHERIT_TYPE:
-                                    const type = <int>properties[len - 1].value;
-                                    break;
-                                case NodePropertyValue.LCL_TRANSLATION: {
-                                    const x = <number>properties[len - 3].value;
-                                    const y = <number>properties[len - 2].value;
-                                    const z = <number>properties[len - 1].value;
-
-                                    m.append44(Matrix44.createTranslation(x, y, z));
-
-                                    break;
-                                }
-                                case NodePropertyValue.PPE_ROTATION: {
-                                    const x = <number>properties[len - 3].value;
-                                    const y = <number>properties[len - 2].value;
-                                    const z = <number>properties[len - 1].value;
-
-                                    Quaternion.createFromEulerXYZ(x * MathUtils.DEG_2_RAD, y * MathUtils.DEG_2_RAD, z * MathUtils.DEG_2_RAD).toMatrix33().append44(m, m);
-
-                                    break;
-                                }
-                                default:
-                                    break;
-                            }
-                        }
-                    }
-
-                    const p = new Vector3();
                     const vs = asset.getVertexSource(ShaderPredefined.a_Position0);
                     if (vs) {
+                        const m = this._parseMatrixFromP70(p70);
+                        const p = new Vector3();
                         const data = vs.data;
                         for (let i = 0, n = data.length; i < n; i += 3) {
                             const x = data[i];
@@ -784,6 +770,78 @@ namespace Aurora.FbxFile {
             }
         }
 
+        private _parseMatrixFromP70(p70: Node): Matrix44 {
+            let translation: Vector3 = null;
+            let preRotation: Quaternion = null;
+            let rotation: Quaternion = null;
+            let scale: Vector3 = null;
+
+            if (p70) {
+                for (let i = 0, n = p70.children.length; i < n; ++i) {
+                    const child = p70.children[i];
+                    if (child.name !== NodeName.P) continue;
+
+                    const properties = child.properties;
+                    if (!properties) continue;
+
+                    const len = properties.length;
+                    if (len === 0) continue;
+
+                    const p = properties[0];
+                    if (p.type === NodePropertyValueType.STRING) {
+                        switch (p.value) {
+                            case NodePropertyValue.INHERIT_TYPE:
+                                const type = <int>properties[len - 1].value;
+                                break;
+                            case NodePropertyValue.LCL_TRANSLATION: {
+                                const x = <number>properties[len - 3].value;
+                                const y = <number>properties[len - 2].value;
+                                const z = <number>properties[len - 1].value;
+
+                                translation = new Vector3(x, y, z);
+
+                                break;
+                            }
+                            case NodePropertyValue.LCL_ROTATION: {
+                                const x = <number>properties[len - 3].value;
+                                const y = <number>properties[len - 2].value;
+                                const z = <number>properties[len - 1].value;
+
+                                rotation = Quaternion.createFromEulerXYZ(x * MathUtils.DEG_2_RAD, y * MathUtils.DEG_2_RAD, z * MathUtils.DEG_2_RAD);
+
+                                break;
+                            }
+                            case NodePropertyValue.PPE_ROTATION: {
+                                const x = <number>properties[len - 3].value;
+                                const y = <number>properties[len - 2].value;
+                                const z = <number>properties[len - 1].value;
+
+                                preRotation = Quaternion.createFromEulerXYZ(x * MathUtils.DEG_2_RAD, y * MathUtils.DEG_2_RAD, z * MathUtils.DEG_2_RAD);
+
+                                break;
+                            }
+                            case NodePropertyValue.LCL_SCALING: {
+                                const x = <number>properties[len - 3].value;
+                                const y = <number>properties[len - 2].value;
+                                const z = <number>properties[len - 1].value;
+
+                                scale = new Vector3(x, y, z);
+
+                                break;
+                            }
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+
+            let m = Matrix44.createTRS(translation, rotation, scale);
+            if (preRotation) m = preRotation.toMatrix33().append34(m);
+
+            return m;
+        }
+
         private _parseSkin(geometry: Node, asset: MeshAsset, skeleton: SkeletonData, vertIdxMapping: uint[], numSourceVertices: uint): void {
             const skins = this.findConnectionChildrenNodes(geometry.id, NodeName.DEFORMER, NodeAttribValue.SKIN);
             if (skins) {
@@ -865,6 +923,7 @@ namespace Aurora.FbxFile {
                             }
                         }
                     }
+                    
                     //const boneIdx = skeleton.getIndexByName(boneNode.attribName);
                     let transMat: Matrix44 = null, transLinkMat: Matrix44 = null;
                     let indices: uint[] = null, weights: number[] = null;
@@ -900,11 +959,13 @@ namespace Aurora.FbxFile {
                         }
                     }
 
-                    transMat.invert(asset.bindPostMatrices[boneIdx]);
-                    //transLinkMat.invert(asset.bindPostMatrices[boneIdx]).append44(transMat);
+                    //transMat.invert(asset.bindPostMatrices[boneIdx]);
+                    //transMat.append44(transLinkMat.invert(asset.bindPreMatrices[boneIdx]), asset.bindPreMatrices[boneIdx]);
+
+                    transLinkMat.invert(asset.bindPreMatrices[boneIdx]).append44(transMat);
+
                     //asset.bindMatrices[boneIdx].set34(transMat);
                     //transLinkMat.invert(asset.bindMatrices[boneIdx]);
-                    transMat.append44(transLinkMat.invert(asset.bindPreMatrices[boneIdx]), asset.bindPreMatrices[boneIdx]);
                     //transMat.append44(transLinkMat, asset.bindMatrices[boneIdx]);
                     //transLinkMat.invert(asset.bindMatrices[boneIdx]).append44(transMat);
                 }

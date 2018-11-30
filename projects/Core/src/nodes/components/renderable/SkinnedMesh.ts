@@ -4,6 +4,7 @@ namespace Aurora {
     export class SkinnedMesh extends Mesh {
         protected static readonly TMP_VEC3 = new Vector3();
         protected static readonly TMP_MAT = new Matrix44();
+        protected static readonly TMP_MAT_EMPTY_ARR: Matrix44[] = [];
 
         public skeleton: Skeleton = null;
 
@@ -30,47 +31,17 @@ namespace Aurora {
 
         public render(renderingData: RenderingData): void {
             if (this.skeleton && this.skeleton.bones && this._asset.boneNames) {
-                const verticesSource = this._asset.getVertexSource(ShaderPredefined.a_Position0);
                 const boneIndicesSource = this._asset.getVertexSource(ShaderPredefined.a_BoneIndex0);
                 const boneWeightsSource = this._asset.getVertexSource(ShaderPredefined.a_BoneWeight0);
-                if (verticesSource && boneIndicesSource && boneWeightsSource && boneIndicesSource.size === boneWeightsSource.size) {
-                    const vertices = verticesSource.data;
+                if (boneIndicesSource && boneWeightsSource && boneIndicesSource.size === boneWeightsSource.size) {
                     const boneIndices = boneIndicesSource.data;
                     const boneWeights = boneWeightsSource.data;
-                    if (vertices && boneIndices && boneWeights) {
-                        const verticesLength = verticesSource.getDataLength();
-                        const verticesOffset = verticesSource.getDataOffset();
-                        const boneIndicesOffset = boneIndicesSource.getDataOffset();
-                        const boneIndicesLength = boneIndicesSource.getDataLength();
-                        const boneWeightsOffset = boneWeightsSource.getDataOffset();
-                        const boneWeightsLength = boneWeightsSource.getDataLength();
-
-                        const verticesSize = verticesSource.size;
-                        const size = boneIndicesSource.size;
-
-                        const numVertices: uint = (verticesLength / verticesSize) | 0;
-
-                        const vs = this._convertedAsset.getVertexSource(ShaderPredefined.a_Position0);
-                        vs.size = verticesSize;
-                        vs.type = verticesSource.type;
-                        vs.normalized = verticesSource.normalized;
-
-                        vs.offset = 0;
-                        vs.length = verticesSource.length;
-
-                        const data = vs.data;
-                        
-                        if (data.length < verticesLength) data.length = verticesLength;
-                        this._convertedAsset.setVertexDirty(ShaderPredefined.a_Position0, true);
-
-                        const vec3 = SkinnedMesh.TMP_VEC3;
-                        const mat = SkinnedMesh.TMP_MAT;
-
+                    if (boneIndices && boneWeights) {
                         let bindPreMatrices = this._asset.bindPreMatrices;
-                        if (!bindPreMatrices) bindPreMatrices = [];
+                        if (!bindPreMatrices) bindPreMatrices = SkinnedMesh.TMP_MAT_EMPTY_ARR;
                         let bindPostMatrices = this._asset.bindPostMatrices;
-                        if (!bindPostMatrices) bindPostMatrices = [];
-
+                        if (!bindPostMatrices) bindPostMatrices = SkinnedMesh.TMP_MAT_EMPTY_ARR;
+ 
                         const boneNames = this._asset.boneNames;
                         const numBones = boneNames.length;
                         if (numBones > this._finalMatrices.length) {
@@ -79,17 +50,6 @@ namespace Aurora {
                         for (let i = 0; i < numBones; ++i) {
                             const bone = this.skeleton.bones.get(this._asset.boneNames[i]);
                             if (!bone) continue;
-
-                            let ppp = bone.getWorldPosition();
-                            let rrr = bone.getWorldRotation().toEuler().mulNumber(MathUtils.RAD_2_DEG);
-                            let rr1 = bone.getLocalRotation().toEuler().mulNumber(MathUtils.RAD_2_DEG);
-
-                            let mmmm = bone.readonlyWorldMatrix;
-
-                            let tttt = new Vector3();
-                            let rrrr = new Matrix44();
-                            mmmm.decomposition(rrrr, tttt);
-                            let r = rrrr.toQuaternion().toEuler().mulNumber(MathUtils.RAD_2_DEG);
 
                             const mat = this._finalMatrices[i];
 
@@ -108,43 +68,96 @@ namespace Aurora {
                             }
                         }
 
-                        //const m = new Matrix44();
-
-                        for (let i = 0; i < numVertices; ++i) {
-                            const idx0 = i * verticesSize;
-                            const idx1 = verticesOffset + idx0;
-
-                            let sx = vertices[idx1];
-                            let sy = vertices[idx1 + 1];
-                            let sz = vertices[idx1 + 2];
-
-                            let dx = 0, dy = 0, dz = 0;
-
-                            const idx2 = i * size;
-                            for (let j = 0; j < size; ++j) {
-                                const idx3 = idx2 + j;
-                                const weight = boneWeights[idx3];
-
-                                if (weight !== 0) {
-                                    const boneIdx = boneIndices[idx3];
-                                    this._finalMatrices[boneIdx].transform44XYZ(sx, sy, sz, vec3);
-                                    
-                                    dx += vec3.x * weight;
-                                    dy += vec3.y * weight;
-                                    dz += vec3.z * weight;
-                                }
-                            }
-
-                            data[idx0] = dx;
-                            data[idx0 + 1] = dy;
-                            data[idx0 + 2] = dz;
-                        }
+                        const numBonesPerElement = boneIndicesSource.size;
+                        this._updateVertices(ShaderPredefined.a_Position0, boneIndices, boneWeights, numBonesPerElement, false);
+                        this._updateVertices(ShaderPredefined.a_Normal0, boneIndices, boneWeights, numBonesPerElement, true);
 
                         renderingData.out.asset = this._convertedAsset;
                     }
                 }
             } else {
                 super.render(renderingData);
+            }
+        }
+
+        protected _updateVertices(name: string, boneIndices: uint[], boneWeights: number[], numBonesPerElement: uint, onlyRotation: boolean): void {
+            const srcSource = this._asset.getVertexSource(name);
+            if (srcSource) {
+                const srcData = srcSource.data;
+                if (srcData) {
+                    const srcOffset = srcSource.getDataOffset();
+                    const srcLength = srcSource.getDataLength();
+
+                    const srcSize = srcSource.size;
+
+                    const numVertices: uint = (srcLength / srcSize) | 0;
+
+                    let dstSource = this._convertedAsset.getVertexSource(name);
+                    let dstData: number[];
+                    if (dstSource) {
+                        dstData = dstSource.data;
+                        if (dstData) {
+                            if (dstData.length < srcLength) dstData.length = srcLength;
+                        } else {
+                            dstData = [];
+                            dstData.length = srcLength;
+                            dstSource.data = dstData;
+                        }
+
+                        dstSource.size = srcSource.size;
+                        dstSource.type = srcSource.type;
+                        dstSource.normalized = srcSource.normalized;
+                    } else {
+                        dstData = [];
+                        dstData.length = srcLength;
+                        dstSource = new VertexSource(name, dstData, srcSource.size, srcSource.type, srcSource.normalized, GLUsageType.DYNAMIC_DRAW);
+                        this._convertedAsset.addVertexSource(dstSource);
+                    }
+
+                    dstSource.length = srcLength;
+
+                    this._convertedAsset.setVertexDirty(name, true);
+
+                    const vec3 = SkinnedMesh.TMP_VEC3;
+                    const mat = SkinnedMesh.TMP_MAT;
+
+                    const boneNames = this._asset.boneNames;
+                    const numBones = boneNames.length;
+
+                    for (let i = 0; i < numVertices; ++i) {
+                        const idx0 = i * srcSize;
+                        const idx1 = srcOffset + idx0;
+
+                        let sx = srcData[idx1];
+                        let sy = srcData[idx1 + 1];
+                        let sz = srcData[idx1 + 2];
+
+                        let dx = 0, dy = 0, dz = 0;
+
+                        const idx2 = i * numBonesPerElement;
+                        for (let j = 0; j < numBonesPerElement; ++j) {
+                            const idx3 = idx2 + j;
+                            const weight = boneWeights[idx3];
+
+                            if (weight !== 0) {
+                                const boneIdx = boneIndices[idx3];
+                                if (onlyRotation) {
+                                    this._finalMatrices[boneIdx].transform33XYZ(sx, sy, sz, vec3);
+                                } else {
+                                    this._finalMatrices[boneIdx].transform44XYZ(sx, sy, sz, vec3);
+                                }
+
+                                dx += vec3.x * weight;
+                                dy += vec3.y * weight;
+                                dz += vec3.z * weight;
+                            }
+                        }
+
+                        dstData[idx0] = dx;
+                        dstData[idx0 + 1] = dy;
+                        dstData[idx0 + 2] = dz;
+                    }
+                }
             }
         }
 

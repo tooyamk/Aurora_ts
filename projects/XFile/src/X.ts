@@ -1,5 +1,5 @@
 namespace Aurora.XFile {
-    export const Version = "0.1.0";
+    export const Version = "0.2.0";
 
     const tmpMat0 = new Matrix44();
     const tmpMat1 = new Matrix44();
@@ -169,11 +169,13 @@ namespace Aurora.XFile {
                         if (meshNode) {
                             this._recordExcludeBones(meshNode, excludeBones);
 
+                            /*
                             const vs = asset.getVertexSource(ShaderPredefined.a_Position0);
                             if (vs) {
                                 const data = vs.data;
                                 if (data) MeshAssetHelper.transformVertices(meshNode.worldMatrix, data, 0, -1, data, 0);
                             }
+                            */
                         }
 
                         if (!this._skinWeightsMap) continue;
@@ -796,7 +798,7 @@ namespace Aurora.XFile {
 
             switch (attrib[0]) {
                 case 0: //r
-                    f.rotation = new Quaternion(values[1], values[2], values[3], values[0]);
+                    f.rotation = new Quaternion(-values[1], -values[2], -values[3], values[0]);
                     break;
                 case 1: //s
                     f.scale = new Vector3().setFromArray(values);

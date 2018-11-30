@@ -6,10 +6,19 @@
 document.oncontextmenu = () => { return false; }
 
 window.addEventListener("DOMContentLoaded", () => {
-    let q = new Aurora.Quaternion(-0.000000, 0.000000, 0.382683, 0.923880);
-    let e = q.toEuler().mulNumber(Aurora.MathUtils.RAD_2_DEG);
+    let r = 45 * Aurora.MathUtils.DEG_2_RAD;
+    let q = Aurora.Quaternion.createFromEulerZ(r);
 
-    let qq = Aurora.Quaternion.createFromEulerXYZ(0, 0, 45 * Aurora.MathUtils.DEG_2_RAD);
+    let m1 = q.toMatrix44();
+
+    let m2 = Aurora.Matrix44.createRotationZ(r);
+
+    let n0 = new Aurora.Node();
+    let n1 = n0.addChild(new Aurora.Node());
+    n1.setLocalRotation(Aurora.Quaternion.createFromEulerX(Math.PI * 0.5));
+    n1.parentRotate(Aurora.Quaternion.createFromEulerZ(Math.PI * 0.5));
+
+    let p = n1.readonlyWorldMatrix.transform34XYZ(0, 1, 0);
 
     new FileTest();
     //new Other();

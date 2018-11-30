@@ -29,8 +29,8 @@ class FileTest {
 
         //this._loadMesh();
         //this._loadSkinnedMesh();
-        //this._loadFbxFile();
-        this._loadXFile();
+        this._loadFbxFile();
+        //this._loadXFile();
     }
 
     /*
@@ -138,7 +138,7 @@ class FileTest {
 
             if (data.skeleton) Helper.printNodeHierarchy([data.skeleton.bones.get(data.skeleton.rootBoneNames[0])]);
 
-            const scale = 10;
+            const scale = 1;
             mesh.node.setLocalScale(scale, scale, scale);
         }));
     }
@@ -154,7 +154,7 @@ class FileTest {
                 data = Aurora.XFile.parse(new Aurora.ByteArray(request.response));
                 task.finish();
             });
-            //request.open("GET", Helper.getURL("box1_bin_trs.X"), true);
+            //request.open("GET", Helper.getURL("box1_bin_mat.X"), true);
             request.open("GET", Helper.getURL("skinnedMeshes/0/model.X"), true);
             request.responseType = "arraybuffer";
             request.send();
@@ -173,14 +173,14 @@ class FileTest {
             let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
             mat.cullFace = Aurora.GLCullFace.NONE;
             mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
-            //mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
+            mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
             mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
-            //mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
+            mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
             mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
 
             if (data.animationClips && data.animationClips.length > 0) {
                 const clip = data.animationClips[0];
-                clip.wrap = Aurora.AnimatorWrap.Clamp;
+                clip.wrap = Aurora.AnimatorWrap.Loop;
                 clip.skeleton = data.skeleton;
 
                 this._animator = new Aurora.Animator();
