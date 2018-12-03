@@ -56,11 +56,14 @@ namespace Aurora.FbxFile {
 
     export class Collections {
         private _animationStacks: Node[] = null;
-        private _models: Node[] = [];
+        private _models: Node[] = null;
+        private _poses: Node[] = null;
 
         private _objects = new Map<uint, Node>();
         private _parentsMap = new Map<uint, Connection[]>();
         private _childrenMap = new Map<uint, Connection[]>();
+
+        private _posesMap = new Map<uint, Matrix44>();
 
         private _globalSettings: Node = null;
 
@@ -85,8 +88,14 @@ namespace Aurora.FbxFile {
                     break;
                 case NodeName.MODEL: {
                     this._objects.set(node.id, node);
-                    this._models.push(node);
-                    
+                    (this._models || (this._models = [])).push(node);
+                                  
+                    break;
+                }
+                case NodeName.POSE: {
+                    this._objects.set(node.id, node);
+                    (this._poses || (this._poses = [])).push(node);
+
                     break;
                 }
                 case NodeName.P: {
@@ -160,28 +169,61 @@ namespace Aurora.FbxFile {
             let meshes: Node[] = null;
             let skeleton: SkeletonData = null;
 
-            for (let i = 0, n = this._models.length; i < n; ++i) {
-                const m = this._models[i];
+            if (this._poses) {
+                for (let i = 0, n0 = this._poses.length; i < n0; ++i) {
+                    const pose = this._poses[i];
+                    for (let j = 0, n1 = pose.children.length; j < n1; ++j) {
+                        const poseNode = pose.children[j];
+                        if (poseNode.name === NodeName.POSE_NODE) {
+                            let id: uint = 0;
+                            let matrix: Matrix44 = null;
+                            for (let k = 0, n2 = poseNode.children.length; k < n2; ++k) {
+                                const node = poseNode.children[k];
+                                switch (node.name) {
+                                    case NodeName.NODE: {
+                                        const p = node.properties[0];
+                                        if (p && p.type === NodePropertyValueType.INT) id = <uint>p.value;
 
-                switch (m.attribType) {
-                    case NodeAttribValue.MESH:
-                        (meshes || (meshes = [])).push(m);
-                        break;
-                    case NodeAttribValue.LIMB_NODE:
-                    case NodeAttribValue.ROOT: {
-                        const bone = new Aurora.Node();
-                        bone.name = m.attribName;
+                                        break;
+                                    }
+                                    case NodeName.MATRIX:
+                                        matrix = this._getPropertyMatrix(node);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
 
-                        const p70 = m.getChildByName(NodeName.PROPERTIES70);
-                        if (p70) bone.setLocalMatrix(this._parseMatrixFromP70(p70));
-
-                        if (!skeleton) skeleton = new SkeletonData();
-                        skeleton.addBone(bone, m.id);
-
-                        break;
+                            if (id !== 0 && matrix) this._posesMap.set(id, matrix);
+                        }
                     }
-                    default:
-                        break;
+                }
+            }
+
+            if (this._models) {
+                for (let i = 0, n = this._models.length; i < n; ++i) {
+                    const m = this._models[i];
+
+                    switch (m.attribType) {
+                        case NodeAttribValue.MESH:
+                            (meshes || (meshes = [])).push(m);
+                            break;
+                        case NodeAttribValue.LIMB_NODE:
+                        case NodeAttribValue.ROOT: {
+                            const bone = new Aurora.Node();
+                            bone.name = m.attribName;
+
+                            const p70 = m.getChildByName(NodeName.PROPERTIES70);
+                            if (p70) bone.setLocalMatrix(this._parseMatrixFromP70(p70));
+
+                            if (!skeleton) skeleton = new SkeletonData();
+                            skeleton.addBone(bone, m.id);
+
+                            break;
+                        }
+                        default:
+                            break;
+                    }
                 }
             }
 
@@ -671,6 +713,7 @@ namespace Aurora.FbxFile {
                     }
                 }
 
+                /*
                 const p70 = model.getChildByName(NodeName.PROPERTIES70);
                 if (p70) {
                     const vs = asset.getVertexSource(ShaderPredefined.a_Position0);
@@ -688,11 +731,10 @@ namespace Aurora.FbxFile {
                             data[i + 2] = p.z;
                         }
                     }
-
-                    let zzz = 1;
                 }
+                */
 
-                this._parseSkin(geometry, asset, skeleton, vertIdxMapping, numSourceVertices);
+                this._parseSkin(geometry, model.id, asset, skeleton, vertIdxMapping, numSourceVertices);
 
                 if (needTriangulate) asset.drawIndexSource.triangulate(faces);
 
@@ -842,7 +884,7 @@ namespace Aurora.FbxFile {
             return m;
         }
 
-        private _parseSkin(geometry: Node, asset: MeshAsset, skeleton: SkeletonData, vertIdxMapping: uint[], numSourceVertices: uint): void {
+        private _parseSkin(geometry: Node, modelNodeID: uint, asset: MeshAsset, skeleton: SkeletonData, vertIdxMapping: uint[], numSourceVertices: uint): void {
             const skins = this.findConnectionChildrenNodes(geometry.id, NodeName.DEFORMER, NodeAttribValue.SKIN);
             if (skins) {
                 const skinData: number[][] = [];
@@ -852,7 +894,7 @@ namespace Aurora.FbxFile {
                 for (let i = 0, n = skins.length; i < n; ++i) {
                     const clusters = this.findConnectionChildrenNodes(skins[i].id, NodeName.DEFORMER, NodeAttribValue.CLUSTER);
                     if (!clusters) continue;
-                    for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, clusters[j], skeleton, skinData, usedBones);
+                    for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, modelNodeID, clusters[j], skeleton, skinData, usedBones);
                 }
 
                 const n = vertIdxMapping.length;
@@ -899,7 +941,7 @@ namespace Aurora.FbxFile {
             }
         }
 
-        private _parseCluster(asset: MeshAsset, cluster: Node, skeleton: SkeletonData, skinData: number[][], usedBones: { [key: string]: uint }): void {
+        private _parseCluster(asset: MeshAsset, modelNodeID: uint, cluster: Node, skeleton: SkeletonData, skinData: number[][], usedBones: { [key: string]: uint }): void {
             const links = this.getConnectionChildren(cluster.id);
             if (links) {
                 const boneNode = this._objects.get(links[0].id);
@@ -959,10 +1001,17 @@ namespace Aurora.FbxFile {
                         }
                     }
 
-                    //transMat.invert(asset.bindPostMatrices[boneIdx]);
+                    let m = this._posesMap.get(modelNodeID);
+
+                    m.append44(transLinkMat.invert(asset.bindPreMatrices[boneIdx]), asset.bindPreMatrices[boneIdx]);
+                    //lm.append44(transMat);
+
+                    //transMat.invert(asset.bindPreMatrices[boneIdx]);
+                    //transMat.append44(transLinkMat.invert(asset.bindPostMatrices[boneIdx]), asset.bindPostMatrices[boneIdx]);
+
                     //transMat.append44(transLinkMat.invert(asset.bindPreMatrices[boneIdx]), asset.bindPreMatrices[boneIdx]);
 
-                    transLinkMat.invert(asset.bindPreMatrices[boneIdx]).append44(transMat);
+                    //transLinkMat.invert(asset.bindPreMatrices[boneIdx]).append44(transMat);
 
                     //asset.bindMatrices[boneIdx].set34(transMat);
                     //transLinkMat.invert(asset.bindMatrices[boneIdx]);

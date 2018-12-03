@@ -21,7 +21,7 @@ class FileTest {
             env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLH(Math.PI / 6, gl.canvas.width / gl.canvas.height, 5, 10000));
         },
         (delta: number) => {
-            if (this._animator) this._animator.update(delta * 0.25);
+            if (this._animator) this._animator.update(delta * 1);
 
             //modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.5 * delta * Math.PI));
             env.renderingManager.render(env.gl, env.camera, env.world, [light]);
@@ -29,8 +29,9 @@ class FileTest {
 
         //this._loadMesh();
         //this._loadSkinnedMesh();
-        this._loadFbxFile();
-        //this._loadXFile();
+        //this._loadFbxFile();
+        this._loadXFile();
+        //this._loadXFile2();
     }
 
     /*
@@ -93,10 +94,10 @@ class FileTest {
                 task.finish();
             });
             //request.open("GET", Helper.getURL("people/model.FBX"), true);
-            //request.open("GET", Helper.getURL("skinnedMeshes/0/model.FBX"), true);
+            request.open("GET", Helper.getURL("skinnedMeshes/0/model.FBX"), true);
             //request.open("GET", Helper.getURL("all.FBX"), true);
-            request.open("GET", Helper.getURL("box_anim_upz.FBX"), true);
-            //request.open("GET", Helper.getURL("box_upy.FBX"), true);
+            //request.open("GET", Helper.getURL("box_anim_upz.FBX"), true);
+            //request.open("GET", Helper.getURL("box_anim_upy.FBX"), true);
             request.responseType = "arraybuffer";
             request.send();
         }));
@@ -136,9 +137,9 @@ class FileTest {
             mesh.setMaterials(mat);
             mesh.skeleton = data.skeleton;
 
-            if (data.skeleton) Helper.printNodeHierarchy([data.skeleton.bones.get(data.skeleton.rootBoneNames[0])]);
+            //if (data.skeleton) Helper.printNodeHierarchy([data.skeleton.bones.get(data.skeleton.rootBoneNames[0])]);
 
-            const scale = 1;
+            const scale = 10;
             mesh.node.setLocalScale(scale, scale, scale);
         }));
     }
@@ -196,10 +197,88 @@ class FileTest {
             mesh.setMaterials(mat);
             mesh.skeleton = data.skeleton;
 
-            if (data.skeleton) Helper.printNodeHierarchy([data.skeleton.bones.get(data.skeleton.rootBoneNames[0])]);
+            //if (data.skeleton) Helper.printNodeHierarchy([data.skeleton.bones.get(data.skeleton.rootBoneNames[0])]);
 
             const scale = 10;
             mesh.node.setLocalScale(scale, scale, scale);
+        }));
+    }
+
+    private _loadXFile2(): void {
+        let data0: Aurora.XFile.Data = null;
+        let data1: Aurora.XFile.Data = null;
+        let img: HTMLImageElement = null;
+
+        let taskQueue = new Aurora.TaskQueue();
+        taskQueue.createTask(Aurora.Handler.create(null, (task: Aurora.Task) => {
+            let request = new XMLHttpRequest();
+            request.addEventListener("loadend", () => {
+                data0 = Aurora.XFile.parse(new Aurora.ByteArray(request.response));
+                task.finish();
+            });
+            //request.open("GET", Helper.getURL("box1_bin_mat.X"), true);
+            request.open("GET", Helper.getURL("skinnedMeshes/1/skeleton.X"), true);
+            request.responseType = "arraybuffer";
+            request.send();
+        }));
+        taskQueue.createTask(Aurora.Handler.create(null, (task: Aurora.Task) => {
+            let request = new XMLHttpRequest();
+            request.addEventListener("loadend", () => {
+                data1 = Aurora.XFile.parse(new Aurora.ByteArray(request.response));
+                task.finish();
+            });
+            //request.open("GET", Helper.getURL("box1_bin_mat.X"), true);
+            request.open("GET", Helper.getURL("skinnedMeshes/1/mesh.X"), true);
+            request.responseType = "arraybuffer";
+            request.send();
+        }));
+        /*
+        taskQueue.createTask(Aurora.Handler.create(null, (task: Aurora.Task) => {
+            img = new Image();
+            img.onload = () => {
+                task.finish();
+            }
+            img.src = Helper.getURL("skinnedMeshes/0/tex.png");
+        }));
+        */
+        taskQueue.start(Aurora.Handler.create(this, () => {
+            //let tex = new Aurora.GLTexture2D(this._env.gl);
+            //tex.upload(0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
+
+            let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
+            mat.cullFace = Aurora.GLCullFace.NONE;
+            mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
+            //mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
+            mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
+            //mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
+            //mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
+
+            if (data0.animationClips && data0.animationClips.length > 0) {
+                const clip = data0.animationClips[0];
+                clip.wrap = Aurora.AnimatorWrap.Loop;
+                clip.skeleton = data0.skeleton;
+
+                this._animator = new Aurora.Animator();
+                this._animator.setClip(clip);
+                // this._animator.elapsed = 0.9;
+            }
+
+            if (data1.meshes) {
+                for (let m of data1.meshes) {
+                    let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
+                    mesh.renderer = this._env.forwardRenderer;
+                    mesh.asset = m;
+                    //mesh.asset.drawIndexSource.offset = 18;
+                    //mesh.asset.drawIndexSource.length = 6;
+                    mesh.setMaterials(mat);
+                    mesh.skeleton = data0.skeleton;
+
+                    //if (data0.skeleton) Helper.printNodeHierarchy([data0.skeleton.bones.get(data0.skeleton.rootBoneNames[0])]);
+
+                    const scale = 0.5;
+                    mesh.node.setLocalScale(scale, scale, scale);
+                }
+            }
         }));
     }
 }
