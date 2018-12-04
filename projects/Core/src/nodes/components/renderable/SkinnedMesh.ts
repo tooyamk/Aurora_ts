@@ -21,7 +21,7 @@ namespace Aurora {
             this._convertedAsset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, [], GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.DYNAMIC_DRAW));
         }
 
-        protected _chanedAsset(): void {
+        protected _changedAsset(): void {
             this._convertedAsset.link = this._asset;
         }
 
@@ -37,9 +37,9 @@ namespace Aurora {
                     const boneIndices = boneIndicesSource.data;
                     const boneWeights = boneWeightsSource.data;
                     if (boneIndices && boneWeights) {
-                        let bindPreMatrices = this._asset.bindPreMatrices;
+                        let bindPreMatrices = this._asset.bonePreOffsetMatrices;
                         if (!bindPreMatrices) bindPreMatrices = SkinnedMesh.TMP_MAT_EMPTY_ARR;
-                        let bindPostMatrices = this._asset.bindPostMatrices;
+                        let bindPostMatrices = this._asset.bonePostOffsetMatrices;
                         if (!bindPostMatrices) bindPostMatrices = SkinnedMesh.TMP_MAT_EMPTY_ARR;
  
                         const boneNames = this._asset.boneNames;

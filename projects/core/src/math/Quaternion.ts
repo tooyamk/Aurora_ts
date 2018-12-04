@@ -235,7 +235,7 @@ namespace Aurora {
             let y1 = this.w * quat.y + this.y * quat.w + this.z * quat.x - this.x * quat.z;
             let z1 = this.w * quat.z + this.z * quat.w + this.x * quat.y - this.y * quat.x;
 
-            return rst ? rst.setFromNumbers(x1, y1, z1, w1) : new Quaternion(x1, y1, z1, w1);
+            return (rst || this).setFromNumbers(x1, y1, z1, w1);
         }
 
         /*

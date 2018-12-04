@@ -23,6 +23,10 @@ namespace Aurora.FbxFile {
             ++this._numBones;
         }
 
+        public isRootBone(name: string): boolean {
+            return this.rootBoneIndices.indexOf(this._bonesByName.get(name)) >= 0;
+        }
+
         public getBoneByName(name: string): Aurora.Node {
             return this.bones[this._bonesByName.get(name)];
         }
@@ -68,6 +72,13 @@ namespace Aurora.FbxFile {
         private _globalSettings: Node = null;
 
         private _upAxis: int = 2;
+        private _upAxisSign: int = 1;
+        private _frontAxis: int = 1;
+        private _frontAxisSign: int = 1;
+        private _coordAxis: int = 0;
+        private _coordAxisSign: int = 1;
+        private _originUpAxis: int = 2;
+        private _originUpAxisSign: int = 1;
 
         private _bbb: Node[] = [];
 
@@ -230,9 +241,13 @@ namespace Aurora.FbxFile {
             if (skeleton) {
                 skeleton.finish(this);
 
+                const tmpMat = new Matrix44();
                 const ske = new Skeleton();
                 for (let i = 0, n = skeleton.bones.length; i < n; ++i) {
                     const bone = skeleton.bones[i];
+                    bone.getLocalMatrix(tmpMat);
+                    this._transformMatrixXZY(tmpMat);
+                    bone.setLocalMatrix(tmpMat);
                     ske.bones.set(bone.name, bone);
                 }
                 for (let i = 0, n = skeleton.rootBoneIndices.length; i < n; ++i) ske.rootBoneNames[i] = skeleton.bones[skeleton.rootBoneIndices[i]].name;
@@ -243,22 +258,40 @@ namespace Aurora.FbxFile {
                 if (animationClips) {
                     result.animationClips = animationClips;
 
-                    if (this._upAxis === 2) {
-                        const tmpVec3 = new Vector3();
-                        
-                        for (let i = 0, n = animationClips.length; i < n; ++i) {
-                            const clip = animationClips[i];
-                            if (!clip) continue;
+                    const tmpVec3 = new Vector3();
 
-                            const frames = clip.frames;
-                            if (!frames) continue;
+                    for (let i = 0, n = animationClips.length; i < n; ++i) {
+                        const clip = animationClips[i];
+                        if (!clip) continue;
 
-                            for (let itr of frames) {
-                                const boneFrames = itr[1];
-                                for (let j = 0, n = boneFrames.length; j < n; ++j) {
-                                    const f = boneFrames[j];
-                                    if (!f) continue;
+                        const frames = clip.frames;
+                        if (!frames) continue;
 
+                        for (let itr of frames) {
+                            const isRoot = skeleton.isRootBone(itr[0]);
+                            const boneFrames = itr[1];
+                            for (let j = 0, n = boneFrames.length; j < n; ++j) {
+                                const f = boneFrames[j];
+                                if (!f) continue;
+
+                                if (this._upAxis === 1) {
+                                    if (isRoot) {
+                                        if (f.translation) f.translation.z = -f.translation.z;
+                                    } else {
+                                        if (f.translation) {
+                                            const tmp = f.translation.y;
+                                            f.translation.y = f.translation.z;
+                                            f.translation.z = tmp;
+                                        }
+                                    }
+
+                                    if (f.rotation) {
+                                        f.rotation.x = -f.rotation.x;
+                                        const tmp = f.rotation.y;
+                                        f.rotation.y = -f.rotation.z;
+                                        f.rotation.z = -tmp;
+                                    }
+                                } else if (this._upAxis === 2) {
                                     if (f.translation) {
                                         const tmp = f.translation.y;
                                         f.translation.y = f.translation.z;
@@ -266,8 +299,10 @@ namespace Aurora.FbxFile {
                                     }
 
                                     if (f.rotation) {
-                                        f.rotation.toEuler(tmpVec3);
-                                        Quaternion.createFromEulerXYZ(-tmpVec3.x, -tmpVec3.z, -tmpVec3.y, f.rotation);
+                                        f.rotation.x = -f.rotation.x;
+                                        const tmp = f.rotation.y;
+                                        f.rotation.y = -f.rotation.z;
+                                        f.rotation.z = -tmp;
                                     }
 
                                     if (f.scale) {
@@ -288,12 +323,11 @@ namespace Aurora.FbxFile {
                     if (asset) {
                         (result.meshes || (result.meshes = [])).push(asset);
 
-                        if (this._upAxis === 2) {
-                            this._transformVertexSourceXZY(asset.getVertexSource(ShaderPredefined.a_Position0));
-                            this._transformVertexSourceXZY(asset.getVertexSource(ShaderPredefined.a_Normal0));
-                            this._transformMatricesXZY(asset.bindPreMatrices);
-                            this._transformMatricesXZY(asset.bindPostMatrices);
-                        }
+                        this._transformVertexSourceXZY(asset.getVertexSource(ShaderPredefined.a_Position0));
+                        this._transformVertexSourceXZY(asset.getVertexSource(ShaderPredefined.a_Normal0));
+                        this._transformMatricesXZY(asset.bonePreOffsetMatrices);
+                        this._transformMatricesXZY(asset.bonePostOffsetMatrices);
+                        asset.bonePostOffsetMatrices = null;
 
                         asset.drawIndexSource.invert();
                     }
@@ -428,6 +462,27 @@ namespace Aurora.FbxFile {
                                 case NodePropertyValue.UP_AXIS:
                                     this._upAxis = <int>properties[len - 1].value;
                                     break;
+                                case NodePropertyValue.UP_AXIS_SIGN:
+                                    this._upAxisSign = <int>properties[len - 1].value;
+                                    break;
+                                case NodePropertyValue.FRONT_AXIS:
+                                    this._frontAxis = <int>properties[len - 1].value;
+                                    break;
+                                case NodePropertyValue.FRONT_AXIS_SIGN:
+                                    this._frontAxisSign = <int>properties[len - 1].value;
+                                    break;
+                                case NodePropertyValue.COORD_AXIS:
+                                    this._coordAxis = <int>properties[len - 1].value;
+                                    break;
+                                case NodePropertyValue.COORD_AXIS_SIGN:
+                                    this._coordAxisSign = <int>properties[len - 1].value;
+                                    break;
+                                case NodePropertyValue.ORIGIN_UP_AXIS:
+                                    this._originUpAxis = <int>properties[len - 1].value;
+                                    break;
+                                case NodePropertyValue.ORIGIN_UP_AXIS_SIGN:
+                                    this._originUpAxisSign = <int>properties[len - 1].value;
+                                    break;
                                 default:
                                     break;
                             }
@@ -465,7 +520,7 @@ namespace Aurora.FbxFile {
                         for (let i2 = 0, n2 = curveNodes.length; i2 < n2; ++i2) {
                             const curveNode = curveNodes[i2];
                             const attribName = curveNode.attribName;//R,T,S,DeformPercent?
-                            const bone = this.findConnectionParentNode(curveNode.id, NodeName.MODEL, NodeAttribValue.LIMB_NODE);
+                            const bone = this.findConnectionParentNode(curveNode.id, NodeName.MODEL);
                             if (!bone) continue;
                             
                             const curves = this.findConnectionChildren(curveNode.id, NodeName.ANIMATION_CURVE);
@@ -624,6 +679,7 @@ namespace Aurora.FbxFile {
                                         default:
                                             break;
                                     }
+
                                     //console.log(bone.attribName + "    " + attribName + "    " + relationship);
                                     //console.log(values);
                                 }
@@ -687,6 +743,7 @@ namespace Aurora.FbxFile {
 
             if (sourceIndices.length > 0) {
                 const asset = new MeshAsset();
+                asset.name = model.attribName;
                 let vertIdxMapping: uint[] = null;
                 let numSourceVertices = 0;
 
@@ -713,6 +770,8 @@ namespace Aurora.FbxFile {
                     }
                 }
 
+                const bindShapeMatrix = this._parseBindShapeMatrixFromP70(model.getChildByName(NodeName.PROPERTIES70));
+
                 /*
                 const p70 = model.getChildByName(NodeName.PROPERTIES70);
                 if (p70) {
@@ -734,7 +793,7 @@ namespace Aurora.FbxFile {
                 }
                 */
 
-                this._parseSkin(geometry, model.id, asset, skeleton, vertIdxMapping, numSourceVertices);
+                this._parseSkin(geometry, model.id, bindShapeMatrix, asset, skeleton, vertIdxMapping, numSourceVertices);
 
                 if (needTriangulate) asset.drawIndexSource.triangulate(faces);
 
@@ -785,31 +844,91 @@ namespace Aurora.FbxFile {
                     const m = matrices[i];
                     if (!m) continue;
 
-                    let tmp = m.m10;
-                    m.m10 = m.m20;
-                    m.m20 = tmp;
-
-                    tmp = m.m01;
-                    m.m01 = m.m02;
-                    m.m02 = tmp;
-
-                    tmp = m.m11;
-                    m.m11 = m.m22;
-                    m.m22 = tmp;
-
-                    tmp = m.m21;
-                    m.m21 = m.m12;
-                    m.m12 = tmp;
-
-                    tmp = m.m31;
-                    m.m31 = m.m32;
-                    m.m32 = tmp;
-
-                    tmp = m.m13;
-                    m.m13 = m.m23;
-                    m.m23 = tmp;
+                    this._transformMatrixXZY(m);
                 }
             }
+        }
+
+        private _transformMatrixXZY(m: Matrix44): void {
+            let tmp = m.m10;
+            m.m10 = m.m20;
+            m.m20 = tmp;
+
+            tmp = m.m01;
+            m.m01 = m.m02;
+            m.m02 = tmp;
+
+            tmp = m.m11;
+            m.m11 = m.m22;
+            m.m22 = tmp;
+
+            tmp = m.m21;
+            m.m21 = m.m12;
+            m.m12 = tmp;
+
+            tmp = m.m31;
+            m.m31 = m.m32;
+            m.m32 = tmp;
+
+            tmp = m.m13;
+            m.m13 = m.m23;
+            m.m23 = tmp;
+        }
+
+        private _parseBindShapeMatrixFromP70(p70: Node): Matrix44 {
+            let translation: Vector3 = null;
+            let rotation: Quaternion = null;
+            let scale: Vector3 = null;
+
+            if (p70) {
+                for (let i = 0, n = p70.children.length; i < n; ++i) {
+                    const child = p70.children[i];
+                    if (child.name !== NodeName.P) continue;
+
+                    const properties = child.properties;
+                    if (!properties) continue;
+
+                    const len = properties.length;
+                    if (len === 0) continue;
+
+                    const p = properties[0];
+                    if (p.type === NodePropertyValueType.STRING) {
+                        switch (p.value) {
+                            case NodePropertyValue.GEOMETRIC_TRANSLATION: {
+                                const x = <number>properties[len - 3].value;
+                                const y = <number>properties[len - 2].value;
+                                const z = <number>properties[len - 1].value;
+
+                                translation = new Vector3(x, y, z);
+
+                                break;
+                            }
+                            case NodePropertyValue.GEOMETRIC_ROTATION: {
+                                const x = <number>properties[len - 3].value;
+                                const y = <number>properties[len - 2].value;
+                                const z = <number>properties[len - 1].value;
+
+                                rotation = Quaternion.createFromEulerXYZ(x * MathUtils.DEG_2_RAD, y * MathUtils.DEG_2_RAD, z * MathUtils.DEG_2_RAD);
+
+                                break;
+                            }
+                            case NodePropertyValue.GEOMETRIC_SCALING: {
+                                const x = <number>properties[len - 3].value;
+                                const y = <number>properties[len - 2].value;
+                                const z = <number>properties[len - 1].value;
+
+                                scale = new Vector3(x, y, z);
+
+                                break;
+                            }
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+
+            return Matrix44.createTRS(translation, rotation, scale);
         }
 
         private _parseMatrixFromP70(p70: Node): Matrix44 {
@@ -884,7 +1003,7 @@ namespace Aurora.FbxFile {
             return m;
         }
 
-        private _parseSkin(geometry: Node, modelNodeID: uint, asset: MeshAsset, skeleton: SkeletonData, vertIdxMapping: uint[], numSourceVertices: uint): void {
+        private _parseSkin(geometry: Node, modelNodeID: uint, bindShapeMatrix: Matrix44, asset: MeshAsset, skeleton: SkeletonData, vertIdxMapping: uint[], numSourceVertices: uint): void {
             const skins = this.findConnectionChildrenNodes(geometry.id, NodeName.DEFORMER, NodeAttribValue.SKIN);
             if (skins) {
                 const skinData: number[][] = [];
@@ -894,7 +1013,7 @@ namespace Aurora.FbxFile {
                 for (let i = 0, n = skins.length; i < n; ++i) {
                     const clusters = this.findConnectionChildrenNodes(skins[i].id, NodeName.DEFORMER, NodeAttribValue.CLUSTER);
                     if (!clusters) continue;
-                    for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, modelNodeID, clusters[j], skeleton, skinData, usedBones);
+                    for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, modelNodeID, bindShapeMatrix, clusters[j], skeleton, skinData, usedBones);
                 }
 
                 const n = vertIdxMapping.length;
@@ -941,7 +1060,7 @@ namespace Aurora.FbxFile {
             }
         }
 
-        private _parseCluster(asset: MeshAsset, modelNodeID: uint, cluster: Node, skeleton: SkeletonData, skinData: number[][], usedBones: { [key: string]: uint }): void {
+        private _parseCluster(asset: MeshAsset, modelNodeID: uint, bindShapeMatrix: Matrix44, cluster: Node, skeleton: SkeletonData, skinData: number[][], usedBones: { [key: string]: uint }): void {
             const links = this.getConnectionChildren(cluster.id);
             if (links) {
                 const boneNode = this._objects.get(links[0].id);
@@ -952,16 +1071,16 @@ namespace Aurora.FbxFile {
                         asset.boneNames[boneIdx] = boneNode.attribName;
                         usedBones[boneNode.attribName] = boneIdx;
 
-                        if (!asset.bindPreMatrices) {
-                            asset.bindPreMatrices = [];
-                            asset.bindPostMatrices = [];
+                        if (!asset.bonePreOffsetMatrices) {
+                            asset.bonePreOffsetMatrices = [];
+                            //asset.bindPostMatrices = [];
                         }
-                        const numMatrices = asset.bindPreMatrices.length;
+                        const numMatrices = asset.bonePreOffsetMatrices.length;
                         const numBones = boneIdx + 1;
                         if (numMatrices < numBones) {
                             for (let i = numMatrices; i < numBones; ++i) {
-                                asset.bindPreMatrices[i] = new Matrix44();
-                                asset.bindPostMatrices[i] = new Matrix44();
+                                asset.bonePreOffsetMatrices[i] = new Matrix44();
+                                //asset.bindPostMatrices[i] = new Matrix44();
                             }
                         }
                     }
@@ -1001,9 +1120,11 @@ namespace Aurora.FbxFile {
                         }
                     }
 
-                    let m = this._posesMap.get(modelNodeID);
+                    const m = asset.bonePreOffsetMatrices[boneIdx];
+                    const poseMat = this._posesMap.get(modelNodeID);
 
-                    m.append44(transLinkMat.invert(asset.bindPreMatrices[boneIdx]), asset.bindPreMatrices[boneIdx]);
+                    poseMat.append44(transLinkMat.invert(m), m);
+                    //if (bindShapeMatrix) bindShapeMatrix.append44(m, m);
                     //lm.append44(transMat);
 
                     //transMat.invert(asset.bindPreMatrices[boneIdx]);

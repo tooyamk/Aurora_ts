@@ -227,7 +227,7 @@ namespace Aurora.XFile {
                         numDataPerElement >>= 1;
 
                         asset.boneNames = boneNames;
-                        asset.bindPreMatrices = bindPreMatrices;
+                        asset.bonePreOffsetMatrices = bindPreMatrices;
 
                         const len = numVertices * numDataPerElement;
                         const boneIndices: number[] = [];

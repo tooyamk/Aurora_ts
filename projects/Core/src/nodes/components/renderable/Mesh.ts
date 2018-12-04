@@ -14,11 +14,11 @@ namespace Aurora {
                 if (this._asset) this._asset.release();
                 this._asset = value;
 
-                this._chanedAsset();
+                this._changedAsset();
             }
         }
 
-        protected _chanedAsset(): void {}
+        protected _changedAsset(): void {}
 
         public checkRenderable(): boolean {
             return !!this._asset;

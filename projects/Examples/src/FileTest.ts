@@ -29,8 +29,8 @@ class FileTest {
 
         //this._loadMesh();
         //this._loadSkinnedMesh();
-        //this._loadFbxFile();
-        this._loadXFile();
+        this._loadFbxFile();
+        //this._loadXFile();
         //this._loadXFile2();
     }
 
@@ -82,6 +82,86 @@ class FileTest {
     }
     */
 
+    private equal1(v1: Aurora.Vector3, v2: Aurora.Vector3): void {
+        if (!Aurora.MathUtils.isEqual(v1.x, v2.x, 0.00001)) {
+            let a = 1;
+        }
+        if (!Aurora.MathUtils.isEqual(v1.y, v2.y, 0.00001)) {
+            let a = 1;
+        }
+        if (!Aurora.MathUtils.isEqual(v1.z, v2.z, 0.00001)) {
+            let a = 1;
+        }
+    }
+
+    private equal2(v1: Aurora.Quaternion, v2: Aurora.Quaternion): void {
+        if (!Aurora.MathUtils.isEqual(v1.x, v2.x, 0.00001)) {
+            let a = 1;
+        }
+        if (!Aurora.MathUtils.isEqual(v1.y, v2.y, 0.00001)) {
+            let a = 1;
+        }
+        if (!Aurora.MathUtils.isEqual(v1.z, v2.z, 0.00001)) {
+            let a = 1;
+        }
+        if (!Aurora.MathUtils.isEqual(v1.w, v2.w, 0.00001)) {
+            let a = 1;
+        }
+    }
+
+    private _loadFbx1File(): void {
+        let data1: Aurora.FbxFile.Data = null;
+        let data2: Aurora.FbxFile.Data = null;
+
+        let taskQueue = new Aurora.TaskQueue();
+        taskQueue.createTask(Aurora.Handler.create(null, (task: Aurora.Task) => {
+            let request = new XMLHttpRequest();
+            request.addEventListener("loadend", () => {
+                data1 = Aurora.FbxFile.parse(new Aurora.ByteArray(request.response));
+                task.finish();
+            });
+            request.open("GET", Helper.getURL("skinnedMeshes/0/model_upy.FBX"), true);
+            request.responseType = "arraybuffer";
+            request.send();
+        }));
+        taskQueue.createTask(Aurora.Handler.create(null, (task: Aurora.Task) => {
+            let request = new XMLHttpRequest();
+            request.addEventListener("loadend", () => {
+                data2 = Aurora.FbxFile.parse(new Aurora.ByteArray(request.response));
+                task.finish();
+            });
+            request.open("GET", Helper.getURL("skinnedMeshes/0/model_upz.FBX"), true);
+            request.responseType = "arraybuffer";
+            request.send();
+        }));
+        taskQueue.start(Aurora.Handler.create(this, () => {
+            let pos1 = data1.meshes[0].getVertexSource(Aurora.ShaderPredefined.a_Position0);
+            let pos2 = data2.meshes[0].getVertexSource(Aurora.ShaderPredefined.a_Position0);
+
+            for (let i = 0, n = pos1.length; i < n; ++i) {
+                if (!Aurora.MathUtils.isEqual(pos1[i], pos2[i], 0.0001)) {
+                    let a = 1;
+                }
+            }
+
+            let frames1 = data1.animationClips[0].frames;
+            let frames2 = data2.animationClips[0].frames;
+            for (let itr of frames1) {
+                let name = itr[0];
+                //if (name === "Bip01") continue;
+                let arr1 = itr[1];
+                let arr2 = frames2.get(name);
+                for (let i = 0, n = arr1.length; i < n; ++i) {
+                    let f1 = arr1[i];
+                    let f2 = arr2[i];
+                    this.equal1(f1.translation, f2.translation);
+                    this.equal1(f1.scale, f2.scale);
+                    this.equal2(f1.rotation, f2.rotation);
+                }
+            }
+        }));
+    }
+
     private _loadFbxFile(): void {
         let data: Aurora.FbxFile.Data = null;
         let img: HTMLImageElement = null;
@@ -94,7 +174,8 @@ class FileTest {
                 task.finish();
             });
             //request.open("GET", Helper.getURL("people/model.FBX"), true);
-            request.open("GET", Helper.getURL("skinnedMeshes/0/model.FBX"), true);
+            //request.open("GET", Helper.getURL("skinnedMeshes/0/model_upy.FBX"), true);
+            request.open("GET", Helper.getURL("skinnedMeshes/1/model_upz.FBX"), true);
             //request.open("GET", Helper.getURL("all.FBX"), true);
             //request.open("GET", Helper.getURL("box_anim_upz.FBX"), true);
             //request.open("GET", Helper.getURL("box_anim_upy.FBX"), true);
@@ -129,18 +210,21 @@ class FileTest {
                 this._animator.setClip(clip);
             }
 
-            let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
-            mesh.renderer = this._env.forwardRenderer;
-            mesh.asset = data.meshes[0];
-            //mesh.asset.drawIndexSource.offset = 18;
-            //mesh.asset.drawIndexSource.length = 6;
-            mesh.setMaterials(mat);
-            mesh.skeleton = data.skeleton;
+            for (let m of data.meshes) {
+                //if (m.name !== "对象06") continue;
+                let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
+                mesh.renderer = this._env.forwardRenderer;
+                mesh.asset = m;
+                //mesh.asset.drawIndexSource.offset = 18;
+                //mesh.asset.drawIndexSource.length = 6;
+                mesh.setMaterials(mat);
+                mesh.skeleton = data.skeleton;
 
-            //if (data.skeleton) Helper.printNodeHierarchy([data.skeleton.bones.get(data.skeleton.rootBoneNames[0])]);
+                //if (data0.skeleton) Helper.printNodeHierarchy([data0.skeleton.bones.get(data0.skeleton.rootBoneNames[0])]);
 
-            const scale = 10;
-            mesh.node.setLocalScale(scale, scale, scale);
+                const scale = 0.5;
+                mesh.node.setLocalScale(scale, scale, scale);
+            }
         }));
     }
 
@@ -186,7 +270,6 @@ class FileTest {
 
                 this._animator = new Aurora.Animator();
                 this._animator.setClip(clip);
-               // this._animator.elapsed = 0.9;
             }
 
             let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());

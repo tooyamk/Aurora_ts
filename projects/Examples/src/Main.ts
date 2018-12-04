@@ -6,19 +6,11 @@
 document.oncontextmenu = () => { return false; }
 
 window.addEventListener("DOMContentLoaded", () => {
-    let r = 45 * Aurora.MathUtils.DEG_2_RAD;
-    let q = Aurora.Quaternion.createFromEulerZ(r);
+    let a = Aurora.Quaternion.createFromEulerXYZ(10 * Aurora.MathUtils.DEG_2_RAD, 20 * Aurora.MathUtils.DEG_2_RAD, 30 * Aurora.MathUtils.DEG_2_RAD);
+    let b = Aurora.Quaternion.createFromEulerXYZ(-10 * Aurora.MathUtils.DEG_2_RAD, -30 * Aurora.MathUtils.DEG_2_RAD, -20 * Aurora.MathUtils.DEG_2_RAD);
 
-    let m1 = q.toMatrix44();
-
-    let m2 = Aurora.Matrix44.createRotationZ(r);
-
-    let n0 = new Aurora.Node();
-    let n1 = n0.addChild(new Aurora.Node());
-    n1.setLocalRotation(Aurora.Quaternion.createFromEulerX(Math.PI * 0.5));
-    n1.parentRotate(Aurora.Quaternion.createFromEulerZ(Math.PI * 0.5));
-
-    let p = n1.readonlyWorldMatrix.transform34XYZ(0, 1, 0);
+    let r0 = new Aurora.Quaternion(0.03634184094195602, 0.9495685905855896, -0.0012979427377120573, 0.3114435385666171).toEuler().mulNumber(Aurora.MathUtils.RAD_2_DEG);
+    let r1 = new Aurora.Quaternion(-0.03634184094195602, 0.0012979427377120573, -0.9495685905855896, 0.3114435385666171).toEuler().mulNumber(Aurora.MathUtils.RAD_2_DEG);
 
     new FileTest();
     //new Other();

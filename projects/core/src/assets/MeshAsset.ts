@@ -6,8 +6,8 @@ namespace Aurora {
 
         public boneNames: string[] = null;
 
-        public bindPreMatrices: Matrix44[] = null;
-        public bindPostMatrices: Matrix44[] = null;
+        public bonePreOffsetMatrices: Matrix44[] = null;
+        public bonePostOffsetMatrices: Matrix44[] = null;
 
         public vertexSources: Map<string, VertexSource> = null;
         public drawIndexSource: DrawIndexSource = null;
