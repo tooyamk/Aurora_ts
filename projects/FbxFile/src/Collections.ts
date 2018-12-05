@@ -1,8 +1,45 @@
 namespace Aurora.FbxFile {
-    export class Data {
+    export class Data extends Ref {
         public meshes: MeshAsset[] = null;
-        public skeleton: Skeleton = null;
-        public animationClips: SkeletonAnimationClip[] = null;
+        public pose: Map<string, Matrix44> = null;
+
+        private _skeleton: Skeleton = null;
+        private _animationClips: RefVector<SkeletonAnimationClip> = null;
+
+        public get skeleton(): Skeleton {
+            return this._skeleton;
+        }
+
+        public set skeleton(ske: Skeleton) {
+            if (this._skeleton !== ske) {
+                if (ske) ske.retain();
+                if (this._skeleton) this._skeleton.release();
+                this._skeleton = ske;
+            }
+        }
+
+        public get animationClips(): RefVector<SkeletonAnimationClip> {
+            return this._animationClips;
+        }
+
+        public set animationClips(clips: RefVector<SkeletonAnimationClip>) {
+            if (this._animationClips !== clips) {
+                if (clips) clips.retain();
+                if (this._animationClips) this._animationClips.release();
+                this._animationClips = clips;
+            }
+        }
+
+        public destroy(): void {
+            this.skeleton = null;
+            this.animationClips = null;
+            this.meshes = null;
+            this.pose = null;
+        }
+
+        protected _refDestroy(): void {
+            this.destroy();
+        }
     }
 
     class SkeletonData {
@@ -178,7 +215,7 @@ namespace Aurora.FbxFile {
             const result = new Data();
 
             let meshes: Node[] = null;
-            let skeleton: SkeletonData = null;
+            let skeData: SkeletonData = null;
 
             if (this._poses) {
                 for (let i = 0, n0 = this._poses.length; i < n0; ++i) {
@@ -211,7 +248,11 @@ namespace Aurora.FbxFile {
                 }
             }
 
+            let bonePose: Map<string, Matrix44> = null;
+
             if (this._models) {
+                bonePose = new Map();
+
                 for (let i = 0, n = this._models.length; i < n; ++i) {
                     const m = this._models[i];
 
@@ -225,10 +266,10 @@ namespace Aurora.FbxFile {
                             bone.name = m.attribName;
 
                             const p70 = m.getChildByName(NodeName.PROPERTIES70);
-                            if (p70) bone.setLocalMatrix(this._parseMatrixFromP70(p70));
+                            bonePose.set(bone.name, this._parseMatrixFromP70(p70));
 
-                            if (!skeleton) skeleton = new SkeletonData();
-                            skeleton.addBone(bone, m.id);
+                            if (!skeData) skeData = new SkeletonData();
+                            skeData.addBone(bone, m.id);
 
                             break;
                         }
@@ -238,41 +279,57 @@ namespace Aurora.FbxFile {
                 }
             }
 
-            if (skeleton) {
-                skeleton.finish(this);
+            if (skeData) {
+                skeData.finish(this);
 
                 const tmpMat = new Matrix44();
                 const ske = new Skeleton();
-                for (let i = 0, n = skeleton.bones.length; i < n; ++i) {
-                    const bone = skeleton.bones[i];
-                    bone.getLocalMatrix(tmpMat);
-                    this._transformMatrixXZY(tmpMat);
-                    bone.setLocalMatrix(tmpMat);
-                    ske.bones.set(bone.name, bone);
+                const skeBones = new RefMap<string, Aurora.Node>();
+                ske.bones = skeBones;
+                for (let i = 0, n = skeData.bones.length; i < n; ++i) {
+                    const bone = skeData.bones[i];
+                    if (bonePose) this._transformMatrixXZY(bonePose.get(bone.name));
+                    skeBones.insert(bone.name, bone);
                 }
-                for (let i = 0, n = skeleton.rootBoneIndices.length; i < n; ++i) ske.rootBoneNames[i] = skeleton.bones[skeleton.rootBoneIndices[i]].name;
+                for (let i = 0, n = skeData.rootBoneIndices.length; i < n; ++i) ske.rootBoneNames[i] = skeData.bones[skeData.rootBoneIndices[i]].name;
+                ske.setPose(bonePose);
                 result.skeleton = ske;
+                result.pose = bonePose;
 
-                const animationClips = this._parseAnimations(skeleton);
+                const animationClips = this._parseAnimations(skeData);
 
                 if (animationClips) {
                     result.animationClips = animationClips;
 
+                    const clipsRaw = animationClips.raw;
                     const tmpVec3 = new Vector3();
 
-                    for (let i = 0, n = animationClips.length; i < n; ++i) {
-                        const clip = animationClips[i];
+                    for (let i = 0, n = clipsRaw.length; i < n; ++i) {
+                        const clip = clipsRaw[i];
                         if (!clip) continue;
 
                         const frames = clip.frames;
                         if (!frames) continue;
 
                         for (let itr of frames) {
-                            const isRoot = skeleton.isRootBone(itr[0]);
+                            const isRoot = skeData.isRootBone(itr[0]);
                             const boneFrames = itr[1];
                             for (let j = 0, n = boneFrames.length; j < n; ++j) {
                                 const f = boneFrames[j];
                                 if (!f) continue;
+
+                                if (f.rotation) {
+                                    f.rotation.x = -f.rotation.x;
+                                    const tmp = f.rotation.y;
+                                    f.rotation.y = -f.rotation.z;
+                                    f.rotation.z = -tmp;
+                                }
+
+                                if (f.scale) {
+                                    const tmp = f.scale.y;
+                                    f.scale.y = f.scale.z;
+                                    f.scale.z = tmp;
+                                }
 
                                 if (this._upAxis === 1) {
                                     if (isRoot) {
@@ -284,42 +341,24 @@ namespace Aurora.FbxFile {
                                             f.translation.z = tmp;
                                         }
                                     }
-
-                                    if (f.rotation) {
-                                        f.rotation.x = -f.rotation.x;
-                                        const tmp = f.rotation.y;
-                                        f.rotation.y = -f.rotation.z;
-                                        f.rotation.z = -tmp;
-                                    }
                                 } else if (this._upAxis === 2) {
                                     if (f.translation) {
                                         const tmp = f.translation.y;
                                         f.translation.y = f.translation.z;
                                         f.translation.z = tmp;
                                     }
-
-                                    if (f.rotation) {
-                                        f.rotation.x = -f.rotation.x;
-                                        const tmp = f.rotation.y;
-                                        f.rotation.y = -f.rotation.z;
-                                        f.rotation.z = -tmp;
-                                    }
-
-                                    if (f.scale) {
-                                        const tmp = f.scale.y;
-                                        f.scale.y = f.scale.z;
-                                        f.scale.z = tmp;
-                                    }
                                 }
                             }
                         }
                     }
                 }
+
+                if (animationClips) animationClips.release();
             }
 
             if (meshes) {
                 for (let i = 0, n = meshes.length; i < n; ++i) {
-                    const asset = this._parseGeometry(meshes[i], skeleton);
+                    const asset = this._parseGeometry(meshes[i], skeData);
                     if (asset) {
                         (result.meshes || (result.meshes = [])).push(asset);
 
@@ -492,22 +531,38 @@ namespace Aurora.FbxFile {
             }
         }
 
-        private _parseAnimations(skeleton: SkeletonData): SkeletonAnimationClip[]  {
-            let clips: SkeletonAnimationClip[] = null;
+        private _parseAnimations(skeleton: SkeletonData): RefVector<SkeletonAnimationClip>  {
+            let clips: RefVector<SkeletonAnimationClip> = null;
 
             if (this._animationStacks) {
                 const framesMap = new Map<string, Map<number, SkeletonAnimationClip.Frame>>();
                 const rots: Quaternion[] = [];
                 let numRots: uint = 0;
 
-                const tmpMat0 = new Matrix44(), tmpMat1 = new Matrix44();
-
                 for (let i0 = 0, n0 = this._animationStacks.length; i0 < n0; ++i0) {
                     const stack = this._animationStacks[i0];
 
-                    const clip = new SkeletonAnimationClip();
-                    clip.name = stack.attribName;
-                    (clips || (clips = [])).push(clip);
+                    let start: number = 0, end: number = -1;
+
+                    const p70 = stack.getChildByName(NodeName.PROPERTIES70);
+                    for (let i1 = 0, n1 = p70.children.length; i1 < n1; ++i1) {
+                        const c = p70.children[i1];
+                        if (c.name === NodeName.P && c.properties && c.properties.length > 0) {
+                            const p = c.properties[0];
+                            if (p.type === NodePropertyValueType.STRING) {
+                                switch (p.value) {
+                                    case NodePropertyValue.LOCAL_START:
+                                        start = this._parseTime(<int>c.properties[c.properties.length - 1].value);
+                                        break;
+                                    case NodePropertyValue.LOCAL_STOP:
+                                        end = this._parseTime(<int>c.properties[c.properties.length - 1].value);
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                        }
+                    }
 
                     const layers = this.findConnectionChildrenNodes(stack.id, NodeName.ANIMATION_LAYER);
                     if (!layers) continue;
@@ -551,7 +606,7 @@ namespace Aurora.FbxFile {
 
                                 if (times && values) {
                                     times = times.concat();
-                                    for (let j = 0, m = times.length; j < m; ++j) times[j] /= 46186158000;
+                                    for (let j = 0, m = times.length; j < m; ++j) times[j] = this._parseTime(times[j]);
 
                                     let boneFramesMap = framesMap.get(bone.attribName);
                                     if (!boneFramesMap) {
@@ -691,6 +746,7 @@ namespace Aurora.FbxFile {
                     rots.length = 0;
 
                     const frames = new Map<string, SkeletonAnimationClip.Frame[]>();
+                    let maxTime: number = -1;
                     for (let itr of framesMap) {
                         const boneName = itr[0];
                         const boneFramesMap = itr[1];
@@ -701,35 +757,37 @@ namespace Aurora.FbxFile {
                         let n = 0;
                         for (let itr1 of boneFramesMap) {
                             const f = itr1[1];
+                            if (maxTime < f.time) maxTime = f.time;
                             if (m) {
                                 if (!f.translation) f.translation = new Vector3(m.m30, m.m31, m.m32);
                                 if (!f.rotation) f.rotation = bone.readonlyLocalRotation.clone();
                                 if (!f.scale) f.scale = bone.readonlyLocalScale.clone();
                             }
-                            /*
-                            if (m) {
-                                Matrix44.createTRS(f.translation, f.rotation, f.scale, tmpMat0);
-                                m.append34(tmpMat0, tmpMat0);
-                                tmpMat0.decomposition(tmpMat1, f.scale);
-                                if (f.translation) f.translation.setFromNumbers(tmpMat0.m30, tmpMat0.m31, tmpMat0.m32);
-                                if (f.rotation) tmpMat1.toQuaternion(f.rotation);
-                            }
-                            */
                             boneFrames[n++] = f;
                         }
 
                         Sort.Merge.sort(boneFrames, (f0: SkeletonAnimationClip.Frame, f1: SkeletonAnimationClip.Frame) => {
-                            return f0.time < f1.time;
+                            return f0.time <= f1.time;
                         });
 
                         SkeletonAnimationClip.supplementLerpFrames(boneFrames);
                     }
 
+                    const clip = new SkeletonAnimationClip();
+                    (clips || (clips = new RefVector())).pushBack(clip);
+                    clip.name = stack.attribName;
                     clip.frames = frames;
+                    clip.setTimeRagne(start, end < 0 ? Math.max(0, maxTime) : end);
                 }
             }
 
+            if (clips) clips.retain();
+
             return clips;
+        }
+
+        private _parseTime(time: int): number {
+            return time / 46186158000;
         }
 
         private _parseGeometry(model: Node, skeleton: SkeletonData): MeshAsset {
@@ -770,6 +828,10 @@ namespace Aurora.FbxFile {
                     }
                 }
 
+                if (asset.name === "Matuge_Main") {
+                    let a = 1;
+                }
+
                 const bindShapeMatrix = this._parseBindShapeMatrixFromP70(model.getChildByName(NodeName.PROPERTIES70));
 
                 /*
@@ -793,7 +855,9 @@ namespace Aurora.FbxFile {
                 }
                 */
 
-                this._parseSkin(geometry, model.id, bindShapeMatrix, asset, skeleton, vertIdxMapping, numSourceVertices);
+                
+
+                this._parseSkin(geometry, model, bindShapeMatrix, asset, skeleton, vertIdxMapping, numSourceVertices);
 
                 if (needTriangulate) asset.drawIndexSource.triangulate(faces);
 
@@ -840,39 +904,36 @@ namespace Aurora.FbxFile {
 
         private _transformMatricesXZY(matrices: Matrix44[]): void {
             if (matrices) {
-                for (let i = 0, n = matrices.length; i < n; ++i) {
-                    const m = matrices[i];
-                    if (!m) continue;
-
-                    this._transformMatrixXZY(m);
-                }
+                for (let i = 0, n = matrices.length; i < n; ++i) this._transformMatrixXZY(matrices[i]);
             }
         }
 
         private _transformMatrixXZY(m: Matrix44): void {
-            let tmp = m.m10;
-            m.m10 = m.m20;
-            m.m20 = tmp;
+            if (m) {
+                let tmp = m.m10;
+                m.m10 = m.m20;
+                m.m20 = tmp;
 
-            tmp = m.m01;
-            m.m01 = m.m02;
-            m.m02 = tmp;
+                tmp = m.m01;
+                m.m01 = m.m02;
+                m.m02 = tmp;
 
-            tmp = m.m11;
-            m.m11 = m.m22;
-            m.m22 = tmp;
+                tmp = m.m11;
+                m.m11 = m.m22;
+                m.m22 = tmp;
 
-            tmp = m.m21;
-            m.m21 = m.m12;
-            m.m12 = tmp;
+                tmp = m.m21;
+                m.m21 = m.m12;
+                m.m12 = tmp;
 
-            tmp = m.m31;
-            m.m31 = m.m32;
-            m.m32 = tmp;
+                tmp = m.m31;
+                m.m31 = m.m32;
+                m.m32 = tmp;
 
-            tmp = m.m13;
-            m.m13 = m.m23;
-            m.m23 = tmp;
+                tmp = m.m13;
+                m.m13 = m.m23;
+                m.m23 = tmp;
+            }
         }
 
         private _parseBindShapeMatrixFromP70(p70: Node): Matrix44 {
@@ -1003,7 +1064,7 @@ namespace Aurora.FbxFile {
             return m;
         }
 
-        private _parseSkin(geometry: Node, modelNodeID: uint, bindShapeMatrix: Matrix44, asset: MeshAsset, skeleton: SkeletonData, vertIdxMapping: uint[], numSourceVertices: uint): void {
+        private _parseSkin(geometry: Node, model: Node, bindShapeMatrix: Matrix44, asset: MeshAsset, skeleton: SkeletonData, vertIdxMapping: uint[], numSourceVertices: uint): void {
             const skins = this.findConnectionChildrenNodes(geometry.id, NodeName.DEFORMER, NodeAttribValue.SKIN);
             if (skins) {
                 const skinData: number[][] = [];
@@ -1013,34 +1074,66 @@ namespace Aurora.FbxFile {
                 for (let i = 0, n = skins.length; i < n; ++i) {
                     const clusters = this.findConnectionChildrenNodes(skins[i].id, NodeName.DEFORMER, NodeAttribValue.CLUSTER);
                     if (!clusters) continue;
-                    for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, modelNodeID, bindShapeMatrix, clusters[j], skeleton, skinData, usedBones);
+                    for (let j = 0, m = clusters.length; j < m; ++j) this._parseCluster(asset, model, bindShapeMatrix, clusters[j], skeleton, skinData, usedBones);
                 }
 
-                const n = vertIdxMapping.length;
-                const len = n << 2;
+                const numVertIdxMapping = vertIdxMapping.length;
+                const len = numVertIdxMapping << 2;
                 const boneIndices: uint[] = [];
                 boneIndices.length = len;
                 const boneWeights: number[] = [];
                 boneWeights.length = len;
 
+                const maxDataPerElement = 4;
+                const exceedDataOffset = maxDataPerElement << 1;
                 let numDataPerElement = 0;
                 for (let i = 0; i < numSourceVertices; ++i) {
                     const data = skinData[i];
                     if (data) {
                         let n = data.length >> 1;
-                        if (n > 4) n = 4;
+                        if (n > maxDataPerElement) n = maxDataPerElement;
                         if (numDataPerElement < n) numDataPerElement = n;
                     }
                 }
 
-                for (let i = 0; i < n; ++i) {
+                if (numDataPerElement > maxDataPerElement) numDataPerElement = maxDataPerElement;
+
+                let maxExceedBones = 0;
+                const exceedSorted: number[] = [];
+                for (let i = 0; i < numVertIdxMapping; ++i) {
                     const idx = i * numDataPerElement;
-                    const data = skinData[vertIdxMapping[i]];
+                    let data = skinData[vertIdxMapping[i]];
                     let j = 0;
                     if (data) {
-                        let nn = data.length >> 1;
-                        if (nn > 4) nn = 4;
-                        for (; j < nn; ++j) {
+                        const dataLen = data.length;
+                        let n = dataLen >> 1;
+                        if (n > maxDataPerElement) {
+                            if (exceedSorted.length < exceedDataOffset + n) exceedSorted.length = exceedDataOffset + n;
+                            for (let j = 0; j < n; ++j) exceedSorted[j + exceedDataOffset] = (j << 1) + 1;
+                            
+                            Sort.Merge.sort(exceedSorted, (a: number, b: number) => {
+                                return data[a] > data[b];
+                            }, exceedDataOffset, exceedDataOffset + n - 1);
+
+                            let reserveTotalWeights = 0;
+                            for (let j = 0; j < numDataPerElement; ++j) reserveTotalWeights += data[exceedSorted[j + exceedDataOffset]];
+                            let abandonTotalWeights = 0;
+                            for (let j = numDataPerElement; j < n; ++j) abandonTotalWeights += data[exceedSorted[j + exceedDataOffset]];
+
+                            for (let j = 0; j < numDataPerElement; ++j) {
+                                const idx1 = exceedSorted[j + exceedDataOffset];
+                                const idx2 = j << 1;
+                                const w = data[idx1];
+                                exceedSorted[idx2] = data[idx1 - 1];
+                                exceedSorted[idx2 + 1] = w + abandonTotalWeights * w / reserveTotalWeights;
+                            }
+
+                            data = exceedSorted;
+
+                            if (maxExceedBones < n) maxExceedBones = n;
+                            n = maxDataPerElement;
+                        }
+                        for (; j < n; ++j) {
                             const idx1 = idx + j;
                             let idx2 = j << 1;
                             boneIndices[idx1] = data[idx2];
@@ -1055,12 +1148,14 @@ namespace Aurora.FbxFile {
                     }
                 }
 
+                if (maxExceedBones > 0) console.warn("warnning: parse mesh(" + model.attribName + "), bound " + maxExceedBones + " bones, exceed max " + maxDataPerElement + " bones restriction.");
+
                 asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneIndex0, boneIndices, numDataPerElement, GLVertexBufferDataType.UNSIGNED_SHORT, false, GLUsageType.STATIC_DRAW));
                 asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneWeight0, boneWeights, numDataPerElement, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
             }
         }
 
-        private _parseCluster(asset: MeshAsset, modelNodeID: uint, bindShapeMatrix: Matrix44, cluster: Node, skeleton: SkeletonData, skinData: number[][], usedBones: { [key: string]: uint }): void {
+        private _parseCluster(asset: MeshAsset, model: Node, bindShapeMatrix: Matrix44, cluster: Node, skeleton: SkeletonData, skinData: number[][], usedBones: { [key: string]: uint }): void {
             const links = this.getConnectionChildren(cluster.id);
             if (links) {
                 const boneNode = this._objects.get(links[0].id);
@@ -1110,21 +1205,24 @@ namespace Aurora.FbxFile {
 
                     if (indices) {
                         for (let i = 0, n = indices.length; i < n; ++i) {
-                            const idx = indices[i];
-                            let arr = skinData[idx];
-                            if (!arr) {
-                                arr = [];
-                                skinData[idx] = arr;
+                            const w = weights[i];
+                            if (w !== 0) {
+                                const idx = indices[i];
+                                let arr = skinData[idx];
+                                if (!arr) {
+                                    arr = [];
+                                    skinData[idx] = arr;
+                                }
+                                arr.push(boneIdx, weights[i]);
                             }
-                            arr.push(boneIdx, weights[i]);
                         }
                     }
 
                     const m = asset.bonePreOffsetMatrices[boneIdx];
-                    const poseMat = this._posesMap.get(modelNodeID);
+                    const poseMat = this._posesMap.get(model.id);
 
                     poseMat.append44(transLinkMat.invert(m), m);
-                    //if (bindShapeMatrix) bindShapeMatrix.append44(m, m);
+                    if (bindShapeMatrix) bindShapeMatrix.append44(m, m);
                     //lm.append44(transMat);
 
                     //transMat.invert(asset.bindPreMatrices[boneIdx]);

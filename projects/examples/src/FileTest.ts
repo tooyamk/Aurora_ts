@@ -174,8 +174,7 @@ class FileTest {
                 task.finish();
             });
             //request.open("GET", Helper.getURL("people/model.FBX"), true);
-            //request.open("GET", Helper.getURL("skinnedMeshes/0/model_upy.FBX"), true);
-            request.open("GET", Helper.getURL("skinnedMeshes/1/model_upz.FBX"), true);
+            request.open("GET", Helper.getURL("skinnedMeshes/0/model.FBX"), true);
             //request.open("GET", Helper.getURL("all.FBX"), true);
             //request.open("GET", Helper.getURL("box_anim_upz.FBX"), true);
             //request.open("GET", Helper.getURL("box_anim_upy.FBX"), true);
@@ -201,8 +200,8 @@ class FileTest {
             //mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
             mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
 
-            if (data.animationClips && data.animationClips.length > 0) {
-                const clip = data.animationClips[0];
+            if (data.animationClips && data.animationClips.size > 0) {
+                const clip = data.animationClips.at(0);
                 clip.wrap = Aurora.AnimatorWrap.Loop;
                 clip.skeleton = data.skeleton;
 
@@ -210,21 +209,45 @@ class FileTest {
                 this._animator.setClip(clip);
             }
 
-            for (let m of data.meshes) {
-                //if (m.name !== "对象06") continue;
-                let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
-                mesh.renderer = this._env.forwardRenderer;
-                mesh.asset = m;
-                //mesh.asset.drawIndexSource.offset = 18;
-                //mesh.asset.drawIndexSource.length = 6;
-                mesh.setMaterials(mat);
-                mesh.skeleton = data.skeleton;
+            if (data.meshes) {
+                for (let m of data.meshes) {
+                    /*
+                    if (m.name === "对象01") continue;
+                    if (m.name === "对象02") continue;
+                    if (m.name === "对象03") continue;
+                    if (m.name === "对象04") continue;
+                    if (m.name === "对象05") continue;
+                    if (m.name === "对象06") continue;
+                    if (m.name === "对象07") continue;
+                    if (m.name === "对象08") continue;
+                    if (m.name === "对象09") continue;
+                    if (m.name.indexOf("cp002") >= 0) continue;
+                    if (m.name.indexOf("ref") >= 0) continue;
+                    if (m.name.indexOf("Eye_r_new") >= 0) continue;
+                    //if (m.name.indexOf("Matuge_Main") >= 0) continue;
+                    */
+                    //if (m.name === "对象001") continue;
+                    //if (m.name === "对象003") continue;
+                    //if (m.name === "对象014") continue;
+                    //if (m.name === "对象079") continue;
+                    //if (m.name === "对象080") continue;
+                    console.log(m.name);
+                    let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
+                    mesh.renderer = this._env.forwardRenderer;
+                    mesh.asset = m;
+                    //mesh.asset.drawIndexSource.offset = 18;
+                    //mesh.asset.drawIndexSource.length = 6;
+                    mesh.setMaterials(mat);
+                    mesh.skeleton = data.skeleton;
 
-                //if (data0.skeleton) Helper.printNodeHierarchy([data0.skeleton.bones.get(data0.skeleton.rootBoneNames[0])]);
+                    //if (data0.skeleton) Helper.printNodeHierarchy([data0.skeleton.bones.get(data0.skeleton.rootBoneNames[0])]);
 
-                const scale = 0.5;
-                mesh.node.setLocalScale(scale, scale, scale);
+                    const scale = 0.7;
+                    mesh.node.setLocalScale(scale, scale, scale);
+                }
             }
+
+            //this._modelNode.localRotate(Aurora.Quaternion.createFromEulerY(-0.5 * Math.PI));
         }));
     }
 
@@ -263,8 +286,8 @@ class FileTest {
             mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
             mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
 
-            if (data.animationClips && data.animationClips.length > 0) {
-                const clip = data.animationClips[0];
+            if (data.animationClips && data.animationClips.size > 0) {
+                const clip = data.animationClips.at(0);
                 clip.wrap = Aurora.AnimatorWrap.Loop;
                 clip.skeleton = data.skeleton;
 
@@ -336,8 +359,8 @@ class FileTest {
             //mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
             //mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
 
-            if (data0.animationClips && data0.animationClips.length > 0) {
-                const clip = data0.animationClips[0];
+            if (data0.animationClips && data0.animationClips.size > 0) {
+                const clip = data0.animationClips.at(0);
                 clip.wrap = Aurora.AnimatorWrap.Loop;
                 clip.skeleton = data0.skeleton;
 

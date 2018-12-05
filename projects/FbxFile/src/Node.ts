@@ -40,7 +40,11 @@ namespace Aurora.FbxFile {
         LCL_TRANSLATION = "Lcl Translation",
         LCL_ROTATION = "Lcl Rotation",
         LCL_SCALING = "Lcl Scaling",
-        MAX_HANDLE = "MaxHandle"
+        MAX_HANDLE = "MaxHandle",
+        LOCAL_START = "LocalStart",
+        LOCAL_STOP = "LocalStop",
+        REFERENCE_START = "ReferenceStart",
+        REFERENCE_STOP = "ReferenceStop"
     }
 
     export const enum NodePropertyValueType {

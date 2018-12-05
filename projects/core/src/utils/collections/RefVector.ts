@@ -1,6 +1,6 @@
 namespace Aurora {
     export class RefVector<I extends IRef> extends Ref {
-        private _arr: I[] = [];
+        private _raw: I[] = [];
 
         constructor();
         constructor(...items: I[]);
@@ -15,24 +15,24 @@ namespace Aurora {
                     for (let i = 0, n = arg0.length; i < n; ++i) {
                         const v = arg0[i];
                         if (v) v.retain();
-                        this._arr[i] = v;
+                        this._raw[i] = v;
                     }
                 } else {
                     for (let i = 0, n = args.length; i < n; ++i) {
                         const v = args[i];
                         if (v) v.retain();
-                        this._arr[i] = v;
+                        this._raw[i] = v;
                     }
                 }
             }
         }
 
         public get raw(): I[] {
-            return this._arr;
+            return this._raw;
         }
 
         public get size(): uint {
-            return this._arr.length;
+            return this._raw.length;
         }
 
         public pushBack(...items: I[]): void {
@@ -40,13 +40,13 @@ namespace Aurora {
                 const v = items[i];
                 if (v) v.retain();
             }
-            this._arr.push(...items);
+            this._raw.push(...items);
         }
 
         public popBack(): I {
-            let len = this._arr.length;
+            let len = this._raw.length;
             if (len > 0) {
-                const v = this._arr[--len];
+                const v = this._raw[--len];
                 if (v) v.release();
                 return v;
             } else {
@@ -55,15 +55,15 @@ namespace Aurora {
         } 
 
         public at(idx: uint): I {
-            return this._arr[idx];
+            return this._raw[idx];
         }
 
         public set(idx: uint, value: I): void {
-            const old = this._arr[idx];
+            const old = this._raw[idx];
             if (old !== value) {
                 if (value) value.retain();
                 if (old) old.release();
-                this._arr[idx] = value;
+                this._raw[idx] = value;
             }
         }
 
@@ -72,55 +72,71 @@ namespace Aurora {
                 const v = items[i];
                 if (v) v.retain();
             }
-            this._arr.splice(idx, 0, ...items);
+            this._raw.splice(idx, 0, ...items);
         }
 
         public erase(idx: uint, length: int = 1): void {
-            const len = this._arr.length;
+            const len = this._raw.length;
             if (idx < len) {
                 if (length !== 1) {
                     const end = length < 0 ? len : idx + length;
 
                     if (end >= len) {
                         for (let i = idx; i < len; ++i) {
-                            const v = this._arr[i];
+                            const v = this._raw[i];
                             if (v) v.release();
                         }
-                        this._arr.length = idx;
+                        this._raw.length = idx;
                     } else {
                         for (let i = idx; i < end; ++i) {
-                            const v = this._arr[i];
+                            const v = this._raw[i];
                             if (v) v.release();
                         }
-                        this._arr.splice(idx, end - idx);
+                        this._raw.splice(idx, end - idx);
                     }
                 } else {
-                    const v = this._arr[idx];
+                    const v = this._raw[idx];
                     if (v) v.release();
 
                     if (idx + 1 === len) {
-                        this._arr.length = idx;
+                        this._raw.length = idx;
                     } else {
-                        this._arr.splice(idx, 1);
+                        this._raw.splice(idx, 1);
                     }
                 }
             }
         }
 
+        public clone(): RefVector<I> {
+            const src = this._raw;
+            const len = src.length;
+
+            let vec = new RefVector<I>();
+            const raw = vec._raw;
+            raw.length = len;
+            for (let i = 0, n = src.length; i < n; ++i) {
+                const v = src[i];
+                if (v) v.retain();
+                raw[i] = v;
+            }
+            
+            return vec;
+        }
+
         public clear(): void {
-            const len = this._arr.length;
+            const len = this._raw.length;
             if (len > 0) {
                 for (let i = 0; i < len; ++i) {
-                    const v = this._arr[i];
+                    const v = this._raw[i];
                     if (v) v.release();
                 }
-                this._arr.length = 0;
+                this._raw.length = 0;
             }
         }
 
         protected _refDestroy() {
             this.clear();
-            this._arr = null;
+            this._raw = null;
         }
     }
 }

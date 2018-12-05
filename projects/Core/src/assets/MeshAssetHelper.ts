@@ -4,7 +4,7 @@
 namespace Aurora {
     export abstract class MeshAssetHelper {
         /**
-         * @returns [0] = indices, [1] = vertices.
+         * @returns [indices, vertices].
          */
         public static sortSameVertices(vertices: number[], precision: int = -1): [uint[], number[]] {
             const len = vertices.length;
@@ -42,10 +42,9 @@ namespace Aurora {
             }
             if (!vert) vert = vertices;
 
-            let v0: number, v1: number;
             Sort.Merge.sort(sorted, (a: number, b: number) => {
-                v0 = vert[a];
-                v1 = vert[b];
+                let v0 = vert[a];
+                let v1 = vert[b];
 
                 if (v0 < v1) {
                     return true;

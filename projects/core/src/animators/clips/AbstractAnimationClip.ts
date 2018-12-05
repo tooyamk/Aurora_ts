@@ -1,5 +1,5 @@
 namespace Aurora {
-    export abstract class AbstractAnimationClip {
+    export abstract class AbstractAnimationClip extends Ref {
         public name: string = null;
 
         protected _duration: number = 0;

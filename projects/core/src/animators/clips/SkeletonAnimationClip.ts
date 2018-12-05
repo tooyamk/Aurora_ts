@@ -7,9 +7,24 @@ namespace Aurora {
         protected static readonly TMP_ROT = new Quaternion();
         protected static readonly TMP_SCALE = new Vector3();
 
-        public skeleton: Skeleton = null;
+        protected _skeleton: Skeleton = null;
+
+        protected _startTime: number = 0;
+        protected _endTime: number = 0;
 
         protected _frames: Map<string, SkeletonAnimationClip.Frame[]> = null;
+
+        public get skeleton(): Skeleton {
+            return this._skeleton;
+        }
+
+        public set skeleton(ske: Skeleton) {
+            if (this._skeleton !== ske) {
+                if (ske) ske.retain();
+                if (this._skeleton) this._skeleton.release();
+                this._skeleton = ske;
+            }
+        }
         
         public get frames(): Map<string, SkeletonAnimationClip.Frame[]> {
             return this._frames;
@@ -17,33 +32,31 @@ namespace Aurora {
 
         public set frames(value: Map<string, SkeletonAnimationClip.Frame[]>) {
             this._frames = value;
-            if (value && value.size > 0) {
-                let d = 0;
-                for (let itr of value) {
-                    const frames = itr[1];
-                    if (frames && frames.length > 0) {
-                        const t = frames[frames.length - 1].time;
-                        if (d < t) d = t;
-                    }
-                }
-                this._duration = d;
-            } else {
-                this._duration = 0;
-            }
+        }
+
+        public setTimeRagne(start: number, end: number): void {
+            this._startTime = start;
+            this._endTime = end <= start ? start : end;
+            this._duration = this._endTime - this._startTime;
         }
 
         public update(elapsed: number): number {
             const e = this._wrap(elapsed, this._duration);
 
-            if (this.skeleton && this._frames) {
-                const bones = this.skeleton.bones;
+            if (this._skeleton && this._frames) {
+                const bones = this._skeleton.bones;
                 if (bones) {
-                    for (let itr of bones) {
-                        const name = itr[0];
-                        const frames = this._frames.get(name);
-                        if (frames && frames.length > 0) {
-                            const start = this._findFrame(e, 0, frames.length - 1, frames);
-                            this._updateBone(name, e, frames[start], frames[start + 1]);
+                    const t = e + this._startTime;
+                    const rawBones = bones.raw;
+                    for (let itr of rawBones) {
+                        const bone = itr[1];
+                        if (bone) {
+                            const name = itr[0];
+                            const frames = this._frames.get(name);
+                            if (frames && frames.length > 0) {
+                                const start = this._findFrame(e, 0, frames.length - 1, frames);
+                                this._updateBone(bone, e, frames[start], frames[start + 1]);
+                            }
                         }
                     }
                 }
@@ -72,57 +85,54 @@ namespace Aurora {
             }
         }
 
-        private _updateBone(name: string, elapsed: number, frame0: SkeletonAnimationClip.Frame, frame1: SkeletonAnimationClip.Frame): void {
-            const bone = this.skeleton.bones.get(name);
-            if (bone) {
-                if (frame1) {
-                    if (frame0) {
-                        const t = (elapsed - frame0.time) / (frame1.time - frame0.time);
-                        if (t === 0) {
-                            this._setBoneTRSByFrame(bone, frame0);
-                        } else if (t === 1) {
-                            this._setBoneTRSByFrame(bone, frame1);
+        private _updateBone(bone: Node, elapsed: number, frame0: SkeletonAnimationClip.Frame, frame1: SkeletonAnimationClip.Frame): void {
+            if (frame1) {
+                if (frame0) {
+                    const t = (elapsed - frame0.time) / (frame1.time - frame0.time);
+                    if (t === 0) {
+                        this._setBoneTRSByFrame(bone, frame0);
+                    } else if (t === 1) {
+                        this._setBoneTRSByFrame(bone, frame1);
+                    } else {
+                        let pos: Vector3;
+                        let rot: Quaternion;
+                        let scale: Vector3;
+
+                        if (frame0.translation) {
+                            if (frame1.translation) {
+                                pos = Vector3.lerp(frame0.translation, frame1.translation, t, SkeletonAnimationClip.TMP_POS);
+                            } else {
+                                pos = frame0.translation;
+                            }
                         } else {
-                            let pos: Vector3;
-                            let rot: Quaternion;
-                            let scale: Vector3;
-
-                            if (frame0.translation) {
-                                if (frame1.translation) {
-                                    pos = Vector3.lerp(frame0.translation, frame1.translation, t, SkeletonAnimationClip.TMP_POS);
-                                } else {
-                                    pos = frame0.translation;
-                                }
-                            } else {
-                                pos = Vector3.CONST_ZERO;
-                            }
-
-                            if (frame0.rotation) {
-                                if (frame1.rotation) {
-                                    rot = Quaternion.slerp(frame0.rotation, frame1.rotation, t, SkeletonAnimationClip.TMP_ROT);
-                                } else {
-                                    rot = frame0.rotation;
-                                }
-                            } else {
-                                rot = Quaternion.CONST_IDENTITY;
-                            }
-
-                            if (frame0.scale) {
-                                if (frame1.scale) {
-                                    scale = Vector3.lerp(frame0.scale, frame1.scale, t, SkeletonAnimationClip.TMP_SCALE);
-                                } else {
-                                    scale = frame0.scale;
-                                }
-                            } else {
-                                scale = Vector3.CONST_ONE;
-                            }
-
-                            bone.setLocalTRS(pos, rot, scale);
+                            pos = Vector3.CONST_ZERO;
                         }
+
+                        if (frame0.rotation) {
+                            if (frame1.rotation) {
+                                rot = Quaternion.slerp(frame0.rotation, frame1.rotation, t, SkeletonAnimationClip.TMP_ROT);
+                            } else {
+                                rot = frame0.rotation;
+                            }
+                        } else {
+                            rot = Quaternion.CONST_IDENTITY;
+                        }
+
+                        if (frame0.scale) {
+                            if (frame1.scale) {
+                                scale = Vector3.lerp(frame0.scale, frame1.scale, t, SkeletonAnimationClip.TMP_SCALE);
+                            } else {
+                                scale = frame0.scale;
+                            }
+                        } else {
+                            scale = Vector3.CONST_ONE;
+                        }
+
+                        bone.setLocalTRS(pos, rot, scale);
                     }
-                } else {
-                    if (frame0) this._setBoneTRSByFrame(bone, frame0);
                 }
+            } else {
+                if (frame0) this._setBoneTRSByFrame(bone, frame0);
             }
         }
 
@@ -196,6 +206,15 @@ namespace Aurora {
                 const f = frames[si];
                 for (let i = si + 1; i < numFrames; ++i) frames[i].scale = f.scale.clone();
             }
+        }
+
+        public destroy(): void {
+            this.skeleton = null;
+            this.frames = null;
+        }
+
+        protected _refDestroy(): void {
+            this.destroy();
         }
     }
 

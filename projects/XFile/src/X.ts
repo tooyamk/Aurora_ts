@@ -195,10 +195,10 @@ namespace Aurora.XFile {
                         const skinVertices: number[][] = [];
                         skinVertices.length = numVertices;
                         for (let i = 0; i < numVertices; ++i) skinVertices[i] = [];
-
+                        
                         let numDataPerElement: uint = 0;
 
-                        const bindPreMatrices: Matrix44[] = [];
+                        const bonePreOffsetMatrices: Matrix44[] = [];
 
                         for (let i = 0, sw: SkinWeights; sw = swArr[i++];) {
                             usedBones[sw.boneName] = true;
@@ -208,7 +208,7 @@ namespace Aurora.XFile {
                                 bones[sw.boneName] = numBones++;
                                 boneNames[boneIdx] = sw.boneName;
 
-                                bindPreMatrices[boneIdx] = sw.matrix;
+                                bonePreOffsetMatrices[boneIdx] = sw.matrix;
                                 //bindPreMatrices[boneIdx] = this._containersMap[sw.boneName].worldMatrix.invert(new Matrix44()).append44(sw.matrix);
                             }
 
@@ -224,10 +224,11 @@ namespace Aurora.XFile {
                                 }
                             }
                         }
-                        numDataPerElement >>= 1;
+
+                        numDataPerElement = this._checkAndCombineBindBones(asset.name, skinVertices, numDataPerElement >> 1);
 
                         asset.boneNames = boneNames;
-                        asset.bonePreOffsetMatrices = bindPreMatrices;
+                        asset.bonePreOffsetMatrices = bonePreOffsetMatrices;
 
                         const len = numVertices * numDataPerElement;
                         const boneIndices: number[] = [];
@@ -275,39 +276,42 @@ namespace Aurora.XFile {
                 }
             }
 
-            const skeleton = new Skeleton();
+            const ske = new Skeleton();
+            const skeBones = new RefMap<string, Node>();
+            ske.bones = skeBones;
+            const pose = new Map<string, Matrix44>();
+            data.pose = pose;
             const rootBones: { [key: string]: boolean } = {};
             for (let i = 0, n = this._containers.length; i < n; ++i) {
                 const c = this._containers[i];
                 if (!excludeBones[c.name]) {
                     const bone = new Node();
                     bone.name = c.name;
-                    skeleton.bones.set(c.name, bone);
+                    skeBones.insert(c.name, bone);
+                    pose.set(c.name, c.localMatrix);
 
                     if (!rootBones[c.root.name]) {
                         rootBones[c.root.name] = true;
-                        skeleton.rootBoneNames[skeleton.rootBoneNames.length] = c.root.name;
+                        ske.rootBoneNames[ske.rootBoneNames.length] = c.root.name;
                     }
                 }
             }
 
-            if (skeleton.bones.size > 0) {
-                for (let i = 0, n = skeleton.rootBoneNames.length; i < n; ++i) {
-                    const name = skeleton.rootBoneNames[i];
-                    this._doBoneHierarchy(this._containersMap[name], skeleton.bones.get(name), skeleton.bones);
+            if (ske.bones.size > 0) {
+                for (let i = 0, n = ske.rootBoneNames.length; i < n; ++i) {
+                    const name = ske.rootBoneNames[i];
+                    this._doBoneHierarchy(this._containersMap[name], skeBones.find(name), skeBones);
                 }
 
-                data.skeleton = skeleton;
+                data.skeleton = ske;
             }
 
             if (this.animations.length > 0) {
-                const animClips: SkeletonAnimationClip[] = [];
+                const animClips = new RefVector<SkeletonAnimationClip>();
                 for (let i = 0, n = this.animations.length; i < n; ++i) {
                     const anim = this.animations[i];
-                    const clip = new SkeletonAnimationClip();
-                    clip.name = anim.name;
-                    animClips[animClips.length] = clip;
 
+                    let maxTime: number = -1;
                     const frames = new Map<string, SkeletonAnimationClip.Frame[]>();
                     for (let itr of anim.frames) {
                         const boneFramesMap = itr[1];
@@ -315,19 +319,77 @@ namespace Aurora.XFile {
                         frames.set(itr[0], boneFrames);
 
                         let n = 0;
-                        for (let itr1 of boneFramesMap) boneFrames[n++] = itr1[1];
+                        for (let itr1 of boneFramesMap) {
+                            const f = itr1[1];
+                            if (maxTime < f.time) maxTime = f.time;
+                            boneFrames[n++] = f;
+                        }
 
                         Sort.Merge.sort(boneFrames, (f0: SkeletonAnimationClip.Frame, f1: SkeletonAnimationClip.Frame) => {
-                            return f0.time < f1.time;
+                            return f0.time <= f1.time;
                         });
 
                         SkeletonAnimationClip.supplementLerpFrames(boneFrames);
                     }
 
+                    const clip = new SkeletonAnimationClip();
+                    animClips.pushBack(clip);
+                    clip.name = anim.name;
                     clip.frames = frames;
+                    clip.setTimeRagne(0, Math.max(0, maxTime));
                 }
                 data.animationClips = animClips;
             }
+        }
+
+
+        private _checkAndCombineBindBones(name: string, skinVertices: number[][], numDataPerElement: uint): uint {
+            const maxDataPerElement = 4;
+
+            if (numDataPerElement > maxDataPerElement) {
+                numDataPerElement = maxDataPerElement;
+
+                const exceedDataOffset = maxDataPerElement << 1;
+
+                let maxExceedBones = 0;
+                const exceedSorted: number[] = [];
+
+                for (let i = 0, numVertices = skinVertices.length; i < numVertices; ++i) {
+                    const sv = skinVertices[i];
+                    const svLen = sv.length;
+                    if (svLen > exceedDataOffset) {
+                        const n = svLen >> 1;
+                        if (maxExceedBones < n) maxExceedBones = n;
+
+                        if (exceedSorted.length < exceedDataOffset + n) exceedSorted.length = exceedDataOffset + n;
+                        for (let j = 0; j < n; ++j) exceedSorted[j + exceedDataOffset] = (j << 1) + 1;
+
+                        Sort.Merge.sort(exceedSorted, (a: number, b: number) => {
+                            return sv[a] > sv[b];
+                        }, exceedDataOffset, exceedDataOffset + n - 1);
+
+                        let reserveTotalWeights = 0;
+                        for (let j = 0; j < numDataPerElement; ++j) reserveTotalWeights += sv[exceedSorted[j + exceedDataOffset]];
+                        let abandonTotalWeights = 0;
+                        for (let j = numDataPerElement; j < n; ++j) abandonTotalWeights += sv[exceedSorted[j + exceedDataOffset]];
+
+                        for (let j = 0; j < numDataPerElement; ++j) {
+                            const idx1 = exceedSorted[j + exceedDataOffset];
+                            const idx2 = j << 1;
+                            const w = sv[idx1];
+                            exceedSorted[idx2] = sv[idx1 - 1];
+                            exceedSorted[idx2 + 1] = w + abandonTotalWeights * w / reserveTotalWeights;
+                        }
+
+                        for (let j = 0; j < exceedDataOffset; ++j) sv[j] = exceedSorted[j];
+                        sv.length = exceedDataOffset;
+                    }
+                }
+
+                console.warn("warnning: parse mesh(" + name + "), bound " + maxExceedBones + " bones, exceed max " + maxDataPerElement + " bones restriction.");
+            }
+
+            return numDataPerElement;
         }
 
         private _recordExcludeBones(c: Container, excludeBones: { [key: string]: boolean }): void {
@@ -337,10 +399,10 @@ namespace Aurora.XFile {
             }
         }
 
-        private _doBoneHierarchy(parentContainer: Container, parentBone: Node, bones: Map<string, Node>): void {
+        private _doBoneHierarchy(parentContainer: Container, parentBone: Node, bones: RefMap<string, Node>): void {
             for (let i = 0, n = parentContainer.children.length; i < n; ++i) {
                 const c = parentContainer.children[i];
-                const b = bones.get(c.name);
+                const b = bones.find(c.name);
                 parentBone.addChild(b);
                 this._doBoneHierarchy(c, b, bones);
             }
@@ -357,10 +419,47 @@ namespace Aurora.XFile {
         }
     }
 
-    export class Data {
+    export class Data extends Ref {
         public meshes: MeshAsset[] = null;
-        public skeleton: Skeleton = null;
-        public animationClips: SkeletonAnimationClip[] = null;
+        public pose: Map<string, Matrix44> = null;
+
+        private _skeleton: Skeleton = null;
+        private _animationClips: RefVector<SkeletonAnimationClip> = null;
+
+        public get skeleton(): Skeleton {
+            return this._skeleton;
+        }
+
+        public set skeleton(ske: Skeleton) {
+            if (this._skeleton !== ske) {
+                if (ske) ske.retain();
+                if (this._skeleton) this._skeleton.release();
+                this._skeleton = ske;
+            }
+        }
+
+        public get animationClips(): RefVector<SkeletonAnimationClip> {
+            return this._animationClips;
+        }
+
+        public set animationClips(clips: RefVector<SkeletonAnimationClip>) {
+            if (this._animationClips !== clips) {
+                if (clips) clips.retain();
+                if (this._animationClips) this._animationClips.release();
+                this._animationClips = clips;
+            }
+        }
+
+        public destroy(): void {
+            this.skeleton = null;
+            this.animationClips = null;
+            this.meshes = null;
+            this.pose = null;
+        }
+
+        protected _refDestroy(): void {
+            this.destroy();
+        }
     }
 
     export function parse(data: ByteArray): Data {
@@ -410,8 +509,10 @@ namespace Aurora.XFile {
 
                 parsedData.generate(result);
             } else {
-
+                console.error("parse x file error: this is a " + fmt + " format, only support " + FormatType.BIN + " format.");
             }
+        } else {
+            console.error("parse x file error: unknow format.");
         }
 
         return result;

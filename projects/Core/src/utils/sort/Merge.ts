@@ -44,21 +44,6 @@ namespace Aurora.Sort.Merge {
         }
     }
 
-    const _mergePassOffset = <T>(SR: T[], SROffset: int, TR: T[], TROffset: int, s: int, n: int, compareFn: (a: T, b: T) => boolean) => {
-        let i = 0;
-        const s2 = s << 1, s_1 = s - 1;
-        const nn = n - s2, s2_1 = s2 - 1;
-        while (i <= nn) {
-            _merge<T>(SR, TR, i, i + s_1, i + s2_1, compareFn);
-            i += s2;
-        }
-        if (i < n - s + 1) {
-            _merge<T>(SR, TR, i, i + s_1, n - 1, compareFn);
-        } else {
-            for (let j = i; j < n; ++j) TR[j + TROffset] = SR[j + SROffset];
-        }
-    }
-
     const _merge = <T>(SR: T[], TR: T[], i: int, m: int, n: int, compareFn: (a: T, b: T) => boolean) => {
         let j: int, k: int;
         for (j = m + 1, k = i; i <= m && j <= n; ++k) {
@@ -71,5 +56,44 @@ namespace Aurora.Sort.Merge {
         }
         while (i <= m) TR[k++] = SR[i++];
         while (j <= n) TR[k++] = SR[j++];
+    }
+
+    const _mergePassOffset = <T>(SR: T[], SROffset: int, TR: T[], TROffset: int, s: int, n: int, compareFn: (a: T, b: T) => boolean) => {
+        let i = 0;
+        const s2 = s << 1, s_1 = s - 1;
+        const nn = n - s2, s2_1 = s2 - 1;
+        while (i <= nn) {
+            _mergeOffset<T>(SR, SROffset, TR, TROffset, i, i + s_1, i + s2_1, compareFn);
+            i += s2;
+        }
+        if (i < n - s + 1) {
+            _mergeOffset<T>(SR, SROffset, TR, TROffset, i, i + s_1, n - 1, compareFn);
+        } else {
+            for (let j = i; j < n; ++j) TR[j + TROffset] = SR[j + SROffset];
+        }
+    }
+
+    const _mergeOffset = <T>(SR: T[], SROffset: int, TR: T[], TROffset: int, i: int, m: int, n: int, compareFn: (a: T, b: T) => boolean) => {
+        let j: int, k: int;
+        for (j = m + 1, k = i; i <= m && j <= n; ++k) {
+            //if (SR[i] < SR[j])
+            if (compareFn(SR[i + SROffset], SR[j + SROffset])) {
+                TR[k + TROffset] = SR[i + SROffset];
+                ++i;
+            } else {
+                TR[k + TROffset] = SR[j + SROffset];
+                ++j;
+            }
+        }
+        while (i <= m) {
+            TR[k + TROffset] = SR[i + SROffset];
+            ++k;
+            ++i;
+        }
+        while (j <= n) {
+            TR[k + TROffset] = SR[j + SROffset];
+            ++k;
+            ++j;
+        }
     }
 }

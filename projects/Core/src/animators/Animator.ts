@@ -1,5 +1,5 @@
 namespace Aurora {
-    export class Animator<T extends AbstractAnimationClip> {
+    export class Animator<T extends AbstractAnimationClip> extends Ref {
         protected _curClip: AbstractAnimationClip = null;
         protected _elapsed: number = 0;
 
@@ -31,7 +31,12 @@ namespace Aurora {
         }
 
         public setClip(clip: T, startTime: number = 0, blendTime: number = 0): void {
-            this._curClip = clip;
+            if (this._curClip !== clip) {
+                if (clip) clip.retain();
+                if (this._curClip) this._curClip.release();
+                this._curClip = clip;
+            }
+
             if (clip) {
                 this._elapsed = startTime;
             } else {
@@ -41,6 +46,17 @@ namespace Aurora {
 
         protected _update(delta: number): void {
             this._elapsed = this._curClip.update(this._elapsed);
+        }
+
+        public destroy(): void {
+            if (this._curClip) {
+                this._curClip.release();
+                this._curClip = null;
+            }
+        }
+
+        protected _refDestroy(): void {
+            this.destroy();
         }
     }
 }

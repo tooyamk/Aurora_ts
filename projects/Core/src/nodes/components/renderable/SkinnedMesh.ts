@@ -6,7 +6,7 @@ namespace Aurora {
         protected static readonly TMP_MAT = new Matrix44();
         protected static readonly TMP_MAT_EMPTY_ARR: Matrix44[] = [];
 
-        public skeleton: Skeleton = null;
+        protected _skeleton: Skeleton = null;
 
         protected _convertedAsset: MeshAsset;
 
@@ -25,12 +25,24 @@ namespace Aurora {
             this._convertedAsset.link = this._asset;
         }
 
+        public get skeleton(): Skeleton {
+            return this._skeleton;
+        }
+
+        public set skeleton(ske: Skeleton) {
+            if (this._skeleton !== ske) {
+                if (ske) ske.retain();
+                if (this._skeleton) this._skeleton.release();
+                this._skeleton = ske;
+            }
+        }
+
         public checkRenderable(): boolean {
             return !!this._asset;
         }
 
         public render(renderingData: RenderingData): void {
-            if (this.skeleton && this.skeleton.bones && this._asset.boneNames) {
+            if (this._skeleton && this._skeleton.bones && this._asset.boneNames) {
                 const boneIndicesSource = this._asset.getVertexSource(ShaderPredefined.a_BoneIndex0);
                 const boneWeightsSource = this._asset.getVertexSource(ShaderPredefined.a_BoneWeight0);
                 if (boneIndicesSource && boneWeightsSource && boneIndicesSource.size === boneWeightsSource.size) {
@@ -41,6 +53,8 @@ namespace Aurora {
                         if (!bindPreMatrices) bindPreMatrices = SkinnedMesh.TMP_MAT_EMPTY_ARR;
                         let bindPostMatrices = this._asset.bonePostOffsetMatrices;
                         if (!bindPostMatrices) bindPostMatrices = SkinnedMesh.TMP_MAT_EMPTY_ARR;
+
+                        const rawBones = this._skeleton.bones.raw;
  
                         const boneNames = this._asset.boneNames;
                         const numBones = boneNames.length;
@@ -48,7 +62,7 @@ namespace Aurora {
                             for (let i = this._finalMatrices.length; i < numBones; ++i) this._finalMatrices[i] = new Matrix44();
                         }
                         for (let i = 0; i < numBones; ++i) {
-                            const bone = this.skeleton.bones.get(this._asset.boneNames[i]);
+                            const bone = rawBones.get(this._asset.boneNames[i]);
                             if (!bone) continue;
 
                             const mat = this._finalMatrices[i];

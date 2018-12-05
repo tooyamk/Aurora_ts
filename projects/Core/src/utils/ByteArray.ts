@@ -457,9 +457,9 @@ namespace Aurora {
         }
 
         public readBytes(length: uint): ByteArray;
-        public readBytes(value: ByteArray, length: uint): void;
+        public readBytes(value: ByteArray, length: uint): ByteArray;
 
-        public readBytes(...args: any[]): ByteArray | void {
+        public readBytes(...args: any[]): ByteArray {
             let bytes: ByteArray = null;
             let length: uint = null;
 
@@ -480,6 +480,8 @@ namespace Aurora {
             if (!bytes) bytes = new ByteArray(length);
             bytes.writeBytes(this, length);
             this._pos += length;
+            
+            return bytes;
         }
 
         public writeBytes(value: ByteArray, length: uint = null): void {

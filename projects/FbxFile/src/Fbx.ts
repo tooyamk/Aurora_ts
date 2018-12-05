@@ -1,21 +1,29 @@
 namespace Aurora.FbxFile {
-    export const Version = "0.1.0";
+    export const Version = "0.2.0";
 
     export function parse(data: ByteArray): Data {
-        data.position += 23;
-        const ver = data.readUint32();
-
         const collections = new Collections();
-        const root = new Node("", null);
 
-        while (data.bytesAvailable > 4) {
-            if (data.readUint32() < data.length) {
-                data.position -= 4;
+        const magic = data.readString(ByteArray.StringMode.FIXED_LENGTH, 21);
+        if (magic === "Kaydara FBX Binary  ") {
+            data.position += 2;
+            const ver = data.readUint32();
 
-                _parseNode(data, root, ver, collections);
-            } else {
-                break;
+            const root = new Node("", null);
+
+            while (data.bytesAvailable > 4) {
+                if (data.readUint32() < data.length) {
+                    data.position -= 4;
+
+                    _parseNode(data, root, ver, collections);
+                } else {
+                    break;
+                }
             }
+        } else if (magic.indexOf("FBX") >= 0) {
+            console.error("parse fbx file error: this is a text format, only support bin format.");
+        } else {
+            console.error("parse fbx file error: unknow format.");
         }
 
         return collections.parse();
@@ -119,9 +127,11 @@ namespace Aurora.FbxFile {
                         data.position += compressedLength;
                         break;
                     } else {
-                        const inflate = new Zlib.Inflate(new Uint8Array(data.raw), { index: data.position, bufferSize: compressedLength });
-                        data.position += compressedLength;
+                        const inflate = new Zlib.Inflate(new Uint8Array(data.readBytes(compressedLength).raw));
                         uncompressedData = new ByteArray(inflate.decompress().buffer);
+                        //const inflate = new Zlib.Inflate(new Uint8Array(data.raw), { index: data.position, bufferSize: compressedLength });
+                        //data.position += compressedLength;
+                        //uncompressedData = new ByteArray(inflate.decompress().buffer);
                     }
                 } else {
                     uncompressedData = data;
