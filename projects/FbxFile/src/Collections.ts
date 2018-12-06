@@ -352,8 +352,6 @@ namespace Aurora.FbxFile {
                         }
                     }
                 }
-
-                if (animationClips) animationClips.release();
             }
 
             if (meshes) {
@@ -780,8 +778,6 @@ namespace Aurora.FbxFile {
                     clip.setTimeRagne(start, end < 0 ? Math.max(0, maxTime) : end);
                 }
             }
-
-            if (clips) clips.retain();
 
             return clips;
         }
@@ -1221,21 +1217,21 @@ namespace Aurora.FbxFile {
                     const m = asset.bonePreOffsetMatrices[boneIdx];
                     const poseMat = this._posesMap.get(model.id);
 
-                    poseMat.append44(transLinkMat.invert(m), m);
-                    if (bindShapeMatrix) bindShapeMatrix.append44(m, m);
-                    //lm.append44(transMat);
+                    poseMat.append34(transLinkMat.invert34(m), m);
+                    if (bindShapeMatrix) bindShapeMatrix.append34(m, m);
+                    //lm.append34(transMat);
 
                     //transMat.invert(asset.bindPreMatrices[boneIdx]);
-                    //transMat.append44(transLinkMat.invert(asset.bindPostMatrices[boneIdx]), asset.bindPostMatrices[boneIdx]);
+                    //transMat.append34(transLinkMat.invert(asset.bindPostMatrices[boneIdx]), asset.bindPostMatrices[boneIdx]);
 
-                    //transMat.append44(transLinkMat.invert(asset.bindPreMatrices[boneIdx]), asset.bindPreMatrices[boneIdx]);
+                    //transMat.append34(transLinkMat.invert(asset.bindPreMatrices[boneIdx]), asset.bindPreMatrices[boneIdx]);
 
-                    //transLinkMat.invert(asset.bindPreMatrices[boneIdx]).append44(transMat);
+                    //transLinkMat.invert(asset.bindPreMatrices[boneIdx]).append34(transMat);
 
                     //asset.bindMatrices[boneIdx].set34(transMat);
                     //transLinkMat.invert(asset.bindMatrices[boneIdx]);
-                    //transMat.append44(transLinkMat, asset.bindMatrices[boneIdx]);
-                    //transLinkMat.invert(asset.bindMatrices[boneIdx]).append44(transMat);
+                    //transMat.append34(transLinkMat, asset.bindMatrices[boneIdx]);
+                    //transLinkMat.invert(asset.bindMatrices[boneIdx]).append34(transMat);
                 }
             }
         }

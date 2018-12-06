@@ -10,10 +10,10 @@ class SpriteAtlasTest {
         env.start(() => {
             let gl = env.gl;
             gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            env.camera.setProjectionMatrix(Aurora.Matrix44.createOrthoLH(gl.canvas.width, gl.canvas.height, 5, 10000));
+            env.camera.value.setProjectionMatrix(Aurora.Matrix44.createOrthoLH(gl.canvas.width, gl.canvas.height, 5, 10000));
         },
         (delta: number) => {
-            env.renderingManager.render(env.gl, env.camera, env.world, null);
+            env.renderingManager.render(env.gl, env.camera.value, env.world.value, null);
         });
 
         Aurora.Node.AbstractComponent;
@@ -33,12 +33,12 @@ class SpriteAtlasTest {
                 atlas.parse(JSON.parse(request.responseText), tex);
 
                 let s = new Aurora.Node().addComponent(new Aurora.Sprite(atlas.getFrame("equipment_bg")));
-                s.meshMaker = new Aurora.Grid9SpriteMeshMaker(10, 10, 10, 10);
+                s.meshMaker = new Aurora.SpriteGrid9MeshMaker(10, 10, 10, 10);
                 s.width = 800;
                 s.height = 600;
                 s.renderer = this._env.spriteRenderer;
                 s.node.localTranslate(0, 0, 100);
-                this._env.camera.node.addChild(s.node);
+                this._env.camera.value.node.addChild(s.node);
             };
             img.src = "res/atlas/tex.png";
         });

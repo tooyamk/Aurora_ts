@@ -1,6 +1,7 @@
 ///<reference path="libs/AlphaTest.ts"/>
 ///<reference path="libs/Lighting.ts"/>
 ///<reference path="libs/Reflection.ts"/>
+///<reference path="libs/Skinning.ts"/>
 
 namespace Aurora.BuiltinShader.DefaultMesh {
     export const NAME = "_Built-in_DefaultMesh";
@@ -22,8 +23,19 @@ attribute vec3 ${ShaderPredefined.a_Position0};
 
 #include<${Lib.Lighting.VERT_HEADER.name}>
 #include<${Lib.Reflection.VERT_HEADER.name}>
+#include<${Lib.Skinning.VERT_HEADER.name}>
 
 void main(void) {
+#include<${General.DECLARE_TEMP_VAR.name}>(vec3, pos)
+pos = ${ShaderPredefined.a_Position0};
+
+#ifdef ${General.DECLARE_ATTRIB_DEFINE_PREFIX}${ShaderPredefined.a_Normal0}
+    #include<${General.DECLARE_TEMP_VAR.name}>(vec3, nrm)
+    nrm = ${ShaderPredefined.a_Normal0};
+#endif
+
+#include<${Lib.Skinning.VERT.name}>(pos, pos)
+
 #ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_UV0}
     ${ShaderPredefined.v_UV0} = ${ShaderPredefined.a_UV0};
 #endif
@@ -32,10 +44,10 @@ void main(void) {
     ${ShaderPredefined.v_Color0} = ${ShaderPredefined.a_Color0};
 #endif
 
-#include<${Lib.Lighting.VERT.name}>
-#include<${Lib.Reflection.VERT.name}>
+#include<${Lib.Lighting.VERT.name}>(pos, nrm)
+#include<${Lib.Reflection.VERT.name}>(pos, nrm)
 
-    gl_Position = ${ShaderPredefined.u_M44_L2P} * vec4(${ShaderPredefined.a_Position0}, 1.0);
+    gl_Position = ${ShaderPredefined.u_M44_L2P} * vec4(pos, 1.0);
 }`;
 
     export const FRAGMENT = `

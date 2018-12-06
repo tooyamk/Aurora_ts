@@ -3,17 +3,17 @@ namespace Aurora {
         public name: string = null;
 
         protected _duration: number = 0;
-        protected _wrap = AnimatorWrap.Clamp;
+        protected _wrap = AnimationWrap.Clamp;
 
         public get duration(): number {
             return this._duration;
         }
 
-        public get wrap(): AnimatorWrapType {
+        public get wrap(): AnimationWrapMethod {
             return this._wrap;
         }
 
-        public set wrap(value: AnimatorWrapType) {
+        public set wrap(value: AnimationWrapMethod) {
             if (value && this._wrap !== value) this._wrap = value;
         }
 

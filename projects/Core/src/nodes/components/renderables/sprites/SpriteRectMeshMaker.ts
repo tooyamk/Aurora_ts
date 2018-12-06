@@ -1,5 +1,3 @@
-///<reference path="ISpriteMeshMaker.ts"/>
-
 namespace Aurora {
     class SharedRect {
         private static readonly _tmpVec2 = new Vector2();
@@ -150,15 +148,25 @@ namespace Aurora {
         }
     }
 
-    export class RectSpriteMeshMaker implements ISpriteMeshMaker {
+    function createDefault(): SpriteRectMeshMaker {
+        const maker = new SpriteRectMeshMaker();
+        maker.retain();
+        return maker;
+    }
+
+    export class SpriteRectMeshMaker extends Sprite.AbstractMeshMaker {
+        public static readonly DEFAULT = createDefault();
         protected static readonly _sharedRect = new SharedRect();
 
         public updateVertices(w: number, h: number, anchor: Vector2, f: SpriteFrame, m: Matrix44): boolean {
-            return RectSpriteMeshMaker._sharedRect.updateVertices(w, h, anchor, f, m);
+            return SpriteRectMeshMaker._sharedRect.updateVertices(w, h, anchor, f, m);
         }
 
         public updateAsset(f: SpriteFrame, tex: GLTexture2D, color: Color4): MeshAsset {
-            return RectSpriteMeshMaker._sharedRect.updateAsset(f, tex, color);
+            return SpriteRectMeshMaker._sharedRect.updateAsset(f, tex, color);
+        }
+
+        public destroy(): void {
         }
     }
 }

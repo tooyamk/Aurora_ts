@@ -4,10 +4,10 @@ class Other {
     constructor() {
         let env = new Env();
         
-        let skyNode = env.world.addChild(new Aurora.Node());
-        let model1Node = env.world.addChild(new Aurora.Node());
-        let model2Node = env.world.addChild(new Aurora.Node());
-        let light = env.world.addChild(new Aurora.Node()).addComponent(new Aurora.PointLight());
+        let skyNode = env.world.value.addChild(new Aurora.Node());
+        let model1Node = env.world.value.addChild(new Aurora.Node());
+        let model2Node = env.world.value.addChild(new Aurora.Node());
+        let light = env.world.value.addChild(new Aurora.Node()).addComponent(new Aurora.PointLight());
         //light.spotAngle = 10 * Math.PI / 180;
         light.color.setFromNumbers(1, 1, 1);
         light.setAttenuation(2500);
@@ -32,12 +32,12 @@ class Other {
         fbo.setAttachmentRenderBuffer(Aurora.GLRenderBufferAttachment.DEPTH_STENCIL_ATTACHMENT, depthAndStencilRBO);
         //fbo.setAttachmentRenderBuffer(MITOIA.GLFrameBufferRenderBufferAttachment.STENCIL_ATTACHMENT, stencilRBO);
     
-        env.camera.clear.color.setFromNumbers(0.5, 0.5, 0.5, 1);
+        env.camera.value.clear.color.setFromNumbers(0.5, 0.5, 0.5, 1);
         //cam.clear.clearColor = false;
         //cam.clear.clearDepth = false;
-        env.camera.node.setLocalPosition(0, 0, -10);
+        env.camera.value.node.setLocalPosition(0, 0, -10);
         if (fbo.checkStatus()) {
-            env.camera.frameBuffer = fbo;
+            env.camera.value.frameBuffer = fbo;
         } else {
             let a = 1;
         }
@@ -57,7 +57,7 @@ class Other {
         this.createSkyBox(skyNode, env.gl, env.shaderStore, Aurora.BuiltinShader.DefaultSkyBox.NAME, Aurora.BuiltinShader.DefaultSkyBox.NAME).renderer = env.forwardRenderer;
     
     
-        let hit = new Aurora.Ray(new Aurora.Vector3(0, 0, 490)).cast(env.world, 0x7FFFFFFF, Aurora.GLCullFace.NONE);
+        let hit = new Aurora.Ray(new Aurora.Vector3(0, 0, 490)).cast(env.world.value, 0x7FFFFFFF, Aurora.GLCullFace.NONE);
     
         //model1Node.appendLocalRotation(MITOIA.Quaternion.createFromEulerY(Math.PI));
     
@@ -70,13 +70,13 @@ class Other {
         env.start(() => {
             let gl = env.gl;
             gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLH(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
+            env.camera.value.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLH(Math.PI / 3, gl.canvas.width / gl.canvas.height, 5, 10000));
         },
         (delta: number) => {
             model1Node.localRotate(Aurora.Quaternion.createFromEulerY(Math.PI / 180));
             //cameraNode.appendLocalRotation(MITOIA.Quaternion.createFromEulerX(Math.PI / 180));
             //gl.context.bindTexture(MITOIA.GL.TEXTURE_2D, null);
-            env.renderingManager.render(env.gl, env.camera, env.world, [light]);
+            env.renderingManager.render(env.gl, env.camera.value, env.world.value, [light]);
             env.renderingManager.postProcess(env.gl, [pp]);
             //gl.context.flush();
             //gl.clear(null);

@@ -121,6 +121,7 @@ namespace Aurora {
                     this._definesList.clear();
                     this._uniformsList.clear();
                 }
+                obj.renderable.postRender();
                 renderingData.out.clear();
             }
         }

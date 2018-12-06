@@ -25,6 +25,10 @@ namespace Aurora {
         protected _defaultMaterial: Material;
         protected _defaultShader: Shader;
 
+        protected _renderQueue: RenderingObject[] = null;
+        protected _renderQueueStart: uint = 0;
+        protected _renderQueueEnd: int = 0;
+
         constructor(gl: GL) {
             super();
             
@@ -115,6 +119,10 @@ namespace Aurora {
             this._curUniformInfos = null;
             this._curShaderNumDefines = 0;
 
+            this._renderQueue = renderingObjects;
+            this._renderQueueStart = start;
+            this._renderQueueEnd = start;
+
             for (let i = start; i <= end; ++i) {
                 const obj = renderingObjects[i];
                 renderingData.in.renderingObject = obj;
@@ -160,8 +168,8 @@ namespace Aurora {
 
                             for (let i = 0; i < this._reformatsLen; ++i) {
                                 let idx = this._reformats[i];
-                                const vs0 = this._vertexSources[idx++];
-                                const vs1 = this._vertexSources[idx];
+                                const vs0 = this._vertexSources[idx];
+                                const vs1 = this._vertexSources[++idx];
                                 vs1.size = vs0.size;
                                 vs1.type = vs0.type;
                                 vs1.normalized = vs0.normalized;
@@ -201,6 +209,7 @@ namespace Aurora {
                         }
 
                         this._combine(as.drawIndexSource, drawIdxLen);
+                        this._renderQueueEnd = i;
                         this._numCombinedVertex += len;
                         this._numCombinedIndex += drawIdxLen;
                         while (this._numCombinedVertex > this._numAllicatedVertex) this._numAllicatedVertex <<= 1;
@@ -224,6 +233,7 @@ namespace Aurora {
             this._curProgramAtts = null;
             this._curUniformInfos = null;
             this._curShaderNumDefines = 0;
+            this._renderQueue = null;
         }
 
         public flush(): void {
@@ -262,6 +272,11 @@ namespace Aurora {
                 this._numCombinedVertex = 0;
                 this._numCombinedIndex = 0;
                 this._activeUniformsList.clear();
+            }
+            
+            if (this._renderQueue && this._renderQueueStart <= this._renderQueueEnd) {
+                for (let i = this._renderQueueStart, n = this._renderQueueEnd; i <= n; ++i) this._renderQueue[i].renderable.postRender();
+                this._renderQueueStart = this._renderQueueEnd + 1;
             }
         }
 

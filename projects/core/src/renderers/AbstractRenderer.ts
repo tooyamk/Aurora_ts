@@ -1,6 +1,6 @@
 namespace Aurora {
     export abstract class AbstractRenderer {
-        public isRendering: boolean = false;
+        public isRendering = false;
 
         protected _renderingMgr: RenderingManager = null;
         protected _lights: AbstractLight[] = null;

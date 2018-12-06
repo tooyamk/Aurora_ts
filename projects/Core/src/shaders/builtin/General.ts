@@ -83,6 +83,34 @@ varying \${0} \${1};
     export const ASSIGNMENT_PREFIX: string = "_ASSIGNMENT_";
 
     /**
+     * @param pos (vec3), local pos.
+     */
+    export const VARYING_WORLD_POS0: ShaderLib = {
+        name: "_VARYING_WORLD_POS0",
+        source: `
+#if defined(${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_WorldPos0}) && defined(${General.DECLARE_UNIFORM_DEFINE_PREFIX}${ShaderPredefined.u_M44_L2W})
+    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_WorldPos0}
+        #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_WorldPos0}
+        ${ShaderPredefined.v_WorldPos0} = (${ShaderPredefined.u_M44_L2W} * vec4(\${0}, 1.0)).xyz;
+    #endif
+#endif
+`};
+
+    /**
+     * @param nrm (vec3), local nrm.
+     */
+    export const VARYING_WORLD_NORMAL0: ShaderLib = {
+        name: "_VARYING_WORLD_NORMAL0",
+        source: `
+#if defined(${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_WorldNormal0}) && defined(${General.DECLARE_UNIFORM_DEFINE_PREFIX}${ShaderPredefined.u_M33_L2W})
+    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_WorldNormal0}
+        #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_WorldNormal0}
+        ${ShaderPredefined.v_WorldNormal0} = ${ShaderPredefined.u_M33_L2W} * \${0};
+    #endif
+#endif
+`};
+
+    /**
      * @param diffuseColor (vec4).
      */
     export const FINAL_COLOR: ShaderLib = {
@@ -100,5 +128,6 @@ varying \${0} \${1};
 #endif
 `};
 
-    export const SOURCES: ShaderLib[] = [DECLARE_ATTRIB, DECLARE_UNIFORM, DECLARE_UNIFORM_ARRAY, DECLARE_VARYING, DECLARE_TEMP_VAR, FINAL_COLOR];
+    export const SOURCES: ShaderLib[] = [DECLARE_ATTRIB, DECLARE_UNIFORM, DECLARE_UNIFORM_ARRAY, DECLARE_VARYING, DECLARE_TEMP_VAR, 
+         VARYING_WORLD_POS0, VARYING_WORLD_NORMAL0, FINAL_COLOR];
 }

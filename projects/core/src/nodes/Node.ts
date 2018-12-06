@@ -785,7 +785,7 @@ namespace Aurora {
             if (this._dirty & Node.INVERSE_WORLD_MATRIX_DIRTY) {
                 this._dirty &= ~Node.INVERSE_WORLD_MATRIX_DIRTY;
 
-                this.readonlyWorldMatrix.invert(this._inverseWorldMatrix);
+                this.readonlyWorldMatrix.invert34(this._inverseWorldMatrix);
             }
         }
 

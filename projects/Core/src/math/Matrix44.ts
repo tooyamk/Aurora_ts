@@ -692,7 +692,109 @@ namespace Aurora {
             this.m32 += this.m33 * z;
         }
 
-        public invert(rst: Matrix44 = null): Matrix44 {
+        public invert33(rst: Matrix44 = null): Matrix44 {
+            let tmp0 = this.m22;
+            let tmp2 = this.m12;
+            let tmp6 = this.m02;
+
+            const dst0 = tmp0 * this.m11 - tmp2 * this.m21;
+            const dst1 = tmp6 * this.m21 - tmp0 * this.m01;
+            const dst2 = tmp2 * this.m01 - tmp6 * this.m11;
+
+            let det = this.m00 * dst0 + this.m10 * dst1 + this.m20 * dst2;
+            if (det > MathUtils.ZERO_TOLERANCE || det < -MathUtils.ZERO_TOLERANCE) {
+                const dst4 = tmp2 * this.m20 - tmp0 * this.m10;
+                const dst5 = tmp0 * this.m00 - tmp6 * this.m20;
+                const dst6 = tmp6 * this.m10 - tmp2 * this.m00;
+
+                const dst8 = this.m10 * this.m21 - this.m20 * this.m11;
+                const dst9 = this.m20 * this.m01 - this.m00 * this.m21;
+                const dst10 = this.m00 * this.m11 - this.m10 * this.m01;
+
+                det = 1 / det;
+
+                rst = rst || this;
+
+                rst.m00 = dst0 * det;
+                rst.m01 = dst1 * det;
+                rst.m02 = dst2 * det;
+
+                rst.m10 = dst4 * det;
+                rst.m11 = dst5 * det;
+                rst.m12 = dst6 * det;
+
+                rst.m20 = dst8 * det;
+                rst.m21 = dst9 * det;
+                rst.m22 = dst10 * det;
+
+                return rst;
+            } else {
+                return null;
+            }
+        }
+
+        public invert34(rst: Matrix44 = null): Matrix44 {
+            let tmp0 = this.m22;
+            let tmp2 = this.m12;
+            let tmp6 = this.m02;
+
+            const dst0 = tmp0 * this.m11 - tmp2 * this.m21;
+            const dst1 = tmp6 * this.m21 - tmp0 * this.m01;
+            const dst2 = tmp2 * this.m01 - tmp6 * this.m11;
+
+            let det = this.m00 * dst0 + this.m10 * dst1 + this.m20 * dst2;
+            if (det > MathUtils.ZERO_TOLERANCE || det < -MathUtils.ZERO_TOLERANCE) {
+                const dst4 = tmp2 * this.m20 - tmp0 * this.m10;
+                const dst5 = tmp0 * this.m00 - tmp6 * this.m20;
+                const dst6 = tmp6 * this.m10 - tmp2 * this.m00;
+
+                tmp0 = this.m20 * this.m31;
+                const tmp1 = this.m30 * this.m21;
+                tmp2 = this.m10 * this.m31;
+                const tmp3 = this.m30 * this.m11;
+                const tmp4 = this.m10 * this.m21;
+                const tmp5 = this.m20 * this.m11;
+                tmp6 = this.m00 * this.m31;
+                const tmp7 = this.m30 * this.m01;
+                const tmp8 = this.m00 * this.m21;
+                const tmp9 = this.m20 * this.m01;
+                const tmp10 = this.m00 * this.m11;
+                const tmp11 = this.m10 * this.m01;
+
+                const dst8 = tmp4 - tmp5;
+                const dst9 = tmp9 - tmp8;
+                const dst10 = tmp10 - tmp11;
+                const dst12 = tmp2 * this.m22 + tmp5 * this.m32 + tmp1 * this.m12 - (tmp4 * this.m32 + tmp0 * this.m12 + tmp3 * this.m22);
+                const dst13 = tmp8 * this.m32 + tmp0 * this.m02 + tmp7 * this.m22 - (tmp6 * this.m22 + tmp9 * this.m32 + tmp1 * this.m02);
+                const dst14 = tmp6 * this.m12 + tmp11 * this.m32 + tmp3 * this.m02 - (tmp10 * this.m32 + tmp2 * this.m02 + tmp7 * this.m12);
+
+                det = 1 / det;
+
+                rst = rst || this;
+
+                rst.m00 = dst0 * det;
+                rst.m01 = dst1 * det;
+                rst.m02 = dst2 * det;
+                
+                rst.m10 = dst4 * det;
+                rst.m11 = dst5 * det;
+                rst.m12 = dst6 * det;
+                
+                rst.m20 = dst8 * det;
+                rst.m21 = dst9 * det;
+                rst.m22 = dst10 * det;
+                
+                rst.m30 = dst12 * det;
+                rst.m31 = dst13 * det;
+                rst.m32 = dst14 * det;
+
+                return rst;
+            } else {
+                return null;
+            }
+        }
+
+        public invert44(rst: Matrix44 = null): Matrix44 {
             let tmp0 = this.m22 * this.m33;
             let tmp1 = this.m32 * this.m23;
             let tmp2 = this.m12 * this.m33;
@@ -710,36 +812,36 @@ namespace Aurora {
             const dst1 = tmp1 * this.m01 + tmp6 * this.m21 + tmp9 * this.m31 - (tmp0 * this.m01 + tmp7 * this.m21 + tmp8 * this.m31);
             const dst2 = tmp2 * this.m01 + tmp7 * this.m11 + tmp10 * this.m31 - (tmp3 * this.m01 + tmp6 * this.m11 + tmp11 * this.m31);
             const dst3 = tmp5 * this.m01 + tmp8 * this.m11 + tmp11 * this.m21 - (tmp4 * this.m01 + tmp9 * this.m11 + tmp10 * this.m21);
-            const dst4 = tmp1 * this.m10 + tmp2 * this.m20 + tmp5 * this.m30 - (tmp0 * this.m10 + tmp3 * this.m20 + tmp4 * this.m30);
-            const dst5 = tmp0 * this.m00 + tmp7 * this.m20 + tmp8 * this.m30 - (tmp1 * this.m00 + tmp6 * this.m20 + tmp9 * this.m30);
-            const dst6 = tmp3 * this.m00 + tmp6 * this.m10 + tmp11 * this.m30 - (tmp2 * this.m00 + tmp7 * this.m10 + tmp10 * this.m30);
-            const dst7 = tmp4 * this.m00 + tmp9 * this.m10 + tmp10 * this.m20 - (tmp5 * this.m00 + tmp8 * this.m10 + tmp11 * this.m20);
-
-            tmp0 = this.m20 * this.m31;
-            tmp1 = this.m30 * this.m21;
-            tmp2 = this.m10 * this.m31;
-            tmp3 = this.m30 * this.m11;
-            tmp4 = this.m10 * this.m21;
-            tmp5 = this.m20 * this.m11;
-            tmp6 = this.m00 * this.m31;
-            tmp7 = this.m30 * this.m01;
-            tmp8 = this.m00 * this.m21;
-            tmp9 = this.m20 * this.m01;
-            tmp10 = this.m00 * this.m11;
-            tmp11 = this.m10 * this.m01;
-
-            const dst8 = tmp0 * this.m13 + tmp3 * this.m23 + tmp4 * this.m33 - (tmp1 * this.m13 + tmp2 * this.m23 + tmp5 * this.m33);
-            const dst9 = tmp1 * this.m03 + tmp6 * this.m23 + tmp9 * this.m33 - (tmp0 * this.m03 + tmp7 * this.m23 + tmp8 * this.m33);
-            const dst10 = tmp2 * this.m03 + tmp7 * this.m13 + tmp10 * this.m33 - (tmp3 * this.m03 + tmp6 * this.m13 + tmp11 * this.m33);
-            const dst11 = tmp5 * this.m03 + tmp8 * this.m13 + tmp11 * this.m23 - (tmp4 * this.m03 + tmp9 * this.m13 + tmp10 * this.m23);
-            const dst12 = tmp2 * this.m22 + tmp5 * this.m32 + tmp1 * this.m12 - (tmp4 * this.m32 + tmp0 * this.m12 + tmp3 * this.m22);
-            const dst13 = tmp8 * this.m32 + tmp0 * this.m02 + tmp7 * this.m22 - (tmp6 * this.m22 + tmp9 * this.m32 + tmp1 * this.m02);
-            const dst14 = tmp6 * this.m12 + tmp11 * this.m32 + tmp3 * this.m02 - (tmp10 * this.m32 + tmp2 * this.m02 + tmp7 * this.m12);
-            const dst15 = tmp10 * this.m22 + tmp4 * this.m02 + tmp9 * this.m12 - (tmp8 * this.m12 + tmp11 * this.m22 + tmp5 * this.m02);
 
             let det = this.m00 * dst0 + this.m10 * dst1 + this.m20 * dst2 + this.m30 * dst3;
-
             if (det > MathUtils.ZERO_TOLERANCE || det < -MathUtils.ZERO_TOLERANCE) {
+                const dst4 = tmp1 * this.m10 + tmp2 * this.m20 + tmp5 * this.m30 - (tmp0 * this.m10 + tmp3 * this.m20 + tmp4 * this.m30);
+                const dst5 = tmp0 * this.m00 + tmp7 * this.m20 + tmp8 * this.m30 - (tmp1 * this.m00 + tmp6 * this.m20 + tmp9 * this.m30);
+                const dst6 = tmp3 * this.m00 + tmp6 * this.m10 + tmp11 * this.m30 - (tmp2 * this.m00 + tmp7 * this.m10 + tmp10 * this.m30);
+                const dst7 = tmp4 * this.m00 + tmp9 * this.m10 + tmp10 * this.m20 - (tmp5 * this.m00 + tmp8 * this.m10 + tmp11 * this.m20);
+
+                tmp0 = this.m20 * this.m31;
+                tmp1 = this.m30 * this.m21;
+                tmp2 = this.m10 * this.m31;
+                tmp3 = this.m30 * this.m11;
+                tmp4 = this.m10 * this.m21;
+                tmp5 = this.m20 * this.m11;
+                tmp6 = this.m00 * this.m31;
+                tmp7 = this.m30 * this.m01;
+                tmp8 = this.m00 * this.m21;
+                tmp9 = this.m20 * this.m01;
+                tmp10 = this.m00 * this.m11;
+                tmp11 = this.m10 * this.m01;
+
+                const dst8 = tmp0 * this.m13 + tmp3 * this.m23 + tmp4 * this.m33 - (tmp1 * this.m13 + tmp2 * this.m23 + tmp5 * this.m33);
+                const dst9 = tmp1 * this.m03 + tmp6 * this.m23 + tmp9 * this.m33 - (tmp0 * this.m03 + tmp7 * this.m23 + tmp8 * this.m33);
+                const dst10 = tmp2 * this.m03 + tmp7 * this.m13 + tmp10 * this.m33 - (tmp3 * this.m03 + tmp6 * this.m13 + tmp11 * this.m33);
+                const dst11 = tmp5 * this.m03 + tmp8 * this.m13 + tmp11 * this.m23 - (tmp4 * this.m03 + tmp9 * this.m13 + tmp10 * this.m23);
+                const dst12 = tmp2 * this.m22 + tmp5 * this.m32 + tmp1 * this.m12 - (tmp4 * this.m32 + tmp0 * this.m12 + tmp3 * this.m22);
+                const dst13 = tmp8 * this.m32 + tmp0 * this.m02 + tmp7 * this.m22 - (tmp6 * this.m22 + tmp9 * this.m32 + tmp1 * this.m02);
+                const dst14 = tmp6 * this.m12 + tmp11 * this.m32 + tmp3 * this.m02 - (tmp10 * this.m32 + tmp2 * this.m02 + tmp7 * this.m12);
+                const dst15 = tmp10 * this.m22 + tmp4 * this.m02 + tmp9 * this.m12 - (tmp8 * this.m12 + tmp11 * this.m22 + tmp5 * this.m02);
+
                 det = 1 / det;
 
                 rst = rst || this;
@@ -748,14 +850,17 @@ namespace Aurora {
                 rst.m01 = dst1 * det;
                 rst.m02 = dst2 * det;
                 rst.m03 = dst3 * det;
+
                 rst.m10 = dst4 * det;
                 rst.m11 = dst5 * det;
                 rst.m12 = dst6 * det;
                 rst.m13 = dst7 * det;
+
                 rst.m20 = dst8 * det;
                 rst.m21 = dst9 * det;
                 rst.m22 = dst10 * det;
                 rst.m23 = dst11 * det;
+
                 rst.m30 = dst12 * det;
                 rst.m31 = dst13 * det;
                 rst.m32 = dst14 * det;

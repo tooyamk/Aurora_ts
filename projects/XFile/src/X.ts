@@ -209,7 +209,7 @@ namespace Aurora.XFile {
                                 boneNames[boneIdx] = sw.boneName;
 
                                 bonePreOffsetMatrices[boneIdx] = sw.matrix;
-                                //bindPreMatrices[boneIdx] = this._containersMap[sw.boneName].worldMatrix.invert(new Matrix44()).append44(sw.matrix);
+                                //bindPreMatrices[boneIdx] = this._containersMap[sw.boneName].worldMatrix.invert(new Matrix44()).append34(sw.matrix);
                             }
 
                             const indices = sw.indices;
@@ -410,9 +410,9 @@ namespace Aurora.XFile {
 
         private _calcWorldMatrix(c: Container, parent: Container): void {
             if (parent) {
-                c.localMatrix.append44(parent.worldMatrix, c.worldMatrix);
+                c.localMatrix.append34(parent.worldMatrix, c.worldMatrix);
             } else {
-                c.worldMatrix.set44(c.localMatrix);
+                c.worldMatrix.set34(c.localMatrix);
             }
 
             for (let i = 0, n = c.children.length; i < n; ++i) this._calcWorldMatrix(c.children[i], c);

@@ -94,7 +94,7 @@ float ${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, ve
 #include<${General.DECLARE_UNIFORM.name}>(mat3, ${ShaderPredefined.u_M33_L2W})
 #include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_WorldNormal0})
 
- #if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_POINT} || ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_SPOT} || defined(${ShaderPredefined.LIGHTING_SPECULAR})
+#if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_POINT} || ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_SPOT} || defined(${ShaderPredefined.LIGHTING_SPECULAR})
     #include<${General.DECLARE_UNIFORM.name}>(mat4, ${ShaderPredefined.u_M44_L2W})
     #include<${General.DECLARE_VARYING.name}>(vec3, ${ShaderPredefined.v_WorldPos0})
 #endif
@@ -102,24 +102,17 @@ float ${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, ve
 #endif
 `}
 
+    /**
+     * @param pos (vec3), local pos.
+     * @param nrm (vec3), local nrm.
+     */
     export const VERT: ShaderLib = {
         name: `${NAME}_Vert`,
         source: `
 #ifdef ${ShaderPredefined.LIGHTING}
 
-#ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_WorldPos0}
-    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_WorldPos0}
-        #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_WorldPos0}
-        ${ShaderPredefined.v_WorldPos0} = (${ShaderPredefined.u_M44_L2W} * vec4(${ShaderPredefined.a_Position0}, 1.0)).xyz;
-    #endif
-#endif
-
-#ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_WorldNormal0}
-    #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_WorldNormal0}
-        #define ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.v_WorldNormal0}
-        ${ShaderPredefined.v_WorldNormal0} = ${ShaderPredefined.u_M33_L2W} * ${ShaderPredefined.a_Normal0};
-    #endif
-#endif
+#include<${General.VARYING_WORLD_POS0.name}>(\${0})
+#include<${General.VARYING_WORLD_NORMAL0.name}>(\${1})
 
 #endif
 `}
@@ -129,7 +122,7 @@ float ${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, ve
         source: `
 #ifdef ${ShaderPredefined.LIGHTING}
 
-struct _Light {
+struct ${NAME}_Light {
     vec3 ambientColor;
     vec3 diffuseColor;
     vec3 specularColor;
@@ -187,7 +180,7 @@ struct _Light {
         source: `
 #ifdef ${ShaderPredefined.LIGHTING}
 
-_Light _lightingInfo;
+${NAME}_Light _lightingInfo;
 vec3 _lightingDirW;
 _lightingInfo.ambientColor = ${ShaderPredefined.u_AmbientColor};
 _lightingInfo.diffuseColor = ${ShaderPredefined.u_LightColor0};

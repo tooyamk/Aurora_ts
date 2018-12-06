@@ -3,12 +3,16 @@ class Env {
     public gl: Aurora.GL;
     public shaderStore: Aurora.ShaderStore;
 
-    public world: Aurora.Node;
-    public camera: Aurora.Camera;
+    //public world: Aurora.Node;
+    public camera = new Aurora.RefPtr<Aurora.Camera>();
+
+    public world = new Aurora.RefPtr<Aurora.Node>();
 
     public renderingManager: Aurora.RenderingManager;
     public forwardRenderer: Aurora.ForwardRenderer;
     public spriteRenderer: Aurora.SpriteRenderer;
+
+    public skinnedMeshCPUSkinningMethod = new Aurora.RefPtr<Aurora.SkinnedMeshCPUSkinningMethod>();
 
     constructor() {
         this.platform = new Aurora.StandardHTMLPlatform();
@@ -24,14 +28,19 @@ class Env {
 
         this.shaderStore = new Aurora.ShaderStore();
         this.shaderStore.addBuiltinLibraries();
-        this.shaderStore.addBuiltinShaderSources();
+        this.shaderStore.addBuiltinSources();
 
-        this.world = new Aurora.Node();
-        this.camera = this.world.addChild(new Aurora.Node()).addComponent(new Aurora.Camera());
+        const s = this.shaderStore.getSource(Aurora.BuiltinShader.DefaultMesh.NAME, Aurora.GLShaderType.VERTEX_SHADER);
+        console.log(s.source);
 
-        this.renderingManager = new Aurora.RenderingManager();
+        this.world.value = new Aurora.Node();
+        this.camera.value = this.world.value.addChild(new Aurora.Node()).addComponent(new Aurora.Camera());
+
+        this.renderingManager = new Aurora.RenderingManager(this.gl);
         this.forwardRenderer = new Aurora.ForwardRenderer();
         this.spriteRenderer = new Aurora.SpriteRenderer(this.gl);
+
+        this.skinnedMeshCPUSkinningMethod.value = new Aurora.SkinnedMeshCPUSkinningMethod();
     }
 
     public start(canvasSizeChangedhandler: () => void, loopHandler: (delta: number) => void): void {

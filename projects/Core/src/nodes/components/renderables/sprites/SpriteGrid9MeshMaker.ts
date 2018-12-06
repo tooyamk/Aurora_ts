@@ -1,5 +1,3 @@
-///<reference path="ISpriteMeshMaker.ts"/>
-
 namespace Aurora {
     /*
      *00, 01, 02, 03
@@ -92,7 +90,7 @@ namespace Aurora {
             ], GLIndexDataType.UNSIGNED_SHORT, GLUsageType.DYNAMIC_DRAW);
         }
 
-        public updateVertices(width: number, height: number, anchor: Vector2, frame: SpriteFrame, m: Matrix44, grid9: Grid9SpriteMeshMaker): boolean {
+        public updateVertices(width: number, height: number, anchor: Vector2, frame: SpriteFrame, m: Matrix44, grid9: SpriteGrid9MeshMaker): boolean {
             const v = SharedGrid9._tmpVec2;
 
             let lxTrim = -frame.sourceWidth * anchor.x + frame.offsetX;
@@ -362,7 +360,7 @@ namespace Aurora {
         }
     }
 
-    export class Grid9SpriteMeshMaker implements ISpriteMeshMaker {
+    export class SpriteGrid9MeshMaker extends Sprite.AbstractMeshMaker {
         protected static readonly _sharedGrid9 = new SharedGrid9();
 
         protected _top: number = 0;
@@ -379,6 +377,7 @@ namespace Aurora {
         protected _height: number = 0;
 
         constructor(top: number, right: number, bottom: number, left: number) {
+            super();
             this.set(top, right, bottom, left);
         }
 
@@ -449,11 +448,14 @@ namespace Aurora {
         }
 
         public updateVertices(w: number, h: number, anchor: Vector2, f: SpriteFrame, m: Matrix44): boolean {
-            return Grid9SpriteMeshMaker._sharedGrid9.updateVertices(w, h, anchor, f, m, this);
+            return SpriteGrid9MeshMaker._sharedGrid9.updateVertices(w, h, anchor, f, m, this);
         }
 
         public updateAsset(f: SpriteFrame, tex: GLTexture2D, color: Color4): MeshAsset {
-            return Grid9SpriteMeshMaker._sharedGrid9.updateAsset(f, tex, color);
+            return SpriteGrid9MeshMaker._sharedGrid9.updateAsset(f, tex, color);
+        }
+
+        public destroy(): void {
         }
     }
 }

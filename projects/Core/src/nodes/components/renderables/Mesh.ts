@@ -28,6 +28,9 @@ namespace Aurora {
             renderingData.out.asset = this._asset;
         }
 
+        public postRender(): void {
+        }
+
         public destroy(): void {
             this.asset = null;
             

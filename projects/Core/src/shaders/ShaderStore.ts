@@ -48,9 +48,10 @@ namespace Aurora {
             this.addLibrary(BuiltinShader.Lib.AlphaTest.SOURCES);
             this.addLibrary(BuiltinShader.Lib.Lighting.SOURCES);
             this.addLibrary(BuiltinShader.Lib.Reflection.SOURCES);
+            this.addLibrary(BuiltinShader.Lib.Skinning.SOURCES);
         }
 
-        public addBuiltinShaderSources(): void {
+        public addBuiltinSources(): void {
             this.addSource(BuiltinShader.DefaultMesh.NAME, BuiltinShader.DefaultMesh.VERTEX, GLShaderType.VERTEX_SHADER);
             this.addSource(BuiltinShader.DefaultMesh.NAME, BuiltinShader.DefaultMesh.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
 
@@ -65,12 +66,12 @@ namespace Aurora {
             if (name && source) this._libs[name] = this.doInclude(ShaderSource.deleteUnnecessaryContent(source));
         }
 
-        public getShaderSource(name: string, type: GLShaderType): ShaderSource {
+        public getSource(name: string, type: GLShaderType): ShaderSource {
             let map = type === GLShaderType.VERTEX_SHADER ? this._verts : this._frags;
             return map[name];
         }
 
-        public createShaderSource(source: string, excludeDefines: string[] = null): ShaderSource {
+        public createSource(source: string, excludeDefines: string[] = null): ShaderSource {
             return new ShaderSource(this.doInclude(ShaderSource.deleteUnnecessaryContent(source)), excludeDefines, false);
         }
 
@@ -79,8 +80,8 @@ namespace Aurora {
 
         public createShader(gl: GL, name1: string, ...args: any[]): Shader {
             const fragName: string = args.length === 0 ? name1 : args[0];
-            const vertSrc = this.getShaderSource(name1, GLShaderType.VERTEX_SHADER);
-            const fragSrc = this.getShaderSource(fragName, GLShaderType.FRAGMENT_SHADER);
+            const vertSrc = this.getSource(name1, GLShaderType.VERTEX_SHADER);
+            const fragSrc = this.getSource(fragName, GLShaderType.FRAGMENT_SHADER);
             return vertSrc && fragSrc ? new Shader(gl, vertSrc, fragSrc) : null;
         }
 
@@ -89,7 +90,7 @@ namespace Aurora {
             let ss = map[name];
             if (ss && !forceUpdate) return ss;
 
-            ss = this.createShaderSource(source, excludeDefines);
+            ss = this.createSource(source, excludeDefines);
             map[name] = ss;
             return ss;
         }

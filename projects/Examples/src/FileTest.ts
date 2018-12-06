@@ -7,8 +7,8 @@ class FileTest {
         let env = new Env();
         this._env = env;
 
-        let modelNode = env.world.addChild(new Aurora.Node());
-        let light = env.world.addChild(new Aurora.Node()).addComponent(new Aurora.PointLight());
+        let modelNode = env.world.value.addChild(new Aurora.Node());
+        let light = env.world.value.addChild(new Aurora.Node()).addComponent(new Aurora.PointLight());
         light.setAttenuation(12500);
 
         modelNode.localTranslate(0, 0, 500);
@@ -18,13 +18,13 @@ class FileTest {
         env.start(() => {
             let gl = env.gl;
             gl.setViewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
-            env.camera.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLH(Math.PI / 6, gl.canvas.width / gl.canvas.height, 5, 10000));
+            env.camera.value.setProjectionMatrix(Aurora.Matrix44.createPerspectiveFovLH(Math.PI / 6, gl.canvas.width / gl.canvas.height, 5, 10000));
         },
         (delta: number) => {
-            if (this._animator) this._animator.update(delta * 1);
+            if (this._animator) this._animator.update(delta * 0.25);
 
             //modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.5 * delta * Math.PI));
-            env.renderingManager.render(env.gl, env.camera, env.world, [light]);
+            env.renderingManager.render(env.gl, env.camera.value, env.world.value, [light]);
         });
 
         //this._loadMesh();
@@ -202,7 +202,7 @@ class FileTest {
 
             if (data.animationClips && data.animationClips.size > 0) {
                 const clip = data.animationClips.at(0);
-                clip.wrap = Aurora.AnimatorWrap.Loop;
+                clip.wrap = Aurora.AnimationWrap.Loop;
                 clip.skeleton = data.skeleton;
 
                 this._animator = new Aurora.Animator();
@@ -234,6 +234,7 @@ class FileTest {
                     console.log(m.name);
                     let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
                     mesh.renderer = this._env.forwardRenderer;
+                    mesh.skinningMethod = this._env.skinnedMeshCPUSkinningMethod.value;
                     mesh.asset = m;
                     //mesh.asset.drawIndexSource.offset = 18;
                     //mesh.asset.drawIndexSource.length = 6;
@@ -242,7 +243,7 @@ class FileTest {
 
                     //if (data0.skeleton) Helper.printNodeHierarchy([data0.skeleton.bones.get(data0.skeleton.rootBoneNames[0])]);
 
-                    const scale = 0.7;
+                    const scale = 10;
                     mesh.node.setLocalScale(scale, scale, scale);
                 }
             }
@@ -281,14 +282,14 @@ class FileTest {
             let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
             mat.cullFace = Aurora.GLCullFace.NONE;
             mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
-            mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
+            //mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
             mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
-            mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
+            //mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
             mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
 
             if (data.animationClips && data.animationClips.size > 0) {
                 const clip = data.animationClips.at(0);
-                clip.wrap = Aurora.AnimatorWrap.Loop;
+                clip.wrap = Aurora.AnimationWrap.Loop;
                 clip.skeleton = data.skeleton;
 
                 this._animator = new Aurora.Animator();
@@ -297,6 +298,7 @@ class FileTest {
 
             let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
             mesh.renderer = this._env.forwardRenderer;
+            mesh.skinningMethod = this._env.skinnedMeshCPUSkinningMethod.value;
             mesh.asset = data.meshes[0];
             //mesh.asset.drawIndexSource.offset = 18;
             //mesh.asset.drawIndexSource.length = 6;
@@ -361,7 +363,7 @@ class FileTest {
 
             if (data0.animationClips && data0.animationClips.size > 0) {
                 const clip = data0.animationClips.at(0);
-                clip.wrap = Aurora.AnimatorWrap.Loop;
+                clip.wrap = Aurora.AnimationWrap.Loop;
                 clip.skeleton = data0.skeleton;
 
                 this._animator = new Aurora.Animator();
@@ -373,6 +375,7 @@ class FileTest {
                 for (let m of data1.meshes) {
                     let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
                     mesh.renderer = this._env.forwardRenderer;
+                    mesh.skinningMethod = this._env.skinnedMeshCPUSkinningMethod.value;
                     mesh.asset = m;
                     //mesh.asset.drawIndexSource.offset = 18;
                     //mesh.asset.drawIndexSource.length = 6;

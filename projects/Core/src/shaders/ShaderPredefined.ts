@@ -10,6 +10,10 @@ namespace Aurora {
         ALPHA_TEST_GREATER = 5,
         ALPHA_TEST_GEQUAL = 6,
 
+        MAX_BONES = "MAX_BONES",
+
+        NUM_BONES_PER_VERTEX = "NUM_BONES_PER_VERTEX",
+
         LIGHTING = "LIGHTING",
         LIGHT0 = "LIGHT0",
 
@@ -78,6 +82,8 @@ namespace Aurora {
         u_DiffuseColor = "u_DiffuseColor",
         u_SpecularColor = "u_SpecularColor",
         u_ReflectionColor = "u_ReflectionColor",
+
+        u_SkinningMatrices = "u_SkinningMatrices",
 
         u_AlphaTestCompareValue = "u_AlphaTestCompareValue",
 

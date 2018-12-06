@@ -1,4 +1,3 @@
-///<reference path="RectSpriteMeshMaker.ts"/>
 ///<reference path="../AbstractRenderable.ts"/>
 
 namespace Aurora {
@@ -9,7 +8,6 @@ namespace Aurora {
     }
 
     export class Sprite extends AbstractRenderable {
-        protected static readonly _defaultMeshMaker = new RectSpriteMeshMaker();
         protected static readonly _tmpColor4 = new Color4();
         protected static readonly _defaultSpriteFrame = createDefaultSpriteFrame();
 
@@ -22,7 +20,7 @@ namespace Aurora {
         protected _color: Color4;
         protected _width: number = null;
         protected _height: number = null;
-        protected _meshMaker: ISpriteMeshMaker = null;
+        protected _meshMaker: Sprite.AbstractMeshMaker = null;
 
         constructor(frame: SpriteFrame = null) {
             super();
@@ -35,12 +33,16 @@ namespace Aurora {
             this.frame = frame;
         }
 
-        public get meshMaker(): ISpriteMeshMaker {
+        public get meshMaker(): Sprite.AbstractMeshMaker {
             return this._meshMaker;
         }
 
-        public set meshMaker(maker: ISpriteMeshMaker) {
-            this._meshMaker = maker;
+        public set meshMaker(maker: Sprite.AbstractMeshMaker) {
+            if (this._meshMaker !== maker) {
+                if (maker) maker.retain();
+                if (this._meshMaker) this._meshMaker.release();
+                this._meshMaker = maker;
+            }
         }
 
         public get color(): Color4 {
@@ -151,8 +153,11 @@ namespace Aurora {
             if (f.width > 0 && f.height > 0) this._render(f, renderingData);
         }
 
+        public postRender(): void {
+        }
+
         protected _render(frame: SpriteFrame, renderingData: RenderingData): void {
-            const maker = this._meshMaker || Sprite._defaultMeshMaker;
+            const maker = this._meshMaker || SpriteRectMeshMaker.DEFAULT;
             if (maker.updateVertices(this._width, this._height, this._anchor, frame, renderingData.in.renderingObject.l2p)) {
                 const c0 = this.node.readonlyCascadeColor, c1 = this._color;
                 const asset = maker.updateAsset(frame, this._texture, Sprite._tmpColor4.setFromNumbers(c0.r * c1.r, c0.g * c1.g, c0.b * c1.b, c0.a * c1.a));
@@ -239,7 +244,7 @@ namespace Aurora {
         public destroy(): void {
             this.texture = null;
             this.frame = null;
-            this._meshMaker = null;
+            this.meshMaker = null;
 
             if (this._uniforms) {
                 this._uniforms.release();
@@ -256,6 +261,18 @@ namespace Aurora {
                 this._texture = tex;
 
                 tex ? this._uniforms.setTexture(ShaderPredefined.u_DiffuseSampler, tex) : this._uniforms.delete(ShaderPredefined.u_DiffuseSampler);
+            }
+        }
+    }
+
+    export namespace Sprite {
+        export abstract class AbstractMeshMaker extends Ref {
+            abstract updateVertices(width: number, height: number, anchor: Vector2, frame: SpriteFrame, m: Matrix44): boolean;
+            abstract updateAsset(frame: SpriteFrame, tex: GLTexture2D, color: Color4): MeshAsset;
+            abstract destroy(): void;
+
+            protected _refDestroy(): void {
+                this.destroy();
             }
         }
     }
