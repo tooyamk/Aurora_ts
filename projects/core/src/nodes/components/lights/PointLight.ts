@@ -15,7 +15,7 @@ namespace Aurora {
         public ready(defines: ShaderDefines, uniforms: ShaderUniforms): void {
             this._generalReady(defines, uniforms);
             
-            defines.setDefine(ShaderPredefined.LIGHT_TYPE0, ShaderPredefined.LIGHT_TYPE_POINT);
+            defines.set(ShaderPredefined.LIGHT_TYPE0, ShaderPredefined.LIGHT_TYPE_POINT);
 
             uniforms.setNumberArray(ShaderPredefined.u_LightAttrib0, [this._attenConstant, this._attenLinear, this._attenQuadratic]);
         }

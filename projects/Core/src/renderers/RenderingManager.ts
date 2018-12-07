@@ -40,14 +40,14 @@ namespace Aurora {
             this._shaderUniforms = new ShaderUniforms();
             this._shaderUniforms.retain();
 
-            this._shaderDefines.setDefine(ShaderPredefined.LIGHTING_SPECULAR, ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
+            this._shaderDefines.set(ShaderPredefined.LIGHTING_SPECULAR, ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
 
             let max = (gl.maxVertexUniformVectors / 3) | 0;
-            if (max >=30) {
-                max -= 30;
-                if (max > 180) max = 180;
+            if (max >=10) {
+                max -= 10;
+                if (max > 60) max = 60;
             }
-            this._shaderDefines.setDefine(ShaderPredefined.MAX_BONES, max);
+            this._shaderDefines.set(ShaderPredefined.MAX_BONES, max);
 
             this._shaderUniforms.setNumbers(ShaderPredefined.u_AlphaTestCompareValue, 1);
             this._shaderUniforms.setNumbers(ShaderPredefined.u_LighitngSpecularShininess, 32);

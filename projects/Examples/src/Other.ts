@@ -221,14 +221,14 @@ class Other {
         //mat.stencilBack = stencil2;
         mesh.setMaterials(mat);
         mesh.enabled = false;
-        mat.defines.setDefine(Aurora.ShaderPredefined.LIGHTING, true);
-        mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, false);
-        mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
+        mat.defines.set(Aurora.ShaderPredefined.LIGHTING, true);
+        mat.defines.set(Aurora.ShaderPredefined.DIFFUSE_TEX, false);
+        mat.defines.set(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
         mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1.0);
         //mat.defines.setDefine(MITOIA.ShaderPredefined.SPECULAR_COLOR, true);
         //mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_SpecularColor, 0.5, 0, 0);
-        mat.defines.setDefine(Aurora.ShaderPredefined.LIGHTING_SPECULAR, Aurora.ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
-        mat.defines.setDefine(Aurora.ShaderPredefined.REFLECTION, false);
+        mat.defines.set(Aurora.ShaderPredefined.LIGHTING_SPECULAR, Aurora.ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
+        mat.defines.set(Aurora.ShaderPredefined.REFLECTION, false);
         
         //mat.defines.setDefine(MITOIA.ShaderPredefined.ALPHA_TEST, MITOIA.ShaderPredefined.ALPHA_TEST_LESS);
         //mat.uniforms.setNumber(MITOIA.ShaderPredefined.u_AlphaTestCompareValue, 0.51);
@@ -303,7 +303,7 @@ class Other {
         mat.depthTest = Aurora.GLDepthTest.NONE;
         mat.renderingPriority = -1;
     
-        mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
+        mat.defines.set(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
     
         mesh.setMaterials(mat);
     

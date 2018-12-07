@@ -34,7 +34,10 @@ pos = ${ShaderPredefined.a_Position0};
     nrm = ${ShaderPredefined.a_Normal0};
 #endif
 
-#include<${Lib.Skinning.VERT.name}>(pos, pos)
+#ifdef ${Lib.Skinning.NEED_SKINNING_DEFINE}
+    ${Lib.Skinning.SKINNED_MATRIX} mat = ${Lib.Skinning.CALC_SKINNING_MATRIX_FUNC}(${ShaderPredefined.a_BoneIndex0}, ${ShaderPredefined.a_BoneWeight0});
+    pos = ${Lib.Skinning.CALC_SKINNING_FUNC}(pos, mat);
+#endif
 
 #ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${ShaderPredefined.v_UV0}
     ${ShaderPredefined.v_UV0} = ${ShaderPredefined.a_UV0};

@@ -98,9 +98,9 @@ namespace Aurora {
             }
         }
 
-        protected _activeMaterial(material: Material, list: ShaderUniformsList, u1: ShaderUniforms): void {
-            this._activeUniformsList.pushBackByList(list).pushBack(material.uniforms).pushBack(u1);
-            this._definesList.pushBack(material.defines);
+        protected _activeMaterial(material: Material, defineList: ShaderDefinesList, uniformsList: ShaderUniformsList, u1: ShaderUniforms): void {
+            this._activeUniformsList.pushBackByList(uniformsList).pushBack(material.uniforms).pushBack(u1);
+            this._definesList.pushBackByList(defineList).pushBack(material.defines);
             const p = this._renderingMgr.useShader(material, this._definesList, this._activeUniformsList);
             this._definesList.clear();
             if (p) {
@@ -127,15 +127,17 @@ namespace Aurora {
                 const obj = renderingObjects[i];
                 renderingData.in.renderingObject = obj;
                 obj.renderable.render(renderingData);
-                const as = renderingData.out.asset;
+                const out = renderingData.out;
+                const as = out.asset;
                 if (as && as.drawIndexSource) {
                     const drawIdxLen = as.drawIndexSource.getDataLength();
                     if (!drawIdxLen) continue;
 
                     const mat = obj.material;
-                    const uniformsList = renderingData.out.uniformsList;
+                    const definesList = out.definesList;
+                    const uniformsList = out.uniformsList;
 
-                    if (!this._curProgramAtts) this._activeMaterial(mat, uniformsList, obj.alternativeUniforms);
+                    if (!this._curProgramAtts) this._activeMaterial(mat, definesList, uniformsList, obj.alternativeUniforms);
                     
                     let len = -1;
                     let needFlush = false;
@@ -164,7 +166,7 @@ namespace Aurora {
                     if (len > 0 && len <= this._maxVertexSize) {
                         if (needFlush) {
                             this.flush();
-                            this._activeMaterial(mat, uniformsList, obj.alternativeUniforms);
+                            this._activeMaterial(mat, definesList, uniformsList, obj.alternativeUniforms);
 
                             for (let i = 0; i < this._reformatsLen; ++i) {
                                 let idx = this._reformats[i];
@@ -180,7 +182,7 @@ namespace Aurora {
                             if (Material.isEqual(this._curMaterial, mat)) {
                                 let b: boolean = true;
                                 if (this._curShaderNumDefines > 0) {
-                                    this._definesList.pushBack(mat.defines).pushBack(this._renderingMgr.shaderDefines);
+                                    this._definesList.pushBackByList(definesList).pushBack(mat.defines).pushBack(this._renderingMgr.shaderDefines);
                                     b = this._curMaterial.shader.isEqual(this._definesList);
                                     this._definesList.clear();
                                 }
@@ -204,7 +206,7 @@ namespace Aurora {
 
                             if (!canCombine) {
                                 this.flush();
-                                this._activeMaterial(mat, uniformsList, obj.alternativeUniforms);
+                                this._activeMaterial(mat, definesList, uniformsList, obj.alternativeUniforms);
                             }
                         }
 

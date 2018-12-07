@@ -4,12 +4,16 @@ namespace Aurora {
         protected static readonly TMP_MAT = new Matrix44();
 
         protected _matrices: number[];
+        protected _defines: ShaderDefines;
         protected _uniforms: ShaderUniforms;
 
         constructor() {
             super();
 
             this._matrices = [];
+
+            this._defines = new ShaderDefines();
+            this._defines.retain();
 
             this._uniforms = new ShaderUniforms();
             this._uniforms.retain();
@@ -18,38 +22,57 @@ namespace Aurora {
         }
 
         public render(renderingData: RenderingData, asset: MeshAsset, matrices: Matrix44[]): void {
-            const data = this._matrices;
-            const n = matrices.length;
-            const maxData = n * 12;
-            if (data.length < maxData) data.length = maxData;
+            const boneIndicesSource = asset.getVertexSource(ShaderPredefined.a_BoneIndex0);
+            const boneWeightsSource = asset.getVertexSource(ShaderPredefined.a_BoneWeight0);
+            if (boneIndicesSource && boneWeightsSource && boneIndicesSource.size === boneWeightsSource.size) {
+                const boneIndices = boneIndicesSource.data;
+                const boneWeights = boneWeightsSource.data;
+                if (boneIndices && boneWeights) {
+                    const numBonesPerElement = boneIndicesSource.size;
 
-            let idx = 0;
-            for (let i = 0; i < n; ++i) {
-                const m = matrices[i];
-                data[idx++] = m.m00;
-                data[idx++] = m.m10;
-                data[idx++] = m.m20;
-                data[idx++] = m.m30;
+                    const data = this._matrices;
+                    const n = matrices.length;
+                    const maxData = n * 12;
+                    if (data.length < maxData) data.length = maxData;
 
-                data[idx++] = m.m01;
-                data[idx++] = m.m11;
-                data[idx++] = m.m21;
-                data[idx++] = m.m31;
+                    let idx = 0;
+                    for (let i = 0; i < n; ++i) {
+                        const m = matrices[i];
+                        data[idx++] = m.m00;
+                        data[idx++] = m.m10;
+                        data[idx++] = m.m20;
+                        data[idx++] = m.m30;
 
-                data[idx++] = m.m02;
-                data[idx++] = m.m12;
-                data[idx++] = m.m22;
-                data[idx++] = m.m32;
+                        data[idx++] = m.m01;
+                        data[idx++] = m.m11;
+                        data[idx++] = m.m21;
+                        data[idx++] = m.m31;
+
+                        data[idx++] = m.m02;
+                        data[idx++] = m.m12;
+                        data[idx++] = m.m22;
+                        data[idx++] = m.m32;
+                    }
+
+                    const out = renderingData.out;
+                    this._defines.set(ShaderPredefined.NUM_BONES_PER_VERTEX, numBonesPerElement);
+                    out.definesList.pushBack(this._defines);
+                    out.uniformsList.pushBack(this._uniforms);
+                    out.asset = asset;
+                }
             }
-
-            renderingData.out.uniformsList.pushBack(this._uniforms);
-            renderingData.out.asset = asset;
         }
 
         public postRender(): void {
         }
 
         public destroy(): void {
+            if (this._defines) {
+                this._defines.delete(ShaderPredefined.NUM_BONES_PER_VERTEX);
+                this._defines.release();
+                this._defines = null;
+            }
+
             if (this._uniforms) {
                 this._uniforms.delete(ShaderPredefined.u_SkinningMatrices);
                 this._uniforms.release();

@@ -10,11 +10,25 @@ namespace Aurora {
     }
 
     export class RenderingDataOut {
-        public asset: MeshAsset = null;
+        private _asset: MeshAsset = null;
+        public readonly definesList = new ShaderDataList<ShaderDefines, ShaderDefines.Value>();
         public readonly uniformsList = new ShaderDataList<ShaderUniforms, ShaderUniforms.Value>();
+
+        public get asset(): MeshAsset {
+            return this._asset;
+        }
+
+        public set asset(value: MeshAsset) {
+            if (this._asset !== value) {
+                if (value) value.retain();
+                if (this._asset) this._asset.release();
+                this._asset = value;
+            }
+        }
 
         public clear(): void {
             this.asset = null;
+            this.definesList.clear();
             this.uniformsList.clear();
         }
     }

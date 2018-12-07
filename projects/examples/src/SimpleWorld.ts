@@ -25,7 +25,7 @@ class SimpleWorld {
 
     private _createModel(env: Env): Aurora.Mesh {
         let mat = new Aurora.Material(env.shaderStore.createShader(env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
-        mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
+        mat.defines.set(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
         mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
 
         let mesh = new Aurora.Mesh();
@@ -42,8 +42,8 @@ class SimpleWorld {
         //console.log(ss.source);
 
         let mat = new Aurora.Material(env.shaderStore.createShader(env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
-        mat.defines.setDefine(Aurora.ShaderPredefined.LIGHTING, false);
-        mat.defines.setDefine(Aurora.ShaderPredefined.VERTEX_COLOR, true);
+        mat.defines.set(Aurora.ShaderPredefined.LIGHTING, false);
+        mat.defines.set(Aurora.ShaderPredefined.VERTEX_COLOR, true);
 
         let mesh = new Aurora.Mesh();
         mesh.renderer = env.forwardRenderer;

@@ -39,12 +39,12 @@ namespace Aurora {
             }
         }
 
-        public hasDefine(name: string): boolean {
+        public has(name: string): boolean {
             const v = this._defines[name];
             return v ? (v.type === ShaderDefines.VlaueType.NONE ? false : true) : false;
         }
 
-        public getDefine(name: string): ShaderDefines.Value {
+        public get(name: string): ShaderDefines.Value {
             const v = this._defines[name];
             if (v) {
                 return v.type === ShaderDefines.VlaueType.NONE ? null : v;
@@ -53,7 +53,7 @@ namespace Aurora {
             }
         }
 
-        public setDefine(name: string, value: boolean | int): void {
+        public set(name: string, value: boolean | int): void {
             if (value === null || value === undefined) value = false;
             
             let v = this._defines[name];
@@ -83,7 +83,7 @@ namespace Aurora {
             }
         }
 
-        public deleteDefine(name: string): void {
+        public delete(name: string): void {
             const v = this._defines[name];
             if (v && v.type !== ShaderDefines.VlaueType.NONE) {
                 v.type = ShaderDefines.VlaueType.NONE;

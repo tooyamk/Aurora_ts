@@ -81,10 +81,10 @@ namespace Aurora {
 
         public render(renderingData: RenderingData, renderingObjects: RenderingObject[], start: int, end: int): void {
             if (this._enalbedLighting && this._light) {
-                this._shaderDefines.setDefine(ShaderPredefined.LIGHTING, true);
+                this._shaderDefines.set(ShaderPredefined.LIGHTING, true);
                 this._light.ready(this._shaderDefines, this._shaderUniforms);
             } else {
-                this._shaderDefines.setDefine(ShaderPredefined.LIGHTING, false);
+                this._shaderDefines.set(ShaderPredefined.LIGHTING, false);
             }
 
             this._renderByQueue(renderingData, renderingObjects, start, end);
@@ -104,12 +104,13 @@ namespace Aurora {
                 const obj = renderingObjects[i];
                 renderingData.in.renderingObject = obj;
                 obj.renderable.render(renderingData);
-                const as = renderingData.out.asset;
+                const out = renderingData.out;
+                const as = out.asset;
                 if (as) {
                     const su = this._shaderUniforms;
                     const mat = obj.material;
-                    this._definesList.pushBack(mat.defines).pushBack(this._shaderDefines);
-                    this._uniformsList.pushBackByList(renderingData.out.uniformsList).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(su);
+                    this._definesList.pushBackByList(out.definesList).pushBack(mat.defines).pushBack(this._shaderDefines);
+                    this._uniformsList.pushBackByList(out.uniformsList).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(su);
                     
                     const shader = mat.shader;
                     if (shader.hasUniform(ShaderPredefined.u_M33_L2W)) su.setNumberArray(ShaderPredefined.u_M33_L2W, obj.l2w.toArray33(false, this._l2wM33Array));

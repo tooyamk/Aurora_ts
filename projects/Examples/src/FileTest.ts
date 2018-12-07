@@ -194,7 +194,7 @@ class FileTest {
 
             let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
             mat.cullFace = Aurora.GLCullFace.NONE;
-            mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
+            mat.defines.set(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
             //mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
             mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
             //mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
@@ -234,7 +234,7 @@ class FileTest {
                     console.log(m.name);
                     let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
                     mesh.renderer = this._env.forwardRenderer;
-                    mesh.skinningMethod = this._env.skinnedMeshCPUSkinningMethod.value;
+                    mesh.skinningMethod = this._env.skinnedMeshGPUSkinningMethod.value;
                     mesh.asset = m;
                     //mesh.asset.drawIndexSource.offset = 18;
                     //mesh.asset.drawIndexSource.length = 6;
@@ -281,7 +281,7 @@ class FileTest {
 
             let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
             mat.cullFace = Aurora.GLCullFace.NONE;
-            mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
+            mat.defines.set(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
             //mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
             mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
             //mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
@@ -355,7 +355,7 @@ class FileTest {
 
             let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
             mat.cullFace = Aurora.GLCullFace.NONE;
-            mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
+            mat.defines.set(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
             //mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
             mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
             //mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);

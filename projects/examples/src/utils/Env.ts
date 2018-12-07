@@ -13,6 +13,7 @@ class Env {
     public spriteRenderer: Aurora.SpriteRenderer;
 
     public skinnedMeshCPUSkinningMethod = new Aurora.RefPtr<Aurora.SkinnedMeshCPUSkinningMethod>();
+    public skinnedMeshGPUSkinningMethod = new Aurora.RefPtr<Aurora.SkinnedMeshGPUSkinningMethod>();
 
     constructor() {
         this.platform = new Aurora.StandardHTMLPlatform();
@@ -30,8 +31,8 @@ class Env {
         this.shaderStore.addBuiltinLibraries();
         this.shaderStore.addBuiltinSources();
 
-        const s = this.shaderStore.getSource(Aurora.BuiltinShader.DefaultMesh.NAME, Aurora.GLShaderType.VERTEX_SHADER);
-        console.log(s.source);
+        //const s = this.shaderStore.getSource(Aurora.BuiltinShader.DefaultMesh.NAME, Aurora.GLShaderType.VERTEX_SHADER);
+        //console.log(s.source);
 
         this.world.value = new Aurora.Node();
         this.camera.value = this.world.value.addChild(new Aurora.Node()).addComponent(new Aurora.Camera());
@@ -41,6 +42,7 @@ class Env {
         this.spriteRenderer = new Aurora.SpriteRenderer(this.gl);
 
         this.skinnedMeshCPUSkinningMethod.value = new Aurora.SkinnedMeshCPUSkinningMethod();
+        this.skinnedMeshGPUSkinningMethod.value = new Aurora.SkinnedMeshGPUSkinningMethod();
     }
 
     public start(canvasSizeChangedhandler: () => void, loopHandler: (delta: number) => void): void {

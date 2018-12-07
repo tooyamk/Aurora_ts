@@ -7,15 +7,12 @@ namespace Aurora.BuiltinShader.Lib.Lighting {
      * @param normal (vec3).
      * @param lightingDir (vec3) lightPos - vertexPos.
      */
-    export const DIFFUSE_FACTOR_FUNC: ShaderLib = {
-        name: `${NAME}_DiffuseFactor`,
-        source: ``
-    };
+    export const DIFFUSE_FACTOR_FUNC = `${NAME}_DiffuseFactor`;
 
     export const DIFFUSE_FACTOR_HEADER: ShaderLib = {
-        name: `${DIFFUSE_FACTOR_FUNC.name}_Header`,
+        name: `${DIFFUSE_FACTOR_FUNC}_Header`,
         source: `
-float ${DIFFUSE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir) {
+float ${DIFFUSE_FACTOR_FUNC}(vec3 normal, vec3 lightingDir) {
 	return max(dot(normal, lightingDir), 0.0);
 }
 `};
@@ -27,15 +24,12 @@ float ${DIFFUSE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir) {
      * @param diffuseFactor (float).
      * @param shininess (float) default recommend 32.
      */
-    export const SPECULAR_PHONE_FACTOR_FUNC: ShaderLib = {
-        name: `${NAME}_SpecularPhoneFactor`,
-        source: ``
-    }; 
+    export const SPECULAR_PHONE_FACTOR_FUNC = `${NAME}_SpecularPhoneFactor`;
 
     export const SPECULAR_PHONE_FACTOR_HEADER: ShaderLib = {
-        name: `${SPECULAR_PHONE_FACTOR_FUNC.name}_Header`,
+        name: `${SPECULAR_PHONE_FACTOR_FUNC}_Header`,
         source: `
-float ${SPECULAR_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, vec3 viewDir, float diffuseFactor, float shininess) {
+float ${SPECULAR_PHONE_FACTOR_FUNC}(vec3 normal, vec3 lightingDir, vec3 viewDir, float diffuseFactor, float shininess) {
     float df2 = diffuseFactor * diffuseFactor;
     vec3 r = normalize((df2 + df2) * normal - lightingDir);
     return pow(max(dot(viewDir, r), 0.0), shininess);
@@ -48,15 +42,12 @@ float ${SPECULAR_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, vec3 vie
      * @param viewDir (vec3) viewPos - vertexPos.
      * @param shininess (float) default recommend 32.
      */
-    export const SPECULAR_BANK_BRDF_FACTOR_FUNC: ShaderLib = {
-        name: `${NAME}_SpecularBankBRDFFactor`,
-        source: ``
-    };
+    export const SPECULAR_BANK_BRDF_FACTOR_FUNC = `${NAME}_SpecularBankBRDFFactor`;
 
     export const SPECULAR_BANK_BRDF_FACTOR_HEADER: ShaderLib = {
-        name: `${SPECULAR_BANK_BRDF_FACTOR_FUNC.name}_Header`,
+        name: `${SPECULAR_BANK_BRDF_FACTOR_FUNC}_Header`,
         source: `
-float ${SPECULAR_BANK_BRDF_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, vec3 viewDir, float shininess) {
+float ${SPECULAR_BANK_BRDF_FACTOR_FUNC}(vec3 normal, vec3 lightingDir, vec3 viewDir, float shininess) {
 	vec3 t = normalize(cross(normal, viewDir));
 	float a = dot(lightingDir, t);
 	float b = dot(viewDir, t);
@@ -71,15 +62,12 @@ float ${SPECULAR_BANK_BRDF_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, vec3
      * @param viewDir (vec3) viewPos - vertexPos.
      * @param shininess (float) default recommend 32.
      */
-    export const SPECULAR_BLINN_PHONE_FACTOR_FUNC: ShaderLib = {
-        name: `${NAME}_SpecularBlinnPhoneFactor`,
-        source: ``
-    };
+    export const SPECULAR_BLINN_PHONE_FACTOR_FUNC = `${NAME}_SpecularBlinnPhoneFactor`;
 
     export const SPECULAR_BLINN_PHONE_FACTOR_HEADER: ShaderLib = {
-        name: `${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}_Header`,
+        name: `${SPECULAR_BLINN_PHONE_FACTOR_FUNC}_Header`,
         source: `
-float ${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(vec3 normal, vec3 lightingDir, vec3 viewDir, float shininess) {
+float ${SPECULAR_BLINN_PHONE_FACTOR_FUNC}(vec3 normal, vec3 lightingDir, vec3 viewDir, float shininess) {
 	vec3 h = normalize(lightingDir + viewDir);
 	return pow(max(dot(normal, h), 0.0), shininess);
 }
@@ -222,7 +210,7 @@ if (_lightingInfo.intensity < 0.00392) {
         ${ShaderPredefined.var_WorldNormal0} = normalize(${ShaderPredefined.v_WorldNormal0});
     #endif
 
-    _lightingInfo.diffuseColor *= ${DIFFUSE_FACTOR_FUNC.name}(${ShaderPredefined.var_WorldNormal0}, _lightingDirW);
+    _lightingInfo.diffuseColor *= ${DIFFUSE_FACTOR_FUNC}(${ShaderPredefined.var_WorldNormal0}, _lightingDirW);
 
     #ifdef ${ShaderPredefined.LIGHTING_SPECULAR}
         #ifndef ${General.ASSIGNMENT_PREFIX}${ShaderPredefined.var_WorldViewDir0}
@@ -231,11 +219,11 @@ if (_lightingInfo.intensity < 0.00392) {
         #endif
 
         #if ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_PHONE}
-            _lightingInfo.specularColor = vec3(${SPECULAR_PHONE_FACTOR_FUNC.name}(${ShaderPredefined.var_WorldNormal0}, _lightingDirW, ${ShaderPredefined.var_WorldViewDir0}, _lightingInfo.diffuseFactor, ${ShaderPredefined.u_LighitngSpecularShininess}));
+            _lightingInfo.specularColor = vec3(${SPECULAR_PHONE_FACTOR_FUNC}(${ShaderPredefined.var_WorldNormal0}, _lightingDirW, ${ShaderPredefined.var_WorldViewDir0}, _lightingInfo.diffuseFactor, ${ShaderPredefined.u_LighitngSpecularShininess}));
         #elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_BANK_BRDF}
-            _lightingInfo.specularColor = vec3(${SPECULAR_BANK_BRDF_FACTOR_FUNC.name}(${ShaderPredefined.var_WorldNormal0}, _lightingDirW, ${ShaderPredefined.var_WorldViewDir0}, ${ShaderPredefined.u_LighitngSpecularShininess}));
+            _lightingInfo.specularColor = vec3(${SPECULAR_BANK_BRDF_FACTOR_FUNC}(${ShaderPredefined.var_WorldNormal0}, _lightingDirW, ${ShaderPredefined.var_WorldViewDir0}, ${ShaderPredefined.u_LighitngSpecularShininess}));
         #elif ${ShaderPredefined.LIGHTING_SPECULAR} == ${ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE}
-            _lightingInfo.specularColor = vec3(${SPECULAR_BLINN_PHONE_FACTOR_FUNC.name}(${ShaderPredefined.var_WorldNormal0}, _lightingDirW, ${ShaderPredefined.var_WorldViewDir0}, ${ShaderPredefined.u_LighitngSpecularShininess}));
+            _lightingInfo.specularColor = vec3(${SPECULAR_BLINN_PHONE_FACTOR_FUNC}(${ShaderPredefined.var_WorldNormal0}, _lightingDirW, ${ShaderPredefined.var_WorldViewDir0}, ${ShaderPredefined.u_LighitngSpecularShininess}));
         #else
             _lightingInfo.specularColor = vec3(0.0);
         #endif
@@ -253,10 +241,10 @@ if (_lightingInfo.intensity < 0.00392) {
 #endif
 `};
 
-    export const DIFFUSE_FACTOR_SOURCES: ShaderLib[] = [DIFFUSE_FACTOR_HEADER, DIFFUSE_FACTOR_FUNC];
-    export const SPECULAR_PHONE_FACTOR_SOURCES: ShaderLib[] = [SPECULAR_PHONE_FACTOR_HEADER, SPECULAR_PHONE_FACTOR_FUNC];
-    export const SPECULAR_BANK_BRDF_FACTOR_SOURCES: ShaderLib[] = [SPECULAR_BANK_BRDF_FACTOR_HEADER, SPECULAR_BANK_BRDF_FACTOR_FUNC];
-    export const SPECULAR_BLINN_PHONE_FACTOR_SOURCES: ShaderLib[] = [SPECULAR_BLINN_PHONE_FACTOR_HEADER, SPECULAR_BLINN_PHONE_FACTOR_FUNC];
+    export const DIFFUSE_FACTOR_SOURCES: ShaderLib[] = [DIFFUSE_FACTOR_HEADER];
+    export const SPECULAR_PHONE_FACTOR_SOURCES: ShaderLib[] = [SPECULAR_PHONE_FACTOR_HEADER];
+    export const SPECULAR_BANK_BRDF_FACTOR_SOURCES: ShaderLib[] = [SPECULAR_BANK_BRDF_FACTOR_HEADER];
+    export const SPECULAR_BLINN_PHONE_FACTOR_SOURCES: ShaderLib[] = [SPECULAR_BLINN_PHONE_FACTOR_HEADER];
 
     export const SOURCES: ShaderLib[] = DIFFUSE_FACTOR_SOURCES.
         concat(SPECULAR_PHONE_FACTOR_SOURCES).
