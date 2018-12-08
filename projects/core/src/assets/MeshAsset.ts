@@ -22,6 +22,8 @@ namespace Aurora {
         public customGetDrawIndexBufferFn: (asset: MeshAsset) => GLIndexBuffer = null;
 
         public autoGenerateNormal = true;
+        public autoGenerateTangent = true;
+        public autoGenerateBinormal = true;
 
         protected _link: MeshAsset = null;
 
@@ -101,29 +103,37 @@ namespace Aurora {
                     if (src) {
                         buffer = src.createBuffer(gl);
                     } else {
-                        if (this.autoGenerateNormal && info.name === ShaderPredefined.a_Normal0) {
-                            let vs = this.vertexSources.get(ShaderPredefined.a_Position0);
-                            let is = this.drawIndexSource;
+                        switch (info.name) {
+                            case ShaderPredefined.a_Normal0: {
+                                if (this.autoGenerateNormal) {
+                                    const vs = this.createNormals();
+                                    if (vs) buffer = vs.createBuffer(gl);
+                                }
 
-                            if (this._link) {
-                                if ((!vs || !vs.data) && this._link.vertexSources) vs = this._link.vertexSources.get(ShaderPredefined.a_Position0);
-                                if (!is || !is.data) is = this._link.drawIndexSource; 
+                                break;
                             }
-                            
-                            if (vs && vs.data && is && is.data) {
-                                const ns = MeshAssetHelper.createNormals(is.data, vs.data);
-                                if (this.addVertexSource(ns)) buffer = ns.createBuffer(gl);
+                            case ShaderPredefined.a_Tangent0: {
+                                if (this.autoGenerateTangent) {
+                                    const vs = this.createTangents();
+                                    if (vs) buffer = vs.createBuffer(gl);
+                                }
+
+                                break;
                             }
+                            case ShaderPredefined.a_Binormal0: {
+                                if (this.autoGenerateBinormal) {
+                                    const vs = this.createBinormals();
+                                    if (vs) buffer = vs.createBuffer(gl);
+                                }
+
+                                break;
+                            }
+                            default:
+                                break;
                         }
                     }
 
-                    if (buffer) {
-                        if (!this._vertexBuffers) {
-                            this._vertexBuffers = new RefMap();
-                            this._vertexBuffers.retain();
-                        }
-                        this._vertexBuffers.insert(info.name, buffer);
-                    }
+                    this.addVertexBuffer(info.name, buffer);
                 }
 
                 if (!buffer) {
@@ -135,6 +145,80 @@ namespace Aurora {
             }
 
             return buffer;
+        }
+
+        public addVertexBuffer(name: string, buffer: GLVertexBuffer): void {
+            if (name && buffer) {
+                if (!this._vertexBuffers) {
+                    this._vertexBuffers = new RefMap();
+                    this._vertexBuffers.retain();
+                }
+                this._vertexBuffers.insert(name, buffer);
+            }
+        }
+
+        public createNormals(): VertexSource {
+            let vs: VertexSource = null;
+
+            let pos = this.vertexSources.get(ShaderPredefined.a_Position0);
+            let idx = this.drawIndexSource;
+
+            if (this._link) {
+                if ((!pos || !pos.data) && this._link.vertexSources) pos = this._link.vertexSources.get(ShaderPredefined.a_Position0);
+                if (!idx || !idx.data) idx = this._link.drawIndexSource;
+            }
+
+            if (pos && pos.data && idx && idx.data) {
+                vs = MeshAssetHelper.createNormals(idx.data, pos.data);
+                this.addVertexSource(vs);
+            }
+
+            return vs;
+        }
+
+        public createTangents(): VertexSource {
+            let vs: VertexSource = null;
+
+            let pos = this.vertexSources.get(ShaderPredefined.a_Position0);
+            let uv = this.vertexSources.get(ShaderPredefined.a_UV0);
+            let idx = this.drawIndexSource;
+
+            if (this._link) {
+                if ((!pos || !pos.data) && this._link.vertexSources) pos = this._link.vertexSources.get(ShaderPredefined.a_Position0);
+                if ((!uv || !uv.data) && this._link.vertexSources) uv = this._link.vertexSources.get(ShaderPredefined.a_UV0);
+                if (!idx || !idx.data) idx = this._link.drawIndexSource;
+            }
+
+            if (pos && pos.data && uv && uv.data && idx && idx.data) {
+                vs = MeshAssetHelper.createTangents(idx.data, pos.data, uv.data);
+                this.addVertexSource(vs)
+            }
+
+            return vs;
+        }
+
+        public createBinormals(): VertexSource {
+            let vs: VertexSource = null;
+
+            let nrm = this.vertexSources.get(ShaderPredefined.a_Normal0);
+            let tan = this.vertexSources.get(ShaderPredefined.a_Tangent0);
+            let idx = this.drawIndexSource;
+
+            if (this._link) {
+                if ((!nrm || !nrm.data) && this._link.vertexSources) nrm = this._link.vertexSources.get(ShaderPredefined.a_Position0);
+                if ((!tan || !tan.data) && this._link.vertexSources) tan = this._link.vertexSources.get(ShaderPredefined.a_UV0);
+                if (!idx || !idx.data) idx = this._link.drawIndexSource;
+            }
+
+            if (!nrm) nrm = this.createNormals();
+            if (!tan) tan = this.createTangents();
+
+            if (nrm && nrm.data && tan && tan.data && idx && idx.data) {
+                vs = MeshAssetHelper.createBinormals(nrm.data, tan.data);
+                this.addVertexSource(vs)
+            }
+
+            return vs;
         }
 
         public getDrawIndexBuffer(gl: GL): GLIndexBuffer {

@@ -229,6 +229,105 @@ namespace Aurora.MeshAssetHelper {
         return new VertexSource(ShaderPredefined.a_Normal0, normals, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT);
     }
 
+    export function createTangents(indices: uint[], vertices: number[], uvs: number[]): VertexSource {
+        const tangents: number[] = [];
+        tangents.length = vertices.length;
+
+        for (let i = 0, n = indices.length; i < n; ++i) {
+            const idx0 = indices[i];
+            const idx1 = indices[++i];
+            const idx2 = indices[++i];
+
+            const i0x = idx0 * 3;
+            const i0y = i0x + 1;
+            const i0z = i0x + 2;
+
+            const x0 = vertices[i0x];
+            const y0 = vertices[i0y];
+            const z0 = vertices[i0z];
+
+            const i1x = idx1 * 3;
+            const i1y = i1x + 1;
+            const iiz = i1x + 2;
+
+            const x1 = vertices[i1x];
+            const y1 = vertices[i1y];
+            const z1 = vertices[iiz];
+
+            const i2x = idx2 * 3;
+            const i2y = i2x + 1;
+            const i2z = i2x + 2;
+
+            const x2 = vertices[i2x];
+            const y2 = vertices[i2y];
+            const z2 = vertices[i2z];
+
+            const abX = x1 - x0;
+            const abY = y1 - y0;
+            const abZ = z1 - z0;
+            const acX = x2 - x0;
+            const acY = y2 - y0;
+            const acZ = z2 - z0;
+
+            let index = idx0 << 1;
+            const s0 = uvs[index];
+            const t0 = uvs[++index];
+
+            index = idx1 << 1;
+            const s1 = uvs[index];
+            const t1 = uvs[++index];
+
+            index = idx2 << 1;
+            const s2 = uvs[index];
+            const t2 = uvs[++index];
+
+            const abS = s1 - s0;
+            const abT = t1 - t0;
+            const acS = s2 - s0;
+            const acT = t2 - t0;
+
+            let k = abS * acT - acS * abT;
+            k = k === 0 ? 1 : 1 / k;
+
+            const x = (acT * abX - abT * acX) / k;
+            const y = (acT * abY - abT * acY) / k;
+            const z = (acT * abZ - abT * acZ) / k;
+            tangents[i0x] = x;
+            tangents[i1x] = x;
+            tangents[i2x] = x;
+            tangents[i0y] = y;
+            tangents[i1y] = y;
+            tangents[i2y] = y;
+            tangents[i0z] = z;
+            tangents[iiz] = z;
+            tangents[i2z] = z;
+        }
+
+        return new VertexSource(ShaderPredefined.a_Tangent0, tangents, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT);
+    }
+
+    export function createBinormals(normals: number[], tangents: number[]): VertexSource {
+        const binormals: number[] = [];
+        binormals.length = normals.length;
+
+        let idx = 0;
+
+        for (let i = 0, n = normals.length; i < n; ++i) {
+            const nx = normals[i];
+            const tx = tangents[i];
+            const ny = normals[++i];
+            const ty = tangents[i];
+            const nz = normals[++i];
+            const tz = tangents[i];
+
+            binormals[idx++] = ny * tz - nz * ty;
+            binormals[idx++] = nz * tx - nx * tz;
+            binormals[idx++] = nx * ty - ny * tx;
+        }
+
+        return new VertexSource(ShaderPredefined.a_Binormal0, binormals, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT);
+    }
+
     export function transformVertices(m: Matrix44, src: number[], srcOffset: uint, srcLength: int, dst: number[], dstOffset: uint): void {
         srcLength = srcLength < 0 ? src.length : Math.min(srcOffset + srcLength, src.length);
         const p = new Vector3();

@@ -231,10 +231,10 @@ class FileTest {
                     //if (m.name === "对象014") continue;
                     //if (m.name === "对象079") continue;
                     //if (m.name === "对象080") continue;
-                    console.log(m.name);
+                    //console.log(m.name);
                     let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
                     mesh.renderer = this._env.forwardRenderer;
-                    mesh.skinningMethod = this._env.skinnedMeshGPUSkinningMethod.value;
+                    mesh.skinningMethod = this._env.skinnedMeshCPUSkinningMethod.value;
                     mesh.asset = m;
                     //mesh.asset.drawIndexSource.offset = 18;
                     //mesh.asset.drawIndexSource.length = 6;

@@ -7,8 +7,8 @@ namespace Aurora.BuiltinShader.Lib.Skinning {
     export const CALC_SKINNING_FUNC = `${NAME}_CalcSkinning`;
     export const CALC_SKINNING_ONLY_ROTATION_FUNC = `${NAME}_CalcSkinningOnlyRotation`;
 
-    export const NEED_SKINNING_DEFINE = "NEED_SKINNING_DEFINE";
-    export const SKINNED_MATRIX = `${NAME}_Mat`;
+    export const NEED_SKINNING_DEFINE = "_NEED_SKINNING_DEFINE";
+    export const SKINNED_MATRIX_STRUCT = `${NAME}_Mat`;
 
     export const VERT_HEADER: ShaderLib = {
         name: `${NAME}_VertHeader`,
@@ -33,13 +33,13 @@ namespace Aurora.BuiltinShader.Lib.Skinning {
 
 #include<${General.DECLARE_UNIFORM_ARRAY.name}>(vec4, ${ShaderPredefined.u_SkinningMatrices}, ${ShaderPredefined.MAX_BONES} * 3)
 
-struct ${SKINNED_MATRIX} {
+struct ${SKINNED_MATRIX_STRUCT} {
     vec4 m00_30;
     vec4 m01_31;
     vec4 m02_32;
 };
 
-void ${CALC_SKINNING_MATRIX_FUNC}_Single(${SKINNED_MATRIX} mat, float index, float weight) {
+void ${CALC_SKINNING_MATRIX_FUNC}_Single(inout ${SKINNED_MATRIX_STRUCT} mat, float index, float weight) {
     int i = int(index) * 3;
 
     mat.m00_30 += ${ShaderPredefined.u_SkinningMatrices}[i] * weight;
@@ -47,11 +47,10 @@ void ${CALC_SKINNING_MATRIX_FUNC}_Single(${SKINNED_MATRIX} mat, float index, flo
     mat.m02_32 += ${ShaderPredefined.u_SkinningMatrices}[i + 2] * weight;
 }
 
-${SKINNED_MATRIX} ${CALC_SKINNING_MATRIX_FUNC}(_BONE_DATA_TYPE indices, _BONE_DATA_TYPE weights) {
-    ${SKINNED_MATRIX} mat;
-    mat.m00_30 = vec4(0.0, 0.0, 0.0, 0.0);
-    mat.m01_31 = vec4(0.0, 0.0, 0.0, 0.0);
-    mat.m02_32 = vec4(0.0, 0.0, 0.0, 0.0);
+void ${CALC_SKINNING_MATRIX_FUNC}(inout ${SKINNED_MATRIX_STRUCT} mat, _BONE_DATA_TYPE indices, _BONE_DATA_TYPE weights) {
+    mat.m00_30 = vec4(0.0);
+    mat.m01_31 = vec4(0.0);
+    mat.m02_32 = vec4(0.0);
 
     ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.x, weights.x);
 
@@ -66,16 +65,14 @@ ${SKINNED_MATRIX} ${CALC_SKINNING_MATRIX_FUNC}(_BONE_DATA_TYPE indices, _BONE_DA
         #endif
     #endif
 #endif
-
-    return mat;
 }
 
-vec3 ${CALC_SKINNING_FUNC}(vec3 pos, ${SKINNED_MATRIX} mat) {
+vec3 ${CALC_SKINNING_FUNC}(vec3 pos, ${SKINNED_MATRIX_STRUCT} mat) {
     vec4 srcPos = vec4(pos, 1.0);
     return vec3(dot(srcPos, mat.m00_30), dot(srcPos, mat.m01_31), dot(srcPos, mat.m02_32));
 }
 
-vec3 ${CALC_SKINNING_ONLY_ROTATION_FUNC}(vec3 pos, ${SKINNED_MATRIX} mat) {
+vec3 ${CALC_SKINNING_ONLY_ROTATION_FUNC}(vec3 pos, ${SKINNED_MATRIX_STRUCT} mat) {
     return vec3(dot(pos, mat.m00_30.xyz), dot(pos, mat.m01_31.xyz), dot(pos, mat.m02_32.xyz));
 }
 

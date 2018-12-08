@@ -39,6 +39,8 @@ namespace Aurora {
         SPECULAR_TEX = "SPECULAR_TEX",
         SPECULAR_COLOR = "SPECULAR_COLOR",
 
+        NORMAL_TEX = "NORMAL_TEX",
+
         REFLECTION_COLOR = "REFLECTION_COLOR",
 
         u_LightColor0 = "u_LightColor0",
@@ -48,14 +50,14 @@ namespace Aurora {
         /**
          * Direction Light:
          ** none.
-        *
-        * Point Light:
-        ** v0 = range.
-        *
-        * Spot Light:
-        ** v0 = range.
-        ** v1 = cos(spotAngle * 0.5).
-        */
+         *
+         * Point Light:
+         ** v0 = range.
+         *
+         * Spot Light:
+         ** v0 = range.
+         ** v1 = cos(spotAngle * 0.5).
+         */
         u_LightAttrib0 = "u_LightAtrrib0",
 
         u_LighitngSpecularShininess = "u_LighitngSpecularShininess",
@@ -64,6 +66,8 @@ namespace Aurora {
 
         a_Position0 = "a_Position0",
         a_Normal0 = "a_Normal0",
+        a_Tangent0 = "a_Tangent0",
+        a_Binormal0 = "a_Binormal0",
         a_UV0 = "a_UV0",
         a_Color0 = "a_Color0",
         a_BoneIndex0 = "a_BoneIndex0",
@@ -90,14 +94,7 @@ namespace Aurora {
         u_Sampler0 = "u_Sampler0",
         u_DiffuseSampler = "u_DiffuseSampler",
         u_SpecularSampler = "u_SpecularSampler",
+        u_NormalSampler = "u_NormalSampler",
         u_ReflectionSampler = "u_ReflectionSampler",
-
-        v_UV0 = "v_UV0",
-        v_Color0 = "v_Color0",
-        v_WorldNormal0 = "v_WorldNormal0",
-        v_WorldPos0 = "v_WorldPos0",
-
-        var_WorldNormal0 = "var_WorldNormal0",
-        var_WorldViewDir0 = "var_WorldViewDir0"
     }
 }
