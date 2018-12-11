@@ -282,7 +282,6 @@ namespace Aurora.FbxFile {
             if (skeData) {
                 skeData.finish(this);
 
-                const tmpMat = new Matrix44();
                 const ske = new Skeleton();
                 const skeBones = new RefMap<string, Aurora.Node>();
                 ske.bones = skeBones;
@@ -302,7 +301,6 @@ namespace Aurora.FbxFile {
                     result.animationClips = animationClips;
 
                     const clipsRaw = animationClips.raw;
-                    const tmpVec3 = new Vector3();
 
                     for (let i = 0, n = clipsRaw.length; i < n; ++i) {
                         const clip = clipsRaw[i];
@@ -362,6 +360,8 @@ namespace Aurora.FbxFile {
 
                         this._transformVertexSourceXZY(asset.getVertexSource(ShaderPredefined.a_Position0));
                         this._transformVertexSourceXZY(asset.getVertexSource(ShaderPredefined.a_Normal0));
+                        this._transformVertexSourceXZY(asset.getVertexSource(ShaderPredefined.a_Tangent0));
+                        this._transformVertexSourceXZY(asset.getVertexSource(ShaderPredefined.a_Binormal0));
                         this._transformMatricesXZY(asset.bonePreOffsetMatrices);
                         this._transformMatricesXZY(asset.bonePostOffsetMatrices);
                         asset.bonePostOffsetMatrices = null;
@@ -814,7 +814,13 @@ namespace Aurora.FbxFile {
                             break;
                         }
                         case NodeName.LAYER_ELEMENT_NORMAL:
-                            this._parseNormals(child, sourceIndices, asset);
+                            this._parseNormals(child, sourceIndices, asset, NodeName.NORMALS, ShaderPredefined.a_Normal0);
+                            break;
+                        case NodeName.LAYER_ELEMENT_TANGENT:
+                            this._parseNormals(child, sourceIndices, asset, NodeName.TANGENT, ShaderPredefined.a_Tangent0);
+                            break;
+                        case NodeName.LAYER_ELEMENT_BINORMAL:
+                            this._parseNormals(child, sourceIndices, asset, NodeName.BINORMALS, ShaderPredefined.a_Binormal0);
                             break;
                         case NodeName.LAYER_ELEMENT_UV:
                             this._parseUVs(child, sourceIndices, asset);
@@ -1317,13 +1323,13 @@ namespace Aurora.FbxFile {
             return null;
         }
 
-        private _parseNormals(node: Node, sourceIndices: uint[], asset: MeshAsset): void {
+        private _parseNormals(node: Node, sourceIndices: uint[], asset: MeshAsset, valueName: string, attribName: string): void {
             let values: number[] = null, refType: string = null, mappingType: string = null;
 
             for (let i = 0, n = node.children.length; i < n; ++i) {
                 const child = node.children[i];
                 switch (child.name) {
-                    case NodeName.NORMALS:
+                    case valueName:
                         values = this._getPropertyValue<number[]>(child, NodePropertyValueType.NUMBER_ARRAY);
                         break;
                     case NodeName.REFERENCE_INFORMATION_TYPE:
@@ -1337,7 +1343,7 @@ namespace Aurora.FbxFile {
                 }
             }
 
-            asset.addVertexSource(new VertexSource(ShaderPredefined.a_Normal0, this._parseVertexSource(values, null, refType, mappingType, sourceIndices, 3),
+            asset.addVertexSource(new VertexSource(attribName, this._parseVertexSource(values, null, refType, mappingType, sourceIndices, 3),
                 GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
         }
 

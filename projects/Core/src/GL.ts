@@ -999,7 +999,7 @@ namespace Aurora {
             this._textureType = type;
             this._tex = this._gl.context.createTexture();
 
-            this.setWraps(GLTexWrapValue.CLAMP_TO_EDGE);
+            this.setWraps(GLTexWrapValue.REPEAT);
             this.setFilters(GLTexFilterValue.LINEAR);
         }
 

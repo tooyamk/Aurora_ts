@@ -31,10 +31,10 @@ class Env {
         this.shaderStore.addBuiltinLibraries();
         this.shaderStore.addBuiltinSources();
 
-        console.log("vert : ");
-        console.log(this.shaderStore.getSource(Aurora.BuiltinShader.DefaultMesh.NAME, Aurora.GLShaderType.VERTEX_SHADER).source);
-        console.log("frag : ");
-        console.log(this.shaderStore.getSource(Aurora.BuiltinShader.DefaultMesh.NAME, Aurora.GLShaderType.FRAGMENT_SHADER).source);
+        //console.log("vert : ");
+        //console.log(this.shaderStore.getSource(Aurora.BuiltinShader.DefaultMesh.NAME, Aurora.GLShaderType.VERTEX_SHADER).source);
+        //console.log("frag : ");
+        //console.log(this.shaderStore.getSource(Aurora.BuiltinShader.DefaultMesh.NAME, Aurora.GLShaderType.FRAGMENT_SHADER).source);
 
         this.world.value = new Aurora.Node();
         this.camera.value = this.world.value.addChild(new Aurora.Node()).addComponent(new Aurora.Camera());

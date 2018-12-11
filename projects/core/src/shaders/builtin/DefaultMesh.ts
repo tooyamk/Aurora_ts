@@ -17,9 +17,12 @@ attribute vec3 ${ShaderPredefined.a_Position0};
 #if defined(${ShaderPredefined.NORMAL_TEX}) && defined(${ShaderPredefined.LIGHTING})
 #include<${General.DECLARE_ATTRIB.name}>(vec3, ${ShaderPredefined.a_Normal0})
 #include<${General.DECLARE_ATTRIB.name}>(vec3, ${ShaderPredefined.a_Tangent0})
-#include<${General.DECLARE_UNIFORM.name}>(mat3, ${ShaderPredefined.u_M33_L2W})
+#include<${General.DECLARE_ATTRIB.name}>(vec2, ${ShaderPredefined.a_UV0})
+#include<${General.DECLARE_UNIFORM.name}>(mat4, ${ShaderPredefined.u_M44_L2W})
+#include<${General.DECLARE_VARYING.name}>(vec2, ${General.v_UV0})
 #include<${General.DECLARE_VARYING.name}>(vec3, ${General.v_WorldPos0})
 #include<${General.DECLARE_VARYING.name}>(vec3, ${General.v_WorldNormal0})
+#include<${General.DECLARE_VARYING.name}>(vec3, ${General.v_WorldTangent0})
 #include<${General.DECLARE_VARYING.name}>(vec3, ${General.v_WorldBinormal0})
 #endif
 
@@ -88,8 +91,9 @@ ${General.PRECISION_HEAD}
 
 #if defined(${ShaderPredefined.NORMAL_TEX}) && defined(${ShaderPredefined.LIGHTING})
 #include<${General.DECLARE_UNIFORM.name}>(sampler2D, ${ShaderPredefined.u_NormalSampler})
-#include<${General.DECLARE_VARYING.name}>(vec2, ${General.v_WorldTangent0})
-#include<${General.DECLARE_VARYING.name}>(vec2, ${General.v_WorldBinormal0})
+#include<${General.DECLARE_VARYING.name}>(vec2, ${General.v_UV0})
+#include<${General.DECLARE_VARYING.name}>(vec3, ${General.v_WorldTangent0})
+#include<${General.DECLARE_VARYING.name}>(vec3, ${General.v_WorldBinormal0})
 #endif
 
 #ifdef ${ShaderPredefined.VERTEX_COLOR}

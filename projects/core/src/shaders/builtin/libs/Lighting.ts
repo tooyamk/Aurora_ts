@@ -81,11 +81,10 @@ float ${SPECULAR_BLINN_PHONE_FACTOR_FUNC}(vec3 normal, vec3 lightingDir, vec3 vi
 #ifdef ${ShaderPredefined.LIGHTING}
 
 #include<${General.DECLARE_ATTRIB.name}>(vec3, ${ShaderPredefined.a_Normal0})
-#include<${General.DECLARE_UNIFORM.name}>(mat3, ${ShaderPredefined.u_M33_L2W})
+#include<${General.DECLARE_UNIFORM.name}>(mat4, ${ShaderPredefined.u_M44_L2W})
 #include<${General.DECLARE_VARYING.name}>(vec3, ${General.v_WorldNormal0})
 
 #if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_POINT} || ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_SPOT} || defined(${ShaderPredefined.LIGHTING_SPECULAR})
-    #include<${General.DECLARE_UNIFORM.name}>(mat4, ${ShaderPredefined.u_M44_L2W})
     #include<${General.DECLARE_VARYING.name}>(vec3, ${General.v_WorldPos0})
 #endif
 

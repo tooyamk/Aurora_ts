@@ -78,7 +78,6 @@ namespace Aurora {
         u_M44_V2P = "u_M44_V2P",
         
         u_M44_L2V = "u_M44_L2V",
-        u_M33_L2W = "u_M33_L2W",
         u_M44_L2W = "u_M44_L2W",
         u_M44_L2P = "u_M44_L2P",
 

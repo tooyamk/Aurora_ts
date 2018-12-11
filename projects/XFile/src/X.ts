@@ -57,6 +57,7 @@ namespace Aurora.XFile {
         MESH_MATERIAL_LIST = 'MeshMaterialList',
         MESH_NORMALS = 'MeshNormals',
         MESH_TEXTURE_COORDS = 'MeshTextureCoords',
+        DECL_DATA = 'DeclData',
         SKIN_WEIGHTS = 'SkinWeights',
         TEMPLATE = 'template',
         TEXTURE_FILE_NAME = 'TextureFilename',
@@ -590,6 +591,9 @@ namespace Aurora.XFile {
                 case TokenName.MESH_TEXTURE_COORDS:
                     _parseMeshUVs(data, floatBits, asset);
                     break;
+                case TokenName.DECL_DATA:
+                    _parseDeclData(data, floatBits, asset);
+                    break;
                 case TokenName.XSKIN_MESH_HEADER:
                     _parseSkinMeshHeader(data, floatBits);
                     break;
@@ -626,6 +630,221 @@ namespace Aurora.XFile {
 
         asset.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, <number[]>valuesToken.value, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
         
+        _skipClosingBrace(data, floatBits);
+    }
+
+    function _parseDeclData(data: ByteArray, floatBits: uint, asset: MeshAsset): void {
+        _parseHeadName(data, floatBits);
+        const valuesToken = _parseNextToken(data, floatBits);
+
+        const vs = asset.getVertexSource(ShaderPredefined.a_Position0);
+        if (!vs) return;
+        const numVertices = (vs.data.length / vs.size) | 0;
+
+        const values = <uint[]>valuesToken.value;
+
+        let idx0 = 0;
+        const num = values[idx0++];
+        let dataStart = (num << 2) + 2;
+
+        const numData: uint[] = [];
+        numData.length = num;
+        for (let i = 0; i < num; ++i) {
+            const type = values[idx0 + (i << 2)];
+            switch (type) {
+                case 0:
+                    numData[i] = 1;
+                    break;
+                case 1:
+                    numData[i] = 2;
+                    break;
+                case 2:
+                    numData[i] = 3;
+                    break;
+                case 3:
+                    numData[i] = 4;
+                    break;
+                case 4:
+                    numData[i] = 4;
+                    break;
+                case 5:
+                    numData[i] = 4;
+                    break;
+                case 6:
+                    numData[i] = 2;
+                    break;
+                case 7:
+                    numData[i] = 4;
+                    break;
+                case 8:
+                    numData[i] = 4;
+                    break;
+                case 9:
+                    numData[i] = 2;
+                    break;
+                case 10:
+                    numData[i] = 4;
+                    break;
+                case 11:
+                    numData[i] = 2;
+                    break;
+                case 12:
+                    numData[i] = 4;
+                    break;
+                case 13:
+                    numData[i] = 3;
+                    break;
+                case 14:
+                    numData[i] = 3;
+                    break;
+                case 15:
+                    numData[i] = 2;
+                    break;
+                case 16:
+                    numData[i] = 4;
+                    break;
+                default:
+                    numData[i] = 0;
+                    break;
+            }
+        }
+
+        let len = 0;
+        for (let i = 0; i < num; ++i) len += numData[i];
+
+        let dataOffset = 0;
+        for (let i = 0; i < num; ++i) {
+            const type = values[idx0++];//0=f32, 1=f32_2, 2=f32_3, 3=f32_4, 4=color(ubyte4,rgba), 5=ubyte4, 6=short2, 7=short4, 8=ubyte4n(/255), 9=short2n(/32767), 10=short4n(/32767), 11=ushort2n(/65535), 12=ushort4n(/65535), 13=udec3, 14=dec3n(/511), 15=f16_2, 16=f16_4
+            const method = values[idx0++];
+            const usage = values[idx0++];//0=POSITION, 1=BLENDWEIGHT, 2=BLENDINDICES, 3=NORMAL, 4=PSIZE, 5=TEXCOORD, 6=TANGENT, 7=BINORMAL, 8=TESSFACTOR, 9=POSITIONT, 10=COLOR, 11=FOG, 12=DEPTH, 13=SAMPLE
+            const usageIndex = values[idx0++];
+
+            const size = numData[i];
+            const n = numVertices * size;
+
+            let idx1 = dataStart + dataOffset;
+            let idx2 = 0;
+            dataOffset += size;
+
+            const data: number[] = [];
+            data.length = n;
+            const glSize: GLVertexBufferSize = size;
+            let glType: GLVertexBufferDataType;
+
+            switch (type) {
+                case 0:
+                case 1:
+                case 2:
+                case 3: {
+                    glType = GLVertexBufferDataType.FLOAT;
+
+                    const ba = new DataView(new ArrayBuffer(4));
+                    for (let j = 0; j < numVertices; ++j) {
+                        for (let k = 0; k < size; ++k) {
+                            ba.setUint32(0, values[idx1 + k], true);
+                            data[idx2++] = ba.getFloat32(0, true);
+                        }
+                        idx1 += len;
+                    }
+
+                    break;
+                }
+                case 4:
+                case 8: {
+                    glType = GLVertexBufferDataType.FLOAT;
+
+                    for (let j = 0; j < numVertices; ++j) {
+                        for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k] / 255;
+                        idx1 += len;
+                    }
+
+                    break;
+                }
+                case 5: {
+                    glType = GLVertexBufferDataType.UNSIGNED_BYTE;
+
+                    for (let j = 0; j < numVertices; ++j) {
+                        for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k];
+                        idx1 += len;
+                    }
+
+                    break;
+                }
+                case 6:
+                case 7: {
+                    glType = GLVertexBufferDataType.SHORT;
+
+                    for (let j = 0; j < numVertices; ++j) {
+                        for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k];
+                        idx1 += len;
+                    }
+
+                    break;
+                }
+                case 9:
+                case 10: {
+                    glType = GLVertexBufferDataType.FLOAT;
+
+                    for (let j = 0; j < n; ++j) {
+                        for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k] / 32767;
+                        idx1 += len;
+                    }
+
+                    break;
+                }
+                case 11:
+                case 12: {
+                    glType = GLVertexBufferDataType.FLOAT;
+
+                    for (let j = 0; j < n; ++j) {
+                        for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k] / 65535;
+                        idx1 += len;
+                    }
+
+                    break;
+                }
+                case 13: {
+                    glType = GLVertexBufferDataType.INT;
+
+                    for (let j = 0; j < numVertices; ++j) {
+                        for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k];
+                        idx1 += len;
+                    }
+
+                    break;
+                }
+                case 14: {
+                    glType = GLVertexBufferDataType.FLOAT;
+
+                    for (let j = 0; j < n; ++j) {
+                        for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k] / 511;
+                        idx1 += len;
+                    }
+
+                    break;
+                }
+                default:
+                    break;
+            }
+
+            switch (usage) {
+                case 3:
+                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_Normal0, data, glSize, glType, false, GLUsageType.STATIC_DRAW));
+                    break;
+                case 5:
+                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, data, glSize, glType, false, GLUsageType.STATIC_DRAW));
+                    break;
+                case 6:
+                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_Tangent0, data, glSize, glType, false, GLUsageType.STATIC_DRAW));
+                    break;
+                case 7:
+                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_Binormal0, data, glSize, glType, false, GLUsageType.STATIC_DRAW));
+                    break;
+                default:
+                    break;
+            }
+        }
+
         _skipClosingBrace(data, floatBits);
     }
 

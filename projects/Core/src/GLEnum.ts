@@ -1197,23 +1197,53 @@ namespace Aurora {
     }
 
     export const enum GLUniformType {
-        FLOAT = GLEnum.FLOAT,
-        FLOAT_VEC2 = GLEnum.FLOAT_VEC2,
-        FLOAT_VEC3 = GLEnum.FLOAT_VEC3,
-        FLOAT_VEC4 = GLEnum.FLOAT_VEC4,
-        INT = GLEnum.INT,
-        INT_VEC2 = GLEnum.INT_VEC2,
-        INT_VEC3 = GLEnum.INT_VEC3,
-        INT_VEC4 = GLEnum.INT_VEC4,
-        BOOL = GLEnum.BOOL,
-        BOOL_VEC2 = GLEnum.BOOL_VEC2,
-        BOOL_VEC3 = GLEnum.BOOL_VEC3,
-        BOOL_VEC4 = GLEnum.BOOL_VEC4,
-        FLOAT_MAT2 = GLEnum.FLOAT_MAT2,
-        FLOAT_MAT3 = GLEnum.FLOAT_MAT3,
-        FLOAT_MAT4 = GLEnum.FLOAT_MAT4,
-        SAMPLER_2D = GLEnum.SAMPLER_2D,
-        SAMPLER_CUBE = GLEnum.SAMPLER_CUBE
+        FLOAT = GLEnum.FLOAT,//float
+        FLOAT_VEC2 = GLEnum.FLOAT_VEC2,//vec2
+        FLOAT_VEC3 = GLEnum.FLOAT_VEC3,//vec3
+        FLOAT_VEC4 = GLEnum.FLOAT_VEC4,//vec4
+        INT = GLEnum.INT,//int
+        INT_VEC2 = GLEnum.INT_VEC2,//ivec2
+        INT_VEC3 = GLEnum.INT_VEC3,//ivec3
+        INT_VEC4 = GLEnum.INT_VEC4,//ivec4
+        BOOL = GLEnum.BOOL,//boolean
+        BOOL_VEC2 = GLEnum.BOOL_VEC2,//bvec2
+        BOOL_VEC3 = GLEnum.BOOL_VEC3,//bvec3
+        BOOL_VEC4 = GLEnum.BOOL_VEC4,//bvec4
+        FLOAT_MAT2 = GLEnum.FLOAT_MAT2,//mat2
+        FLOAT_MAT3 = GLEnum.FLOAT_MAT3,//mat3
+        FLOAT_MAT4 = GLEnum.FLOAT_MAT4,//mat4
+        SAMPLER_2D = GLEnum.SAMPLER_2D,//sampler2D
+        SAMPLER_CUBE = GLEnum.SAMPLER_CUBE,//samplerCube
+
+        /** **WebGL Version:** WebGL 2.0. */
+        UNSIGNED_INT = GLEnum.UNSIGNED_INT,//uint
+
+        /** **WebGL Version:** WebGL 2.0. */
+        UNSIGNED_INT_VEC2 = GLEnum.UNSIGNED_INT_VEC2,//ivec2
+
+        /** **WebGL Version:** WebGL 2.0. */
+        UNSIGNED_INT_VEC3 = GLEnum.UNSIGNED_INT_VEC3,//ivec3
+
+        /** **WebGL Version:** WebGL 2.0. */
+        UNSIGNED_INT_VEC4 = GLEnum.UNSIGNED_INT_VEC4,//ivec4
+
+        /** **WebGL Version:** WebGL 2.0. */
+        FLOAT_MAT2x3 = GLEnum.FLOAT_MAT2x3,//mat2x3
+
+        /** **WebGL Version:** WebGL 2.0. */
+        FLOAT_MAT2x4 = GLEnum.FLOAT_MAT2x4,//mat2x4
+
+        /** **WebGL Version:** WebGL 2.0. */
+        FLOAT_MAT3x2 = GLEnum.FLOAT_MAT3x2,//mat3x2
+
+        /** **WebGL Version:** WebGL 2.0. */
+        FLOAT_MAT3x4 = GLEnum.FLOAT_MAT3x4,//mat3x4
+
+        /** **WebGL Version:** WebGL 2.0. */
+        FLOAT_MAT4x2 = GLEnum.FLOAT_MAT4x2,//mat4x2
+
+        /** **WebGL Version:** WebGL 2.0. */
+        FLOAT_MAT4x3 = GLEnum.FLOAT_MAT4x3//mat4x3
     }
 
     export const enum GLBlendEquationType {

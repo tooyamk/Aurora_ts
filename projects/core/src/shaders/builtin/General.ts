@@ -118,18 +118,26 @@ varying \${0} \${1};
     #endif
 #endif
 
-#ifdef ${General.DECLARE_UNIFORM_DEFINE_PREFIX}${ShaderPredefined.u_M33_L2W}
+#ifdef ${General.DECLARE_UNIFORM_DEFINE_PREFIX}${ShaderPredefined.u_M44_L2W}
+    mat3 m3 = mat3(${ShaderPredefined.u_M44_L2W});
     #ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${v_WorldNormal0}
         #ifndef ${General.ASSIGNMENT_PREFIX}${v_WorldNormal0}
             #define ${General.ASSIGNMENT_PREFIX}${v_WorldNormal0}
-            ${v_WorldNormal0} = ${ShaderPredefined.u_M33_L2W} * ${General.var_Nrm0};
+            ${v_WorldNormal0} = m3 * ${General.var_Nrm0};
+        #endif
+    #endif
+
+    #ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${v_WorldTangent0}
+        #ifndef ${General.ASSIGNMENT_PREFIX}${v_WorldTangent0}
+            #define ${General.ASSIGNMENT_PREFIX}${v_WorldTangent0}
+            ${v_WorldTangent0} = m3 * ${General.var_Tan0};
         #endif
     #endif
 
     #ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${v_WorldBinormal0}
         #ifndef ${General.ASSIGNMENT_PREFIX}${v_WorldBinormal0}
             #define ${General.ASSIGNMENT_PREFIX}${v_WorldBinormal0}
-            ${v_WorldBinormal0} = ${ShaderPredefined.u_M33_L2W} * ${General.var_Binrm0};
+            ${v_WorldBinormal0} = m3 * ${General.var_Binrm0};
         #endif
     #endif
 #endif

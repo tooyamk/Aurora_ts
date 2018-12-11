@@ -27,7 +27,6 @@ vec3 ${CUBIC_FUNC.name}(vec3 normal, vec3 viewDir) {
 #ifdef ${ShaderPredefined.REFLECTION}
 
 #include<${General.DECLARE_ATTRIB.name}>(vec3, ${ShaderPredefined.a_Normal0})
-#include<${General.DECLARE_UNIFORM.name}>(mat3, ${ShaderPredefined.u_M33_L2W})
 #include<${General.DECLARE_VARYING.name}>(vec3, ${General.v_WorldNormal0})
 #include<${General.DECLARE_UNIFORM.name}>(mat4, ${ShaderPredefined.u_M44_L2W})
 #include<${General.DECLARE_VARYING.name}>(vec3, ${General.v_WorldPos0})
