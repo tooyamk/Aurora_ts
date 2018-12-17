@@ -24,6 +24,8 @@ namespace Aurora {
                     const boneNames = asset.boneNames;
                     this._updateVertices(asset, ShaderPredefined.a_Position0, boneIndices, boneWeights, numBonesPerElement, boneNames, matrices, false);
                     this._updateVertices(asset, ShaderPredefined.a_Normal0, boneIndices, boneWeights, numBonesPerElement, boneNames, matrices, true);
+                    this._updateVertices(asset, ShaderPredefined.a_Tangent0, boneIndices, boneWeights, numBonesPerElement, boneNames, matrices, true);
+                    this._updateVertices(asset, ShaderPredefined.a_Binormal0, boneIndices, boneWeights, numBonesPerElement, boneNames, matrices, true);
 
                     renderingData.out.asset = this._convertedAsset;
                 }

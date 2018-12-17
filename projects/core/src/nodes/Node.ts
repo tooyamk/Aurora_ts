@@ -464,30 +464,42 @@ namespace Aurora {
             }
         }
 
-        public getComponentByType<T extends Node.AbstractComponent>(c: {prototype: T}, checkEnabled: boolean = true): T {
+        public getComponentByType<T extends Node.AbstractComponent>(c: { prototype: T }, checkEnabled: boolean = true, layerMask: uint = 0x7FFFFFFF): T {
             if (this._components) {
                 const type = <any>c;
 
-                for (let i = 0, n = this._components.length; i < n; ++i) {
-                    const com = this._components[i];
-                    if (checkEnabled && !com.enabled) continue;
-                    if (com instanceof type) return <T>com;
+                if (checkEnabled) {
+                    for (let i = 0, n = this._components.length; i < n; ++i) {
+                        const com = this._components[i];
+                        if (com.enabled && com.layer & layerMask && com instanceof type) return <T>com;
+                    }
+                } else {
+                    for (let i = 0, n = this._components.length; i < n; ++i) {
+                        const com = this._components[i];
+                        if (com.layer & layerMask && com instanceof type) return <T>com;
+                    }
                 }
             }
 
             return null;
         }
 
-        public getComponentsByType<T extends Node.AbstractComponent>(c: { prototype: T }, checkEnabled: boolean = true, rst: T[] = null, rstOffset: uint = 0): uint {
+        public getComponentsByType<T extends Node.AbstractComponent>(c: { prototype: T }, checkEnabled: boolean = true, layerMask: uint = 0x7FFFFFFF, rst: T[] = null, rstOffset: uint = 0): uint {
             let num = 0;
 
             if (this._components) {
                 const type = <any>c;
 
-                for (let i = 0, n = this._components.length; i < n; ++i) {
-                    const com = this._components[i];
-                    if (checkEnabled && !com.enabled) continue;
-                    if (com instanceof type) rst[rstOffset + num++] = <T>com;
+                if (checkEnabled) {
+                    for (let i = 0, n = this._components.length; i < n; ++i) {
+                        const com = this._components[i];
+                        if (com.enabled && com.layer & layerMask && com instanceof type) rst[rstOffset + num++] = <T>com;
+                    }
+                } else {
+                    for (let i = 0, n = this._components.length; i < n; ++i) {
+                        const com = this._components[i];
+                        if (com.layer & layerMask && com instanceof type) rst[rstOffset + num++] = <T>com;
+                    }
                 }
             }
 
@@ -871,6 +883,8 @@ namespace Aurora {
 
     export namespace Node {
         export abstract class AbstractComponent extends Ref {
+            public layer: uint = 0x7FFFFFFF;
+
             protected _node: Node = null;
             protected _enabled = true;
 

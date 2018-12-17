@@ -18,19 +18,6 @@ namespace Aurora.BuiltinShader.Lib.Skinning {
 
 #define ${NEED_SKINNING_DEFINE}
 
-#if ${ShaderPredefined.NUM_BONES_PER_VERTEX} == 1
-    #define _BONE_DATA_TYPE vec1
-#elif ${ShaderPredefined.NUM_BONES_PER_VERTEX} == 2
-    #define _BONE_DATA_TYPE vec2
-#elif ${ShaderPredefined.NUM_BONES_PER_VERTEX} == 3
-    #define _BONE_DATA_TYPE vec3
-#else
-    #define _BONE_DATA_TYPE vec4
-#endif
-
-#include<${General.DECLARE_ATTRIB.name}>(_BONE_DATA_TYPE, ${ShaderPredefined.a_BoneIndex0})
-#include<${General.DECLARE_ATTRIB.name}>(_BONE_DATA_TYPE, ${ShaderPredefined.a_BoneWeight0})
-
 #include<${General.DECLARE_UNIFORM_ARRAY.name}>(vec4, ${ShaderPredefined.u_SkinningMatrices}, ${ShaderPredefined.MAX_BONES} * 3)
 
 struct ${SKINNED_MATRIX_STRUCT} {
@@ -47,25 +34,48 @@ void ${CALC_SKINNING_MATRIX_FUNC}_Single(inout ${SKINNED_MATRIX_STRUCT} mat, flo
     mat.m02_32 += ${ShaderPredefined.u_SkinningMatrices}[i + 2] * weight;
 }
 
-void ${CALC_SKINNING_MATRIX_FUNC}(inout ${SKINNED_MATRIX_STRUCT} mat, _BONE_DATA_TYPE indices, _BONE_DATA_TYPE weights) {
-    mat.m00_30 = vec4(0.0);
-    mat.m01_31 = vec4(0.0);
-    mat.m02_32 = vec4(0.0);
+#if ${ShaderPredefined.NUM_BONES_PER_VERTEX} == 1
+    #include<${General.DECLARE_ATTRIB.name}>(float, ${ShaderPredefined.a_BoneIndex0})
+    #include<${General.DECLARE_ATTRIB.name}>(float, ${ShaderPredefined.a_BoneWeight0})
 
-    ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.x, weights.x);
+    void ${CALC_SKINNING_MATRIX_FUNC}(inout ${SKINNED_MATRIX_STRUCT} mat, float indices, float weights) {
+#elif ${ShaderPredefined.NUM_BONES_PER_VERTEX} == 2
+    #include<${General.DECLARE_ATTRIB.name}>(vec2, ${ShaderPredefined.a_BoneIndex0})
+    #include<${General.DECLARE_ATTRIB.name}>(vec2, ${ShaderPredefined.a_BoneWeight0})
 
-#if ${ShaderPredefined.NUM_BONES_PER_VERTEX} > 1
-    ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.y, weights.y);
+    void ${CALC_SKINNING_MATRIX_FUNC}(inout ${SKINNED_MATRIX_STRUCT} mat, vec2 indices, vec2 weights) {
+#elif ${ShaderPredefined.NUM_BONES_PER_VERTEX} == 3
+    #include<${General.DECLARE_ATTRIB.name}>(vec3, ${ShaderPredefined.a_BoneIndex0})
+    #include<${General.DECLARE_ATTRIB.name}>(vec3, ${ShaderPredefined.a_BoneWeight0})
 
-    #if ${ShaderPredefined.NUM_BONES_PER_VERTEX} > 2
-        ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.z, weights.z);
+    void ${CALC_SKINNING_MATRIX_FUNC}(inout ${SKINNED_MATRIX_STRUCT} mat, vec3 indices, vec3 weights) {
+#else
+    #include<${General.DECLARE_ATTRIB.name}>(vec4, ${ShaderPredefined.a_BoneIndex0})
+    #include<${General.DECLARE_ATTRIB.name}>(vec4, ${ShaderPredefined.a_BoneWeight0})
 
-        #if ${ShaderPredefined.NUM_BONES_PER_VERTEX} > 3
-            ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.w, weights.w);
-        #endif
-    #endif
+    void ${CALC_SKINNING_MATRIX_FUNC}(inout ${SKINNED_MATRIX_STRUCT} mat, vec4 indices, vec4 weights) {
 #endif
-}
+
+        mat.m00_30 = vec4(0.0);
+        mat.m01_31 = vec4(0.0);
+        mat.m02_32 = vec4(0.0);
+
+#if ${ShaderPredefined.NUM_BONES_PER_VERTEX} == 1
+        ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices, weights);
+#elif ${ShaderPredefined.NUM_BONES_PER_VERTEX} == 2
+        ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.x, weights.x);
+        ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.y, weights.y);
+#elif ${ShaderPredefined.NUM_BONES_PER_VERTEX} == 3
+        ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.x, weights.x);
+        ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.y, weights.y);
+        ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.z, weights.z);
+#else
+        ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.x, weights.x);
+        ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.y, weights.y);
+        ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.z, weights.z);
+        ${CALC_SKINNING_MATRIX_FUNC}_Single(mat, indices.w, weights.w);
+#endif
+    }
 
 vec3 ${CALC_SKINNING_FUNC}(vec3 pos, ${SKINNED_MATRIX_STRUCT} mat) {
     vec4 srcPos = vec4(pos, 1.0);

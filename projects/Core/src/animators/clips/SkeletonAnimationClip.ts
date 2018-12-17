@@ -2,10 +2,33 @@
 ///<reference path="../../math/Vector.ts"/>
 
 namespace Aurora {
+    class TRS {
+        public static readonly CONST_IDENTITY = new TRS();
+
+        public readonly translation = new Vector3();
+        public readonly rotation = new Quaternion();
+        public readonly scale = new Vector3(1, 1, 1);
+
+        public identity(): void {
+            this.translation.setZero();
+            this.rotation.identity();
+            this.scale.setOne();
+        }
+
+        public static lerp(trs0: TRS, trs1: TRS, t: number, rst: TRS): void {
+            Vector3.lerp(trs0.translation, trs1.translation, t, rst.translation);
+            Quaternion.slerp(trs0.rotation, trs1.rotation, t, rst.rotation);
+            Vector3.lerp(trs0.scale, trs1.scale, t, rst.scale);
+        }
+    }
+
     export class SkeletonAnimationClip extends AbstractAnimationClip {
         protected static readonly TMP_POS = new Vector3();
         protected static readonly TMP_ROT = new Quaternion();
         protected static readonly TMP_SCALE = new Vector3();
+
+        protected static readonly _transformsPool: TRS[][] = [];
+        protected static _numTransformsInPool: uint = 0;
 
         protected _skeleton: Skeleton = null;
 
@@ -13,6 +36,25 @@ namespace Aurora {
         protected _endTime: number = 0;
 
         protected _frames: Map<string, SkeletonAnimationClip.Frame[]> = null;
+
+        protected _transforms: TRS[] = [];
+
+        protected _bones: Node[] = null;
+        protected _numBones: uint = 0;
+        protected _transforms0: TRS[] = null;
+        protected _transforms1: TRS[] = null;
+
+        protected static _getTransformsFromPool(): TRS[] {
+            if (SkeletonAnimationClip._numTransformsInPool) {
+                return SkeletonAnimationClip[--SkeletonAnimationClip._numTransformsInPool];
+            } else {
+                return [];
+            }
+        }
+
+        protected static _pushTransformsToPool(transforms: TRS[]): void {
+            SkeletonAnimationClip[SkeletonAnimationClip._numTransformsInPool++] = transforms;
+        }
 
         public get skeleton(): Skeleton {
             return this._skeleton;
@@ -40,29 +82,120 @@ namespace Aurora {
             this._duration = this._endTime - this._startTime;
         }
 
-        public update(elapsed: number): number {
-            const e = this._wrap(elapsed, this._duration);
+        public update(start: number, elapsed: number, blend: AnimatorBlend[]): number {
+            const e = this._wrap(start + elapsed, this._duration);
 
-            if (this._skeleton && this._frames) {
-                const bones = this._skeleton.bones;
-                if (bones) {
-                    const t = e + this._startTime;
-                    const rawBones = bones.raw;
-                    for (let itr of rawBones) {
-                        const bone = itr[1];
-                        if (bone) {
-                            const name = itr[0];
-                            const frames = this._frames.get(name);
-                            if (frames && frames.length > 0) {
-                                const start = this._findFrame(e, 0, frames.length - 1, frames);
-                                this._updateBone(bone, e, frames[start], frames[start + 1]);
-                            }
+            const transSelf = SkeletonAnimationClip._getTransformsFromPool();
+            if (this._updateWithClampElapsed(e, transSelf)) {
+                if (blend && blend.length > 0) {
+                    let begin = 0;
+                    let n = blend.length;
+                    for (let i = n - 1; i >= 0; --i) {
+                        const ab = blend[i];
+                        if (elapsed >= ab.blendTime || elapsed <= -ab.blendTime) {
+                            begin = i + 1;
+                            break;
                         }
+                    }
+
+                    if (begin < n) {
+                        const transRst = SkeletonAnimationClip._getTransformsFromPool();
+                        this._capacityTransforms(transRst, this._skeleton.bones.size);
+
+                        let ske0: Skeleton = null;
+                        let trans0: TRS[] = null;
+                        let bt: number;
+
+                        for (let i = begin, n = blend.length; i < n; ++i) {
+                            let trans: TRS[] = null;
+                            const ab = blend[i];
+                            if (elapsed >= ab.blendTime || elapsed <= -ab.blendTime) continue;
+
+                            const clip = <SkeletonAnimationClip>ab.clip;
+                            let ske: Skeleton = clip._skeleton;
+                            trans = SkeletonAnimationClip._getTransformsFromPool();
+                            if (!clip._updateWithClampElapsed(ab.startTime + elapsed, trans)) {
+                                SkeletonAnimationClip._pushTransformsToPool(trans);
+                                trans = null;
+                            }
+
+                            if (i === begin) {
+                                trans0 = trans;
+                                ske0 = ske;
+                            } else {
+                                this._lerpTransforms(ske0, trans0, ske, trans, 1 - Math.abs(bt - elapsed) / bt, transRst);
+                                SkeletonAnimationClip._pushTransformsToPool(trans);
+                                ske0 = this._skeleton;
+                                if (trans0 !== transRst) {
+                                    SkeletonAnimationClip._pushTransformsToPool(trans0);
+                                    trans0 = transRst;
+                                }
+                            }
+
+                            bt = ab.blendTime;
+                        }
+
+                        this._lerpTransforms(ske0, trans0, this._skeleton, transSelf, 1 - Math.abs(bt - elapsed) / bt, transSelf);
+                        if (trans0 && trans0 !== transRst) SkeletonAnimationClip._pushTransformsToPool(trans0);
+                        SkeletonAnimationClip._pushTransformsToPool(transRst);
+                    }
+                }
+
+                const rawBones = this._skeleton.bones.raw;
+                for (let i = 0, n = rawBones.length; i < n; ++i) {
+                    const bone = rawBones[i];
+                    if (bone) {
+                        const trs = transSelf[i];
+                        bone.setLocalTRS(trs.translation, trs.rotation, trs.scale);
                     }
                 }
             }
+            SkeletonAnimationClip._pushTransformsToPool(transSelf);
 
             return e;
+        }
+
+        private _capacityTransforms(trans: TRS[], len: uint): void {
+            if (trans.length < len) {
+                for (let i = trans.length; i < len; ++i) trans[i] = new TRS();
+            }
+        }
+
+        private _updateWrapElapsed(elapsed: number, transforms: TRS[]): boolean {
+            return this._updateWithClampElapsed(this._wrap(elapsed, this._duration), transforms);
+        }
+
+        public _updateWithClampElapsed(elapsed: number, transforms: TRS[]): boolean {
+            if (this._skeleton && this._frames) {
+                const bones = this._skeleton.bones;
+                if (bones) {
+                    const rawBones = bones.raw;
+                    const n = rawBones.length;
+
+                    this._capacityTransforms(transforms, n);
+
+                    const t = elapsed + this._startTime;
+                    for (let i = 0; i < n; ++i) {
+                        const bone = rawBones[i];
+                        const trs = transforms[i];
+                        if (bone) {
+                            const frames = this._frames.get(bone.name);
+                            if (frames && frames.length > 0) {
+                                const start = this._findFrame(elapsed, 0, frames.length - 1, frames);
+                                this._updateTransform(trs, elapsed, frames[start], frames[start + 1]);
+                            } else {
+                                trs.identity();
+                            }
+                        } else {
+                            trs.identity();
+                        }
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private _findFrame(elapsed: number, start: uint, end: uint, frames: SkeletonAnimationClip.Frame[]): int {
@@ -85,14 +218,114 @@ namespace Aurora {
             }
         }
 
-        private _updateBone(bone: Node, elapsed: number, frame0: SkeletonAnimationClip.Frame, frame1: SkeletonAnimationClip.Frame): void {
+        private _getTRSFromSkeleton(name: string, ske: Skeleton, trans: TRS[]): TRS {
+            const idx = ske.mapping.get(name);
+            if (idx === undefined) {
+                return TRS.CONST_IDENTITY;
+            } else {
+                return trans[idx];
+            }
+        }
+
+        private _lerpTransforms(ske0: Skeleton, trans0: TRS[], ske1: Skeleton, trans1: TRS[], weight: number, rst: TRS[]): void {
+            const rawBones = this._skeleton.bones.raw;
+            const numBones = rawBones.length;
+
+            if (trans0) {
+                if (trans1) {
+                    if (ske0 === this._skeleton) {
+                        if (ske1 === this._skeleton) {
+                            for (let i = 0; i < numBones; ++i) {
+                                const bone = rawBones[i];
+                                if (bone) {
+                                    TRS.lerp(trans0[i], trans1[i], weight, rst[i]);
+                                } else {
+                                    rst[i].identity();
+                                }
+                            }
+                        } else {
+                            for (let i = 0; i < numBones; ++i) {
+                                const bone = rawBones[i];
+                                if (bone) {
+                                    TRS.lerp(trans0[i], this._getTRSFromSkeleton(bone.name, ske1, trans1), weight, rst[i]);
+                                } else {
+                                    rst[i].identity();
+                                }
+                            }
+                        }
+                    } else if (ske1 === this._skeleton) {
+                        for (let i = 0; i < numBones; ++i) {
+                            const bone = rawBones[i];
+                            if (bone) {
+                                TRS.lerp(this._getTRSFromSkeleton(bone.name, ske0, trans0), trans1[i], weight, rst[i]);
+                            } else {
+                                rst[i].identity();
+                            }
+                        }
+                    } else {
+                        for (let i = 0; i < numBones; ++i) {
+                            const bone = rawBones[i];
+                            if (bone) {
+                                TRS.lerp(this._getTRSFromSkeleton(bone.name, ske0, trans0), this._getTRSFromSkeleton(bone.name, ske1, trans1), weight, rst[i]);
+                            } else {
+                                rst[i].identity();
+                            }
+                        }
+                    }
+                } else {
+                    if (ske0 === this._skeleton) {
+                        for (let i = 0; i < numBones; ++i) {
+                            const bone = rawBones[i];
+                            if (bone) {
+                                TRS.lerp(trans0[i], TRS.CONST_IDENTITY, weight, rst[i]);
+                            } else {
+                                rst[i].identity();
+                            }
+                        }
+                    } else {
+                        for (let i = 0; i < numBones; ++i) {
+                            const bone = rawBones[i];
+                            if (bone) {
+                                TRS.lerp(this._getTRSFromSkeleton(bone.name, ske0, trans0), TRS.CONST_IDENTITY, weight, rst[i]);
+                            } else {
+                                rst[i].identity();
+                            }
+                        }
+                    }
+                }
+            } else if (trans1) {
+                if (ske1 === this._skeleton) {
+                    for (let i = 0; i < numBones; ++i) {
+                        const bone = rawBones[i];
+                        if (bone) {
+                            TRS.lerp(TRS.CONST_IDENTITY, trans1[i], weight, rst[i]);
+                        } else {
+                            rst[i].identity();
+                        }
+                    }
+                } else {
+                    for (let i = 0; i < numBones; ++i) {
+                        const bone = rawBones[i];
+                        if (bone) {
+                            TRS.lerp(TRS.CONST_IDENTITY, this._getTRSFromSkeleton(bone.name, ske1, trans1), weight, rst[i]);
+                        } else {
+                            rst[i].identity();
+                        }
+                    }
+                }
+            } else {
+                for (let i = 0; i < numBones; ++i) rst[i].identity();
+            }
+        }
+
+        private _updateTransform(trans: TRS, elapsed: number, frame0: SkeletonAnimationClip.Frame, frame1: SkeletonAnimationClip.Frame): void {
             if (frame1) {
                 if (frame0) {
                     const t = (elapsed - frame0.time) / (frame1.time - frame0.time);
                     if (t === 0) {
-                        this._setBoneTRSByFrame(bone, frame0);
+                        this._setTransformByFrame(trans, frame0);
                     } else if (t === 1) {
-                        this._setBoneTRSByFrame(bone, frame1);
+                        this._setTransformByFrame(trans, frame1);
                     } else {
                         let pos: Vector3;
                         let rot: Quaternion;
@@ -128,19 +361,20 @@ namespace Aurora {
                             scale = Vector3.CONST_ONE;
                         }
 
-                        bone.setLocalTRS(pos, rot, scale);
+                        trans.translation.set(pos);
+                        trans.rotation.set(rot);
+                        trans.scale.set(scale);
                     }
                 }
             } else {
-                if (frame0) this._setBoneTRSByFrame(bone, frame0);
+                if (frame0) this._setTransformByFrame(trans, frame0);
             }
         }
 
-        private _setBoneTRSByFrame(bone: Node, frame: SkeletonAnimationClip.Frame): void {
-            bone.setLocalTRS(
-                frame.translation ? frame.translation : Vector3.CONST_ZERO,
-                frame.rotation ? frame.rotation : Quaternion.CONST_IDENTITY,
-                frame.scale ? frame.scale : Vector3.CONST_ONE);
+        private _setTransformByFrame(trans: TRS, frame: SkeletonAnimationClip.Frame): void {
+            trans.translation.set(frame.translation ? frame.translation : Vector3.CONST_ZERO);
+            trans.rotation.set(frame.rotation ? frame.rotation : Quaternion.CONST_IDENTITY);
+            trans.scale.set(frame.scale ? frame.scale : Vector3.CONST_ONE);
         }
 
         public static supplementLerpFrames(frames: SkeletonAnimationClip.Frame[]): void {

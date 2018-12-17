@@ -80,7 +80,7 @@ namespace Aurora {
 
         private _castNode(node: Node, layerMask: uint, ray: Ray, cullFace: GLCullFace, rstHit: RaycastHit, tmpHit: RaycastHit, tmpVec3: Vector3, tmpArr: Collider[]): void {
             if (node.active && node.layer & layerMask) {
-                const num = node.getComponentsByType(Collider, true, tmpArr);
+                const num = node.getComponentsByType(Collider, true, layerMask, tmpArr);
                 for (let i = 0; i < num; ++i) {
                     const collider = tmpArr[i];
                     if (collider.shape) {

@@ -283,12 +283,10 @@ namespace Aurora.FbxFile {
                 skeData.finish(this);
 
                 const ske = new Skeleton();
-                const skeBones = new RefMap<string, Aurora.Node>();
-                ske.bones = skeBones;
                 for (let i = 0, n = skeData.bones.length; i < n; ++i) {
                     const bone = skeData.bones[i];
                     if (bonePose) this._transformMatrixXZY(bonePose.get(bone.name));
-                    skeBones.insert(bone.name, bone);
+                    ske.addBone(bone);
                 }
                 for (let i = 0, n = skeData.rootBoneIndices.length; i < n; ++i) ske.rootBoneNames[i] = skeData.bones[skeData.rootBoneIndices[i]].name;
                 ske.setPose(bonePose);

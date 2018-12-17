@@ -132,7 +132,15 @@ namespace Aurora {
         }
 
         public setZero(): void {
-            this.x = this.y = this.z = 0;
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+        }
+
+        public setOne(): void {
+            this.x = 1;
+            this.y = 1;
+            this.z = 1;
         }
 
         public get length(): number {

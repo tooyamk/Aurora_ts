@@ -29,11 +29,11 @@ class FileTest {
 
         //this._loadMesh();
         //this._loadSkinnedMesh();
-        //this._loadFbxFile1();
+        this._loadFbxFile1();
         //this._loadFbxFile2();
         //this._loadXFile();
         //this._loadXFile2();
-        this._loadXFile3();
+        //this._loadXFile3();
     }
 
     private _loadFbxFile1(): void {

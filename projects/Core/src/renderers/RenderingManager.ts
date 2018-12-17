@@ -134,8 +134,8 @@ namespace Aurora {
                 camera.node.getWorldMatrix(this._cameraWorldMatrix);
                 camera.node.getInverseWorldMatrix(this._worldToViewMatrix);
             } else {
-                this._cameraWorldMatrix.identity44();
-                this._worldToViewMatrix.identity44();
+                this._cameraWorldMatrix.identity34();
+                this._worldToViewMatrix.identity34();
             }
 
             this._renderingData.in.camera = camera;
@@ -257,7 +257,6 @@ namespace Aurora {
                     } else {
                         valid = false;
                         console.log("draw not found attribute: " + att.name);
-                        //p.gl.deactiveVertexAttrib(att.location);
                     }
                 }
 
@@ -268,7 +267,7 @@ namespace Aurora {
         private _collectNode(node: Node, cullingMask: uint, replaceMaterials: Material[]): void {
             if (node.active) {
                 if (node.layer & cullingMask) {
-                    let num = node.getComponentsByType(AbstractRenderable, true, this._renderables);
+                    let num = node.getComponentsByType(AbstractRenderable, true, cullingMask, this._renderables);
                     for (let i = 0; i < num; ++i) {
                         let renderable = this._renderables[i];
                         if (renderable.renderer && renderable.checkRenderable()) {

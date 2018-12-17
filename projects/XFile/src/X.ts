@@ -278,8 +278,6 @@ namespace Aurora.XFile {
             }
 
             const ske = new Skeleton();
-            const skeBones = new RefMap<string, Node>();
-            ske.bones = skeBones;
             const pose = new Map<string, Matrix44>();
             data.pose = pose;
             const rootBones: { [key: string]: boolean } = {};
@@ -288,7 +286,7 @@ namespace Aurora.XFile {
                 if (!excludeBones[c.name]) {
                     const bone = new Node();
                     bone.name = c.name;
-                    skeBones.insert(c.name, bone);
+                    ske.addBone(bone);
                     pose.set(c.name, c.localMatrix);
 
                     if (!rootBones[c.root.name]) {
@@ -301,7 +299,7 @@ namespace Aurora.XFile {
             if (ske.bones.size > 0) {
                 for (let i = 0, n = ske.rootBoneNames.length; i < n; ++i) {
                     const name = ske.rootBoneNames[i];
-                    this._doBoneHierarchy(this._containersMap[name], skeBones.find(name), skeBones);
+                    this._doBoneHierarchy(this._containersMap[name], ske.bonesMap.find(name), ske.bonesMap);
                 }
 
                 data.skeleton = ske;

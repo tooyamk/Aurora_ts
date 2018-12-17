@@ -6,8 +6,9 @@
 document.oncontextmenu = () => { return false; }
 
 window.addEventListener("DOMContentLoaded", () => {
-    new FileTest();
+    //new FileTest();
     //new Other();
     //new SimpleWorld();
     //new SpriteAtlasTest();
+    new SkeletonAnimation();
 });

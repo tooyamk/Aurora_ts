@@ -35,6 +35,11 @@ namespace Aurora {
             return this._raw.length;
         }
 
+        public pushBackOne(item: I): void {
+            if (item) item.retain();
+            this._raw[this._raw.length] = item;
+        }
+
         public pushBack(...items: I[]): void {
             for (let i = 0, n = items.length; i < n; ++i) {
                 const v = items[i];

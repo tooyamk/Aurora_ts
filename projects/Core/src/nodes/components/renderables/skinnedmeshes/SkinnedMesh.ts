@@ -50,7 +50,7 @@ namespace Aurora {
                 let bindPostMatrices = this._asset.bonePostOffsetMatrices;
                 if (!bindPostMatrices) bindPostMatrices = SkinnedMesh.TMP_MAT_EMPTY_ARR;
 
-                const rawBones = this._skeleton.bones.raw;
+                const rawBones = this._skeleton.bonesMap.raw;
 
                 const boneNames = this._asset.boneNames;
                 const numBones = boneNames.length;
@@ -67,13 +67,13 @@ namespace Aurora {
                     const bindPostMat = bindPostMatrices[i];
 
                     if (bindPreMat) {
-                        bindPreMat.append44(bone.readonlyWorldMatrix, mat);
-                        if (bindPostMat) mat.append44(bindPostMat);
+                        bindPreMat.append34(bone.readonlyWorldMatrix, mat);
+                        if (bindPostMat) mat.append34(bindPostMat);
                     } else {
                         if (bindPostMat) {
-                            bone.readonlyWorldMatrix.append44(bindPostMat, mat);
+                            bone.readonlyWorldMatrix.append34(bindPostMat, mat);
                         } else {
-                            mat.set44(bone.readonlyWorldMatrix);
+                            mat.set34(bone.readonlyWorldMatrix);
                         }
                     }
                 }
