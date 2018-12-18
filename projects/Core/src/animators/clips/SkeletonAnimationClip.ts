@@ -5,6 +5,7 @@ namespace Aurora {
     class TRS {
         public static readonly CONST_IDENTITY = new TRS();
 
+        public valid = false;
         public readonly translation = new Vector3();
         public readonly rotation = new Quaternion();
         public readonly scale = new Vector3(1, 1, 1);
@@ -13,22 +14,71 @@ namespace Aurora {
             this.translation.setZero();
             this.rotation.identity();
             this.scale.setOne();
+            this.valid = false;
         }
 
         public static lerp(trs0: TRS, trs1: TRS, t: number, rst: TRS): void {
-            Vector3.lerp(trs0.translation, trs1.translation, t, rst.translation);
-            Quaternion.slerp(trs0.rotation, trs1.rotation, t, rst.rotation);
-            Vector3.lerp(trs0.scale, trs1.scale, t, rst.scale);
+            if (trs0.valid) {
+                if (trs1.valid) {
+                    Vector3.lerp(trs0.translation, trs1.translation, t, rst.translation);
+                    Quaternion.slerp(trs0.rotation, trs1.rotation, t, rst.rotation);
+                    Vector3.lerp(trs0.scale, trs1.scale, t, rst.scale);
+                    rst.valid = true;
+                } else {
+                    rst.translation.set(trs0.translation);
+                    rst.rotation.set(trs0.rotation);
+                    rst.scale.set(trs0.scale);
+                    rst.valid = true;
+                }
+            } else if (trs1.valid) {
+                rst.translation.set(trs1.translation);
+                rst.rotation.set(trs1.rotation);
+                rst.scale.set(trs1.scale);
+                rst.valid = true;
+            } else {
+                rst.valid = false;
+            }
+        }
+    }
+
+    class SubClip {
+        private _clip: SkeletonAnimationClip = null;
+        public weight: number = 0;
+
+        constructor(clip: SkeletonAnimationClip, weight: number) {
+            this.clip = clip;
+            this.weight = weight;
+        }
+
+        public get clip(): SkeletonAnimationClip {
+            return this._clip;
+        }
+
+        public set clip(value: SkeletonAnimationClip) {
+            if (this._clip !== value) {
+                if (value) value.retain();
+                if (this._clip) this._clip.release();
+                this._clip = value;
+            }
+        }
+
+        public destroy(): void {
+            this.clip = null;
         }
     }
 
     export class SkeletonAnimationClip extends AbstractAnimationClip {
-        protected static readonly TMP_POS = new Vector3();
-        protected static readonly TMP_ROT = new Quaternion();
-        protected static readonly TMP_SCALE = new Vector3();
+        protected static readonly tmpPos = new Vector3();
+        protected static readonly tmpRot = new Quaternion();
+        protected static readonly tmpScale = new Vector3();
+        protected static readonly tmpTrs = new TRS();
 
         protected static readonly _transformsPool: TRS[][] = [];
         protected static _numTransformsInPool: uint = 0;
+
+        protected _multiClips: Map<string, SubClip> = null;
+        protected _numMultiClips: uint = 0;
+        protected _multiClipsTotalWeights: number = 0;
 
         protected _skeleton: Skeleton = null;
 
@@ -82,6 +132,45 @@ namespace Aurora {
             this._duration = this._endTime - this._startTime;
         }
 
+        public setMultiClip(name: string, clip: SkeletonAnimationClip, weight: number): void {
+            if (clip) {
+                if (weight < 0) weight = 0;
+                if (!this._multiClips) this._multiClips = new Map();
+                let sub = this._multiClips.get(name);
+                if (sub) {
+                    this._multiClipsTotalWeights = this._multiClipsTotalWeights - sub.weight + weight;
+                    sub.clip = clip;
+                    sub.weight = weight;
+                } else {
+                    this._multiClipsTotalWeights += weight;
+                    sub = new SubClip(clip, weight);
+                    this._multiClips.set(name, sub);
+                    ++this._numMultiClips;
+                }
+            }
+        }
+
+        public deleteMultiClip(name: string): void {
+            if (this._numMultiClips > 0) {
+                const sub = this._multiClips.get(name);
+                if (sub) {
+                    this._multiClips.delete(name);
+                    this._multiClipsTotalWeights -= sub.weight;
+                    sub.destroy();
+                    --this._numMultiClips;
+                }
+            }
+        }
+
+        public clearAllMultiClips(): void {
+            if (this._numMultiClips > 0) {
+                for (let itr of this._multiClips) itr[1].destroy();
+                this._multiClips.clear();
+                this._numMultiClips = 0;
+                this._multiClipsTotalWeights = 0;
+            }
+        }
+
         public update(start: number, elapsed: number, blend: AnimatorBlend[]): number {
             const e = this._wrap(start + elapsed, this._duration);
 
@@ -114,7 +203,7 @@ namespace Aurora {
                             const clip = <SkeletonAnimationClip>ab.clip;
                             let ske: Skeleton = clip._skeleton;
                             trans = SkeletonAnimationClip._getTransformsFromPool();
-                            if (!clip._updateWithClampElapsed(ab.startTime + elapsed, trans)) {
+                            if (!clip._updateWrapElapsed(ab.startTime + elapsed, trans)) {
                                 SkeletonAnimationClip._pushTransformsToPool(trans);
                                 trans = null;
                             }
@@ -146,7 +235,7 @@ namespace Aurora {
                     const bone = rawBones[i];
                     if (bone) {
                         const trs = transSelf[i];
-                        bone.setLocalTRS(trs.translation, trs.rotation, trs.scale);
+                        if (trs.valid) bone.setLocalTRS(trs.translation, trs.rotation, trs.scale);
                     }
                 }
             }
@@ -166,32 +255,93 @@ namespace Aurora {
         }
 
         public _updateWithClampElapsed(elapsed: number, transforms: TRS[]): boolean {
-            if (this._skeleton && this._frames) {
-                const bones = this._skeleton.bones;
-                if (bones) {
-                    const rawBones = bones.raw;
-                    const n = rawBones.length;
+            if (this._skeleton) {
+                if (this._numMultiClips > 0) {
+                    if (this._multiClipsTotalWeights > 0) {
+                        const bones = this._skeleton.bones;
+                        if (bones) {
+                            const rawBones = bones.raw;
+                            const n = rawBones.length;
+                            const tmpTrs = SkeletonAnimationClip.tmpTrs;
 
-                    this._capacityTransforms(transforms, n);
+                            this._capacityTransforms(transforms, n);
 
-                    const t = elapsed + this._startTime;
-                    for (let i = 0; i < n; ++i) {
-                        const bone = rawBones[i];
-                        const trs = transforms[i];
-                        if (bone) {
-                            const frames = this._frames.get(bone.name);
-                            if (frames && frames.length > 0) {
-                                const start = this._findFrame(elapsed, 0, frames.length - 1, frames);
-                                this._updateTransform(trs, elapsed, frames[start], frames[start + 1]);
-                            } else {
-                                trs.identity();
+                            for (let i = 0; i < n; ++i) {
+                                const trs = transforms[i];
+                                trs.translation.setZero();
+                                trs.rotation.identity();
+                                trs.scale.setZero();
+                                trs.valid = false;
                             }
-                        } else {
-                            trs.identity();
+
+                            const tr = this._duration > 0 ? (elapsed + this._startTime) / this._duration : 0;
+                            for (let itr of this._multiClips) {
+                                const sub = itr[1];
+                                if (sub.weight <= 0) continue;
+                                
+                                const clip = sub.clip;
+                                const subFrames = clip._frames;
+                                if (!subFrames) continue;
+
+                                const w = sub.weight / this._multiClipsTotalWeights;
+                                const t = tr * clip._duration;
+
+                                for (let i = 0; i < n; ++i) {
+                                    const bone = rawBones[i];
+                                    const trs = transforms[i];
+                                    if (bone) {
+                                        const frames = subFrames.get(bone.name);
+                                        if (frames && frames.length > 0) {
+                                            const start = this._findFrame(t, 0, frames.length - 1, frames);
+                                            this._updateTransform(tmpTrs, t, frames[start], frames[start + 1]);
+                                            trs.valid = true;
+                                        } else {
+                                            tmpTrs.identity();
+                                        }
+                                    } else {
+                                        tmpTrs.identity();
+                                    }
+
+                                    tmpTrs.translation.mulNumber(w);
+                                    tmpTrs.scale.mulNumber(w);
+                                    tmpTrs.rotation.pow(w);
+                                    trs.translation.add(tmpTrs.translation);
+                                    trs.scale.add(tmpTrs.scale);
+                                    trs.rotation.append(tmpTrs.rotation);
+                                }
+                            }
+
+                            return true;
                         }
                     }
+                } else if (this._frames) {
+                    const bones = this._skeleton.bones;
+                    if (bones) {
+                        const rawBones = bones.raw;
+                        const n = rawBones.length;
 
-                    return true;
+                        this._capacityTransforms(transforms, n);
+
+                        const t = elapsed + this._startTime;
+                        for (let i = 0; i < n; ++i) {
+                            const bone = rawBones[i];
+                            const trs = transforms[i];
+                            if (bone) {
+                                const frames = this._frames.get(bone.name);
+                                if (frames && frames.length > 0) {
+                                    const start = this._findFrame(elapsed, 0, frames.length - 1, frames);
+                                    this._updateTransform(trs, elapsed, frames[start], frames[start + 1]);
+                                    trs.valid = true;
+                                } else {
+                                    trs.valid = false;
+                                }
+                            } else {
+                                trs.valid = false;
+                            }
+                        }
+
+                        return true;
+                    }
                 }
             }
 
@@ -240,7 +390,7 @@ namespace Aurora {
                                 if (bone) {
                                     TRS.lerp(trans0[i], trans1[i], weight, rst[i]);
                                 } else {
-                                    rst[i].identity();
+                                    rst[i].valid = false;
                                 }
                             }
                         } else {
@@ -249,7 +399,7 @@ namespace Aurora {
                                 if (bone) {
                                     TRS.lerp(trans0[i], this._getTRSFromSkeleton(bone.name, ske1, trans1), weight, rst[i]);
                                 } else {
-                                    rst[i].identity();
+                                    rst[i].valid = false;
                                 }
                             }
                         }
@@ -259,7 +409,7 @@ namespace Aurora {
                             if (bone) {
                                 TRS.lerp(this._getTRSFromSkeleton(bone.name, ske0, trans0), trans1[i], weight, rst[i]);
                             } else {
-                                rst[i].identity();
+                                rst[i].valid = false;
                             }
                         }
                     } else {
@@ -268,7 +418,7 @@ namespace Aurora {
                             if (bone) {
                                 TRS.lerp(this._getTRSFromSkeleton(bone.name, ske0, trans0), this._getTRSFromSkeleton(bone.name, ske1, trans1), weight, rst[i]);
                             } else {
-                                rst[i].identity();
+                                rst[i].valid = false;
                             }
                         }
                     }
@@ -279,7 +429,7 @@ namespace Aurora {
                             if (bone) {
                                 TRS.lerp(trans0[i], TRS.CONST_IDENTITY, weight, rst[i]);
                             } else {
-                                rst[i].identity();
+                                rst[i].valid = false;
                             }
                         }
                     } else {
@@ -288,7 +438,7 @@ namespace Aurora {
                             if (bone) {
                                 TRS.lerp(this._getTRSFromSkeleton(bone.name, ske0, trans0), TRS.CONST_IDENTITY, weight, rst[i]);
                             } else {
-                                rst[i].identity();
+                                rst[i].valid = false;
                             }
                         }
                     }
@@ -300,7 +450,7 @@ namespace Aurora {
                         if (bone) {
                             TRS.lerp(TRS.CONST_IDENTITY, trans1[i], weight, rst[i]);
                         } else {
-                            rst[i].identity();
+                            rst[i].valid = false;
                         }
                     }
                 } else {
@@ -309,12 +459,12 @@ namespace Aurora {
                         if (bone) {
                             TRS.lerp(TRS.CONST_IDENTITY, this._getTRSFromSkeleton(bone.name, ske1, trans1), weight, rst[i]);
                         } else {
-                            rst[i].identity();
+                            rst[i].valid = false;
                         }
                     }
                 }
             } else {
-                for (let i = 0; i < numBones; ++i) rst[i].identity();
+                for (let i = 0; i < numBones; ++i) rst[i].valid = false;
             }
         }
 
@@ -333,7 +483,7 @@ namespace Aurora {
 
                         if (frame0.translation) {
                             if (frame1.translation) {
-                                pos = Vector3.lerp(frame0.translation, frame1.translation, t, SkeletonAnimationClip.TMP_POS);
+                                pos = Vector3.lerp(frame0.translation, frame1.translation, t, SkeletonAnimationClip.tmpPos);
                             } else {
                                 pos = frame0.translation;
                             }
@@ -343,7 +493,7 @@ namespace Aurora {
 
                         if (frame0.rotation) {
                             if (frame1.rotation) {
-                                rot = Quaternion.slerp(frame0.rotation, frame1.rotation, t, SkeletonAnimationClip.TMP_ROT);
+                                rot = Quaternion.slerp(frame0.rotation, frame1.rotation, t, SkeletonAnimationClip.tmpRot);
                             } else {
                                 rot = frame0.rotation;
                             }
@@ -353,7 +503,7 @@ namespace Aurora {
 
                         if (frame0.scale) {
                             if (frame1.scale) {
-                                scale = Vector3.lerp(frame0.scale, frame1.scale, t, SkeletonAnimationClip.TMP_SCALE);
+                                scale = Vector3.lerp(frame0.scale, frame1.scale, t, SkeletonAnimationClip.tmpScale);
                             } else {
                                 scale = frame0.scale;
                             }

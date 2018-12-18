@@ -3,6 +3,7 @@
 
 namespace Aurora.MathUtils {
     export const ZERO_TOLERANCE: number = 1E-6;//Number.EPSILON;
+    export const EPSILON_SQ = Number.EPSILON * Number.EPSILON;
     export const PI2: number = Math.PI * 2;
     export const PI_2: number = Math.PI * 0.5;
     export const RAD_2_DEG: number = 180 / Math.PI;

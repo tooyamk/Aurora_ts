@@ -515,18 +515,21 @@ namespace Aurora {
         public transpose(rst: Matrix44 = null): Matrix44 {
             rst = rst || this;
 
-            const n01 = this.m01;
-            const n02 = this.m02;
-            const n03 = this.m03;
-            const n10 = this.m10;
-            const n12 = this.m12;
-            const n13 = this.m13;
-            const n20 = this.m20;
-            const n21 = this.m21;
-            const n23 = this.m23;
-            const n30 = this.m30;
-            const n31 = this.m31;
-            const n32 = this.m32;
+            const m01 = this.m01;
+            const m02 = this.m02;
+            const m03 = this.m03;
+
+            const m10 = this.m10;
+            const m12 = this.m12;
+            const m13 = this.m13;
+
+            const m20 = this.m20;
+            const m21 = this.m21;
+            const m23 = this.m23;
+
+            const m30 = this.m30;
+            const m31 = this.m31;
+            const m32 = this.m32;
 
             if (rst !== this) {
                 rst.m00 = this.m00;
@@ -535,18 +538,67 @@ namespace Aurora {
                 rst.m33 = this.m33;
             }
 
-            rst.m01 = n10;
-            rst.m02 = n20;
-            rst.m03 = n30;
-            rst.m10 = n01;
-            rst.m12 = n21;
-            rst.m13 = n31;
-            rst.m20 = n02;
-            rst.m21 = n12;
-            rst.m23 = n32;
-            rst.m30 = n03;
-            rst.m31 = n13;
-            rst.m32 = n23;
+            rst.m01 = m10;
+            rst.m02 = m20;
+            rst.m03 = m30;
+
+            rst.m10 = m01;
+            rst.m12 = m21;
+            rst.m13 = m31;
+
+            rst.m20 = m02;
+            rst.m21 = m12;
+            rst.m23 = m32;
+
+            rst.m30 = m03;
+            rst.m31 = m13;
+            rst.m32 = m23;
+
+            return rst;
+        }
+
+        public add44(m: Matrix44, rst: Matrix44 = null): Matrix44 {
+            const m00 = this.m00 + m.m00;
+            const m01 = this.m01 + m.m01;
+            const m02 = this.m02 + m.m02;
+            const m03 = this.m03 + m.m03;
+
+            const m10 = this.m10 + m.m10;
+            const m11 = this.m11 + m.m11;
+            const m12 = this.m12 + m.m12;
+            const m13 = this.m13 + m.m13;
+
+            const m20 = this.m20 + m.m20;
+            const m21 = this.m21 + m.m21;
+            const m22 = this.m22 + m.m22;
+            const m23 = this.m23 + m.m23;
+
+            const m30 = this.m30 + m.m30;
+            const m31 = this.m31 + m.m31;
+            const m32 = this.m32 + m.m32;
+            const m33 = this.m33 + m.m33;
+
+            rst = rst || this;
+
+            rst.m00 = m00;
+            rst.m01 = m01;
+            rst.m02 = m02;
+            rst.m03 = m03;
+
+            rst.m10 = m10;
+            rst.m11 = m11;
+            rst.m12 = m12;
+            rst.m13 = m13;
+
+            rst.m20 = m20;
+            rst.m21 = m21;
+            rst.m22 = m22;
+            rst.m23 = m23;
+
+            rst.m30 = m30;
+            rst.m31 = m31;
+            rst.m32 = m32;
+            rst.m33 = m33;
 
             return rst;
         }

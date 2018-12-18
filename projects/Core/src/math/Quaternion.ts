@@ -168,7 +168,7 @@ namespace Aurora {
             let y1 = to.y;
             let z1 = to.z;
             let cosOmega = from.w * w1 + from.x * x1 + from.y * y1 + from.z * z1;
-            if (cosOmega < 0) {
+            if (cosOmega <= MathUtils.ZERO_TOLERANCE) {
                 w1 = -w1;
                 x1 = -x1;
                 y1 = -y1;
@@ -206,6 +206,51 @@ namespace Aurora {
             this.w = 1;
         }
 
+        public mulNumber(s: number, rst: Quaternion = null): Quaternion {
+            rst = rst || this;
+            return rst.setFromNumbers(this.x * s, this.y * s, this.z * s, this.w * s);
+        }
+
+        public log(rst: Quaternion = null): Quaternion {
+            rst = rst || this;
+
+            const len2 = this.x * this.x + this.y * this.y + this.z * this.z;
+            if (len2 <= MathUtils.EPSILON_SQ) {
+                return rst.setFromNumbers(this.x, this.y, this.z, Math.exp(this.w));
+            } else {
+                const len = Math.sqrt(len2);
+                const f = Math.atan2(len, this.w) / len;
+                return rst.setFromNumbers(f * this.x, f * this.y, f * this.z, Math.log(this.w * this.w + len2) * 0.5);
+            }
+        }
+
+        public exp(rst: Quaternion = null): Quaternion {
+            rst = rst || this;
+
+            let len = this.x * this.x + this.y * this.y + this.z * this.z;
+            if (len <= MathUtils.EPSILON_SQ) {
+                return rst.setFromNumbers(this.x, this.y, this.z, Math.log(this.w));
+            } else {
+                len = Math.sqrt(len);
+                const e = Math.exp(this.w);
+                const f = e * Math.sin(len) / len;
+                return rst.setFromNumbers(f * this.x, f * this.y, f * this.z, e * Math.cos(len));
+            }
+        }
+
+        public pow(exp: number, rst: Quaternion = null): Quaternion {
+            rst = rst || this;
+
+            if (this.w >= 1) {
+                return rst.setFromNumbers(0, 0, 0, 1);
+            } else {
+                const t = Math.acos(this.w);
+                const te = t * exp;
+                const f = Math.sin(te) / Math.sin(t);
+                return rst.setFromNumbers(f * this.x, f * this.y, f * this.z, Math.cos(te));
+            }
+        }
+
         public isEqual(toCompare: Quaternion, tolerance: number = 0): boolean {
             if (tolerance === 0) {
                 return this.x === toCompare.x && this.y === toCompare.y && this.z === toCompare.z && this.w === toCompare.w;
@@ -230,12 +275,12 @@ namespace Aurora {
         }
 
         public append(quat: Quaternion, rst: Quaternion = null): Quaternion {
-            let w1 = this.w * quat.w - this.x * quat.x - this.y * quat.y - this.z * quat.z;
-            let x1 = this.w * quat.x + this.x * quat.w + this.y * quat.z - this.z * quat.y;
-            let y1 = this.w * quat.y + this.y * quat.w + this.z * quat.x - this.x * quat.z;
-            let z1 = this.w * quat.z + this.z * quat.w + this.x * quat.y - this.y * quat.x;
+            const w = this.w * quat.w - this.x * quat.x - this.y * quat.y - this.z * quat.z;
+            const x = this.w * quat.x + this.x * quat.w + this.y * quat.z - this.z * quat.y;
+            const y = this.w * quat.y + this.y * quat.w + this.z * quat.x - this.x * quat.z;
+            const z = this.w * quat.z + this.z * quat.w + this.x * quat.y - this.y * quat.x;
 
-            return (rst || this).setFromNumbers(x1, y1, z1, w1);
+            return (rst || this).setFromNumbers(x, y, z, w);
         }
 
         /*

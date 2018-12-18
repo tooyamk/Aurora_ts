@@ -40,7 +40,7 @@ namespace Aurora {
 
         public setClip(clip: T, startTime: number = 0, blendTime: number = 0): void {
             if (blendTime > 0 && this._curClip && clip) {
-                const ab = AnimatorBlend.create(this._curClip, this._startTime, blendTime);;
+                const ab = AnimatorBlend.create(this._curClip, this._startTime + this._elapsed, blendTime);;
                 ab.retain();
 
                 if (this._blendClips) {
