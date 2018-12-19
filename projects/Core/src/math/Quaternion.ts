@@ -49,21 +49,17 @@ namespace Aurora {
             return this;
         }
 
+        public conjugate(rst: Quaternion = null): Quaternion {
+            return rst ? rst.setFromNumbers(-this.x, -this.y, -this.z, this.w) : new Quaternion(-this.x, -this.y, -this.z, this.w);
+        }
+
+        /**
+         * need is a unit quaternion.
+         */
         public invert(rst: Quaternion = null): Quaternion {
             return rst ? rst.setFromNumbers(-this.x, -this.y, -this.z, this.w) : new Quaternion(-this.x, -this.y, -this.z, this.w);
-            /*
-            rst = rst || this;
-
-            let dot = this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
-            let invDot = dot > MathUtils.ZERO_TOLERANCE ? 1 / dot : 0;
-
-            rst.x = -this.x * invDot;
-            rst.y = -this.y * invDot;
-            rst.z = -this.z * invDot;
-            rst.w = this.w * invDot;
-
-            return rst;
-            */
+            //const f = 1 / this.length;
+            //return rst ? rst.setFromNumbers(-this.x * f, -this.y * f, -this.z * f, this.w * f) : new Quaternion(-this.x * f, -this.y * f, -this.z * f, this.w * f);
         }
 
         /**
@@ -163,40 +159,52 @@ namespace Aurora {
         public static slerp(from: Quaternion, to: Quaternion, t: number, rst: Quaternion = null): Quaternion {
             rst = rst || new Quaternion();
 
-            let w1 = to.w;
-            let x1 = to.x;
-            let y1 = to.y;
-            let z1 = to.z;
-            let cosOmega = from.w * w1 + from.x * x1 + from.y * y1 + from.z * z1;
-            if (cosOmega <= MathUtils.ZERO_TOLERANCE) {
-                w1 = -w1;
-                x1 = -x1;
-                y1 = -y1;
-                z1 = -z1;
-                cosOmega = -cosOmega;
+            let w = to.w;
+            let x = to.x;
+            let y = to.y;
+            let z = to.z;
+            let cos = from.w * w + from.x * x + from.y * y + from.z * z;
+            if (cos < 0) {//shortest path
+                w = -to.w;
+                x = -to.x;
+                y = -to.y;
+                z = -to.z;
+                cos = -cos;
             }
             let k0: number, k1: number;
-            if (cosOmega > 0.9999) {
+            if (cos > 0.9999) {
                 k0 = 1 - t;
                 k1 = t;
             } else {
-                const omega = Math.acos(cosOmega);
-                const sinOmega = Math.sin(omega);
-                const to = t * omega;
-                k0 = Math.sin(omega - to) / sinOmega;
-                k1 = Math.sin(to) / sinOmega;
+                const a = Math.acos(cos);
+                const sin = Math.sin(a);
+                const ta = t * a;
+                k0 = Math.sin(a - ta) / sin;
+                k1 = Math.sin(ta) / sin;
             }
 
-            rst.x = from.x * k0 + x1 * k1;
-            rst.y = from.y * k0 + y1 * k1;
-            rst.z = from.z * k0 + z1 * k1;
-            rst.w = from.w * k0 + w1 * k1;
+            rst.x = from.x * k0 + x * k1;
+            rst.y = from.y * k0 + y * k1;
+            rst.z = from.z * k0 + z * k1;
+            rst.w = from.w * k0 + w * k1;
 
             return rst;
         }
 
+        public static dot(q0: Quaternion, q1: Quaternion): number {
+            return q0.x * q1.x + q0.y * q1.y + q0.z * q1.z + q0.w * q1.w;
+        }
+
+        public static angleBetween(q0: Quaternion, q1: Quaternion): number {
+            return Math.acos(q0.x * q1.x + q0.y * q1.y + q0.z * q1.z + q0.w * q1.w);
+        }
+
         public get isIdentity(): boolean {
             return this.x === 0 && this.y === 0 && this.z === 0 && this.w === 1;
+        }
+
+        public get angle(): number {
+            return Math.acos(this.w);
         }
 
         public identity(): void {
@@ -216,7 +224,7 @@ namespace Aurora {
 
             const len2 = this.x * this.x + this.y * this.y + this.z * this.z;
             if (len2 <= MathUtils.EPSILON_SQ) {
-                return rst.setFromNumbers(this.x, this.y, this.z, Math.exp(this.w));
+                return rst.setFromNumbers(this.x, this.y, this.z, Math.log(this.w));
             } else {
                 const len = Math.sqrt(len2);
                 const f = Math.atan2(len, this.w) / len;
@@ -229,7 +237,7 @@ namespace Aurora {
 
             let len = this.x * this.x + this.y * this.y + this.z * this.z;
             if (len <= MathUtils.EPSILON_SQ) {
-                return rst.setFromNumbers(this.x, this.y, this.z, Math.log(this.w));
+                return rst.setFromNumbers(this.x, this.y, this.z, Math.exp(this.w));
             } else {
                 len = Math.sqrt(len);
                 const e = Math.exp(this.w);

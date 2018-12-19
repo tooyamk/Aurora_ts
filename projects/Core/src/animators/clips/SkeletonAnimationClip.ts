@@ -17,23 +17,32 @@ namespace Aurora {
             this.valid = false;
         }
 
-        public static lerp(trs0: TRS, trs1: TRS, t: number, rst: TRS): void {
-            if (trs0.valid) {
-                if (trs1.valid) {
-                    Vector3.lerp(trs0.translation, trs1.translation, t, rst.translation);
-                    Quaternion.slerp(trs0.rotation, trs1.rotation, t, rst.rotation);
-                    Vector3.lerp(trs0.scale, trs1.scale, t, rst.scale);
+        public set(target: TRS): void {
+            this.valid = target.valid;
+            if (this.valid) {
+                this.translation.set(target.translation);
+                this.rotation.set(target.rotation);
+                this.scale.set(target.scale);
+            }
+        }
+
+        public static lerp(from: TRS, to: TRS, t: number, rst: TRS): void {
+            if (from.valid) {
+                if (to.valid) {
+                    Vector3.lerp(from.translation, to.translation, t, rst.translation);
+                    Quaternion.slerp(from.rotation, to.rotation, t, rst.rotation);
+                    Vector3.lerp(from.scale, to.scale, t, rst.scale);
                     rst.valid = true;
                 } else {
-                    rst.translation.set(trs0.translation);
-                    rst.rotation.set(trs0.rotation);
-                    rst.scale.set(trs0.scale);
+                    rst.translation.set(from.translation);
+                    rst.rotation.set(from.rotation);
+                    rst.scale.set(from.scale);
                     rst.valid = true;
                 }
-            } else if (trs1.valid) {
-                rst.translation.set(trs1.translation);
-                rst.rotation.set(trs1.rotation);
-                rst.scale.set(trs1.scale);
+            } else if (to.valid) {
+                Vector3.lerp(Vector3.CONST_ZERO, to.translation, t, rst.translation);
+                Quaternion.slerp(Quaternion.CONST_IDENTITY, to.rotation, t, rst.rotation);
+                Vector3.lerp(Vector3.CONST_ONE, to.scale, t, rst.scale);
                 rst.valid = true;
             } else {
                 rst.valid = false;
@@ -78,7 +87,6 @@ namespace Aurora {
 
         protected _multiClips: Map<string, SubClip> = null;
         protected _numMultiClips: uint = 0;
-        protected _multiClipsTotalWeights: number = 0;
 
         protected _skeleton: Skeleton = null;
 
@@ -86,13 +94,6 @@ namespace Aurora {
         protected _endTime: number = 0;
 
         protected _frames: Map<string, SkeletonAnimationClip.Frame[]> = null;
-
-        protected _transforms: TRS[] = [];
-
-        protected _bones: Node[] = null;
-        protected _numBones: uint = 0;
-        protected _transforms0: TRS[] = null;
-        protected _transforms1: TRS[] = null;
 
         protected static _getTransformsFromPool(): TRS[] {
             if (SkeletonAnimationClip._numTransformsInPool) {
@@ -138,15 +139,22 @@ namespace Aurora {
                 if (!this._multiClips) this._multiClips = new Map();
                 let sub = this._multiClips.get(name);
                 if (sub) {
-                    this._multiClipsTotalWeights = this._multiClipsTotalWeights - sub.weight + weight;
                     sub.clip = clip;
                     sub.weight = weight;
                 } else {
-                    this._multiClipsTotalWeights += weight;
                     sub = new SubClip(clip, weight);
                     this._multiClips.set(name, sub);
                     ++this._numMultiClips;
                 }
+            } else {
+                this.deleteMultiClip(name);
+            }
+        }
+
+        public setMultiClipWeight(name: string, weight: number): void {
+            if (this._numMultiClips > 0) {
+                const sub = this._multiClips.get(name);
+                if (sub) sub.weight = weight < 0 ? 0 : weight;
             }
         }
 
@@ -155,7 +163,6 @@ namespace Aurora {
                 const sub = this._multiClips.get(name);
                 if (sub) {
                     this._multiClips.delete(name);
-                    this._multiClipsTotalWeights -= sub.weight;
                     sub.destroy();
                     --this._numMultiClips;
                 }
@@ -167,7 +174,6 @@ namespace Aurora {
                 for (let itr of this._multiClips) itr[1].destroy();
                 this._multiClips.clear();
                 this._numMultiClips = 0;
-                this._multiClipsTotalWeights = 0;
             }
         }
 
@@ -175,7 +181,7 @@ namespace Aurora {
             const e = this._wrap(start + elapsed, this._duration);
 
             const transSelf = SkeletonAnimationClip._getTransformsFromPool();
-            if (this._updateWithClampElapsed(e, transSelf)) {
+            if (this._updateWithClampElapsed(this._skeleton, e, transSelf)) {
                 if (blend && blend.length > 0) {
                     let begin = 0;
                     let n = blend.length;
@@ -191,41 +197,39 @@ namespace Aurora {
                         const transRst = SkeletonAnimationClip._getTransformsFromPool();
                         this._capacityTransforms(transRst, this._skeleton.bones.size);
 
-                        let ske0: Skeleton = null;
-                        let trans0: TRS[] = null;
+                        let fromSke: Skeleton = null;
+                        let fromTrans: TRS[] = null;
                         let bt: number;
 
                         for (let i = begin, n = blend.length; i < n; ++i) {
-                            let trans: TRS[] = null;
                             const ab = blend[i];
-                            if (elapsed >= ab.blendTime || elapsed <= -ab.blendTime) continue;
 
                             const clip = <SkeletonAnimationClip>ab.clip;
-                            let ske: Skeleton = clip._skeleton;
-                            trans = SkeletonAnimationClip._getTransformsFromPool();
-                            if (!clip._updateWrapElapsed(ab.startTime + elapsed, trans)) {
+                            const ske: Skeleton = clip._skeleton;
+                            let trans = SkeletonAnimationClip._getTransformsFromPool();
+                            if (!clip._updateWrapElapsed(clip._skeleton, ab.startTime + elapsed, trans)) {
                                 SkeletonAnimationClip._pushTransformsToPool(trans);
                                 trans = null;
                             }
 
                             if (i === begin) {
-                                trans0 = trans;
-                                ske0 = ske;
+                                fromTrans = trans;
+                                fromSke = ske;
                             } else {
-                                this._lerpTransforms(ske0, trans0, ske, trans, 1 - Math.abs(bt - elapsed) / bt, transRst);
+                                this._lerpTransforms(fromSke, fromTrans, ske, trans, 1 - Math.abs(bt - elapsed) / bt, transRst);
                                 SkeletonAnimationClip._pushTransformsToPool(trans);
-                                ske0 = this._skeleton;
-                                if (trans0 !== transRst) {
-                                    SkeletonAnimationClip._pushTransformsToPool(trans0);
-                                    trans0 = transRst;
+                                fromSke = this._skeleton;
+                                if (fromTrans !== transRst) {
+                                    SkeletonAnimationClip._pushTransformsToPool(fromTrans);
+                                    fromTrans = transRst;
                                 }
                             }
 
                             bt = ab.blendTime;
                         }
 
-                        this._lerpTransforms(ske0, trans0, this._skeleton, transSelf, 1 - Math.abs(bt - elapsed) / bt, transSelf);
-                        if (trans0 && trans0 !== transRst) SkeletonAnimationClip._pushTransformsToPool(trans0);
+                        this._lerpTransforms(fromSke, fromTrans, this._skeleton, transSelf, 1 - Math.abs(bt - elapsed) / bt, transSelf);
+                        if (fromTrans && fromTrans !== transRst) SkeletonAnimationClip._pushTransformsToPool(fromTrans);
                         SkeletonAnimationClip._pushTransformsToPool(transRst);
                     }
                 }
@@ -250,72 +254,71 @@ namespace Aurora {
             }
         }
 
-        private _updateWrapElapsed(elapsed: number, transforms: TRS[]): boolean {
-            return this._updateWithClampElapsed(this._wrap(elapsed, this._duration), transforms);
+        private _updateWrapElapsed(skeleton: Skeleton, elapsed: number, transforms: TRS[]): boolean {
+            return this._updateWithClampElapsed(skeleton, this._wrap(elapsed, this._duration), transforms);
         }
 
-        public _updateWithClampElapsed(elapsed: number, transforms: TRS[]): boolean {
-            if (this._skeleton) {
+        public _updateWithClampElapsed(skeleton: Skeleton, elapsed: number, transforms: TRS[]): boolean {
+            if (skeleton) {
                 if (this._numMultiClips > 0) {
-                    if (this._multiClipsTotalWeights > 0) {
-                        const bones = this._skeleton.bones;
-                        if (bones) {
-                            const rawBones = bones.raw;
-                            const n = rawBones.length;
-                            const tmpTrs = SkeletonAnimationClip.tmpTrs;
+                    const bones = skeleton.bones;
+                    if (bones) {
+                        const rawBones = bones.raw;
+                        const n = rawBones.length;
 
-                            this._capacityTransforms(transforms, n);
+                        this._capacityTransforms(transforms, n);
 
-                            for (let i = 0; i < n; ++i) {
-                                const trs = transforms[i];
-                                trs.translation.setZero();
-                                trs.rotation.identity();
-                                trs.scale.setZero();
-                                trs.valid = false;
+                        let fromTrans: TRS[] = null;
+                        let weights = 0;
+
+                        const tr = this._duration > 0 ? (elapsed + this._startTime) / this._duration : 0;
+                        let count = 0;
+                        for (let itr of this._multiClips) {
+                            const sub = itr[1];
+                            const w = sub.weight;
+                            if (w <= 0) continue;
+
+                            weights += w;
+
+                            const clip = sub.clip;
+                            const t = tr * clip._duration;
+
+                            let trans = SkeletonAnimationClip._getTransformsFromPool();
+                            if (!clip._updateWithClampElapsed(skeleton, t, trans)) {
+                                SkeletonAnimationClip._pushTransformsToPool(trans);
+                                trans = null;
                             }
 
-                            const tr = this._duration > 0 ? (elapsed + this._startTime) / this._duration : 0;
-                            for (let itr of this._multiClips) {
-                                const sub = itr[1];
-                                if (sub.weight <= 0) continue;
-                                
-                                const clip = sub.clip;
-                                const subFrames = clip._frames;
-                                if (!subFrames) continue;
-
-                                const w = sub.weight / this._multiClipsTotalWeights;
-                                const t = tr * clip._duration;
-
-                                for (let i = 0; i < n; ++i) {
-                                    const bone = rawBones[i];
-                                    const trs = transforms[i];
-                                    if (bone) {
-                                        const frames = subFrames.get(bone.name);
-                                        if (frames && frames.length > 0) {
-                                            const start = this._findFrame(t, 0, frames.length - 1, frames);
-                                            this._updateTransform(tmpTrs, t, frames[start], frames[start + 1]);
-                                            trs.valid = true;
-                                        } else {
-                                            tmpTrs.identity();
-                                        }
-                                    } else {
-                                        tmpTrs.identity();
-                                    }
-
-                                    tmpTrs.translation.mulNumber(w);
-                                    tmpTrs.scale.mulNumber(w);
-                                    tmpTrs.rotation.pow(w);
-                                    trs.translation.add(tmpTrs.translation);
-                                    trs.scale.add(tmpTrs.scale);
-                                    trs.rotation.append(tmpTrs.rotation);
+                            if (count === 0) {
+                                fromTrans = trans;
+                            } else {
+                                this._lerpTransforms(skeleton, fromTrans, skeleton, trans, w / weights, transforms);
+                                SkeletonAnimationClip._pushTransformsToPool(trans);
+                                if (fromTrans !== transforms) {
+                                    SkeletonAnimationClip._pushTransformsToPool(fromTrans);
+                                    fromTrans = transforms;
                                 }
                             }
 
-                            return true;
+                            ++count;
                         }
+
+                        if (count === 0) {
+                            for (let i = 0; i < n; ++i) transforms[i].valid = false;
+                        } else if (count === 1) {
+                            if (fromTrans) {
+                                for (let i = 0; i < n; ++i) transforms[i].set(fromTrans[i]);
+                            } else {
+                                for (let i = 0; i < n; ++i) transforms[i].valid = false;
+                            }
+                        }
+
+                        if (fromTrans && fromTrans !== transforms) SkeletonAnimationClip._pushTransformsToPool(fromTrans);
+
+                        return true;
                     }
                 } else if (this._frames) {
-                    const bones = this._skeleton.bones;
+                    const bones = skeleton.bones;
                     if (bones) {
                         const rawBones = bones.raw;
                         const n = rawBones.length;
@@ -377,18 +380,18 @@ namespace Aurora {
             }
         }
 
-        private _lerpTransforms(ske0: Skeleton, trans0: TRS[], ske1: Skeleton, trans1: TRS[], weight: number, rst: TRS[]): void {
+        private _lerpTransforms(fromSke: Skeleton, fromTrans: TRS[], toSke: Skeleton, toTrans: TRS[], t: number, rst: TRS[]): void {
             const rawBones = this._skeleton.bones.raw;
             const numBones = rawBones.length;
 
-            if (trans0) {
-                if (trans1) {
-                    if (ske0 === this._skeleton) {
-                        if (ske1 === this._skeleton) {
+            if (fromTrans) {
+                if (toTrans) {
+                    if (fromSke === this._skeleton) {
+                        if (toSke === this._skeleton) {
                             for (let i = 0; i < numBones; ++i) {
                                 const bone = rawBones[i];
                                 if (bone) {
-                                    TRS.lerp(trans0[i], trans1[i], weight, rst[i]);
+                                    TRS.lerp(fromTrans[i], toTrans[i], t, rst[i]);
                                 } else {
                                     rst[i].valid = false;
                                 }
@@ -397,17 +400,17 @@ namespace Aurora {
                             for (let i = 0; i < numBones; ++i) {
                                 const bone = rawBones[i];
                                 if (bone) {
-                                    TRS.lerp(trans0[i], this._getTRSFromSkeleton(bone.name, ske1, trans1), weight, rst[i]);
+                                    TRS.lerp(fromTrans[i], this._getTRSFromSkeleton(bone.name, toSke, toTrans), t, rst[i]);
                                 } else {
                                     rst[i].valid = false;
                                 }
                             }
                         }
-                    } else if (ske1 === this._skeleton) {
+                    } else if (toSke === this._skeleton) {
                         for (let i = 0; i < numBones; ++i) {
                             const bone = rawBones[i];
                             if (bone) {
-                                TRS.lerp(this._getTRSFromSkeleton(bone.name, ske0, trans0), trans1[i], weight, rst[i]);
+                                TRS.lerp(this._getTRSFromSkeleton(bone.name, fromSke, fromTrans), toTrans[i], t, rst[i]);
                             } else {
                                 rst[i].valid = false;
                             }
@@ -416,18 +419,18 @@ namespace Aurora {
                         for (let i = 0; i < numBones; ++i) {
                             const bone = rawBones[i];
                             if (bone) {
-                                TRS.lerp(this._getTRSFromSkeleton(bone.name, ske0, trans0), this._getTRSFromSkeleton(bone.name, ske1, trans1), weight, rst[i]);
+                                TRS.lerp(this._getTRSFromSkeleton(bone.name, fromSke, fromTrans), this._getTRSFromSkeleton(bone.name, toSke, toTrans), t, rst[i]);
                             } else {
                                 rst[i].valid = false;
                             }
                         }
                     }
                 } else {
-                    if (ske0 === this._skeleton) {
+                    if (fromSke === this._skeleton) {
                         for (let i = 0; i < numBones; ++i) {
                             const bone = rawBones[i];
                             if (bone) {
-                                TRS.lerp(trans0[i], TRS.CONST_IDENTITY, weight, rst[i]);
+                                TRS.lerp(fromTrans[i], TRS.CONST_IDENTITY, t, rst[i]);
                             } else {
                                 rst[i].valid = false;
                             }
@@ -436,19 +439,19 @@ namespace Aurora {
                         for (let i = 0; i < numBones; ++i) {
                             const bone = rawBones[i];
                             if (bone) {
-                                TRS.lerp(this._getTRSFromSkeleton(bone.name, ske0, trans0), TRS.CONST_IDENTITY, weight, rst[i]);
+                                TRS.lerp(this._getTRSFromSkeleton(bone.name, fromSke, fromTrans), TRS.CONST_IDENTITY, t, rst[i]);
                             } else {
                                 rst[i].valid = false;
                             }
                         }
                     }
                 }
-            } else if (trans1) {
-                if (ske1 === this._skeleton) {
+            } else if (toTrans) {
+                if (toSke === this._skeleton) {
                     for (let i = 0; i < numBones; ++i) {
                         const bone = rawBones[i];
                         if (bone) {
-                            TRS.lerp(TRS.CONST_IDENTITY, trans1[i], weight, rst[i]);
+                            TRS.lerp(TRS.CONST_IDENTITY, toTrans[i], t, rst[i]);
                         } else {
                             rst[i].valid = false;
                         }
@@ -457,7 +460,7 @@ namespace Aurora {
                     for (let i = 0; i < numBones; ++i) {
                         const bone = rawBones[i];
                         if (bone) {
-                            TRS.lerp(TRS.CONST_IDENTITY, this._getTRSFromSkeleton(bone.name, ske1, trans1), weight, rst[i]);
+                            TRS.lerp(TRS.CONST_IDENTITY, this._getTRSFromSkeleton(bone.name, toSke, toTrans), t, rst[i]);
                         } else {
                             rst[i].valid = false;
                         }
@@ -595,6 +598,11 @@ namespace Aurora {
         public destroy(): void {
             this.skeleton = null;
             this.frames = null;
+            
+            if (this._multiClips) {
+                this.clearAllMultiClips();
+                this._multiClips = null;
+            }
         }
 
         protected _refDestroy(): void {

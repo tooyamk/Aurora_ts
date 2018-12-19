@@ -32,8 +32,8 @@ class SkeletonAnimation {
         },
             (delta: number) => {
                 //this._animControl0(delta);
-                //this._animControl1(delta);
-                if (this._animator) this._animator.update(delta);
+                this._animControl1(delta);
+                //if (this._animator) this._animator.update(delta);
 
                 //modelNode.worldRotate(Aurora.Quaternion.createFromEulerY(0.5 * delta * Math.PI));
                 env.renderingManager.render(env.gl, env.camera.value, env.world.value, [light]);
@@ -81,17 +81,25 @@ class SkeletonAnimation {
         if (this._time >= 0) {
             this._time += delta * timeScale;
 
-            if (this._time >= 3) {
-                if (this._step === 0) {
+            if (this._step === 0) {
+                if (this._time >= 3) {
                     this._animator.setClip(this._animWalkRunClip, 0, 2);
                     ++this._step;
+                    this._time = 0;
                     console.log("idle -> walk&run");
-                } else {
+                }
+            } else if (this._step === 1) {
+                const max = 5;
+                if (this._time >= max) {
                     this._animator.setClip(this._animIdleClip, 0, 2);
                     this._step = 0;
+                    this._time = 0;
                     console.log("walk&run -> idle");
+                } else {
+                    const t = this._time / max;
+                    this._animWalkRunClip.setMultiClipWeight("walk", 1 - t);
+                    this._animWalkRunClip.setMultiClipWeight("run", t);
                 }
-                this._time = 0;
             }
 
             this._animator.update(delta * timeScale);
@@ -206,14 +214,14 @@ class SkeletonAnimation {
                 this._animWalkRunClip = clip;
                 clip.wrap = Aurora.AnimationWrap.Loop;
                 clip.skeleton = skeData.skeleton;
-                clip.setMultiClip("walk", this._animWalkClip, 0.5);
-                clip.setMultiClip("run", this._animRunClip, 0.1);
+                clip.setMultiClip("walk", this._animWalkClip, 1);
+                clip.setMultiClip("run", this._animRunClip, 0);
                 clip.setTimeRagne(0, this._animRunClip.duration);
             }
 
             this._animator = new Aurora.Animator();
-            //this._animator.setClip(this._animIdleClip);
-            this._animator.setClip(this._animWalkRunClip);
+            this._animator.setClip(this._animIdleClip);
+            //this._animator.setClip(this._animWalkRunClip);
 
             if (meshData.meshes) {
                 for (let m of meshData.meshes) {

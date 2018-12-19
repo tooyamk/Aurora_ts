@@ -692,14 +692,14 @@ namespace Aurora {
             } else {
                 if (this.m11 > this.m00) {
                     if (this.m22 > this.m11) {//2
-                        let s = Math.sqrt((this.m22 - (this.m00 + this.m11)) + 1);
+                        let s = Math.sqrt((this.m22 - this.m00 - this.m11) + 1);
                         rst.z = s * 0.5;
                         s = 0.5 / s;
                         rst.x = (this.m20 + this.m02) * s;
                         rst.y = (this.m21 + this.m12) * s;
                         rst.w = (this.m01 - this.m10) * s;
                     } else {//1
-                        let s = Math.sqrt((this.m11 - (this.m22 + this.m00)) + 1);
+                        let s = Math.sqrt((this.m11 - this.m22 - this.m00) + 1);
                         rst.y = s * 0.5;
                         s = 0.5 / s;
                         rst.x = (this.m10 + this.m01) * s;
@@ -707,14 +707,14 @@ namespace Aurora {
                         rst.w = (this.m20 - this.m02) * s;
                     }
                 } else if (this.m22 > this.m00) {//2
-                    let s = Math.sqrt((this.m22 - (this.m00 + this.m11)) + 1);
+                    let s = Math.sqrt((this.m22 - this.m00 - this.m11) + 1);
                     rst.z = s * 0.5;
                     s = 0.5 / s;
                     rst.x = (this.m20 + this.m02) * s;
                     rst.y = (this.m21 + this.m12) * s;
                     rst.w = (this.m01 - this.m10) * s;
                 } else {//0
-                    let s = Math.sqrt((this.m00 - (this.m11 + this.m22)) + 1);
+                    let s = Math.sqrt((this.m00 - this.m11 - this.m22) + 1);
                     rst.x = s * 0.5;
                     s = 0.5 / s;
                     rst.y = (this.m01 + this.m10) * s;
