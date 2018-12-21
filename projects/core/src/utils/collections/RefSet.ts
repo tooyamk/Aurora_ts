@@ -10,6 +10,10 @@ namespace Aurora {
             return this._raw.size;
         }
 
+        public has(key: I): boolean {
+            return this._raw.has(key);
+        }
+
         public insert(value: I): void {
             if (!this._raw.has(value)) {
                 if (value) value.retain();

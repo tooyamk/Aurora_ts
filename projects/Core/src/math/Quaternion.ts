@@ -159,16 +159,13 @@ namespace Aurora {
         public static slerp(from: Quaternion, to: Quaternion, t: number, rst: Quaternion = null): Quaternion {
             rst = rst || new Quaternion();
 
-            let w = to.w;
-            let x = to.x;
-            let y = to.y;
-            let z = to.z;
-            let cos = from.w * w + from.x * x + from.y * y + from.z * z;
+            let x = to.x, y = to.y, z = to.z, w = to.w;
+            let cos = from.x * x + from.y * y + from.z * z + from.w * w;
             if (cos < 0) {//shortest path
-                w = -to.w;
-                x = -to.x;
-                y = -to.y;
-                z = -to.z;
+                x = -x;
+                y = -y;
+                z = -z;
+                w = -w;
                 cos = -cos;
             }
             let k0: number, k1: number;
@@ -177,10 +174,10 @@ namespace Aurora {
                 k1 = t;
             } else {
                 const a = Math.acos(cos);
-                const sin = Math.sin(a);
+                const s = Math.sin(a);
                 const ta = t * a;
-                k0 = Math.sin(a - ta) / sin;
-                k1 = Math.sin(ta) / sin;
+                k0 = Math.sin(a - ta) / s;
+                k1 = Math.sin(ta) / s;
             }
 
             rst.x = from.x * k0 + x * k1;

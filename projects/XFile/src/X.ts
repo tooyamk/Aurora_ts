@@ -311,24 +311,25 @@ namespace Aurora.XFile {
                     const anim = this.animations[i];
 
                     let maxTime: number = -1;
-                    const frames = new Map<string, SkeletonAnimationClip.Frame[]>();
+                    const frames = new Map<string, SkeletonAnimationClip.BoneFrames>();
                     for (let itr of anim.frames) {
                         const boneFramesMap = itr[1];
-                        const boneFrames: SkeletonAnimationClip.Frame[] = [];
+                        const boneFrames = new SkeletonAnimationClip.BoneFrames();
                         frames.set(itr[0], boneFrames);
 
                         let n = 0;
                         for (let itr1 of boneFramesMap) {
                             const f = itr1[1];
                             if (maxTime < f.time) maxTime = f.time;
-                            boneFrames[n++] = f;
+                            boneFrames.frames[n++] = f;
                         }
 
-                        Sort.Merge.sort(boneFrames, (f0: SkeletonAnimationClip.Frame, f1: SkeletonAnimationClip.Frame) => {
+                        Sort.Merge.sort(boneFrames.frames, (f0: SkeletonAnimationClip.Frame, f1: SkeletonAnimationClip.Frame) => {
                             return f0.time <= f1.time;
                         });
 
-                        SkeletonAnimationClip.supplementLerpFrames(boneFrames);
+                        boneFrames.supplementLerpFrames();
+                        boneFrames.calcEquantInterval();
                     }
 
                     const clip = new SkeletonAnimationClip();
@@ -340,7 +341,6 @@ namespace Aurora.XFile {
                 data.animationClips = animClips;
             }
         }
-
 
         private _checkAndCombineBindBones(name: string, skinVertices: number[][], numDataPerElement: uint): uint {
             const maxDataPerElement = 4;

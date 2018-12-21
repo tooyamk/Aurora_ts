@@ -3,14 +3,14 @@ namespace Aurora {
         protected static readonly TMP_VEC3 = new Vector3();
         protected static readonly TMP_MAT = new Matrix44();
 
-        protected _matrices: number[];
+        protected _matrices: Float32Array;
         protected _defines: ShaderDefines;
         protected _uniforms: ShaderUniforms;
 
         constructor() {
             super();
 
-            this._matrices = [];
+            this._matrices = new Float32Array(180);
 
             this._defines = new ShaderDefines();
             this._defines.retain();
@@ -30,10 +30,14 @@ namespace Aurora {
                 if (boneIndices && boneWeights) {
                     const numBonesPerElement = boneIndicesSource.size;
 
-                    const data = this._matrices;
+                    let data = this._matrices;
                     const n = matrices.length;
                     const maxData = n * 12;
-                    if (data.length < maxData) data.length = maxData;
+                    if (data.length < maxData) {
+                        data = new Float32Array(maxData);
+                        this._matrices = data;
+                        this._uniforms.setNumberArray(ShaderPredefined.u_SkinningMatrices, this._matrices);
+                    }
 
                     let idx = 0;
                     for (let i = 0; i < n; ++i) {

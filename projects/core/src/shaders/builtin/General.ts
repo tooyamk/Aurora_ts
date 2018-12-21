@@ -19,7 +19,7 @@ namespace Aurora.BuiltinShader.General {
     export const PRECISION_HEAD: string = `
 #ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
-#else  
+#else
 precision mediump float;
 #endif
 `;

@@ -1149,10 +1149,8 @@ namespace Aurora {
             this.m32 = tmp;
         }
 
-        public toArray33(transpose:boolean = false, rst: number[] = null): number[] {
+        public toArray33(transpose: boolean = false, rst: FloatArray = null): FloatArray {
             rst = rst || [];
-
-            rst.length = 9;
 
             rst[0] = this.m00;
             rst[4] = this.m11;
@@ -1181,10 +1179,8 @@ namespace Aurora {
             return rst;
         }
 
-        public toArray34(transpose: boolean = false, rst: number[] = null): number[] {
+        public toArray34(transpose: boolean = false, rst: FloatArray = null): FloatArray {
             rst = rst || [];
-
-            rst.length = 12;
 
             rst[0] = this.m00;
 
@@ -1222,10 +1218,8 @@ namespace Aurora {
             return rst;
         }
 
-        public toArray44(transpose: boolean = false, rst: number[] = null): number[] {
+        public toArray44(transpose: boolean = false, rst: FloatArray = null): FloatArray {
             rst = rst || [];
-
-            rst.length = 16;
 
             rst[0] = this.m00;
             rst[5] = this.m11;

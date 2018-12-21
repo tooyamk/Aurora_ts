@@ -1,3 +1,10 @@
+class AnimData {
+    public animator: Aurora.SkeletonAnimator = null;
+    public walkRunClip: Aurora.SkeletonAnimationClip = null;
+    public time = -1;
+    public step = 0;
+}
+
 class SkeletonAnimation {
     private _env: Env;
     private _modelNode: Aurora.Node;
@@ -5,21 +12,16 @@ class SkeletonAnimation {
     private _animIdleClip: Aurora.SkeletonAnimationClip = null;
     private _animWalkClip: Aurora.SkeletonAnimationClip = null;
     private _animRunClip: Aurora.SkeletonAnimationClip = null;
-
-    private _animWalkRunClip: Aurora.SkeletonAnimationClip = null;
     
-    private _animator: Aurora.Animator<Aurora.SkeletonAnimationClip> = null;
-
-    private _time = -1;
-    private _step = 0;
+    private _animators: AnimData[] = [];
 
     constructor() {
         let env = new Env();
         this._env = env;
 
         let modelNode = env.world.value.addChild(new Aurora.Node());
-        let light = env.world.value.addChild(new Aurora.Node()).addComponent(new Aurora.PointLight());
-        light.setAttenuation(12500);
+        let light = env.world.value.addChild(new Aurora.Node()).addComponent(new Aurora.DirectionLight());
+        //light.setAttenuation(12500);
 
         modelNode.localTranslate(0, 0, 500);
         this._modelNode = modelNode;
@@ -46,31 +48,34 @@ class SkeletonAnimation {
         //delta = 0.01666666 * 0.25;
         const timeScale = 1;//0.25;
 
-        if (this._time >= 0) {
-            this._time += delta * timeScale;
+        for (let i = 0; i < this._animators.length; ++i) {
+            let data = this._animators[i];
+            if (data.time >= 0) {
+                data.time += delta * timeScale;
 
-            if (this._time >= 3) {
-                if (this._step === 0) {
-                    this._animator.setClip(this._animWalkClip, 0, 2);
-                    ++this._step;
-                    console.log("idle -> walk");
-                } else if (this._step === 1) {
-                    this._animator.setClip(this._animRunClip, this._animRunClip.duration * this._animator.time / this._animWalkClip.duration, 2);
-                    ++this._step;
-                    console.log("walk -> run");
-                } else if (this._step === 2) {
-                    this._animator.setClip(this._animWalkClip, this._animWalkClip.duration * this._animator.time / this._animRunClip.duration, 2);
-                    ++this._step;
-                    console.log("run -> walk");
-                } else if (this._step === 3) {
-                    this._animator.setClip(this._animIdleClip, 0, 2);
-                    this._step = 0;
-                    console.log("walk -> idle");
+                if (data.time >= 3) {
+                    if (data.step === 0) {
+                        data.animator.setClip(this._animWalkClip, 0, 2);
+                        ++data.step;
+                        console.log("idle -> walk");
+                    } else if (data.step === 1) {
+                        data.animator.setClip(this._animRunClip, this._animRunClip.duration * data.animator.time / this._animWalkClip.duration, 2);
+                        ++data.step;
+                        console.log("walk -> run");
+                    } else if (data.step === 2) {
+                        data.animator.setClip(this._animWalkClip, this._animWalkClip.duration * data.animator.time / this._animRunClip.duration, 2);
+                        ++data.step;
+                        console.log("run -> walk");
+                    } else if (data.step === 3) {
+                        data.animator.setClip(this._animIdleClip, 0, 2);
+                        data.step = 0;
+                        console.log("walk -> idle");
+                    }
+                    data.time = 0;
                 }
-                this._time = 0;
-            }
 
-            this._animator.update(delta * timeScale);
+                data.animator.update(delta * timeScale);
+            }
         }
     }
 
@@ -78,31 +83,36 @@ class SkeletonAnimation {
         //delta = 0.01666666 * 0.25;
         const timeScale = 1;//0.25;
 
-        if (this._time >= 0) {
-            this._time += delta * timeScale;
+        for (let i = 0; i < this._animators.length; ++i) {
+            let data = this._animators[i];
+            if (data.time >= 0) {
+                data.time += delta * timeScale;
 
-            if (this._step === 0) {
-                if (this._time >= 3) {
-                    this._animator.setClip(this._animWalkRunClip, 0, 2);
-                    ++this._step;
-                    this._time = 0;
-                    console.log("idle -> walk&run");
+                /*
+                if (data.step === 0) {
+                    if (data.time >= 3) {
+                        data.animator.setClip(data.walkRunClip, 0, 2);
+                        ++data.step;
+                        data.time = 0;
+                        //console.log("idle -> walk&run");
+                    }
+                } else if (data.step === 1) {
+                    const max = 5;
+                    if (data.time >= max) {
+                        data.animator.setClip(this._animIdleClip, 0, 2);
+                        data.step = 0;
+                        data.time = 0;
+                        //console.log("walk&run -> idle");
+                    } else {
+                        const t = data.time / max;
+                        data.walkRunClip.setMultiClipWeight("walk", 1 - t);
+                        data.walkRunClip.setMultiClipWeight("run", t);
+                    }
                 }
-            } else if (this._step === 1) {
-                const max = 5;
-                if (this._time >= max) {
-                    this._animator.setClip(this._animIdleClip, 0, 2);
-                    this._step = 0;
-                    this._time = 0;
-                    console.log("walk&run -> idle");
-                } else {
-                    const t = this._time / max;
-                    this._animWalkRunClip.setMultiClipWeight("walk", 1 - t);
-                    this._animWalkRunClip.setMultiClipWeight("run", t);
-                }
+                */
+
+                data.animator.update(delta * timeScale);
             }
-
-            this._animator.update(delta * timeScale);
         }
     }
 
@@ -121,7 +131,7 @@ class SkeletonAnimation {
                 skeData = Aurora.FbxFile.parse(new Aurora.ByteArray(request.response));
                 task.finish();
             });
-            request.open("GET", Helper.getURL("skinnedMeshes/2/ske.FBX"), true);
+            request.open("GET", Helper.getURL("skinnedMeshes/3/model.FBX"), true);
             request.responseType = "arraybuffer";
             request.send();
         }));
@@ -131,7 +141,7 @@ class SkeletonAnimation {
                 meshData = Aurora.FbxFile.parse(new Aurora.ByteArray(request.response));
                 task.finish();
             });
-            request.open("GET", Helper.getURL("skinnedMeshes/2/mesh.FBX"), true);
+            request.open("GET", Helper.getURL("skinnedMeshes/3/model.FBX"), true);
             request.responseType = "arraybuffer";
             request.send();
         }));
@@ -141,7 +151,7 @@ class SkeletonAnimation {
                 anim0Data = Aurora.FbxFile.parse(new Aurora.ByteArray(request.response));
                 task.finish();
             });
-            request.open("GET", Helper.getURL("skinnedMeshes/2/idle.FBX"), true);
+            request.open("GET", Helper.getURL("skinnedMeshes/3/model.FBX"), true);
             request.responseType = "arraybuffer";
             request.send();
         }));
@@ -151,7 +161,7 @@ class SkeletonAnimation {
                 anim1Data = Aurora.FbxFile.parse(new Aurora.ByteArray(request.response));
                 task.finish();
             });
-            request.open("GET", Helper.getURL("skinnedMeshes/2/walk.FBX"), true);
+            request.open("GET", Helper.getURL("skinnedMeshes/3/model.FBX"), true);
             request.responseType = "arraybuffer";
             request.send();
         }));
@@ -161,7 +171,7 @@ class SkeletonAnimation {
                 anim2Data = Aurora.FbxFile.parse(new Aurora.ByteArray(request.response));
                 task.finish();
             });
-            request.open("GET", Helper.getURL("skinnedMeshes/2/run.FBX"), true);
+            request.open("GET", Helper.getURL("skinnedMeshes/3/model.FBX"), true);
             request.responseType = "arraybuffer";
             request.send();
         }));
@@ -177,7 +187,7 @@ class SkeletonAnimation {
             tex.upload(0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
 
             let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
-            mat.cullFace = Aurora.GLCullFace.NONE;
+            //mat.cullFace = Aurora.GLCullFace.NONE;
             mat.defines.set(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
             //mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
             mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
@@ -187,53 +197,69 @@ class SkeletonAnimation {
             if (anim0Data.animationClips && anim0Data.animationClips.size > 0) {
                 const clip = anim0Data.animationClips.at(0);
                 clip.retain();
+                clip.cache(true);
                 this._animIdleClip = clip;
                 clip.wrap = Aurora.AnimationWrap.Loop;
-                clip.skeleton = skeData.skeleton;
             }
 
             if (anim1Data.animationClips && anim1Data.animationClips.size > 0) {
                 const clip = anim1Data.animationClips.at(0);
                 clip.retain();
+                clip.cache(true);
                 this._animWalkClip = clip;
                 clip.wrap = Aurora.AnimationWrap.Loop;
-                clip.skeleton = skeData.skeleton;
             }
 
             if (anim2Data.animationClips && anim2Data.animationClips.size > 0) {
                 const clip = anim2Data.animationClips.at(0);
                 clip.retain();
+                clip.cache(true);
                 this._animRunClip = clip;
                 clip.wrap = Aurora.AnimationWrap.Loop;
-                clip.skeleton = skeData.skeleton;
             }
 
-            if (this._animWalkClip && this._animRunClip) {
-                const clip = new Aurora.SkeletonAnimationClip();
-                clip.retain();
-                this._animWalkRunClip = clip;
-                clip.wrap = Aurora.AnimationWrap.Loop;
-                clip.skeleton = skeData.skeleton;
-                clip.setMultiClip("walk", this._animWalkClip, 1);
-                clip.setMultiClip("run", this._animRunClip, 0);
-                clip.setTimeRagne(0, this._animRunClip.duration);
-            }
+            for (let i = 0; i < 100; ++i) {
+                let ske = skeData.skeleton.clone();
 
-            this._animator = new Aurora.Animator();
-            this._animator.setClip(this._animIdleClip);
-            //this._animator.setClip(this._animWalkRunClip);
+                //Helper.printNodeHierarchy([ske.bonesMap.find(ske.rootBoneNames[0])]);
 
-            if (meshData.meshes) {
-                for (let m of meshData.meshes) {
-                    let mesh = this._modelNode.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
-                    mesh.renderer = this._env.forwardRenderer;
-                    mesh.skinningMethod = this._env.skinnedMeshGPUSkinningMethod.value;
-                    mesh.asset = m;
-                    mesh.setMaterials(mat);
-                    mesh.skeleton = skeData.skeleton;
+                let node = this._modelNode.addChild(new Aurora.Node());
+                const scale = 1.6;
+                node.setLocalScale(scale, scale, scale);
 
-                    const scale = 0.8;
-                    mesh.node.setLocalScale(scale, scale, scale);
+                node.setLocalPosition(-60 + 120 * Math.random(), -60 + 120 * Math.random(), -60 + 120 * Math.random());
+
+                let data = new AnimData();
+                data.time = Math.random() * 3;
+                data.step = 0;
+
+                if (this._animWalkClip && this._animRunClip) {
+                    const clip = new Aurora.SkeletonAnimationClip();
+                    clip.retain();
+                    data.walkRunClip = clip;
+                    clip.wrap = Aurora.AnimationWrap.Loop;
+                    clip.setMultiClip("walk", this._animWalkClip, 1);
+                    clip.setMultiClip("run", this._animRunClip, 0);
+                    clip.setTimeRagne(0, this._animRunClip.duration);
+                }
+
+                let animator = new Aurora.SkeletonAnimator();
+                data.animator = animator;
+                this._animators[i] = data;
+                animator.skeleton = ske;
+                animator.setClip(this._animIdleClip);
+                animator.elapsed = data.time;
+                animator.update(0);
+
+                if (meshData.meshes) {
+                    for (let m of meshData.meshes) {
+                        let mesh = node.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
+                        mesh.renderer = this._env.forwardRenderer;
+                        mesh.skinningMethod = this._env.skinnedMeshGPUSkinningMethod.value;
+                        mesh.asset = m;
+                        mesh.setMaterials(mat);
+                        mesh.skeleton = ske;
+                    }
                 }
             }
 
@@ -242,9 +268,6 @@ class SkeletonAnimation {
             anim0Data.release();
             anim1Data.release();
             anim2Data.release();
-
-            this._time = 0;
-            this._step = 0;
         }));
     }
 }

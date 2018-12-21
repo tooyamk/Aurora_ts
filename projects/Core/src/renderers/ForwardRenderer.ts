@@ -7,9 +7,13 @@ namespace Aurora {
         protected _enalbedLighting = true;
         protected _light: AbstractLight = null;
 
-        protected _l2wM44Array: number[] = [];
-        protected _l2pM44Array: number[] = [];
-        protected _l2vM44Array: number[] = [];
+        //protected _l2wM44Array: number[] = [];
+        //protected _l2pM44Array: number[] = [];
+        //protected _l2vM44Array: number[] = [];
+
+        protected _l2wM44Array = new Float32Array(16);
+        protected _l2pM44Array = new Float32Array(16);
+        protected _l2vM44Array = new Float32Array(16);
 
         protected _shaderDefines: ShaderDefines = null;
         protected _shaderUniforms: ShaderUniforms = null;

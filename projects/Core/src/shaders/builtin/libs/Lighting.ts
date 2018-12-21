@@ -129,7 +129,10 @@ struct ${LIGHTING_STRUCT} {
     #endif
 #endif
 
+#ifdef ${ShaderPredefined.AMBIENT_COLOR}
 #include<${General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_AmbientColor})
+#endif
+
 #include<${General.DECLARE_UNIFORM.name}>(vec3, ${ShaderPredefined.u_LightColor0})
 
 #if ${ShaderPredefined.LIGHT_TYPE0} == ${ShaderPredefined.LIGHT_TYPE_DIRECTION}
@@ -155,8 +158,14 @@ struct ${LIGHTING_STRUCT} {
 #ifdef ${ShaderPredefined.LIGHTING}
 
 ${LIGHTING_STRUCT} _lightingInfo;
+
 vec3 _lightingDirW;
+#ifdef ${General.DECLARE_UNIFORM_DEFINE_PREFIX}${ShaderPredefined.u_AmbientColor}
 _lightingInfo.ambientColor = ${ShaderPredefined.u_AmbientColor};
+#else
+_lightingInfo.ambientColor = vec3(0.0);
+#endif
+
 _lightingInfo.diffuseColor = ${ShaderPredefined.u_LightColor0};
 
 #ifdef ${ShaderPredefined.LIGHTING_SPECULAR}

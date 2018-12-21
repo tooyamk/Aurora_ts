@@ -16,7 +16,5 @@ namespace Aurora {
         public set wrap(value: AnimationWrapMethod) {
             if (value && this._wrap !== value) this._wrap = value;
         }
-
-        public abstract update(start: number, elapsed: number, blend: AnimatorBlend[]): number;
     }
 }

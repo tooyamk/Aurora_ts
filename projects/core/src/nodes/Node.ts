@@ -216,10 +216,7 @@ namespace Aurora {
 
             return n;
         }
-
-        /**
-         * @returns numChildren.
-         */
+        
         public getAllChildren(rst: Node[], start: uint = 0): Node[] {
             rst = rst || [];
             

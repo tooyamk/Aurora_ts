@@ -10,6 +10,10 @@ namespace Aurora {
             return this._raw.size;
         }
 
+        public has(key: K): boolean {
+            return this._raw.has(key);
+        }
+
         public find(key: K): V {
             return this._raw.get(key);
         }

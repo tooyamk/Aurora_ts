@@ -35,7 +35,7 @@ namespace Aurora {
             return this._raw.length;
         }
 
-        public pushBackOne(item: I): void {
+        public pushBackSingle(item: I): void {
             if (item) item.retain();
             this._raw[this._raw.length] = item;
         }

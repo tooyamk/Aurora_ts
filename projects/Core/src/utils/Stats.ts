@@ -5,6 +5,7 @@ namespace Aurora {
 
         private _platform: IPlatform;
         private _color: string;
+        private _fontSize: number;
         private _delta: number = 0;
         private _time: number = 0;
         private _fps: number = 0;
@@ -12,9 +13,10 @@ namespace Aurora {
 
         private _dis: HTMLDivElement = null;
         
-        constructor(platform: IPlatform, color: string = "#808080", delta: number = 1000) {
+        constructor(platform: IPlatform, color: string = "#808080", fontSize: number = 30, delta: number = 1000) {
             this._platform = platform;
             this._color = color;
+            this._fontSize = fontSize;
             this.delta = delta;
 
             this.reset(true);
@@ -88,6 +90,7 @@ namespace Aurora {
                 this._dis.style.left = "0px";
                 this._dis.style.top = "0px";
                 this._dis.style.color = this._color;
+                this._dis.style.fontSize = this._fontSize.toString();;
                 //this._dis.style.opacity = "1";
                 //this._dis.style.backgroundColor = "#ffffcc";
                 this._dis.innerText = "";

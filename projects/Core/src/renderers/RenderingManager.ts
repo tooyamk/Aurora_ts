@@ -18,9 +18,9 @@ namespace Aurora {
         protected _viewToProjMatrix = new Matrix44();
         protected _worldToViewMatrix = new Matrix44();
         protected _worldToProjMatrix = new Matrix44();
-        protected _viewToProjM44Array: number[] = [];
-        protected _worldToViewM44Array: number[] = [];
-        protected _worldToProjM44Array: number[] = [];
+        protected _viewToProjM44Array = new Float32Array(16);
+        protected _worldToViewM44Array = new Float32Array(16);
+        protected _worldToProjM44Array = new Float32Array(16);
 
         protected _defaultPPVertexBuffer: GLVertexBuffer = null;
         protected _defaultPPUVBuffer: GLVertexBuffer = null;
@@ -40,6 +40,7 @@ namespace Aurora {
             this._shaderUniforms = new ShaderUniforms();
             this._shaderUniforms.retain();
 
+            this._shaderDefines.set(ShaderPredefined.AMBIENT_COLOR, true);
             this._shaderDefines.set(ShaderPredefined.LIGHTING_SPECULAR, ShaderPredefined.LIGHTING_SPECULAR_BLINN_PHONE);
 
             let max = (gl.maxVertexUniformVectors / 3) | 0;

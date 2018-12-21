@@ -2,9 +2,7 @@
 
 namespace Aurora {
     export class PointLight extends AbstractLight {
-        protected _attenConstant: number;
-        protected _attenLinear: number;
-        protected _attenQuadratic: number;
+        protected _atten = new Float32Array(4);//0=constant, 1=linear, 2=quadratic, 3=use for spot light
 
         constructor() {
             super();
@@ -17,7 +15,7 @@ namespace Aurora {
             
             defines.set(ShaderPredefined.LIGHT_TYPE0, ShaderPredefined.LIGHT_TYPE_POINT);
 
-            uniforms.setNumberArray(ShaderPredefined.u_LightAttrib0, [this._attenConstant, this._attenLinear, this._attenQuadratic]);
+            uniforms.setNumberArray(ShaderPredefined.u_LightAttrib0, this._atten);
         }
 
         public setAttenuation(radius: number): void;
@@ -30,13 +28,13 @@ namespace Aurora {
         public setAttenuation(...args: any[]): void {
             if (args.length === 1) {
                 const radius = <number>args[0];
-                this._attenConstant = 1;
-                this._attenLinear = 4.5 / radius;
-                this._attenQuadratic = 75 / (radius * radius);
+                this._atten[0] = 1;
+                this._atten[1] = 4.5 / radius;
+                this._atten[2] = 75 / (radius * radius);
             } else if (args.length === 3) {
-                this._attenConstant = args[0];
-                this._attenLinear = args[1];
-                this._attenQuadratic = args[2];
+                this._atten[0] = args[0];
+                this._atten[1] = args[1];
+                this._atten[2] = args[2];
             } else {
                 console.error("PointLight setAttenuation params error");
             }

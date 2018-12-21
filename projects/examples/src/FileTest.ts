@@ -1,7 +1,7 @@
 class FileTest {
     private _env: Env;
     private _modelNode: Aurora.Node;
-    private _animator: Aurora.Animator<Aurora.SkeletonAnimationClip> = null;
+    private _animator: Aurora.SkeletonAnimator = null;
 
     constructor() {
         let env = new Env();
@@ -77,9 +77,8 @@ class FileTest {
             if (data.animationClips && data.animationClips.size > 0) {
                 const clip = data.animationClips.at(0);
                 clip.wrap = Aurora.AnimationWrap.Loop;
-                clip.skeleton = data.skeleton;
 
-                this._animator = new Aurora.Animator();
+                this._animator = new Aurora.SkeletonAnimator();
                 this._animator.setClip(clip);
             }
 
@@ -176,9 +175,8 @@ class FileTest {
             if (data.animationClips && data.animationClips.size > 0) {
                 const clip = data.animationClips.at(0);
                 clip.wrap = Aurora.AnimationWrap.Loop;
-                clip.skeleton = data.skeleton;
 
-                this._animator = new Aurora.Animator();
+                this._animator = new Aurora.SkeletonAnimator();
                 this._animator.setClip(clip);
             }
 
@@ -238,9 +236,8 @@ class FileTest {
             if (data.animationClips && data.animationClips.size > 0) {
                 const clip = data.animationClips.at(0);
                 clip.wrap = Aurora.AnimationWrap.Loop;
-                clip.skeleton = data.skeleton;
 
-                this._animator = new Aurora.Animator();
+                this._animator = new Aurora.SkeletonAnimator();
                 this._animator.setClip(clip);
             }
 
@@ -312,9 +309,8 @@ class FileTest {
             if (data0.animationClips && data0.animationClips.size > 0) {
                 const clip = data0.animationClips.at(0);
                 clip.wrap = Aurora.AnimationWrap.Loop;
-                clip.skeleton = data0.skeleton;
 
-                this._animator = new Aurora.Animator();
+                this._animator = new Aurora.SkeletonAnimator();
                 this._animator.setClip(clip);
                 // this._animator.elapsed = 0.9;
             }
@@ -389,9 +385,8 @@ class FileTest {
             if (data.animationClips && data.animationClips.size > 0) {
                 const clip = data.animationClips.at(0);
                 clip.wrap = Aurora.AnimationWrap.Loop;
-                clip.skeleton = data.skeleton;
 
-                this._animator = new Aurora.Animator();
+                this._animator = new Aurora.SkeletonAnimator();
                 this._animator.setClip(clip);
             }
 

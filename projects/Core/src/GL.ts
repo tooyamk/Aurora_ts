@@ -757,8 +757,8 @@ namespace Aurora {
                     if (mode === GLDrawMode.TRIANGLES) stats.drawTris += (count / 3) | 0;
                 }
 
-                const err = this._gl.context.getError();
-                if (err !== GLEnum.NO_ERROR) this._gl.printConstant("draw error : ", err);
+                //const err = this._gl.context.getError();
+                //if (err !== GLEnum.NO_ERROR) this._gl.printConstant("draw error : ", err);
             }
         }
     }
@@ -931,8 +931,8 @@ namespace Aurora {
 
             const err = this.linkByInternalShander(vert, frag);
 
-            gl.deleteShader(vert);
-            gl.deleteShader(frag);
+            //gl.deleteShader(vert);
+            //gl.deleteShader(frag);
 
             return err;
         }

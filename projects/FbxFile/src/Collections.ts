@@ -309,7 +309,7 @@ namespace Aurora.FbxFile {
 
                         for (let itr of frames) {
                             const isRoot = skeData.isRootBone(itr[0]);
-                            const boneFrames = itr[1];
+                            const boneFrames = itr[1].frames;
                             for (let j = 0, n = boneFrames.length; j < n; ++j) {
                                 const f = boneFrames[j];
                                 if (!f) continue;
@@ -741,12 +741,12 @@ namespace Aurora.FbxFile {
                     for (let i = 0, q: Quaternion; q = rots[i++];) Quaternion.createFromEulerXYZ(q.x, q.y, q.z, q);
                     rots.length = 0;
 
-                    const frames = new Map<string, SkeletonAnimationClip.Frame[]>();
+                    const frames = new Map<string, SkeletonAnimationClip.BoneFrames>();
                     let maxTime: number = -1;
                     for (let itr of framesMap) {
                         const boneName = itr[0];
                         const boneFramesMap = itr[1];
-                        const boneFrames: SkeletonAnimationClip.Frame[] = [];
+                        const boneFrames = new SkeletonAnimationClip.BoneFrames();
                         frames.set(boneName, boneFrames);
                         const bone = skeleton.getBoneByName(boneName);
                         const m = bone ? bone.readonlyLocalMatrix : null;
@@ -759,14 +759,15 @@ namespace Aurora.FbxFile {
                                 if (!f.rotation) f.rotation = bone.readonlyLocalRotation.clone();
                                 if (!f.scale) f.scale = bone.readonlyLocalScale.clone();
                             }
-                            boneFrames[n++] = f;
+                            boneFrames.frames[n++] = f;
                         }
 
-                        Sort.Merge.sort(boneFrames, (f0: SkeletonAnimationClip.Frame, f1: SkeletonAnimationClip.Frame) => {
+                        Sort.Merge.sort(boneFrames.frames, (f0: SkeletonAnimationClip.Frame, f1: SkeletonAnimationClip.Frame) => {
                             return f0.time <= f1.time;
                         });
 
-                        SkeletonAnimationClip.supplementLerpFrames(boneFrames);
+                        boneFrames.supplementLerpFrames();
+                        boneFrames.calcEquantInterval();
                     }
 
                     const clip = new SkeletonAnimationClip();

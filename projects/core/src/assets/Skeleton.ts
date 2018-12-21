@@ -33,7 +33,7 @@ namespace Aurora {
         public addBone(bone: Node): void {
             const idx = this._bones.size;
             this._mapping.set(bone.name, idx);
-            this._bones.pushBackOne(bone);
+            this._bones.pushBackSingle(bone);
             this._bonesMap.insert(bone.name, bone);
         }
 
@@ -48,6 +48,35 @@ namespace Aurora {
                     }
                 }
             }
+        }
+
+        public clone(): Skeleton {
+            const ske = new Skeleton();
+
+            const raw = this._bones.raw;
+            const n = raw.length;
+            for (let i = 0; i < n; ++i) ske.addBone(raw[i].clone(false));
+
+            const raw1 = ske._bones.raw;
+
+            for (let i = 0; i < n; ++i) {
+                const bone = raw[i];
+                const parent = bone.parent;
+                if (parent) {
+                    if (this._bonesMap.find(parent.name)) {
+                        const p = ske._bonesMap.find(parent.name);
+                        if (p) p.addChild(raw1[i]);
+                    }
+                }
+            }
+
+            if (this.rootBoneNames) {
+                ske.rootBoneNames = this.rootBoneNames.concat();
+            } else {
+                ske.rootBoneNames = null;
+            }
+
+            return ske;
         }
 
         public destroy(): void {
