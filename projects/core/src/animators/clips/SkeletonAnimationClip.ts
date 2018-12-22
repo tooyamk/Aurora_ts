@@ -238,19 +238,19 @@ namespace Aurora {
             public calcEquantInterval(): void {
                 const frames = this.frames;
                 const numFrames = frames.length;
-
+                
                 this.equantInterval = 0;
                 if (numFrames >= 2) {
-                    this.equantInterval = 1;
                     let t0 = frames[1].time;
                     let interval = t0 - frames[0].time;
-                    for (let i = 1; i < numFrames; ++i) {
+                    for (let i = 2; i < numFrames; ++i) {
                         const f = frames[i];
                         let t1 = f.time;
                         if (!MathUtils.isEqual(interval, t1 - t0, 0.00001)) {
                             this.equantInterval = -1;
                             break;
                         }
+                        t0 = t1;
                     }
 
                     if (this.equantInterval === 0) this.equantInterval = (frames[numFrames - 1].time - frames[0].time) / numFrames;

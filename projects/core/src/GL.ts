@@ -749,7 +749,7 @@ namespace Aurora {
             const last = this._numElements - offset;
             if (last > 0) {
                 if (count > last) count = last;
-                this._gl.drawElements(mode, count, this._dataType, offset);
+                //this._gl.drawElements(mode, count, this._dataType, offset);
 
                 const stats = this._gl.stats;
                 if (stats) {
