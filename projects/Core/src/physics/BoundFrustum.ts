@@ -19,45 +19,48 @@ namespace Aurora {
          * If test vertex in view space, matrix = projMatrix.
          */
         public set matrix(m: Matrix44) {
-            let x = m.m03 - m.m00;
-            let y = m.m13 - m.m10;
-            let z = m.m23 - m.m20;
-            let w = m.m33 - m.m30;
+            const e = m.elements;
+            const m00 = e[0], m10 = e[1], m20 = e[2], m30 = e[3], m01 = e[4], m11 = e[5], m21 = e[6], m31 = e[7], m02 = e[8], m12 = e[9], m22 = e[10], m32 = e[11], m03 = e[12], m13 = e[13], m23 = e[14], m33 = e[15];
+
+            let x = m03 - m00;
+            let y = m13 - m10;
+            let z = m23 - m20;
+            let w = m33 - m30;
             let t = Math.sqrt(x * x + y * y + z * z);
             this.right.setFromNumbers(x / t, y / t, z / t, w / t);
 
-            x = m.m03 + m.m00;
-            y = m.m13 + m.m10;
-            z = m.m23 + m.m20;
-            w = m.m33 + m.m30;
+            x = m03 + m00;
+            y = m13 + m10;
+            z = m23 + m20;
+            w = m33 + m30;
             t = Math.sqrt(x * x + y * y + z * z);
             this.left.setFromNumbers(x / t, y / t, z / t, w / t);
 
-            x = m.m03 - m.m01;
-            y = m.m13 - m.m11;
-            z = m.m23 - m.m21;
-            w = m.m33 - m.m31;
+            x = m03 - m01;
+            y = m13 - m11;
+            z = m23 - m21;
+            w = m33 - m31;
             t = Math.sqrt(x * x + y * y + z * z);
             this.top.setFromNumbers(x / t, y / t, z / t, w / t);
 
-            x = m.m03 + m.m01;
-            y = m.m13 + m.m11;
-            z = m.m23 + m.m21;
-            w = m.m33 + m.m31;
+            x = m03 + m01;
+            y = m13 + m11;
+            z = m23 + m21;
+            w = m33 + m31;
             t = Math.sqrt(x * x + y * y + z * z);
             this.bottom.setFromNumbers(x / t, y / t, z / t, w / t);
 
-            x = m.m03 - m.m02;
-            y = m.m13 - m.m12;
-            z = m.m23 - m.m22;
-            w = m.m33 - m.m32;
+            x = m03 - m02;
+            y = m13 - m12;
+            z = m23 - m22;
+            w = m33 - m32;
             t = Math.sqrt(x * x + y * y + z * z);
             this.far.setFromNumbers(x / t, y / t, z / t, w / t);
 
-            x = m.m03 + m.m02;
-            y = m.m13 + m.m12;
-            z = m.m23 + m.m22;
-            w = m.m33 + m.m32;
+            x = m03 + m02;
+            y = m13 + m12;
+            z = m23 + m22;
+            w = m33 + m32;
             t = Math.sqrt(x * x + y * y + z * z);
             this.near.setFromNumbers(x / t, y / t, z / t, w / t);
         }

@@ -41,21 +41,8 @@ namespace Aurora {
 
                     let idx = 0;
                     for (let i = 0; i < n; ++i) {
-                        const m = matrices[i];
-                        data[idx++] = m.m00;
-                        data[idx++] = m.m10;
-                        data[idx++] = m.m20;
-                        data[idx++] = m.m30;
-
-                        data[idx++] = m.m01;
-                        data[idx++] = m.m11;
-                        data[idx++] = m.m21;
-                        data[idx++] = m.m31;
-
-                        data[idx++] = m.m02;
-                        data[idx++] = m.m12;
-                        data[idx++] = m.m22;
-                        data[idx++] = m.m32;
+                        const e = matrices[i].elements;
+                        for (let j = 0; j < 12; ++j) data[idx++] = e[j];
                     }
 
                     const out = renderingData.out;

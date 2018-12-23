@@ -203,7 +203,8 @@ namespace Aurora {
         public clone(cloneChildren: boolean): Node {
             const n = new Node();
             n.name = this.name;
-            n.setLocalTRS(Node._tmpVec3.setFromNumbers(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32), this._localRot, this._localScale);
+            const e = this._localMatrix.elements;
+            n.setLocalTRS(Node._tmpVec3.setFromNumbers(e[3], e[7], e[11]), this._localRot, this._localScale);
             if (this._color) n.setColor4(this._color);
 
             if (cloneChildren) {
@@ -534,13 +535,15 @@ namespace Aurora {
         }
 
         public getLocalPositon(rst: Vector3 = null): Vector3 {
-            return rst ? rst.setFromNumbers(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32) : new Vector3(this._localMatrix.m30, this._localMatrix.m31, this._localMatrix.m32);
+            const e = this._localMatrix.elements;
+            return rst ? rst.setFromNumbers(e[3], e[7], e[11]) : new Vector3(e[3], e[7], e[11]);
         }
 
         public setLocalPosition(x: number = 0, y: number = 0, z: number = 0): void {
-            this._localMatrix.m30 = x;
-            this._localMatrix.m31 = y;
-            this._localMatrix.m32 = z;
+            const e = this._localMatrix.elements;
+            e[3] = x;
+            e[7] = y;
+            e[11] = z;
 
             const old = this._dirty;
             this._dirty |= Node.WORLD_AND_INVERSE_MATRIX_DIRTY;
@@ -558,16 +561,18 @@ namespace Aurora {
         public getWorldPosition(rst: Vector3 = null): Vector3 {
             this.updateWorldMatrix();
 
-            return rst ? rst.setFromNumbers(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32) : new Vector3(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32);
+            const e = this._worldMatrix.elements;
+            return rst ? rst.setFromNumbers(e[3], e[7], e[11]) : new Vector3(e[3], e[7], e[11]);
         }
 
         public setWorldPosition(x: number = 0, y: number = 0, z: number = 0): void {
             const old = this._dirty;
             this.updateWorldMatrix();
 
-            this._worldMatrix.m30 = x;
-            this._worldMatrix.m31 = y;
-            this._worldMatrix.m32 = z;
+            const e = this._worldMatrix.elements;
+            e[3] = x;
+            e[7] = y;
+            e[11] = z;
 
             this._worldPositionChanged(old);
         }
@@ -580,16 +585,19 @@ namespace Aurora {
         }
 
         protected _worldPositionChanged(oldDirty: uint): void {
+            const l = this._localMatrix.elements;
+            const w = this._worldMatrix.elements;
+
             if (this._parent) {
-                const vec3 = this._parent.readonlyInverseWorldMatrix.transform34XYZ(this._worldMatrix.m30, this._worldMatrix.m31, this._worldMatrix.m32, Node._tmpVec3);
+                const vec3 = this._parent.readonlyInverseWorldMatrix.transform34XYZ(w[3], w[7], w[11], Node._tmpVec3);
                 
-                this._localMatrix.m30 = vec3.x;
-                this._localMatrix.m31 = vec3.y;
-                this._localMatrix.m32 = vec3.z;
+                l[3] = vec3.x;
+                l[7]  = vec3.y;
+                l[11]  = vec3.z;
             } else {
-                this._localMatrix.m30 = this._worldMatrix.m30;
-                this._localMatrix.m31 = this._worldMatrix.m31;
-                this._localMatrix.m32 = this._worldMatrix.m32;
+                l[3] = w[3];
+                l[7] = w[7];
+                l[11] = w[11];
             }
 
             this._dirty |= Node.INVERSE_WORLD_MATRIX_DIRTY;
@@ -703,12 +711,13 @@ namespace Aurora {
         }
 
         public setLocalTRS(pos: Vector3, rot: Quaternion, scale: Vector3): void {
-            this._localMatrix.m30 = pos.x;
-            this._localMatrix.m31 = pos.y;
-            this._localMatrix.m32 = pos.z;
+            const e = this._localMatrix.elements;
+
+            e[3] = pos.x;
+            e[7] = pos.y;
+            e[11] = pos.z;
 
             this._localRot.set(rot);
-
             this._localScale.set(scale);
 
             const old = this._dirty;
@@ -746,15 +755,34 @@ namespace Aurora {
         }
 
         public identity(): void {
-            if (!this._localRot.isIdentity || !this._localScale.isOne || this._localMatrix.m30 !== 0 || this._localMatrix.m31 !== 0 || this._localMatrix.m32 !== 0) {
-                this._localMatrix.identity44();
-                this._localRot.identity();
-                this._localScale.set(Vector3.CONST_ONE);
+            const old = this._dirty;
+            let notice: uint = 0;
 
-                const old = this._dirty;
-                this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
-                if (old !== this._dirty) this._noticeUpdate(Node.WORLD_ALL_DIRTY);
+            const e = this._localMatrix.elements;
+            if (e[3] !== 0 || e[7] !== 0 || e[11] !== 0) {
+                e[3] = 0;
+                e[7] = 0;
+                e[11] = 0;
+                
+                this._dirty |= Node.WORLD_AND_INVERSE_MATRIX_DIRTY;
+                notice = Node.WORLD_AND_INVERSE_MATRIX_DIRTY;
             }
+
+            if (!this._localRot.isIdentity) {
+                this._localRot.identity();
+
+                this._dirty |= Node.LOCAL_AND_WORLD_ALL_DIRTY;
+                notice |= Node.WORLD_ALL_DIRTY;
+            }
+
+            if (!this._localScale.isOne) {
+                this._localScale.setOne();
+
+                this._dirty |= Node.ALL_MATRIX_DIRTY;
+                notice = Node.WORLD_AND_INVERSE_MATRIX_DIRTY;
+            }
+
+            if (old !== this._dirty) this._noticeUpdate(notice);
         }
 
         public updateWorldRotation(): void {

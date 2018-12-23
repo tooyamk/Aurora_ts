@@ -336,17 +336,19 @@ namespace Aurora {
             const wz = this.w * z2;
 
             if (rst) {
-                rst.m00 = 1 - yy - zz;
-                rst.m01 = xy + wz;
-                rst.m02 = xz - wy;
+                const e = rst.elements;
 
-                rst.m10 = xy - wz;
-                rst.m11 = 1 - xx - zz;
-                rst.m12 = yz + wx;
+                e[0] = 1 - yy - zz;
+                e[1] = xy - wz;
+                e[2] = xz + wy;
 
-                rst.m20 = xz + wy;
-                rst.m21 = yz - wx;
-                rst.m22 = 1 - xx - yy;
+                e[4] = xy + wz;
+                e[5] = 1 - xx - zz;
+                e[6]= yz - wx;
+
+                e[8] = xz - wy;
+                e[9] = yz + wx;
+                e[10] = 1 - xx - yy;
             } else {
                 rst = new Matrix44(
                     1 - yy - zz, xy + wz, xz - wy, 0,
@@ -360,14 +362,14 @@ namespace Aurora {
         public toMatrix44(rst: Matrix44 = null): Matrix44 {
             rst = this.toMatrix33(rst);
 
-            rst.m03 = 0;
-            rst.m13 = 0;
-            rst.m23 = 0;
-
-            rst.m30 = 0;
-            rst.m31 = 0;
-            rst.m32 = 0;
-            rst.m33 = 1;
+            const e = rst.elements;
+            e[3] = 0;
+            e[7] = 0;
+            e[11] = 0;
+            e[12]= 0;
+            e[13] = 0;
+            e[14] = 0;
+            e[15] = 1;
 
             return rst;
         }

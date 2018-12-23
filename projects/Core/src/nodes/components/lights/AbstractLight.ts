@@ -8,11 +8,11 @@ namespace Aurora {
         public abstract ready(defines: ShaderDefines, uniforms: ShaderUniforms): void;
 
         protected _generalReady(defines: ShaderDefines, uniforms: ShaderUniforms): void {
-            const wm = this.node.readonlyWorldMatrix;
+            const e = this.node.readonlyWorldMatrix.elements;
 
             uniforms.setNumbers(ShaderPredefined.u_LightColor0, this.color.r * this.intensity, this.color.g * this.intensity, this.color.b * this.intensity);
-            uniforms.setNumbers(ShaderPredefined.u_LightDirW0, wm.m20, wm.m21, wm.m22);
-            uniforms.setNumbers(ShaderPredefined.u_LightPosW0, wm.m30, wm.m31, wm.m32);
+            uniforms.setNumbers(ShaderPredefined.u_LightDirW0, e[2], e[6], e[10]);
+            uniforms.setNumbers(ShaderPredefined.u_LightPosW0, e[3], e[7], e[11]);
         }
     }
 }

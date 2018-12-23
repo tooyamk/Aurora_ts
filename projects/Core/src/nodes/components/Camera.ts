@@ -37,15 +37,18 @@ namespace Aurora {
         public setProjectionMatrix(m: Matrix44): void {
             this._projectionMatrix.set44(m);
 
-            this._zNear = -this._projectionMatrix.m32 / this._projectionMatrix.m22;
+            const e = this._projectionMatrix.elements;
+            const m22 = e[10];
 
-            if (this._projectionMatrix.m33 === 1) {
-                this._zFar = 1 / this._projectionMatrix.m22 + this._zNear;
+            this._zNear = -e[11] / m22;
+
+            if (e[15] === 1) {
+                this._zFar = 1 / m22 + this._zNear;
             } else {
-                this._zFar = (this._zNear * this._projectionMatrix.m22) / (this._projectionMatrix.m22 - 1);
+                this._zFar = (this._zNear * m22) / (m22 - 1);
             }
 
-            this._aspectRatio = this._projectionMatrix.m11 / this._projectionMatrix.m00;
+            this._aspectRatio = e[5] / e[0];
         }
 
         public getWorldToProjectionMatrix(rst: Matrix44 = null): Matrix44 {
@@ -67,9 +70,11 @@ namespace Aurora {
             let originX: number, originY: number, originZ: number;
             let dirX: number, dirY: number, dirZ: number;
 
-            if (this._projectionMatrix.m33 === 1) {
-                let w = 2 / this._projectionMatrix.m00;
-                let h = 2 / this._projectionMatrix.m11;
+            const e = this._projectionMatrix.elements;
+
+            if (e[15] === 1) {
+                let w = 2 / e[0];
+                let h = 2 / e[5];
 
                 w /= screenWidth;
                 h /= screenHeight;
@@ -90,8 +95,8 @@ namespace Aurora {
                 dirX = (focusX / screenWidth) * 2 - 1;
                 dirY = 1 - (focusY / screenHeight) * 2;
 
-                dirX = dirX * this._zNear / this._projectionMatrix.m00;
-                dirY = dirY * this._zNear / this._projectionMatrix.m11;
+                dirX = dirX * this._zNear / e[0];
+                dirY = dirY * this._zNear / e[5];
                 dirZ = this._zNear;
 
                 let d = dirX * dirX + dirY * dirY + dirZ * dirZ;

@@ -148,7 +148,9 @@ namespace Aurora {
             this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_V2P, this._viewToProjMatrix.toArray44(false, this._viewToProjM44Array));
             this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_W2P, this._worldToProjMatrix.toArray44(false, this._worldToProjM44Array));
             this._shaderUniforms.setNumberArray(ShaderPredefined.u_M44_W2V, this._worldToViewMatrix.toArray44(false, this._worldToViewM44Array));
-            this._shaderUniforms.setNumbers(ShaderPredefined.u_CamPosW, this._cameraWorldMatrix.m30, this._cameraWorldMatrix.m31, this._cameraWorldMatrix.m32);
+
+            const e = this._cameraWorldMatrix.elements;
+            this._shaderUniforms.setNumbers(ShaderPredefined.u_CamPosW, e[3], e[7], e[11]);
 
             this.begin(gl, camera);
 
@@ -172,9 +174,9 @@ namespace Aurora {
                         if (value === 0) {
                             switch (a.material.renderingSort) {
                                 case RenderingSort.FAR_TO_NEAR:
-                                    return a.l2v.m32 >= b.l2v.m32;
+                                    return a.l2v.elements[11] >= b.l2v.elements[11];
                                 case RenderingSort.NEAR_TO_FAR:
-                                    return a.l2v.m32 <= b.l2v.m32;
+                                    return a.l2v.elements[11] <= b.l2v.elements[11];
                                 default:
                                     return true;
                             }
