@@ -2,47 +2,60 @@
 
 namespace Aurora {
     /**
-	 * 00 04 08 12  axisX                                                                                       
-	 * 01 05 09 13  axisY                                                                                                                                                    
-	 * 02 06 10 14  axisZ                                                                                       
-	 * 03 07 11 15
+	 * m00 m01 m02 m03  axisX                                                                                       
+	 * m10 m11 m12 m13  axisY                                                                                                                                                    
+	 * m20 m21 m22 m23  axisZ                                                                                       
+	 * m30 m31 m32 m33
      * 
-	 * x' = x * 00 + y * 01 + z * 02 + w * 03                                                           
-	 * y' = x * 04 + y * 05 + z * 06 + w * 07                                                                       
-	 * z' = x * 08 + y * 09 + z * 10 + w * 11                                                                       
-	 * w' = x * 12 + y * 13 + z * 14 + w * 15
+	 * x' = x * m00 + y * m10 + z * m20 + w * m30                                                           
+	 * y' = x * m01 + y * m11 + z * m21 + w * m31                                                                       
+	 * z' = x * m02 + y * m12 + z * m22 + w * m32                                                                       
+	 * w' = x * m03 + y * m13 + z * m23 + w * m33
      * 
      * @see https://docs.microsoft.com/en-us/previous-versions/windows/desktop/bb281696(v%3dvs.85)
 	 */
     export class Matrix44 {
-        public readonly elements = new Float32Array(16);
+        public m00: number;
+        public m01: number;
+        public m02: number;
+        public m03: number;
+        public m10: number;
+        public m11: number;
+        public m12: number;
+        public m13: number;
+        public m20: number;
+        public m21: number;
+        public m22: number;
+        public m23: number;
+        public m30: number;
+        public m31: number;
+        public m32: number;
+        public m33: number;
 
         constructor(
             m00: number = 1, m01: number = 0, m02: number = 0, m03: number = 0,
             m10: number = 0, m11: number = 1, m12: number = 0, m13: number = 0,
             m20: number = 0, m21: number = 0, m22: number = 1, m23: number = 0,
             m30: number = 0, m31: number = 0, m32: number = 0, m33: number = 1) {
-            const e = this.elements;
+            this.m00 = m00;
+            this.m01 = m01;
+            this.m02 = m02;
+            this.m03 = m03;
 
-            e[0] = m00;
-            e[1] = m10;
-            e[2] = m20;
-            e[3] = m30;
+            this.m10 = m10;
+            this.m11 = m11;
+            this.m12 = m12;
+            this.m13 = m13;
 
-            e[4] = m01;
-            e[5] = m11;
-            e[6] = m21;
-            e[7] = m31;
+            this.m20 = m20;
+            this.m21 = m21;
+            this.m22 = m22;
+            this.m23 = m23;
 
-            e[8] = m02;
-            e[9] = m12;
-            e[10] = m22;
-            e[11] = m32;
-
-            e[12] = m03;
-            e[13] = m13;
-            e[14] = m23;
-            e[15] = m33;
+            this.m30 = m30;
+            this.m31 = m31;
+            this.m32 = m32;
+            this.m33 = m33;
         }
 
         public static createOrthoLH(width: number, height: number, zNear: number, zFar: number, rst: Matrix44 = null): Matrix44 {
@@ -143,11 +156,26 @@ namespace Aurora {
             const xsin = axisX * sin;
             const ysin = axisY * sin;
             const zsin = axisZ * sin;
+            
+            rst.m00 = cos + cos1x * axisX;
+            rst.m01 = cos1xy - zsin;
+            rst.m02 = cos1xz + ysin;
+            rst.m03 = 0;
 
-            rst.set44FromNumbers(
-                cos + cos1x * axisX, cos1xy - zsin, cos1xz + ysin, 0,
-                cos1xy + zsin, cos + cos1y * axisY, cos1yz - xsin, 0,
-                cos1xz - ysin, cos1yz + xsin, cos + cos1 * axisZ * axisZ);
+            rst.m10 = cos1xy + zsin;
+            rst.m11 = cos + cos1y * axisY;
+            rst.m12 = cos1yz - xsin;
+            rst.m13 = 0;
+
+            rst.m20 = cos1xz - ysin;
+            rst.m21 = cos1yz + xsin;
+            rst.m22 = cos + cos1 * axisZ * axisZ;
+            rst.m23 = 0;
+
+            rst.m30 = 0;
+            rst.m31 = 0;
+            rst.m32 = 0;
+            rst.m33 = 1;
 
             return rst;
         }
@@ -163,12 +191,12 @@ namespace Aurora {
                 rst.set44FromNumbers(
                     1, 0, 0, 0,
                     0, cos, sin, 0,
-                    0, -sin, cos);
+                    0, -sin, cos); 
             } else {
                 rst = new Matrix44(
                     1, 0, 0, 0,
                     0, cos, sin, 0,
-                    0, -sin, cos);
+                    0, -sin, cos); 
             }
 
             return rst;
@@ -257,38 +285,34 @@ namespace Aurora {
                     rst = new Matrix44();
                 }
             }
-
-            const e = rst.elements;
             
-            e[12] = 0;
-            e[13] = 0;
-            e[14] = 0;
-            e[15] = 1;
+            rst.m03 = 0;
+            rst.m13 = 0;
+            rst.m23 = 0;
+            rst.m33 = 1;
 
             if (scale) {
-                const sx = scale.x, sy = scale.y, sz = scale.z;
+                rst.m00 *= scale.x;
+                rst.m01 *= scale.x;
+                rst.m02 *= scale.x;
 
-                e[0] *= sx;
-                e[1] *= sy;
-                e[2] *= sz;
+                rst.m10 *= scale.y;
+                rst.m11 *= scale.y;
+                rst.m12 *= scale.y;
 
-                e[4] *= sx;
-                e[5] *= sy;
-                e[6] *= sz;
-
-                e[8] *= sx;
-                e[9] *= sy;
-                e[10] *= sz;
+                rst.m20 *= scale.z;
+                rst.m21 *= scale.z;
+                rst.m22 *= scale.z;
             }
 
             if (translation) {
-                e[3] = translation.x;
-                e[7] = translation.y;
-                e[11] = translation.z;
+                rst.m30 = translation.x;
+                rst.m31 = translation.y;
+                rst.m32 = translation.z;
             } else {
-                e[3] = 0;
-                e[7] = 0;
-                e[11] = 0;
+                rst.m30 = 0;
+                rst.m31 = 0;
+                rst.m32 = 0;
             }
             
             return rst;
@@ -298,19 +322,17 @@ namespace Aurora {
             m00: number = 1, m01: number = 0, m02: number = 0,
             m10: number = 0, m11: number = 1, m12: number = 0,
             m20: number = 0, m21: number = 0, m22: number = 1): Matrix44 {
-            const e = this.elements;
+            this.m00 = m00;
+            this.m01 = m01;
+            this.m02 = m02;
 
-            e[0] = m00;
-            e[1] = m10;
-            e[2] = m20;
+            this.m10 = m10;
+            this.m11 = m11;
+            this.m12 = m12;
 
-            e[4] = m01;
-            e[5] = m11;
-            e[6] = m21;
-
-            e[8] = m02;
-            e[9] = m12;
-            e[10] = m22;
+            this.m20 = m20;
+            this.m21 = m21;
+            this.m22 = m22;
 
             return this;
         }
@@ -320,22 +342,21 @@ namespace Aurora {
             m10: number = 0, m11: number = 1, m12: number = 0,
             m20: number = 0, m21: number = 0, m22: number = 1,
             m30: number = 0, m31: number = 0, m32: number = 0): Matrix44 {
-            const e = this.elements;
+            this.m00 = m00;
+            this.m01 = m01;
+            this.m02 = m02;
 
-            e[0] = m00;
-            e[1] = m10;
-            e[2] = m20;
-            e[3] = m30;
+            this.m10 = m10;
+            this.m11 = m11;
+            this.m12 = m12;
 
-            e[4] = m01;
-            e[5] = m11;
-            e[6] = m21;
-            e[7] = m31;
+            this.m20 = m20;
+            this.m21 = m21;
+            this.m22 = m22;
 
-            e[8] = m02;
-            e[9] = m12;
-            e[10] = m22;
-            e[11] = m32;
+            this.m30 = m30;
+            this.m31 = m31;
+            this.m32 = m32;
 
             return this;
         }
@@ -345,87 +366,125 @@ namespace Aurora {
             m10: number = 0, m11: number = 1, m12: number = 0, m13: number = 0,
             m20: number = 0, m21: number = 0, m22: number = 1, m23: number = 0,
             m30: number = 0, m31: number = 0, m32: number = 0, m33: number = 1): Matrix44 {
-            const e = this.elements;
+            this.m00 = m00;
+            this.m01 = m01;
+            this.m02 = m02;
+            this.m03 = m03;
 
-            e[0] = m00;
-            e[1] = m10;
-            e[2] = m20;
-            e[3] = m30;
+            this.m10 = m10;
+            this.m11 = m11;
+            this.m12 = m12;
+            this.m13 = m13;
 
-            e[4] = m01;
-            e[5] = m11;
-            e[6] = m21;
-            e[7] = m31;
+            this.m20 = m20;
+            this.m21 = m21;
+            this.m22 = m22;
+            this.m23 = m23;
 
-            e[8] = m02;
-            e[9] = m12;
-            e[10] = m22;
-            e[11] = m32;
-
-            e[12] = m03;
-            e[13] = m13;
-            e[14] = m23;
-            e[15] = m33;
+            this.m30 = m30;
+            this.m31 = m31;
+            this.m32 = m32;
+            this.m33 = m33;
 
             return this;
         }
 
-        public set44FromArray(numbers: number[], offset: int = 0, transpose: boolean = false): Matrix44 {
-            const e = this.elements;
+        public set44FromArray(numbers: number[], offset: int = 0, columnMajor: boolean = false): Matrix44 {
+            if (columnMajor) {
+                this.m00 = numbers[offset];
+                this.m10 = numbers[offset + 1];
+                this.m20 = numbers[offset + 2];
+                this.m30 = numbers[offset + 3];
 
-            if (transpose) {
-                for (let i = 0; i < 16; ++i) e[i] = numbers[i];
+                this.m01 = numbers[offset + 4];
+                this.m11 = numbers[offset + 5];
+                this.m21 = numbers[offset + 6];
+                this.m31 = numbers[offset + 7];
+
+                this.m02 = numbers[offset + 8];
+                this.m12 = numbers[offset + 9];
+                this.m22 = numbers[offset + 10];
+                this.m32 = numbers[offset + 11];
+
+                this.m03 = numbers[offset + 12];
+                this.m13 = numbers[offset + 13];
+                this.m23 = numbers[offset + 14];
+                this.m33 = numbers[offset + 15];
             } else {
-                e[0] = numbers[offset];
-                e[1] = numbers[offset + 4];
-                e[2] = numbers[offset + 8];
-                e[3] = numbers[offset + 12];
+                this.m00 = numbers[offset];
+                this.m01 = numbers[offset + 1];
+                this.m02 = numbers[offset + 2];
+                this.m03 = numbers[offset + 3];
 
-                e[4] = numbers[offset + 1];
-                e[5] = numbers[offset + 5];
-                e[6] = numbers[offset + 9];
-                e[7] = numbers[offset + 13];
+                this.m10 = numbers[offset + 4];
+                this.m11 = numbers[offset + 5];
+                this.m12 = numbers[offset + 6];
+                this.m13 = numbers[offset + 7];
 
-                e[8] = numbers[offset + 2];
-                e[9] = numbers[offset + 6];
-                e[10] = numbers[offset + 10];
-                e[11] = numbers[offset + 14];
+                this.m20 = numbers[offset + 8];
+                this.m21 = numbers[offset + 9];
+                this.m22 = numbers[offset + 10];
+                this.m23 = numbers[offset + 11];
 
-                e[12] = numbers[offset + 3];
-                e[13] = numbers[offset + 7];
-                e[14] = numbers[offset + 11];
-                e[15] = numbers[offset + 15];
+                this.m30 = numbers[offset + 12];
+                this.m31 = numbers[offset + 13];
+                this.m32 = numbers[offset + 14];
+                this.m33 = numbers[offset + 15];
             }
 
             return this;
         }
 
         public set34(m: Matrix44): Matrix44 {
-            const e0 = this.elements;
-            const e1 = m.elements;
+            this.m00 = m.m00;
+            this.m01 = m.m01;
+            this.m02 = m.m02;
 
-            for (let i = 0; i < 12; ++i) e0[i] = e1[i];
+            this.m10 = m.m10;
+            this.m11 = m.m11;
+            this.m12 = m.m12;
+
+            this.m20 = m.m20;
+            this.m21 = m.m21;
+            this.m22 = m.m22;
+
+            this.m30 = m.m30;
+            this.m31 = m.m31;
+            this.m32 = m.m32;
 
             return this;
         }
 
         public set44(m: Matrix44): Matrix44 {
-            const e0 = this.elements;
-            const e1 = m.elements;
+            this.m00 = m.m00;
+            this.m01 = m.m01;
+            this.m02 = m.m02;
+            this.m03 = m.m03;
 
-            for (let i = 0; i < 16; ++i) e0[i] = e1[i];
+            this.m10 = m.m10;
+            this.m11 = m.m11;
+            this.m12 = m.m12;
+            this.m13 = m.m13;
+
+            this.m20 = m.m20;
+            this.m21 = m.m21;
+            this.m22 = m.m22;
+            this.m23 = m.m23;
+
+            this.m30 = m.m30;
+            this.m31 = m.m31;
+            this.m32 = m.m32;
+            this.m33 = m.m33;
 
             return this;
         }
 
         public clone(): Matrix44 {
-            const e = this.elements;
-
             return new Matrix44(
-                e[0], e[4], e[8], e[12],
-                e[1], e[5], e[9], e[13],
-                e[2], e[6], e[10], e[14],
-                e[3], e[7], e[11], e[15]);
+                this.m00, this.m01, this.m02, this.m03,
+                this.m10, this.m11, this.m12, this.m13,
+                this.m20, this.m21, this.m22, this.m23,
+                this.m30, this.m31, this.m32, this.m33);
         }
 
         public identity33(): Matrix44 {
@@ -456,62 +515,90 @@ namespace Aurora {
         public transpose(rst: Matrix44 = null): Matrix44 {
             rst = rst || this;
 
-            const e0 = this.elements;
-            const e1 = rst.elements;
+            const m01 = this.m01;
+            const m02 = this.m02;
+            const m03 = this.m03;
 
-            if (e0 === e1) {
-                const m10 = e0[1];
-                const m20 = e0[2];
-                const m30 = e0[3];
+            const m10 = this.m10;
+            const m12 = this.m12;
+            const m13 = this.m13;
 
-                const m01 = e0[4];
-                const m21 = e0[6];
-                const m31 = e0[7];
+            const m20 = this.m20;
+            const m21 = this.m21;
+            const m23 = this.m23;
 
-                const m02 = e0[8];
-                const m12 = e0[9];
-                const m32 = e0[11];
+            const m30 = this.m30;
+            const m31 = this.m31;
+            const m32 = this.m32;
 
-                const m03 = e0[12];
-                const m13 = e0[13];
-                const m23 = e0[14];
-
-                e1[1] = m01;
-                e1[2] = m02;
-                e1[3] = m03;
-
-                e1[4] = m10;
-                e1[6] = m12;
-                e1[7] = m13;
-
-                e1[8] = m20;
-                e1[9] = m21;
-                e1[11] = m23;
-
-                e1[12] = m30;
-                e1[13] = m31;
-                e1[14] = m32;
-            } else {
-                e1[0] = e0[0];
-                e1[1] = e0[4];
-                e1[2] = e0[8];
-                e1[3] = e0[12];
-
-                e1[4] = e0[1];
-                e1[5] = e0[5];
-                e1[6] = e0[9];
-                e1[7] = e0[13];
-
-                e1[8] = e0[2];
-                e1[9] = e0[6];
-                e1[10] = e0[10];
-                e1[11] = e0[14];
-
-                e1[12] = e0[3];
-                e1[13] = e0[7];
-                e1[14] = e0[11];
-                e1[14] = e0[15];
+            if (rst !== this) {
+                rst.m00 = this.m00;
+                rst.m11 = this.m11;
+                rst.m22 = this.m22;
+                rst.m33 = this.m33;
             }
+
+            rst.m01 = m10;
+            rst.m02 = m20;
+            rst.m03 = m30;
+
+            rst.m10 = m01;
+            rst.m12 = m21;
+            rst.m13 = m31;
+
+            rst.m20 = m02;
+            rst.m21 = m12;
+            rst.m23 = m32;
+
+            rst.m30 = m03;
+            rst.m31 = m13;
+            rst.m32 = m23;
+
+            return rst;
+        }
+
+        public add44(m: Matrix44, rst: Matrix44 = null): Matrix44 {
+            const m00 = this.m00 + m.m00;
+            const m01 = this.m01 + m.m01;
+            const m02 = this.m02 + m.m02;
+            const m03 = this.m03 + m.m03;
+
+            const m10 = this.m10 + m.m10;
+            const m11 = this.m11 + m.m11;
+            const m12 = this.m12 + m.m12;
+            const m13 = this.m13 + m.m13;
+
+            const m20 = this.m20 + m.m20;
+            const m21 = this.m21 + m.m21;
+            const m22 = this.m22 + m.m22;
+            const m23 = this.m23 + m.m23;
+
+            const m30 = this.m30 + m.m30;
+            const m31 = this.m31 + m.m31;
+            const m32 = this.m32 + m.m32;
+            const m33 = this.m33 + m.m33;
+
+            rst = rst || this;
+
+            rst.m00 = m00;
+            rst.m01 = m01;
+            rst.m02 = m02;
+            rst.m03 = m03;
+
+            rst.m10 = m10;
+            rst.m11 = m11;
+            rst.m12 = m12;
+            rst.m13 = m13;
+
+            rst.m20 = m20;
+            rst.m21 = m21;
+            rst.m22 = m22;
+            rst.m23 = m23;
+
+            rst.m30 = m30;
+            rst.m31 = m31;
+            rst.m32 = m32;
+            rst.m33 = m33;
 
             return rst;
         }
@@ -837,6 +924,9 @@ namespace Aurora {
             }
         }
 
+        /*
+        public elements = new Float32Array(16);
+
         public append34a(m: Matrix44, rst: Matrix44 = null): Matrix44 {
             const self = this.elements;
             const target = m.elements;
@@ -905,6 +995,7 @@ namespace Aurora {
 
             return rst;
         }
+        */
 
         public append34b(m: Matrix44, rst: Matrix44 = null): Matrix44 {
             const self = this;
@@ -1198,14 +1289,14 @@ namespace Aurora {
             this.m32 = tmp;
         }
 
-        public toArray33(transpose: boolean = false, rst: FloatArray = null): FloatArray {
+        public toArray33(columnMajor: boolean = false, rst: FloatArray = null): FloatArray {
             rst = rst || [];
 
             rst[0] = this.m00;
             rst[4] = this.m11;
             rst[8] = this.m22;
 
-            if (transpose) {
+            if (columnMajor) {
                 rst[1] = this.m10;
                 rst[2] = this.m20;
 
@@ -1228,12 +1319,12 @@ namespace Aurora {
             return rst;
         }
 
-        public toArray34(transpose: boolean = false, rst: FloatArray = null): FloatArray {
+        public toArray34(columnMajor: boolean = false, rst: FloatArray = null): FloatArray {
             rst = rst || [];
 
             rst[0] = this.m00;
 
-            if (transpose) {
+            if (columnMajor) {
                 rst[1] = this.m10;
                 rst[2] = this.m20;
                 rst[3] = this.m30;
@@ -1267,7 +1358,7 @@ namespace Aurora {
             return rst;
         }
 
-        public toArray44(transpose: boolean = false, rst: FloatArray = null): FloatArray {
+        public toArray44(columnMajor: boolean = false, rst: FloatArray = null): FloatArray {
             rst = rst || [];
 
             rst[0] = this.m00;
@@ -1275,7 +1366,7 @@ namespace Aurora {
             rst[10] = this.m22;
             rst[15] = this.m33;
 
-            if (transpose) {
+            if (columnMajor) {
                 rst[1] = this.m10;
                 rst[2] = this.m20;
                 rst[3] = this.m30;

@@ -2,6 +2,10 @@
 
 namespace Aurora {
     export class MeshAsset extends Ref {
+        private static _idGenerator = 0;
+
+        protected _id: int;
+
         public name = "";
 
         public boneNames: string[] = null;
@@ -26,6 +30,16 @@ namespace Aurora {
         public autoGenerateBinormal = true;
 
         protected _link: MeshAsset = null;
+
+        constructor() {
+            super();
+
+            this._id = ++MeshAsset._idGenerator;
+        }
+
+        public get id(): int {
+            return this._id;
+        }
 
         public get link(): MeshAsset {
             return this._link;
@@ -145,6 +159,23 @@ namespace Aurora {
             }
 
             return buffer;
+        }
+
+        public setSkinningNunBonesPerVertex(n: uint): void {
+            if (n >= 1 && n <= 4) {
+                const indices = this.getVertexSource(ShaderPredefined.a_BoneIndex0);
+                const weights = this.getVertexSource(ShaderPredefined.a_BoneWeight0);
+                if (indices && weights && indices.size === weights.size && indices.size !== n) {
+                    const len = indices.getDataLength();
+                    if (len === weights.getDataLength()) {
+                        const indexData = indices.data;
+                        const weightData = weights.data;
+                        if (indexData && weightData) {
+                            
+                        }
+                    }
+                }
+            }
         }
 
         public addVertexBuffer(name: string, buffer: GLVertexBuffer): void {

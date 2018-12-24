@@ -2,10 +2,87 @@
 ///<reference path="../math/MathUtils.ts"/>
 
 namespace Aurora.MeshAssetHelper {
+    export function createVertexSourceData(src: VertexSourceData, length: uint): VertexSourceData {
+        if (src instanceof Array) {
+            const dst: number[] = [];
+            dst.length = length;
+            return dst;
+        } else if (src instanceof Float32Array) {
+            return new Float32Array(length);
+        } else if (src instanceof Int16Array) {
+            return new Int16Array(length);
+        } else if (src instanceof Uint16Array) {
+            return new Uint16Array(length);
+        } else if (src instanceof Int8Array) {
+            return new Int8Array(length);
+        } else if (src instanceof Int32Array) {
+            return new Int32Array(length);
+        } else if (src instanceof Uint8Array) {
+            return new Uint8Array(length);
+        } else if (src instanceof Uint32Array) {
+            return new Uint32Array(length);
+        } else if (src instanceof Uint8ClampedArray) {
+            return new Uint8ClampedArray(length);
+        } else if (src instanceof Float64Array) {
+            return new Float64Array(length);
+        }
+        return null;
+    }
+
+    export function resizeVertexSourceData(src: VertexSourceData, length: uint): VertexSourceData {
+        if (src instanceof Array) {
+            src.length = length;
+            return src;
+        } else if (src.length === length) {
+            return src;
+        } else {
+            if (src instanceof Float32Array) {
+                return new Float32Array(length);
+            } else if (src instanceof Int16Array) {
+                return new Int16Array(length);
+            } else if (src instanceof Uint16Array) {
+                return new Uint16Array(length);
+            } else if (src instanceof Int8Array) {
+                return new Int8Array(length);
+            } else if (src instanceof Int32Array) {
+                return new Int32Array(length);
+            } else if (src instanceof Uint8Array) {
+                return new Uint8Array(length);
+            } else if (src instanceof Uint32Array) {
+                return new Uint32Array(length);
+            } else if (src instanceof Uint8ClampedArray) {
+                return new Uint8ClampedArray(length);
+            } else if (src instanceof Float64Array) {
+                return new Float64Array(length);
+            }
+        }
+        return null;
+    }
+
+    export function createBinaryIntVertexSourceData(length: uint, maxValue: long, unsigned: boolean): [VertexSourceData, GLVertexBufferDataType] {
+        if (maxValue <= 256) {
+            return unsigned ? [new Uint8Array(length), GLVertexBufferDataType.UNSIGNED_BYTE] : [new Int8Array(length), GLVertexBufferDataType.BYTE];
+        } else if (maxValue <= 65536) {
+            return unsigned ? [new Uint16Array(length), GLVertexBufferDataType.UNSIGNED_SHORT] : [new Int16Array(length), GLVertexBufferDataType.SHORT];
+        } else {
+            return unsigned ? [new Uint32Array(length), GLVertexBufferDataType.UNSIGNED_INT] : [new Int32Array(length), GLVertexBufferDataType.INT];
+        }
+    }
+
+    export function createBinaryDrawIndexSourceData(length: uint, numVertices: uint): [IndexSourceData, GLIndexDataType] {
+        if (numVertices <= 256) {
+            return [new Uint8Array(length), GLIndexDataType.UNSIGNED_BYTE];
+        } else if (numVertices <= 65536) {
+            return [new Uint16Array(length), GLIndexDataType.UNSIGNED_SHORT];
+        } else {
+            return [new Uint32Array(length), GLIndexDataType.UNSIGNED_INT];
+        }
+    }
+
     /**
      * @returns [indices, vertices].
      */
-    export function sortSameVertices(vertices: number[], precision: int = -1): [uint[], number[]] {
+    export function sortSameVertices(vertices: VertexSourceData, precision: int = -1): [uint[], VertexSourceData] {
         const len = vertices.length;
         const count = (len / 3) | 0;
 
@@ -14,7 +91,7 @@ namespace Aurora.MeshAssetHelper {
 
         for (let i = 0; i < count; ++i) sorted[i] = i * 3;
 
-        let vert: number[] = null;
+        let vert: VertexSourceData = null;
         precision |= 0;
         if (precision === 0) {
             vert = [];
@@ -67,7 +144,7 @@ namespace Aurora.MeshAssetHelper {
         return [sorted, vert];
     }
 
-    export function createLerpNormals(indices: uint[], vertices: number[], precision: int = -1): VertexSource {
+    export function createLerpNormals(indices: IndexSourceData, vertices: VertexSourceData, precision: int = -1): VertexSource {
         const vs = createNormals(indices, vertices);
         const sortResult = sortSameVertices(vertices, precision);
         const sortIndices = sortResult[0];
@@ -128,11 +205,10 @@ namespace Aurora.MeshAssetHelper {
         return vs;
     }
 
-    export function createNormals(indices: uint[], vertices: number[]): VertexSource {
+    export function createNormals(indices: IndexSourceData, vertices: VertexSourceData): VertexSource {
         const len = vertices.length;
 
-        const normals: number[] = [];
-        normals.length = len;
+        const normals = createVertexSourceData(vertices, len);
 
         const multi: boolean[] = [];
         multi.length = len / 3;
@@ -229,9 +305,8 @@ namespace Aurora.MeshAssetHelper {
         return new VertexSource(ShaderPredefined.a_Normal0, normals, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT);
     }
 
-    export function createTangents(indices: uint[], vertices: number[], uvs: number[]): VertexSource {
-        const tangents: number[] = [];
-        tangents.length = vertices.length;
+    export function createTangents(indices: IndexSourceData, vertices: VertexSourceData, uvs: VertexSourceData): VertexSource {
+        const tangents = createVertexSourceData(vertices, vertices.length);
 
         for (let i = 0, n = indices.length; i < n; ++i) {
             const idx0 = indices[i];
@@ -306,9 +381,8 @@ namespace Aurora.MeshAssetHelper {
         return new VertexSource(ShaderPredefined.a_Tangent0, tangents, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT);
     }
 
-    export function createBinormals(normals: number[], tangents: number[]): VertexSource {
-        const binormals: number[] = [];
-        binormals.length = normals.length;
+    export function createBinormals(normals: VertexSourceData, tangents: VertexSourceData): VertexSource {
+        const binormals = createVertexSourceData(normals, normals.length);
 
         let idx = 0;
 
@@ -328,7 +402,7 @@ namespace Aurora.MeshAssetHelper {
         return new VertexSource(ShaderPredefined.a_Binormal0, binormals, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT);
     }
 
-    export function transformVertices(m: Matrix44, src: number[], srcOffset: uint, srcLength: int, dst: number[], dstOffset: uint): void {
+    export function transformVertices(m: Matrix44, src: VertexSourceData, srcOffset: uint, srcLength: int, dst: VertexSourceData, dstOffset: uint): void {
         srcLength = srcLength < 0 ? src.length : Math.min(srcOffset + srcLength, src.length);
         const p = new Vector3();
         let dstIdx = dstOffset;

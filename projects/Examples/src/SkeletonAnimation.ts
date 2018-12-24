@@ -180,7 +180,7 @@ class SkeletonAnimation {
             img.onload = () => {
                 task.finish();
             }
-            img.src = Helper.getURL("skinnedMeshes/0/tex.png");
+            img.src = Helper.getURL("skinnedMeshes/3/tex.png");
         }));
         taskQueue.start(Aurora.Handler.create(this, () => {
             let tex = new Aurora.GLTexture2D(this._env.gl);
@@ -188,8 +188,9 @@ class SkeletonAnimation {
 
             let mat = new Aurora.Material(this._env.shaderStore.createShader(this._env.gl, Aurora.BuiltinShader.DefaultMesh.NAME));
             //mat.cullFace = Aurora.GLCullFace.NONE;
+            //mat.defines.set(Aurora.ShaderPredefined.LIGHTING, false);
             mat.defines.set(Aurora.ShaderPredefined.DIFFUSE_COLOR, true);
-            //mat.defines.setDefine(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
+            mat.defines.set(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
             mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_DiffuseColor, 1, 1, 1, 1);
             //mat.uniforms.setNumbers(Aurora.ShaderPredefined.u_AmbientColor, 1, 1, 1, 1);
             mat.uniforms.setTexture(Aurora.ShaderPredefined.u_DiffuseSampler, tex);
@@ -218,7 +219,7 @@ class SkeletonAnimation {
                 clip.wrap = Aurora.AnimationWrap.Loop;
             }
 
-            for (let i = 0; i < 500; ++i) {
+            for (let i = 0; i < 150; ++i) {
                 let ske = skeData.skeleton.clone();
 
                 //Helper.printNodeHierarchy([ske.bonesMap.find(ske.rootBoneNames[0])]);
@@ -252,7 +253,8 @@ class SkeletonAnimation {
                 animator.update(0);
 
                 if (meshData.meshes) {
-                    for (let m of meshData.meshes) {
+                    for (let j = 0, n = meshData.meshes.length; j < n; ++j) {
+                        let m = meshData.meshes[j];
                         let mesh = node.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
                         mesh.renderer = this._env.forwardRenderer;
                         mesh.skinningMethod = this._env.skinnedMeshGPUSkinningMethod.value;

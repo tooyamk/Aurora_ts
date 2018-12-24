@@ -1,7 +1,7 @@
 ///<reference path="MeshBufferSource.ts"/>
 
 namespace Aurora {
-    export class VertexSource extends MeshBufferSource<number[]> {
+    export class VertexSource extends MeshBufferSource<VertexSourceData> {
         public name: string;
 
         public size: GLVertexBufferSize;
@@ -9,11 +9,11 @@ namespace Aurora {
         public normalized: boolean;
         public usage: GLUsageType;
 
-        constructor(name: string = null, vertices: number[] = null, size: GLVertexBufferSize = GLVertexBufferSize.THREE, type: GLVertexBufferDataType = GLVertexBufferDataType.FLOAT, normalized: boolean = false, usage: GLUsageType = GLUsageType.STATIC_DRAW) {
+        constructor(name: string = null, data: VertexSourceData = null, size: GLVertexBufferSize = GLVertexBufferSize.THREE, type: GLVertexBufferDataType = GLVertexBufferDataType.FLOAT, normalized: boolean = false, usage: GLUsageType = GLUsageType.STATIC_DRAW) {
             super();
             
             this.name = name;
-            this.data = vertices;
+            this.data = data;
             this.size = size;
             this.type = type;
             this.normalized = normalized;

@@ -1080,10 +1080,9 @@ namespace Aurora.FbxFile {
 
                 const numVertIdxMapping = vertIdxMapping.length;
                 const len = numVertIdxMapping << 2;
-                const boneIndices: uint[] = [];
-                boneIndices.length = len;
-                const boneWeights: number[] = [];
-                boneWeights.length = len;
+                const boneIndicesInfo = MeshAssetHelper.createBinaryIntVertexSourceData(len, asset.boneNames.length, true);
+                const boneIndices = boneIndicesInfo[0];
+                const boneWeights = new Float32Array(len);
 
                 const maxDataPerElement = 4;
                 const exceedDataOffset = maxDataPerElement << 1;
@@ -1151,7 +1150,7 @@ namespace Aurora.FbxFile {
 
                 if (maxExceedBones > 0) console.warn("warnning: parse mesh(" + model.attribName + "), bound " + maxExceedBones + " bones, exceed max " + maxDataPerElement + " bones restriction.");
 
-                asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneIndex0, boneIndices, numDataPerElement, GLVertexBufferDataType.UNSIGNED_SHORT, false, GLUsageType.STATIC_DRAW));
+                asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneIndex0, boneIndices, numDataPerElement, boneIndicesInfo[1], false, GLUsageType.STATIC_DRAW));
                 asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneWeight0, boneWeights, numDataPerElement, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
             }
         }
@@ -1241,13 +1240,12 @@ namespace Aurora.FbxFile {
             }
         }
 
-        private _parseVertexSource(values: number[], indices: uint[], refType: string, mappingType: string, sourceIndices: uint[], numDataPerVertex: uint): number[] {
+        private _parseVertexSource(values: number[], indices: uint[], refType: string, mappingType: string, sourceIndices: uint[], numDataPerVertex: uint): VertexSourceData {
             if (values) {
                 const n = sourceIndices.length;
                 if (mappingType === NodePropertyValue.BY_CONTROL_POINT) {
                     if (refType === NodePropertyValue.DIRECT) {
-                        const vertices: number[] = [];
-                        vertices.length = n * numDataPerVertex;
+                        const vertices = new Float32Array(n * numDataPerVertex);
                         let vertIdx = 0;
                         for (let i = 0; i < n; ++i) {
                             const idx = sourceIndices[i] * numDataPerVertex;
@@ -1255,8 +1253,7 @@ namespace Aurora.FbxFile {
                         }
                         return vertices;
                     } else if (refType === NodePropertyValue.INDEX_TO_DIRECT) {
-                        const vertices: number[] = [];
-                        vertices.length = n * numDataPerVertex;
+                        const vertices = new Float32Array(n * numDataPerVertex);
                         let vertIdx = 0;
                         for (let i = 0; i < n; ++i) {
                             const idx = indices[sourceIndices[i]] * numDataPerVertex;
@@ -1266,10 +1263,9 @@ namespace Aurora.FbxFile {
                     }
                 } else if (mappingType === NodePropertyValue.BY_POLYGON_VERTEX) {
                     if (refType === NodePropertyValue.DIRECT) {
-                        return values.concat();
+                        return new Float32Array(values);
                     } else if (refType === NodePropertyValue.INDEX_TO_DIRECT) {
-                        const vertices: number[] = [];
-                        vertices.length = n * numDataPerVertex;
+                        const vertices = new Float32Array(n * numDataPerVertex);
                         let vertIdx = 0;
                         for (let i = 0; i < n; ++i) {
                             const idx = indices[i] * numDataPerVertex;
@@ -1289,11 +1285,20 @@ namespace Aurora.FbxFile {
                     const sourceVertices = <number[]>p.value;
                     const n = sourceIndices.length;
 
-                    const indices: uint[] = [];
-                    indices.length = n;
+                    let indices: IndexSourceData;
+                    let indexDataType: GLIndexDataType;
+                    if (n <= 256) {
+                        indices = new Uint8Array(n);
+                        indexDataType = GLIndexDataType.UNSIGNED_BYTE;
+                    } else if (n <= 65536) {
+                        indices = new Uint16Array(n);
+                        indexDataType = GLIndexDataType.UNSIGNED_SHORT;
+                    } else {
+                        indices = new Uint32Array(n);
+                        indexDataType = GLIndexDataType.UNSIGNED_INT;
+                    }
 
-                    const vertices: number[] = [];
-                    vertices.length = n * 3;
+                    const vertices = new Float32Array(n * 3);
 
                     const vertIdxMapping: uint[] = [];
                     vertIdxMapping.length - n;
@@ -1312,7 +1317,7 @@ namespace Aurora.FbxFile {
                         indices[i] = i;
                     }
 
-                    asset.drawIndexSource = new DrawIndexSource(indices, GLIndexDataType.AUTO, GLUsageType.STATIC_DRAW);
+                    asset.drawIndexSource = new DrawIndexSource(indices, indexDataType, GLUsageType.STATIC_DRAW);
                     asset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
 
                     return [vertIdxMapping, (sourceVertices.length / 3) | 0];

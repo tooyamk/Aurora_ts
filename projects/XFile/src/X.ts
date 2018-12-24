@@ -232,10 +232,9 @@ namespace Aurora.XFile {
                         asset.bonePreOffsetMatrices = bonePreOffsetMatrices;
 
                         const len = numVertices * numDataPerElement;
-                        const boneIndices: number[] = [];
-                        boneIndices.length = len; 
-                        const boneWeights: number[] = [];
-                        boneWeights.length = len;
+                        const boneIndicesInfo = MeshAssetHelper.createBinaryIntVertexSourceData(len, boneNames.length, true);
+                        const boneIndices = boneIndicesInfo[0];
+                        const boneWeights = new Float32Array(len);
                         for (let i = 0; i < numVertices; ++i) {
                             const idx = i * numDataPerElement;
                             const sv = skinVertices[i];
@@ -255,7 +254,7 @@ namespace Aurora.XFile {
                             }
                         }
 
-                        asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneIndex0, boneIndices, numDataPerElement, GLVertexBufferDataType.UNSIGNED_SHORT, false, GLUsageType.STATIC_DRAW));
+                        asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneIndex0, boneIndices, numDataPerElement, boneIndicesInfo[1], false, GLUsageType.STATIC_DRAW));
                         asset.addVertexSource(new VertexSource(ShaderPredefined.a_BoneWeight0, boneWeights, numDataPerElement, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
                     }
                     data.meshes = meshes;
@@ -559,7 +558,7 @@ namespace Aurora.XFile {
         const valuesToken = _parseNextToken(data, floatBits);
         const indicesToken = _parseNextToken(data, floatBits);
 
-        asset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, <number[]>valuesToken.value, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
+        asset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, new Float32Array(<number[]>valuesToken.value), GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
 
         const rawIndices = <uint[]>indicesToken.value;
         const numDrawIdx: uint = rawIndices[0];
@@ -616,7 +615,7 @@ namespace Aurora.XFile {
         const numToken = _parseNextToken(data, floatBits);
         const valuesToken = _parseNextToken(data, floatBits);
 
-        asset.addVertexSource(new VertexSource(ShaderPredefined.a_Normal0, <number[]>valuesToken.value, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
+        asset.addVertexSource(new VertexSource(ShaderPredefined.a_Normal0, new Float32Array(<number[]>valuesToken.value), GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
 
         _skipClosingBrace(data, floatBits);
     }
@@ -626,7 +625,7 @@ namespace Aurora.XFile {
         const numToken = _parseNextToken(data, floatBits);
         const valuesToken = _parseNextToken(data, floatBits);
 
-        asset.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, <number[]>valuesToken.value, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
+        asset.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, new Float32Array(<number[]>valuesToken.value), GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
         
         _skipClosingBrace(data, floatBits);
     }
@@ -727,15 +726,14 @@ namespace Aurora.XFile {
             const data: number[] = [];
             data.length = n;
             const glSize: GLVertexBufferSize = size;
-            let glType: GLVertexBufferDataType;
+            //let glType: GLVertexBufferDataType;
 
             switch (type) {
                 case 0:
                 case 1:
                 case 2:
                 case 3: {
-                    glType = GLVertexBufferDataType.FLOAT;
-
+                    //glType = GLVertexBufferDataType.FLOAT;
                     const ba = new DataView(new ArrayBuffer(4));
                     for (let j = 0; j < numVertices; ++j) {
                         for (let k = 0; k < size; ++k) {
@@ -749,8 +747,7 @@ namespace Aurora.XFile {
                 }
                 case 4:
                 case 8: {
-                    glType = GLVertexBufferDataType.FLOAT;
-
+                    //glType = GLVertexBufferDataType.FLOAT;
                     for (let j = 0; j < numVertices; ++j) {
                         for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k] / 255;
                         idx1 += len;
@@ -759,8 +756,7 @@ namespace Aurora.XFile {
                     break;
                 }
                 case 5: {
-                    glType = GLVertexBufferDataType.UNSIGNED_BYTE;
-
+                    //glType = GLVertexBufferDataType.UNSIGNED_BYTE;/
                     for (let j = 0; j < numVertices; ++j) {
                         for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k];
                         idx1 += len;
@@ -770,8 +766,7 @@ namespace Aurora.XFile {
                 }
                 case 6:
                 case 7: {
-                    glType = GLVertexBufferDataType.SHORT;
-
+                    //glType = GLVertexBufferDataType.SHORT;
                     for (let j = 0; j < numVertices; ++j) {
                         for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k];
                         idx1 += len;
@@ -781,8 +776,7 @@ namespace Aurora.XFile {
                 }
                 case 9:
                 case 10: {
-                    glType = GLVertexBufferDataType.FLOAT;
-
+                    //glType = GLVertexBufferDataType.FLOAT;
                     for (let j = 0; j < n; ++j) {
                         for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k] / 32767;
                         idx1 += len;
@@ -792,8 +786,7 @@ namespace Aurora.XFile {
                 }
                 case 11:
                 case 12: {
-                    glType = GLVertexBufferDataType.FLOAT;
-
+                    //glType = GLVertexBufferDataType.FLOAT;
                     for (let j = 0; j < n; ++j) {
                         for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k] / 65535;
                         idx1 += len;
@@ -802,8 +795,7 @@ namespace Aurora.XFile {
                     break;
                 }
                 case 13: {
-                    glType = GLVertexBufferDataType.INT;
-
+                    //glType = GLVertexBufferDataType.INT;
                     for (let j = 0; j < numVertices; ++j) {
                         for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k];
                         idx1 += len;
@@ -812,8 +804,7 @@ namespace Aurora.XFile {
                     break;
                 }
                 case 14: {
-                    glType = GLVertexBufferDataType.FLOAT;
-
+                    //glType = GLVertexBufferDataType.FLOAT;
                     for (let j = 0; j < n; ++j) {
                         for (let k = 0; k < size; ++k) data[idx2++] = values[idx1 + k] / 511;
                         idx1 += len;
@@ -827,16 +818,16 @@ namespace Aurora.XFile {
 
             switch (usage) {
                 case 3:
-                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_Normal0, data, glSize, glType, false, GLUsageType.STATIC_DRAW));
+                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_Normal0, new Float32Array(data), glSize, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
                     break;
                 case 5:
-                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, data, glSize, glType, false, GLUsageType.STATIC_DRAW));
+                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, new Float32Array(data), glSize, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
                     break;
                 case 6:
-                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_Tangent0, data, glSize, glType, false, GLUsageType.STATIC_DRAW));
+                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_Tangent0, new Float32Array(data), glSize, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
                     break;
                 case 7:
-                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_Binormal0, data, glSize, glType, false, GLUsageType.STATIC_DRAW));
+                    asset.addVertexSource(new VertexSource(ShaderPredefined.a_Binormal0, new Float32Array(data), glSize, GLVertexBufferDataType.FLOAT, false, GLUsageType.STATIC_DRAW));
                     break;
                 default:
                     break;

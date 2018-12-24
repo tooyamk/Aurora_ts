@@ -1,5 +1,5 @@
 namespace Aurora {
-    export class MeshBufferSource<T> {
+    export class MeshBufferSource<T extends VertexSourceData> {
         public offset: uint = 0;
         public length: int = -1;
 

@@ -133,6 +133,15 @@ namespace Aurora {
             this._height = h === undefined ? null : h;
         }
 
+        public getSortWeight(material: Material): number {
+            let b = 0;
+            if (material) {
+                const s = material.shader;
+                if (s) b = s.id;
+            }
+            return b;
+        }
+
         public checkRenderable(): boolean {
             const tex = this._texture;
             return tex && tex.width > 0 && tex.height > 0 && this._color.a > 0 && this._node.readonlyCascadeColor.a > 0;

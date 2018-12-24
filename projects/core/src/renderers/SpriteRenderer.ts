@@ -65,35 +65,41 @@ namespace Aurora {
 
         public collect(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void {
             const mats = renderable.getMaterials();
-            let len = mats ? mats.size : 1;
+            const rawMats = mats ? mats.raw : null;
+            let len = rawMats ? rawMats.length : 1;
             if (len === 0) len = 1;
 
             if (replaceMaterials) {
                 const len1 = replaceMaterials.length;
                 if (len >= len1) {
                     for (let i = 0; i < len1; ++i) {
-                        const m = mats ? mats.at(i) : null;
-                        appendFn(renderable, replaceMaterials[i], m ? m.uniforms : this._defaultMaterial.uniforms);
+                        const m = rawMats ? rawMats[i] : null;
+                        const m2 = replaceMaterials[i];
+                        appendFn(renderable, m2, m ? m.uniforms : this._defaultMaterial.uniforms, renderable.getSortWeight(m2));
                     }
                 } else if (len === 1) {
                     let u: ShaderUniforms;
-                    if (mats) {
-                        const m = mats.at(0);
+                    if (rawMats) {
+                        const m = rawMats[0];
                         u = m ? m.uniforms : this._defaultMaterial.uniforms;
                     } else {
                         u = this._defaultMaterial.uniforms;
                     }
-                    for (let i = 0; i < len1; ++i) appendFn(renderable, replaceMaterials[i], u);
+                    for (let i = 0; i < len1; ++i) {
+                        const m2 = replaceMaterials[i];
+                        appendFn(renderable, m2, u, renderable.getSortWeight(m2));
+                    }
                 } else {
                     for (let i = 0; i < len; ++i) {
-                        const m = mats ? mats.at(i) : null;
-                        appendFn(renderable, replaceMaterials[i], m ? m.uniforms : this._defaultMaterial.uniforms);
+                        const m = rawMats ? rawMats[i] : null;
+                        const m2 = replaceMaterials[i];
+                        appendFn(renderable, m2, m ? m.uniforms : this._defaultMaterial.uniforms, renderable.getSortWeight(m2));
                     }
                 }
             } else {
                 for (let i = 0; i < len; ++i) {
-                    const m = mats ? mats.at(i) : null;
-                    appendFn(renderable, m ? m : this._defaultMaterial, this._defaultMaterial.uniforms);
+                    const m = rawMats ? rawMats[i] : null;
+                    appendFn(renderable, m ? m : this._defaultMaterial, this._defaultMaterial.uniforms, renderable.getSortWeight(m));
                 }
             }
         }

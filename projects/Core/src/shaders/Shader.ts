@@ -49,6 +49,10 @@ namespace Aurora {
     }
 
     export class Shader extends Ref {
+        private static _idGenerator = 0;
+
+        private _id: int;
+
         protected _gl: GL;
         protected _vert: ShaderSource;
         protected _frag: ShaderSource;
@@ -69,6 +73,8 @@ namespace Aurora {
         constructor(gl: GL, vert: ShaderSource, frag: ShaderSource) {
             super();
 
+            this._id = ++Shader._idGenerator;
+
             this._gl = gl;
             this._vert = vert;
             this._frag = frag;
@@ -85,6 +91,10 @@ namespace Aurora {
             this._usedDefines = [];
             this._usedDefines.length = idx;
             for (let i = 0; i < idx; ++i) this._usedDefines[i] = new RWShaderDefineInfo();
+        }
+
+        public get id(): int {
+            return this._id;
         }
 
         public get defines(): string[] {
@@ -233,17 +243,17 @@ namespace Aurora {
             return p;
         }
 
-        public use(uniformsList: ShaderDataList<ShaderUniforms, ShaderUniforms.Value>): ShaderProgram {
+        public use(uniformsList: ShaderUniformsList): ShaderProgram {
             if (this._curProgram && this._curProgram.status === GLProgramStatus.SUCCESSED) {
                 this._curProgram.use();
 
                 if (this._curProgram.uniforms) {
                     const infos = this._curProgram.uniforms;
-                    const numInfos = infos.length;
+                    let numInfos = infos.length;
                     if (numInfos > 0 && uniformsList) {
                         const gl = this._gl.context;
                         let samplerIndex = 0;
-                        for (let i = 0, n = infos.length; i < n; ++i) {
+                        for (let i = 0; i < numInfos; ++i) {
                             const info = infos[i];
                             const v = uniformsList.getValue(info.name);
                             switch (info.type) {

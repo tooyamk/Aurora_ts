@@ -20,6 +20,16 @@ namespace Aurora {
 
         protected _changedAsset(): void {}
 
+        public getSortWeight(material: Material): number {
+            const a = this._asset ? this._asset.id : 0;
+            let b = 0;
+            if (material) {
+                const s = material.shader;
+                if (s) b = s.id;
+            }
+            return a ^ b;
+        }
+
         public checkRenderable(): boolean {
             return !!this._asset;
         }

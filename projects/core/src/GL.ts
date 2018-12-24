@@ -279,8 +279,8 @@ namespace Aurora {
     export class GLVertexBuffer extends AbstractGLBuffer {
         private static _idGenerator = 0;
 
-        private _id: number;
-        private _uploadCount: number = 0;
+        private _id: int;
+        private _uploadCount: int = 0;
 
         private _size = GLVertexBufferSize.FOUR;
         private _dataType = GLVertexBufferDataType.FLOAT;
@@ -292,7 +292,7 @@ namespace Aurora {
             this._id = ++GLVertexBuffer._idGenerator;
         }
 
-        public get id(): number {
+        public get id(): int {
             return this._id;
         }
 
@@ -320,7 +320,7 @@ namespace Aurora {
             this._normalized = b;
         }
 
-        public get uploadCount(): number {
+        public get uploadCount(): int {
             return this._uploadCount;
         }
 
@@ -459,10 +459,10 @@ namespace Aurora {
                             if (offset + length > dataLen) length = dataLen - offset;
                         }
                         if (this._sizePerElement === 2) {
-                            if (!(length & 0b1))--length;
+                            if (length & 0b1) --length;
                         } else if (this._sizePerElement === 4) {
                             const r = length & 0b11;
-                            if (!r) length -= r;
+                            if (r) length -= r;
                         }
                     }
 
@@ -703,10 +703,10 @@ namespace Aurora {
                             if (offset + length > dataLen) length = dataLen - offset;
                         }
                         if (this._sizePerElement === 2) {
-                            if (!(length & 0b1))--length;
+                            if (length & 0b1) --length;
                         } else if (this._sizePerElement === 4) {
                             const r = length & 0b11;
-                            if (!r) length -= r;
+                            if (r) length -= r;
                         }
                     }
 
@@ -749,7 +749,7 @@ namespace Aurora {
             const last = this._numElements - offset;
             if (last > 0) {
                 if (count > last) count = last;
-                //this._gl.drawElements(mode, count, this._dataType, offset);
+                this._gl.drawElements(mode, count, this._dataType, offset);
 
                 const stats = this._gl.stats;
                 if (stats) {
@@ -1757,19 +1757,21 @@ namespace Aurora {
         constructor(canvasOrContext: HTMLCanvasElement | WebGLRenderingContext, options: GLOptions = null) {
             this._acquireGL(canvasOrContext, options);
 
-            this._versionFullInfo = this._gl.getParameter(GLEnum.VERSION);
-            this._vendor = this._gl.getParameter(GLEnum.VENDOR);
-            this._renderer = this._gl.getParameter(GLEnum.RENDERER);
+            const gl = this._gl;
 
-            this._maxVertexAttributes = this._gl.getParameter(GLEnum.MAX_VERTEX_ATTRIBS);
-            this._maxVaryingVectors = this._gl.getParameter(GLEnum.MAX_VARYING_VECTORS);
-            this._maxVertexUniformVectors = this._gl.getParameter(GLEnum.MAX_VERTEX_UNIFORM_VECTORS);
-            this._maxFragmentUniformVectors = this._gl.getParameter(GLEnum.MAX_FRAGMENT_UNIFORM_VECTORS);
-            this._maxTexutreImageUnits = this._gl.getParameter(GLEnum.MAX_TEXTURE_IMAGE_UNITS);
-            this._maxTextureSize = this._gl.getParameter(GLEnum.MAX_TEXTURE_SIZE);
-            this._stencilBits = this._gl.getParameter(GLEnum.STENCIL_BITS);
+            this._versionFullInfo = gl.getParameter(GLEnum.VERSION);
+            this._vendor = gl.getParameter(GLEnum.VENDOR);
+            this._renderer = gl.getParameter(GLEnum.RENDERER);
 
-            this._supportUintIndexes = false || this._gl.getExtension('OES_element_index_uint') !== null;
+            this._maxVertexAttributes = gl.getParameter(GLEnum.MAX_VERTEX_ATTRIBS);
+            this._maxVaryingVectors = gl.getParameter(GLEnum.MAX_VARYING_VECTORS);
+            this._maxVertexUniformVectors = gl.getParameter(GLEnum.MAX_VERTEX_UNIFORM_VECTORS);
+            this._maxFragmentUniformVectors = gl.getParameter(GLEnum.MAX_FRAGMENT_UNIFORM_VECTORS);
+            this._maxTexutreImageUnits = gl.getParameter(GLEnum.MAX_TEXTURE_IMAGE_UNITS);
+            this._maxTextureSize = gl.getParameter(GLEnum.MAX_TEXTURE_SIZE);
+            this._stencilBits = gl.getParameter(GLEnum.STENCIL_BITS);
+
+            this._supportUintIndexes = false || gl.getExtension('OES_element_index_uint') !== null;
 
             this._initViewport();
             this._initClear();
@@ -1836,65 +1838,75 @@ namespace Aurora {
         }
 
         private _initClear(): void {
-            const color = this._gl.getParameter(GLEnum.COLOR_CLEAR_VALUE);
+            const gl = this._gl;
+
+            const color = gl.getParameter(GLEnum.COLOR_CLEAR_VALUE);
             this._clear.color.r = color[0];
             this._clear.color.g = color[1];
             this._clear.color.b = color[2];
             this._clear.color.a = color[3];
-            this._clear.depth = this._gl.getParameter(GLEnum.DEPTH_CLEAR_VALUE);
-            this._clear.stencil = this._gl.getParameter(GLEnum.STENCIL_CLEAR_VALUE);
+            this._clear.depth = gl.getParameter(GLEnum.DEPTH_CLEAR_VALUE);
+            this._clear.stencil = gl.getParameter(GLEnum.STENCIL_CLEAR_VALUE);
         }
 
         private _initBlend(): void {
-            this._enabledBlend = this._gl.isEnabled(GLEnum.BLEND);
+            const gl = this._gl;
 
-            this._blend.equation.rgb = this._gl.getParameter(GLEnum.BLEND_EQUATION_RGB);
-            this._blend.equation.alpha = this._gl.getParameter(GLEnum.BLEND_EQUATION_ALPHA);
+            this._enabledBlend = gl.isEnabled(GLEnum.BLEND);
 
-            this._blend.func.srcRGB = this._gl.getParameter(GLEnum.BLEND_SRC_RGB);
-            this._blend.func.srcAlpha = this._gl.getParameter(GLEnum.BLEND_SRC_ALPHA);
-            this._blend.func.dstRGB = this._gl.getParameter(GLEnum.BLEND_DST_RGB);
-            this._blend.func.dstAlpha = this._gl.getParameter(GLEnum.BLEND_DST_ALPHA);
+            this._blend.equation.rgb = gl.getParameter(GLEnum.BLEND_EQUATION_RGB);
+            this._blend.equation.alpha = gl.getParameter(GLEnum.BLEND_EQUATION_ALPHA);
 
-            const blendColor = this._gl.getParameter(GLEnum.BLEND_COLOR);
+            this._blend.func.srcRGB = gl.getParameter(GLEnum.BLEND_SRC_RGB);
+            this._blend.func.srcAlpha = gl.getParameter(GLEnum.BLEND_SRC_ALPHA);
+            this._blend.func.dstRGB = gl.getParameter(GLEnum.BLEND_DST_RGB);
+            this._blend.func.dstAlpha = gl.getParameter(GLEnum.BLEND_DST_ALPHA);
+
+            const blendColor = gl.getParameter(GLEnum.BLEND_COLOR);
             this._blend.constColor.setFromNumbers(blendColor[0], blendColor[1], blendColor[2], blendColor[3]);
         }
 
         private _initCullFace(): void {
-            this._enabledCullFace = this._gl.isEnabled(GLEnum.CULL_FACE);
-            this._cullFace = this._gl.getParameter(GLEnum.CULL_FACE_MODE);
+            const gl = this._gl;
+
+            this._enabledCullFace = gl.isEnabled(GLEnum.CULL_FACE);
+            this._cullFace = gl.getParameter(GLEnum.CULL_FACE_MODE);
         }
 
         private _initVertexAttribs(): void {
             this._usedVertexAttribs.length = this._maxFragmentUniformVectors;
-            for (let i = 0; i < this._maxFragmentUniformVectors; ++i) this._usedVertexAttribs[i] = new UsedVertexAttribInfo();
+            for (let i = 0, n = this._maxFragmentUniformVectors; i < n; ++i) this._usedVertexAttribs[i] = new UsedVertexAttribInfo();
         }
 
         private _initDepth(): void {
-            this._depthWrite = this._gl.getParameter(GLEnum.DEPTH_WRITEMASK);
+            const gl = this._gl;
 
-            this._enabledDepthTest = this._gl.isEnabled(GLEnum.DEPTH_TEST);
-            this._depthTest = this._gl.getParameter(GLEnum.DEPTH_FUNC);
+            this._depthWrite = gl.getParameter(GLEnum.DEPTH_WRITEMASK);
+
+            this._enabledDepthTest = gl.isEnabled(GLEnum.DEPTH_TEST);
+            this._depthTest = gl.getParameter(GLEnum.DEPTH_FUNC);
         }
 
         private _initStencil(): void {
-            this._enabledStencilTest = this._gl.isEnabled(GLEnum.STENCIL_TEST);
+            const gl = this._gl;
 
-            this._stencilFrontFace.writeMask = this._gl.getParameter(GLEnum.STENCIL_WRITEMASK);
-            this._stencilFrontFace.func = this._gl.getParameter(GLEnum.STENCIL_FUNC);
-            this._stencilFrontFace.ref = this._gl.getParameter(GLEnum.STENCIL_REF);
-            this._stencilFrontFace.funcMask = this._gl.getParameter(GLEnum.STENCIL_VALUE_MASK);
-            this._stencilFrontFace.stenciFail = this._gl.getParameter(GLEnum.STENCIL_FAIL);
-            this._stencilFrontFace.depthlFail = this._gl.getParameter(GLEnum.STENCIL_PASS_DEPTH_FAIL);
-            this._stencilFrontFace.pass = this._gl.getParameter(GLEnum.STENCIL_PASS_DEPTH_PASS);
+            this._enabledStencilTest = gl.isEnabled(GLEnum.STENCIL_TEST);
 
-            this._stencilBackFace.writeMask = this._gl.getParameter(GLEnum.STENCIL_BACK_WRITEMASK);
-            this._stencilBackFace.func = this._gl.getParameter(GLEnum.STENCIL_BACK_FUNC);
-            this._stencilBackFace.ref = this._gl.getParameter(GLEnum.STENCIL_BACK_REF);
-            this._stencilBackFace.funcMask = this._gl.getParameter(GLEnum.STENCIL_BACK_VALUE_MASK);
-            this._stencilBackFace.stenciFail = this._gl.getParameter(GLEnum.STENCIL_BACK_FAIL);
-            this._stencilBackFace.depthlFail = this._gl.getParameter(GLEnum.STENCIL_BACK_PASS_DEPTH_FAIL);
-            this._stencilBackFace.pass = this._gl.getParameter(GLEnum.STENCIL_BACK_PASS_DEPTH_PASS);
+            this._stencilFrontFace.writeMask = gl.getParameter(GLEnum.STENCIL_WRITEMASK);
+            this._stencilFrontFace.func = gl.getParameter(GLEnum.STENCIL_FUNC);
+            this._stencilFrontFace.ref = gl.getParameter(GLEnum.STENCIL_REF);
+            this._stencilFrontFace.funcMask = gl.getParameter(GLEnum.STENCIL_VALUE_MASK);
+            this._stencilFrontFace.stenciFail = gl.getParameter(GLEnum.STENCIL_FAIL);
+            this._stencilFrontFace.depthlFail = gl.getParameter(GLEnum.STENCIL_PASS_DEPTH_FAIL);
+            this._stencilFrontFace.pass = gl.getParameter(GLEnum.STENCIL_PASS_DEPTH_PASS);
+
+            this._stencilBackFace.writeMask = gl.getParameter(GLEnum.STENCIL_BACK_WRITEMASK);
+            this._stencilBackFace.func = gl.getParameter(GLEnum.STENCIL_BACK_FUNC);
+            this._stencilBackFace.ref = gl.getParameter(GLEnum.STENCIL_BACK_REF);
+            this._stencilBackFace.funcMask = gl.getParameter(GLEnum.STENCIL_BACK_VALUE_MASK);
+            this._stencilBackFace.stenciFail = gl.getParameter(GLEnum.STENCIL_BACK_FAIL);
+            this._stencilBackFace.depthlFail = gl.getParameter(GLEnum.STENCIL_BACK_PASS_DEPTH_FAIL);
+            this._stencilBackFace.pass = gl.getParameter(GLEnum.STENCIL_BACK_PASS_DEPTH_PASS);
         }
 
         private _initColorMask(): void {
@@ -1906,11 +1918,13 @@ namespace Aurora {
         }
 
         private _initFrameBuffer(): void {
-            this._bindingFrameBuffer = this._gl.getParameter(GLEnum.FRAMEBUFFER_BINDING);
+            const gl = this._gl;
+
+            this._bindingFrameBuffer = gl.getParameter(GLEnum.FRAMEBUFFER_BINDING);
 
             if (this._version >= 2) {
-                this._bindingReadFrameBuffer = this._gl.getParameter(GLEnum.READ_FRAMEBUFFER_BINDING);
-                this._bindingDrawFrameBuffer = this._gl.getParameter(GLEnum.DRAW_FRAMEBUFFER_BINDING);
+                this._bindingReadFrameBuffer = gl.getParameter(GLEnum.READ_FRAMEBUFFER_BINDING);
+                this._bindingDrawFrameBuffer = gl.getParameter(GLEnum.DRAW_FRAMEBUFFER_BINDING);
             }
         }
 
@@ -1919,8 +1933,10 @@ namespace Aurora {
         }
 
         private _initTexture(): void {
-            this._bindingTexture2D = this._gl.getParameter(GLEnum.TEXTURE_BINDING_2D);
-            this._bindingTextureCube = this._gl.getParameter(GLEnum.TEXTURE_BINDING_CUBE_MAP);
+            const gl = this._gl;
+
+            this._bindingTexture2D = gl.getParameter(GLEnum.TEXTURE_BINDING_2D);
+            this._bindingTextureCube = gl.getParameter(GLEnum.TEXTURE_BINDING_CUBE_MAP);
         }
 
         public get canvas(): HTMLCanvasElement {
@@ -2011,23 +2027,26 @@ namespace Aurora {
         public clear(data: GLClear): void {
             data = data || this._defaultClear;
 
-            if (!this._clear.color.isEqualColor4(data.color)) {
-                this._clear.color.set(data.color);
-                this._gl.clearColor(data.color.r, data.color.g, data.color.b, data.color.a);
+            const selfClear = this._clear;
+            const gl = this._gl;
+
+            if (!selfClear.color.isEqualColor4(data.color)) {
+                selfClear.color.set(data.color);
+                gl.clearColor(data.color.r, data.color.g, data.color.b, data.color.a);
             }
 
-            if (this._clear.depth !== data.depth) {
-                this._clear.depth = data.depth;
-                this._gl.clearDepth(data.depth);
+            if (selfClear.depth !== data.depth) {
+                selfClear.depth = data.depth;
+                gl.clearDepth(data.depth);
             }
 
-            if (this._clear.stencil !== data.stencil) {
-                this._clear.stencil = data.stencil;
-                this._gl.clearStencil(data.stencil);
+            if (selfClear.stencil !== data.stencil) {
+                selfClear.stencil = data.stencil;
+                gl.clearStencil(data.stencil);
             }
 
             const mask = data.clearMask;
-            if (mask !== 0) this._gl.clear(mask);
+            if (mask !== 0) gl.clear(mask);
         }
 
         public enableBlend(b: boolean): void {
@@ -2096,15 +2115,17 @@ namespace Aurora {
                     this._gl.disable(GLEnum.CULL_FACE);
                 }
             } else {
+                const gl = this._gl;
+
                 if (!this._enabledCullFace) {
                     this._enabledCullFace = true;
-                    this._gl.enable(GLEnum.CULL_FACE);
+                    gl.enable(GLEnum.CULL_FACE);
                 }
 
                 if (this._cullFace !== mode) {
                     this._cullFace = mode;
 
-                    this._gl.cullFace(mode);
+                    gl.cullFace(mode);
                 }
             }
         }
@@ -2116,15 +2137,17 @@ namespace Aurora {
                     this._gl.disable(GLEnum.DEPTH_TEST);
                 }
             } else {
+                const gl = this._gl;
+
                 if (!this._enabledDepthTest) {
                     this._enabledDepthTest = true;
-                    this._gl.enable(GLEnum.DEPTH_TEST);
+                    gl.enable(GLEnum.DEPTH_TEST);
                 }
 
                 if (this._depthTest !== mode) {
                     this._depthTest = mode;
 
-                    this._gl.depthFunc(mode);
+                    gl.depthFunc(mode);
                 }
             }
         }
@@ -2147,6 +2170,8 @@ namespace Aurora {
         }
 
         public setStencil(front: GLStencil, back: GLStencil): void {
+            const gl = this._gl;
+
             if (front || back) {
                 //webgl special handling
                 let writeMask: number = null, ref: number = null, funcMask: number = null;
@@ -2176,7 +2201,7 @@ namespace Aurora {
                 if (!this._enabledStencilTest) {
                     this._enabledStencilTest = true;
 
-                    this._gl.enable(GLEnum.STENCIL_TEST);
+                    gl.enable(GLEnum.STENCIL_TEST);
                 }
 
                 if (front === back || front.isEqual(back)) {
@@ -2184,21 +2209,21 @@ namespace Aurora {
                         this._stencilFrontFace.writeMask = front.writeMask;
                         this._stencilBackFace.writeMask = front.writeMask;
 
-                        this._gl.stencilMaskSeparate(GLEnum.FRONT_AND_BACK, front.writeMask);
+                        gl.stencilMaskSeparate(GLEnum.FRONT_AND_BACK, front.writeMask);
                     }
 
                     if (!this._stencilFrontFace.isFuncEqual(front) || this._stencilBackFace.isFuncEqual(front)) {
                         this._stencilFrontFace.copyFunc(front);
                         this._stencilBackFace.copyFunc(front);
 
-                        this._gl.stencilFuncSeparate(GLEnum.FRONT_AND_BACK, front.func, front.ref, front.funcMask);
+                        gl.stencilFuncSeparate(GLEnum.FRONT_AND_BACK, front.func, front.ref, front.funcMask);
                     }
 
                     if (!this._stencilFrontFace.isOpEqual(front) || !this._stencilBackFace.isOpEqual(front)) {
                         this._stencilFrontFace.copyOp(front);
                         this._stencilBackFace.copyOp(front);
 
-                        this._gl.stencilOpSeparate(GLEnum.FRONT_AND_BACK, front.stenciFail, front.depthlFail, front.pass);
+                        gl.stencilOpSeparate(GLEnum.FRONT_AND_BACK, front.stenciFail, front.depthlFail, front.pass);
                     }
                 } else {
                     this._setStencilSingleFace(GLStencilFace.FRONT, this._stencilFrontFace, front);
@@ -2214,28 +2239,30 @@ namespace Aurora {
                 if (this._enabledStencilTest) {
                     this._enabledStencilTest = false;
 
-                    this._gl.disable(GLEnum.STENCIL_TEST);
+                    gl.disable(GLEnum.STENCIL_TEST);
                 }
             }
         }
 
         private _setStencilSingleFace(face: GLStencilFace, self: GLStencil, target: GLStencil): void {
+            const gl = this._gl;
+
             if (self.writeMask !== target.writeMask) {
                 self.writeMask = target.writeMask;
 
-                this._gl.stencilMaskSeparate(face, target.writeMask);
+                gl.stencilMaskSeparate(face, target.writeMask);
             }
 
             if (!self.isFuncEqual(target)) {
                 self.copyFunc(target);
 
-                this._gl.stencilFuncSeparate(face, target.func, target.ref, target.funcMask);
+                gl.stencilFuncSeparate(face, target.func, target.ref, target.funcMask);
             }
 
             if (!self.isOpEqual(target)) {
                 self.copyOp(target);
 
-                this._gl.stencilOpSeparate(face, target.stenciFail, target.depthlFail, target.pass);
+                gl.stencilOpSeparate(face, target.stenciFail, target.depthlFail, target.pass);
             }
         }
 
@@ -2492,9 +2519,11 @@ namespace Aurora {
                     info.stride = stride;
                     info.offset = offset;
 
-                    this._gl.enableVertexAttribArray(index);
+                    const gl = this._gl;
+
+                    gl.enableVertexAttribArray(index);
                     buffer.bind();
-                    this._gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
+                    gl.vertexAttribPointer(index, size, type, normalized, stride, offset);
                 }
             }
         }
@@ -2512,7 +2541,6 @@ namespace Aurora {
 
         public activeTexture(tex: AbstractGLTexture, index: uint): boolean {
             if (index < this._maxTexutreImageUnits) {
-
                 const idx = GLEnum.TEXTURE0 + index;
                 if (this._activingTextureIndex !== idx) {
                     this._activingTextureIndex = idx;

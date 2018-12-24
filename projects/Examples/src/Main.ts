@@ -6,6 +6,33 @@
 document.oncontextmenu = () => { return false; }
 
 window.addEventListener("DOMContentLoaded", () => {
+    /*
+    let m0 = new Aurora.Matrix44();
+    let m1 = new Aurora.Matrix44();
+
+    let a = 1;
+    let b = true;
+
+    let t0 = Date.now();
+
+    for (let i = 0; i < 9999999; ++i) {
+        if (b) ++a;
+    }
+
+    let t1 = Date.now();
+    console.log(t1 - t0);
+
+    t0 = Date.now();
+
+    for (let i = 0; i < 9999999; ++i) {
+        b && ++a;
+    }
+
+    t1 = Date.now();
+    console.log(t1 - t0);
+    */
+   
+    /*
     let m0 = new Aurora.Matrix44();
     let m1 = new Aurora.Matrix44();
 
@@ -26,6 +53,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     t1 = Date.now();
     console.log(t1 - t0);
+    */
 
     //new FileTest();
     //new Other();

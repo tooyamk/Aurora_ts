@@ -13,11 +13,13 @@ namespace Aurora {
     export type FloatArray = number[] | Float32Array;
 
     export type GLImage = HTMLCanvasElement | HTMLImageElement | HTMLVideoElement | ImageBitmap | ImageData;
-    export type GLVertexBufferData = number[] | Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer | ArrayBufferView;
-    export type GLIndexBufferData = uint[] | Uint32Array | Uint16Array | Uint8Array | ArrayBuffer;
-
+    export type VertexSourceData = number[] | Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array;
+    export type GLVertexBufferData = VertexSourceData | DataView | ArrayBuffer | ArrayBufferView;
+    export type IndexSourceData = uint[] | Uint32Array | Uint16Array | Uint8Array;
+    export type GLIndexBufferData = IndexSourceData | ArrayBuffer;
+    
     export type AnimationWrapMethod = (elapsed:number, duration:number) => number;
-    export type AppendRenderingObjectFn = (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms) => void;
+    export type AppendRenderingObjectFn = (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms, sortWeight: number) => void;
 
     export type SkinnedMeshVertexUpdateMethod = () => void;
 

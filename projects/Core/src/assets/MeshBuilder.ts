@@ -22,18 +22,23 @@ namespace Aurora {
             const asset = new MeshAsset();
             asset.vertexSources = vertexSources;
 
-            const vertices: number[] = [];
+            const numVertices = ((lengthSegs + 1) * (widthSegs + 1) + (lengthSegs + 1) * (heightSegs + 1) + (widthSegs + 1) * (heightSegs + 1)) << 1;
+
+            const vertices = new Float32Array(numVertices * 3);
+            let vertIdx = 0;
             asset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT));
 
-            let uvs: number[];
+            let uvs: Float32Array;
+            let uvIdx = 0;
             if (generateUV) {
-                uvs = [];
+                uvs = new Float32Array(numVertices << 1);
                 asset.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, uvs, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT));
             }
 
-            const drawIndexSource = new DrawIndexSource();
-            const drawIndices: uint[] = [];
-            drawIndexSource.data = drawIndices;
+            const drawIndexInfo = MeshAssetHelper.createBinaryDrawIndexSourceData((lengthSegs * widthSegs + lengthSegs * heightSegs + widthSegs * heightSegs) * 12, numVertices);
+            let drawIndices = drawIndexInfo[0];
+            let drawIdx = 0;
+            const drawIndexSource = new DrawIndexSource(drawIndices, drawIndexInfo[1]);
             asset.drawIndexSource = drawIndexSource;
 
             let u: number;
@@ -42,10 +47,18 @@ namespace Aurora {
                 if (generateUV) u = l / lengthSegs;
                 for (let w = 0; w <= widthSegs; ++w) {
                     const z = halfWidth - w * unitWidth;
-                    vertices.push(x, halfHegiht, z, x, -halfHegiht, z);
+                    vertices[vertIdx++] = x;
+                    vertices[vertIdx++] = halfHegiht;
+                    vertices[vertIdx++] = z;
+                    vertices[vertIdx++] = x;
+                    vertices[vertIdx++] = -halfHegiht;
+                    vertices[vertIdx++] = z;
                     if (generateUV) {
                         const v = w / widthSegs;
-                        uvs.push(u, v, 1 - u, v);
+                        uvs[uvIdx++] = u;
+                        uvs[uvIdx++] = v;
+                        uvs[uvIdx++] = 1 - u;
+                        uvs[uvIdx++] = v;
                     }
                 }
             }
@@ -53,7 +66,18 @@ namespace Aurora {
             for (let i = 0, n = lengthSegs * widthSegs; i < n; ++i) {
                 const i1 = i + 2;
                 const i2 = i + ((1 + widthSegs) << 1);
-                drawIndices.push(i1, i, i2, i2, i2 + 2, i1, i2 + 1, i + 1, i1 + 1, i1 + 1, i2 + 3, i2 + 1);
+                drawIndices[drawIdx++] = i1;
+                drawIndices[drawIdx++] = i;
+                drawIndices[drawIdx++] = i2;
+                drawIndices[drawIdx++] = i2;
+                drawIndices[drawIdx++] = i2 + 2;
+                drawIndices[drawIdx++] = i1;
+                drawIndices[drawIdx++] = i2 + 1;
+                drawIndices[drawIdx++] = i + 1;
+                drawIndices[drawIdx++] = i1 + 1;
+                drawIndices[drawIdx++] = i1 + 1;
+                drawIndices[drawIdx++] = i2 + 3;
+                drawIndices[drawIdx++] = i2 + 1;
             }
 
             for (let l = 0; l <= lengthSegs; ++l) {
@@ -61,10 +85,18 @@ namespace Aurora {
                 if (generateUV) u = l / lengthSegs;
                 for (let h = 0; h <= heightSegs; ++h) {
                     const y = halfHegiht - h * unitHeight;
-                    vertices.push(x, y, -halfWidth, x, y, halfWidth);
+                    vertices[vertIdx++] = x;
+                    vertices[vertIdx++] = y;
+                    vertices[vertIdx++] = -halfWidth;
+                    vertices[vertIdx++] = x;
+                    vertices[vertIdx++] = y;
+                    vertices[vertIdx++] = halfWidth;
                     if (generateUV) {
                         const v = h / heightSegs;
-                        uvs.push(u, v, 1 - u, v);
+                        uvs[uvIdx++] = u;
+                        uvs[uvIdx++] = v;
+                        uvs[uvIdx++] = 1 - u;
+                        uvs[uvIdx++] = v;
                     }
                 }
             }
@@ -74,7 +106,18 @@ namespace Aurora {
                 const i0 = start + i;
                 const i1 = i0 + 2;
                 const i2 = i0 + ((1 + heightSegs) << 1);
-                drawIndices.push(i1, i0, i2, i2, i2 + 2, i1, i2 + 1, i0 + 1, i1 + 1, i1 + 1, i2 + 3, i2 + 1);
+                drawIndices[drawIdx++] = i1;
+                drawIndices[drawIdx++] = i0;
+                drawIndices[drawIdx++] = i2;
+                drawIndices[drawIdx++] = i2;
+                drawIndices[drawIdx++] = i2 + 2;
+                drawIndices[drawIdx++] = i1;
+                drawIndices[drawIdx++] = i2 + 1;
+                drawIndices[drawIdx++] = i0 + 1;
+                drawIndices[drawIdx++] = i1 + 1;
+                drawIndices[drawIdx++] = i1 + 1;
+                drawIndices[drawIdx++] = i2 + 3;
+                drawIndices[drawIdx++] = i2 + 1;
             }
 
             for (let w = 0; w <= widthSegs; ++w) {
@@ -82,10 +125,18 @@ namespace Aurora {
                 if (generateUV) u = w / widthSegs;
                 for (let h = 0; h <= heightSegs; ++h) {
                     const y = halfHegiht - h * unitHeight;
-                    vertices.push(-halfLength, y, z, halfLength, y, z);
+                    vertices[vertIdx++] = -halfLength;
+                    vertices[vertIdx++] = y;
+                    vertices[vertIdx++] = z;
+                    vertices[vertIdx++] = halfLength;
+                    vertices[vertIdx++] = y;
+                    vertices[vertIdx++] = z;
                     if (generateUV) {
                         const v = h / heightSegs;
-                        uvs.push(u, v, 1 - u, v);
+                        uvs[uvIdx++] = u;
+                        uvs[uvIdx++] = v;
+                        uvs[uvIdx++] = 1 - u;
+                        uvs[uvIdx++] = v;
                     }
                 }
             }
@@ -95,7 +146,18 @@ namespace Aurora {
                 const i0 = start + i;
                 const i1 = i0 + 2;
                 const i2 = i0 + ((1 + heightSegs) << 1);
-                drawIndices.push(i1, i0, i2, i2, i2 + 2, i1, i2 + 1, i0 + 1, i1 + 1, i1 + 1, i2 + 3, i2 + 1);
+                drawIndices[drawIdx++] = i1;
+                drawIndices[drawIdx++] = i0;
+                drawIndices[drawIdx++] = i2;
+                drawIndices[drawIdx++] = i2;
+                drawIndices[drawIdx++] = i2 + 2;
+                drawIndices[drawIdx++] = i1;
+                drawIndices[drawIdx++] = i2 + 1;
+                drawIndices[drawIdx++] = i0 + 1;
+                drawIndices[drawIdx++] = i1 + 1;
+                drawIndices[drawIdx++] = i1 + 1;
+                drawIndices[drawIdx++] = i2 + 3;
+                drawIndices[drawIdx++] = i2 + 1;
             }
 
             if (generateNormal) asset.addVertexSource(MeshAssetHelper.createNormals(drawIndices, vertices));
@@ -116,18 +178,25 @@ namespace Aurora {
             const angleX = Math.PI / (numV + 1);
             const angleY = MathUtils.PI2 / segments;
 
-            const vertices: number[] = [];
+            const numVertices = 2 + numV * (segments + 1);
+
+            const vertices = new Float32Array(numVertices * 3);
+            let vertIdx = 0;
             asset.addVertexSource(new VertexSource(ShaderPredefined.a_Position0, vertices, GLVertexBufferSize.THREE, GLVertexBufferDataType.FLOAT));
 
-            vertices.push(0, radius, 0);
+            vertices[vertIdx++] = 0;
+            vertices[vertIdx++] = radius;
+            vertices[vertIdx++] = 0;
 
             let uvMax = 0;
-            let uvs: number[];
+            let uvs: Float32Array;
+            let uvIdx = 0;
             if (generateUV) {
-                uvs = [];
+                uvs = new Float32Array(numVertices * 2);
                 asset.addVertexSource(new VertexSource(ShaderPredefined.a_UV0, uvs, GLVertexBufferSize.TWO, GLVertexBufferDataType.FLOAT));
 
-                uvs.push(0.5, 0);
+                uvs[uvIdx++] = 0.5;
+                uvs[uvIdx++] = 0;
                 uvMax = numV + 1;
             }
 
@@ -144,18 +213,35 @@ namespace Aurora {
                     rotY -= angleY;
                     const x = z * Math.cos(rotY);
                     const z1 = z * Math.sin(rotY);
-                    vertices.push(x, y, z1);
-                    if (generateUV) uvs.push(j / segments, curV);
+                    vertices[vertIdx++] = x;
+                    vertices[vertIdx++] = y;
+                    vertices[vertIdx++] = z1;
+                    if (generateUV) {
+                        uvs[uvIdx++] = j / segments;
+                        uvs[uvIdx++] = curV;
+                    }
                 }
             }
-            vertices.push(0, -radius, 0);
-            if (generateUV) uvs.push(0.5, 1);
+            vertices[vertIdx++] = 0;
+            vertices[vertIdx++] = -radius;
+            vertices[vertIdx++] = 0;
+            if (generateUV) {
+                uvs[uvIdx++] = 0.5;
+                uvs[uvIdx++] = 1;
+            }
 
-            const drawIndexSource = new DrawIndexSource();
-            const drawIndices: uint[] = [];
+            const drawIndexInfo = MeshAssetHelper.createBinaryDrawIndexSourceData((1 + numV) * segments * 6, numVertices);
+            const drawIndices = drawIndexInfo[0];
+            let drawIdx = 0;
+            const drawIndexSource = new DrawIndexSource(drawIndices, drawIndexInfo[1]);
+            asset.drawIndexSource = drawIndexSource;
             drawIndexSource.data = drawIndices;
             asset.drawIndexSource = drawIndexSource;
-            for (let i = 1; i <= segments; ++i) drawIndices.push(0, i, i + 1);
+            for (let i = 1; i <= segments; ++i) {
+                drawIndices[drawIdx++] = 0;
+                drawIndices[drawIdx++] = i;
+                drawIndices[drawIdx++] = i + 1;
+            }
             --numV;
             for (let i = 0; i < numV; ++i) {
                 const h1 = 1 + i * (segments + 1);
@@ -164,14 +250,21 @@ namespace Aurora {
                     const idx1 = h1 + j;
                     const idx2 = h2 + j;
                     const idx3 = idx2 + 1;
-                    drawIndices.push(idx1 + 1, idx1, idx3, idx1, idx2, idx3);
+                    drawIndices[drawIdx++] = idx1 + 1;
+                    drawIndices[drawIdx++] = idx1;
+                    drawIndices[drawIdx++] = idx3;
+                    drawIndices[drawIdx++] = idx1;
+                    drawIndices[drawIdx++] = idx2;
+                    drawIndices[drawIdx++] = idx3;
                 }
             }
             const last = (vertices.length / 3 - 1) | 0;
             const idx = last - segments - 2;
             for (let i = 1; i <= segments; ++i) {
                 const j = idx + i;
-                drawIndices.push(last, j + 1, j);
+                drawIndices[drawIdx++] = last;
+                drawIndices[drawIdx++] = j + 1;
+                drawIndices[drawIdx++] = j;
             }
 
             if (generateNormal) asset.addVertexSource(MeshAssetHelper.createLerpNormals(drawIndices, vertices));

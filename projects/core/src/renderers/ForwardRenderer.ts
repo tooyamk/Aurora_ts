@@ -42,27 +42,36 @@ namespace Aurora {
         public collect(renderable: AbstractRenderable, replaceMaterials: Material[], appendFn: AppendRenderingObjectFn): void {
             const mats = renderable.getMaterials();
             if (mats) {
-                const len = mats.size;
+                const rawMats = mats.raw;
+                const len = rawMats.length;
                 if (len > 0) {
                     if (replaceMaterials) {
                         const len1 = replaceMaterials.length;
                         if (len >= len1) {
                             for (let i = 0; i < len1; ++i) {
-                                const m = mats.at(i);
-                                appendFn(renderable, replaceMaterials[i], m ? m.uniforms : null);
+                                const m = rawMats[i];
+                                const m2 = replaceMaterials[i];
+                                appendFn(renderable, m2, m ? m.uniforms : null, renderable.getSortWeight(m2));
                             }
                         } else if (len === 1) {
-                            const m = mats.at(0);
+                            const m = rawMats[0];
                             const u = m ? m.uniforms : null;
-                            for (let i = 0; i < len1; ++i) appendFn(renderable, replaceMaterials[i], u);
+                            for (let i = 0; i < len1; ++i) {
+                                const m2 = replaceMaterials[i];
+                                appendFn(renderable, m2, u, renderable.getSortWeight(m2));
+                            }
                         } else {
                             for (let i = 0; i < len; ++i) {
-                                const m = mats.at(i);
-                                appendFn(renderable, replaceMaterials[i], m ? m.uniforms : null);
+                                const m = rawMats[i];
+                                const m2 = replaceMaterials[i];
+                                appendFn(renderable, m2, m ? m.uniforms : null, renderable.getSortWeight(m2));
                             }
                         }
                     } else {
-                        for (let i = 0; i < len; ++i) appendFn(renderable, mats.at(i), null);
+                        for (let i = 0; i < len; ++i) {
+                            const m = rawMats[i];
+                            appendFn(renderable, m, null, renderable.getSortWeight(m));
+                        }
                     }
                 }
             }

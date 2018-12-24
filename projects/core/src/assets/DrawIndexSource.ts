@@ -1,11 +1,11 @@
 ///<reference path="MeshBufferSource.ts"/>
 
 namespace Aurora {
-    export class DrawIndexSource extends MeshBufferSource<uint[]> {
+    export class DrawIndexSource extends MeshBufferSource<IndexSourceData> {
         public type: GLIndexDataType;
         public usage: GLUsageType;
 
-        constructor(data: uint[] = null, type: GLIndexDataType = GLIndexDataType.AUTO, usage: GLUsageType = GLUsageType.STATIC_DRAW) {
+        constructor(data: IndexSourceData = null, type: GLIndexDataType = GLIndexDataType.AUTO, usage: GLUsageType = GLUsageType.STATIC_DRAW) {
             super();
             
             this.data = data;

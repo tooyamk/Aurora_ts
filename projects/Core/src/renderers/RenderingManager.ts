@@ -162,30 +162,7 @@ namespace Aurora {
                 }
             }
 
-            if (this._renderingQueueLength > 0) {
-                Sort.Merge.sort(this._renderingQueue, (a: RenderingObject, b: RenderingObject) => {
-                    const sub = a.material.renderingPriority - b.material.renderingPriority;
-                    if (sub < 0) {
-                        return true;
-                    } else if (sub === 0) {
-                        const value = a.material.renderingSort - b.material.renderingSort;
-                        if (value === 0) {
-                            switch (a.material.renderingSort) {
-                                case RenderingSort.FAR_TO_NEAR:
-                                    return a.l2v.m32 >= b.l2v.m32;
-                                case RenderingSort.NEAR_TO_FAR:
-                                    return a.l2v.m32 <= b.l2v.m32;
-                                default:
-                                    return true;
-                            }
-                        } else {
-                            return value < 0;
-                        }
-                    } else {
-                        return false;
-                    }
-                }, 0, this._renderingQueueLength - 1);
-            }
+            if (this._renderingQueueLength > 0) Sort.Merge.sort(this._renderingQueue, this._sortFn, 0, this._renderingQueueLength - 1);
 
             this._renderByQueue(lights);
 
@@ -196,7 +173,47 @@ namespace Aurora {
             this._renderingData.clear();
         }
 
-        public appendRenderingObject(renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms): void {
+        protected _sortFn(a: RenderingObject, b: RenderingObject): boolean {
+            const sub = a.material.renderingPriority - b.material.renderingPriority;
+            if (sub < 0) {
+                return true;
+            } else if (sub === 0) {
+                const rs = a.material.renderingSort;
+                const value = rs - b.material.renderingSort;
+                if (value === 0) {
+                    switch (rs) {
+                        case RenderingSort.FAR_TO_NEAR: {
+                            const az = a.l2v.m32, bz = b.l2v.m32;
+                            if (az > bz) {
+                                return true;
+                            } else if (az < bz) {
+                                return false;
+                            } else {
+                                return a.sortWeight <= b.sortWeight;
+                            }
+                        }
+                        case RenderingSort.NEAR_TO_FAR: {
+                            const az = a.l2v.m32, bz = b.l2v.m32;
+                            if (az < bz) {
+                                return true;
+                            } else if (az > bz) {
+                                return false;
+                            } else {
+                                return a.sortWeight <= b.sortWeight;
+                            }
+                        }
+                        default:
+                            return a.sortWeight <= b.sortWeight;
+                    }
+                } else {
+                    return value < 0;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        public appendRenderingObject(renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms, sortWeight: number): void {
             if (material && material.shader) {
                 if (!renderable.renderer.isRendering) {
                     renderable.renderer.isRendering = true;
@@ -215,6 +232,7 @@ namespace Aurora {
                 queueNode.material = material;
                 queueNode.renderable = renderable;
                 queueNode.alternativeUniforms = alternativeUniforms;
+                queueNode.sortWeight = sortWeight;
                 renderable.node.getWorldMatrix(queueNode.l2w);
                 queueNode.l2w.append34(this._worldToViewMatrix, queueNode.l2v);
                 queueNode.l2w.append44(this._worldToProjMatrix, queueNode.l2p);

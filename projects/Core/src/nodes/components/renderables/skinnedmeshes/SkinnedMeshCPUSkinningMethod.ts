@@ -36,7 +36,7 @@ namespace Aurora {
             this._convertedAsset.link = null;
         }
 
-        protected _updateVertices(asset: MeshAsset, name: string, boneIndices: uint[], boneWeights: number[], numBonesPerElement: uint, boneNames: string[], matrices: Matrix44[], onlyRotation: boolean): void {
+        protected _updateVertices(asset: MeshAsset, name: string, boneIndices: VertexSourceData, boneWeights: VertexSourceData, numBonesPerElement: uint, boneNames: string[], matrices: Matrix44[], onlyRotation: boolean): void {
             const srcSource: VertexSource = asset.getVertexSource(name);
             if (srcSource) {
                 const srcData = srcSource.data;
@@ -49,14 +49,16 @@ namespace Aurora {
                     const numVertices: uint = (srcLength / srcSize) | 0;
 
                     let dstSource = this._convertedAsset.getVertexSource(name);
-                    let dstData: number[];
+                    let dstData: VertexSourceData;
                     if (dstSource) {
                         dstData = dstSource.data;
                         if (dstData) {
-                            if (dstData.length < srcLength) dstData.length = srcLength;
+                            if (dstData.length < srcLength) {
+                                dstData = MeshAssetHelper.createVertexSourceData(dstData, srcLength);
+                                dstSource.data = dstData;
+                            }
                         } else {
-                            dstData = [];
-                            dstData.length = srcLength;
+                            dstData = MeshAssetHelper.createVertexSourceData(boneWeights, srcLength);
                             dstSource.data = dstData;
                         }
 
@@ -64,8 +66,7 @@ namespace Aurora {
                         dstSource.type = srcSource.type;
                         dstSource.normalized = srcSource.normalized;
                     } else {
-                        dstData = [];
-                        dstData.length = srcLength;
+                        dstData = MeshAssetHelper.createVertexSourceData(boneWeights, srcLength);
                         dstSource = new VertexSource(name, dstData, srcSource.size, srcSource.type, srcSource.normalized, GLUsageType.DYNAMIC_DRAW);
                         this._convertedAsset.addVertexSource(dstSource);
                     }
