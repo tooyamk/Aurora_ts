@@ -856,8 +856,6 @@ namespace Aurora.FbxFile {
                 }
                 */
 
-                
-
                 this._parseSkin(geometry, model, bindShapeMatrix, asset, skeleton, vertIdxMapping, numSourceVertices);
 
                 if (needTriangulate) asset.drawIndexSource.triangulate(faces);

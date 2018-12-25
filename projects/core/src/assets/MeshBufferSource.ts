@@ -17,16 +17,15 @@ namespace Aurora {
 
         public getDataLength(): uint {
             if (this.data) {
-                if (this.data instanceof Array) {
-                    const len = this.data.length;
-                    if (this.offset > len) {
-                        return 0;
+                const numElements = this.data.length;
+
+                if (this.offset > numElements) {
+                    return 0;
+                } else {
+                    if (this.length < 0) {
+                        return numElements - this.offset;
                     } else {
-                        if (this.length < 0) {
-                            return len - this.offset;
-                        } else {
-                            return this.offset + this.length > len ? len - this.offset : this.length;
-                        }
+                        return this.offset + this.length > numElements ? numElements - this.offset : this.length;
                     }
                 }
             }

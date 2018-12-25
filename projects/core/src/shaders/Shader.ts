@@ -60,7 +60,7 @@ namespace Aurora {
         protected _defines: string[] = [];
 
         protected _cachedNoDefineProgram: ShaderProgram = null;
-        protected _cachedPrograms = new RefMap<string, ShaderProgram>();
+        protected _cachedPrograms = new RefMap<int, ShaderProgram>();
         protected _numCachedPrograms = 0;
 
         protected _curProgram: ShaderProgram = null;
@@ -69,6 +69,9 @@ namespace Aurora {
 
         protected _usedDefines: RWShaderDefineInfo[];
         protected _numUsedDefines: uint = 0;
+
+        protected _keyMask0: uint;
+        protected _keyMask1: uint;
 
         constructor(gl: GL, vert: ShaderSource, frag: ShaderSource) {
             super();
@@ -88,6 +91,15 @@ namespace Aurora {
             Sort.Merge.sort(this._defines, (a: string, b: string) => {
                 return a < b;
             });
+            if (idx > 31) {
+                this._keyMask0 = 0x7FFFFFFF;
+                this._keyMask1 = 0xFFF;
+            } else {
+                this._keyMask0 = Math.pow(2, idx) - 1;
+                let n = 53 - idx;
+                this._keyMask1 = Math.pow(2, n > 31 ? 31 : n) - 1;
+            }
+            
             this._usedDefines = [];
             this._usedDefines.length = idx;
             for (let i = 0; i < idx; ++i) this._usedDefines[i] = new RWShaderDefineInfo();
@@ -167,88 +179,93 @@ namespace Aurora {
         }
 
         public precompile(definesList: ShaderDefinesList): boolean {
-            return this._getOrCreateProgram(this._collectDefinesKey(definesList)).status === GLProgramStatus.SUCCESSED;
+            return this._getOrCreateProgram(definesList).status === GLProgramStatus.SUCCESSED;
         }
 
         public ready(definesList: ShaderDefinesList): ShaderProgram {
-            this._curProgram = this._getOrCreateProgram(this._collectDefinesKey(definesList));
+            const p = this._getOrCreateProgram(definesList);
+            this._curProgram = p;
 
-            this._attributes = this._curProgram.attributes;
-            this._uniforms = this._curProgram.uniforms;
+            this._attributes = p.attributes;
+            this._uniforms = p.uniforms;
 
-            return this._curProgram.status === GLProgramStatus.SUCCESSED ? this._curProgram : null;
+            return p.status === GLProgramStatus.SUCCESSED ? p : null;
         }
 
-        private _collectDefinesKey(definesList: ShaderDefinesList): string {
-            let key = "";
+        private _getOrCreateProgram(definesList: ShaderDefinesList): ShaderProgram {
+            let key = 0;
             this._numUsedDefines = 0;
 
             if (definesList) {
-                for (let i = 0, n = this._defines.length; i < n; ++i) {
-                    const name = this._defines[i];
+                const defines = this._defines;
+                const usedDefines = this._usedDefines;
+                let num = 0;
+                let idxFlag = 0;
+                let valueFlag = 0;
+                for (let i = 0, n = defines.length; i < n; ++i) {
+                    const name = defines[i];
                     const v = definesList.getValue(name);
                     if (v) {
                         if (v.type === ShaderDefines.VlaueType.BOOL) {
                             if (v.value) {
-                                key += "\n" + i;
-                                this._usedDefines[this._numUsedDefines++].set(i, null);
+                                idxFlag |= 1 << i;
+                                usedDefines[num++].set(i, null);
                             }
                         } else if (v.type === ShaderDefines.VlaueType.INT) {
-                            key += "\n" + i + " " + v.value;
-                            this._usedDefines[this._numUsedDefines++].set(i, <int>v.value);
+                            const value = <int>v.value;
+                            valueFlag ^= i ^ value;
+                            usedDefines[num++].set(i, value);
                         }
                     }
                 }
+
+                key = (valueFlag & this._keyMask1) * this._keyMask0 + (idxFlag & this._keyMask0);
+
+                this._numUsedDefines = num;
             }
 
-            return key;
-        }
+            let p = key ? this._cachedPrograms.find(key) : this._cachedNoDefineProgram;
+            if (!p) {
+                const defines = this._defines;
+                const usedDefines: ShaderDefineInfo[] = [];
+                const unusedDefines: string[] = [];
+                let unusedIdx: uint = 0;
+                let definesStr = "";
+                for (let i = 0, n = this._numUsedDefines; i < n; ++i) {
+                    const info = this._usedDefines[i];
+                    const idx = info.index;
 
-        private _getOrCreateProgram(key: string): ShaderProgram {
-            let p = this._getProgramFromCache(key);
-            if (!p) p = this._createProgram(key);
-            return p;
-        }
+                    for (let j = unusedIdx; j < idx; ++j) unusedDefines[unusedDefines.length] = defines[j];
+                    unusedIdx = i + 1;
 
-        private _createProgram(key: string): ShaderProgram {
-            const usedDefines: ShaderDefineInfo[] = [];
-            const unusedDefines: string[] = [];
-            let unusedIdx: uint = 0;
-            let defines = "";
-            for (let i = 0, n = this._numUsedDefines; i < n; ++i) {
-                const info = this._usedDefines[i];
-                const idx = info.index;
+                    definesStr += "#define " + defines[idx];
+                    if (info.value !== null) definesStr += " " + info.value;
+                    usedDefines[usedDefines.length] = new ShaderDefineInfo(info.index, info.value);
+                    definesStr += "\n";
+                }
+                for (let j = unusedIdx, n = defines.length; j < n; ++j) unusedDefines[unusedDefines.length] = defines[j];
 
-                for (let j = unusedIdx; j < idx; ++j) unusedDefines[unusedDefines.length] = this._defines[j];
-                unusedIdx = i + 1;
-
-                defines += "#define " + this._defines[idx];
-                if (info.value !== null) defines += " " + info.value;
-                usedDefines[usedDefines.length] = new ShaderDefineInfo(info.index, info.value);
-                defines += "\n";
+                p = new ShaderProgram(this._gl, usedDefines, unusedDefines);
+                p.compileAndLink(definesStr + this._vert.source, definesStr + this._frag.source);
+                if (key) {
+                    this._cachedPrograms.insert(key, p);
+                } else {
+                    p.retain();
+                    if (this._cachedNoDefineProgram) this._cachedNoDefineProgram.release();
+                    this._cachedNoDefineProgram = p;
+                }
+                ++this._numCachedPrograms;
             }
-            for (let j = unusedIdx, n = this._defines.length; j < n; ++j) unusedDefines[unusedDefines.length] = this._defines[j];
-
-            const p = new ShaderProgram(this._gl, usedDefines, unusedDefines);
-            p.compileAndLink(defines + this._vert.source, defines + this._frag.source);
-            if (key) {
-                this._cachedPrograms.insert(key, p);
-            } else {
-                p.retain();
-                if (this._cachedNoDefineProgram) this._cachedNoDefineProgram.release();
-                this._cachedNoDefineProgram = p;
-            }
-            ++this._numCachedPrograms;
-
             return p;
         }
 
         public use(uniformsList: ShaderUniformsList): ShaderProgram {
-            if (this._curProgram && this._curProgram.status === GLProgramStatus.SUCCESSED) {
-                this._curProgram.use();
+            const p = this._curProgram;
+            if (p && p.status === GLProgramStatus.SUCCESSED) {
+                p.use();
 
-                if (this._curProgram.uniforms) {
-                    const infos = this._curProgram.uniforms;
+                if (p.uniforms) {
+                    const infos = p.uniforms;
                     let numInfos = infos.length;
                     if (numInfos > 0 && uniformsList) {
                         const gl = this._gl.context;
@@ -430,7 +447,7 @@ namespace Aurora {
                 }
             }
 
-            return this._curProgram;
+            return p;
         }
 
         public destroy(): void {
@@ -450,10 +467,6 @@ namespace Aurora {
 
         protected _refDestroy(): void {
             this.destroy();
-        }
-
-        protected _getProgramFromCache(key: string): ShaderProgram {
-            return key ? this._cachedPrograms.find(key) : this._cachedNoDefineProgram;
         }
     }
 }

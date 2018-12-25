@@ -13,7 +13,7 @@ namespace Aurora {
             this.usage = usage;
         }
 
-        public triangulate(polygons: uint[]): void {
+        public triangulate(polygons: IndexSourceData): void {
             if (this.data && polygons) {
                 const src = this.data;
                 const newData: uint[] = [];
@@ -64,7 +64,19 @@ namespace Aurora {
                         }
                     }
                 }
-                this.data = newData;
+
+                if (this.data instanceof Array) {
+                    this.data = newData;
+                } else {
+                    let maxVertices = 0;
+                    for (let i = 0, n = src.length; i < n; ++i) {
+                        const idx = src[i];
+                        if (maxVertices < idx) maxVertices = idx;
+                    }
+                    const info = MeshAssetHelper.createBinaryDrawIndexSourceData(newData.length, maxVertices === 0 ? 0 : maxVertices + 1);
+                    this.data = info[0];
+                    this.type = info[1];
+                }
             }
         }
 

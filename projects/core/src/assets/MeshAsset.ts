@@ -195,7 +195,8 @@ namespace Aurora {
             let idx = this.drawIndexSource;
 
             if (this._link) {
-                if ((!pos || !pos.data) && this._link.vertexSources) pos = this._link.vertexSources.get(ShaderPredefined.a_Position0);
+                const linkVertSrcs = this._link.vertexSources;
+                if ((!pos || !pos.data) && linkVertSrcs) pos = linkVertSrcs.get(ShaderPredefined.a_Position0);
                 if (!idx || !idx.data) idx = this._link.drawIndexSource;
             }
 
@@ -215,8 +216,11 @@ namespace Aurora {
             let idx = this.drawIndexSource;
 
             if (this._link) {
-                if ((!pos || !pos.data) && this._link.vertexSources) pos = this._link.vertexSources.get(ShaderPredefined.a_Position0);
-                if ((!uv || !uv.data) && this._link.vertexSources) uv = this._link.vertexSources.get(ShaderPredefined.a_UV0);
+                const linkVertSrcs = this._link.vertexSources;
+                if (linkVertSrcs) {
+                    if (!pos || !pos.data) pos = linkVertSrcs.get(ShaderPredefined.a_Position0);
+                    if (!uv || !uv.data) uv = linkVertSrcs.get(ShaderPredefined.a_UV0);
+                }
                 if (!idx || !idx.data) idx = this._link.drawIndexSource;
             }
 
@@ -236,8 +240,11 @@ namespace Aurora {
             let idx = this.drawIndexSource;
 
             if (this._link) {
-                if ((!nrm || !nrm.data) && this._link.vertexSources) nrm = this._link.vertexSources.get(ShaderPredefined.a_Position0);
-                if ((!tan || !tan.data) && this._link.vertexSources) tan = this._link.vertexSources.get(ShaderPredefined.a_UV0);
+                const linkVertSrcs = this._link.vertexSources;
+                if (linkVertSrcs) {
+                    if (!nrm || !nrm.data) nrm = linkVertSrcs.get(ShaderPredefined.a_Position0);
+                    if (!tan || !tan.data) tan = linkVertSrcs.get(ShaderPredefined.a_UV0);
+                }
                 if (!idx || !idx.data) idx = this._link.drawIndexSource;
             }
 

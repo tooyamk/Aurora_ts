@@ -276,16 +276,21 @@ namespace Aurora {
         }
 
         public prepend(q: Quaternion, rst: Quaternion = null): Quaternion {
-            return q.append(this, rst || this);
+            const w = q.w * this.w - q.x * this.x - q.y * this.y - q.z * this.z;
+            const x = q.w * this.x + q.x * this.w + q.y * this.z - q.z * this.y;
+            const y = q.w * this.y + q.y * this.w + q.z * this.x - q.x * this.z;
+            const z = q.w * this.z + q.z * this.w + q.x * this.y - q.y * this.x;
+
+            return rst ? rst.setFromNumbers(x, y, z, w) : new Quaternion(x, y, z, w);
         }
 
-        public append(quat: Quaternion, rst: Quaternion = null): Quaternion {
-            const w = this.w * quat.w - this.x * quat.x - this.y * quat.y - this.z * quat.z;
-            const x = this.w * quat.x + this.x * quat.w + this.y * quat.z - this.z * quat.y;
-            const y = this.w * quat.y + this.y * quat.w + this.z * quat.x - this.x * quat.z;
-            const z = this.w * quat.z + this.z * quat.w + this.x * quat.y - this.y * quat.x;
+        public append(q: Quaternion, rst: Quaternion = null): Quaternion {
+            const w = this.w * q.w - this.x * q.x - this.y * q.y - this.z * q.z;
+            const x = this.w * q.x + this.x * q.w + this.y * q.z - this.z * q.y;
+            const y = this.w * q.y + this.y * q.w + this.z * q.x - this.x * q.z;
+            const z = this.w * q.z + this.z * q.w + this.x * q.y - this.y * q.x;
 
-            return (rst || this).setFromNumbers(x, y, z, w);
+            return rst ? rst.setFromNumbers(x, y, z, w) : new Quaternion(x, y, z, w);
         }
 
         /*
@@ -322,9 +327,7 @@ namespace Aurora {
         }
 
         public toMatrix33(rst: Matrix44 = null): Matrix44 {
-            const x2 = this.x * 2;
-            const y2 = this.y * 2;
-            const z2 = this.z * 2;
+            const x2 = this.x * 2, y2 = this.y * 2, z2 = this.z * 2;
             const xx = this.x * x2;
             const xy = this.x * y2;
             const xz = this.x * z2;

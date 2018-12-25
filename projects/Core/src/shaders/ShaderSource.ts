@@ -35,7 +35,7 @@ namespace Aurora {
         private static _init(): void {
             if (!ShaderSource.SYS_DEFINES) {
                 ShaderSource.SYS_DEFINES = new Set(["GL_ES", "GL_FRAGMENT_PRECISION_HIGH"]);
-                ShaderSource.EXCLUDE_DEFINE = new RegExp(`^(${BuiltinShader.General.DECLARE_UNIFORM_DEFINE_PREFIX}|${BuiltinShader.General.DECLARE_UNIFORM_ARRAY_DEFINE_PREFIX}|${BuiltinShader.General.DECLARE_VARYING_DEFINE_PREFIX}|${BuiltinShader.General.DECLARE_TEMP_VAR_PREFIX})`);
+                ShaderSource.EXCLUDE_DEFINE = new RegExp(`^(${BuiltinShader.General.DECLARE_ATTRIB_MACRO_PREFIX}|${BuiltinShader.General.DECLARE_UNIFORM_MACRO_PREFIX}|${BuiltinShader.General.DECLARE_UNIFORM_ARRAY_MACRO_PREFIX}|${BuiltinShader.General.DECLARE_VARYING_MACRO_PREFIX}|${BuiltinShader.General.DECLARE_TEMP_VAR_PREFIX}|${BuiltinShader.General.ASSIGNMENT_MACRO_PREFIX}|${BuiltinShader.General.PRIVATE_MACRO_PREFIX})`);
                 ShaderSource.EXTRACT_LINES = /[\r\n][  ]*#(define|undef|ifdef|ifndef|if|elif)[  ]+[^\r\n\/]*/g;
                 ShaderSource.SEARCH_IF_OR_ELIF_DEFINE = /#(if|elif)[  ]*/;
                 ShaderSource.SEARCH_DEFINEDS = /\s*!*defined\s*\(\s*|\s|\)/g;

@@ -1,8 +1,8 @@
 namespace Aurora.Sort.Merge {
     /**
-     * @param compareFn : If return true, a is before to b.
+     * @param compareFn : if return true, a is before to b.
      */
-    export const sort = <T>(L: T[], compareFn: (a: T, b: T) => boolean, start: int = 0, end: int = -1) => {
+    export function sort<T>(L: T[], compareFn: (a: T, b: T) => boolean, start: int = 0, end: int = -1): void {
         if (end < 0 || end >= L.length) end = L.length - 1;
         if (start < 0) start = 0;
 
@@ -29,7 +29,7 @@ namespace Aurora.Sort.Merge {
         }
     }
 
-    const _mergePass = <T>(SR: T[], TR: T[], s: int, n: int, compareFn: (a: T, b: T) => boolean) => {
+    function _mergePass<T>(SR: T[], TR: T[], s: int, n: int, compareFn: (a: T, b: T) => boolean): void {
         let i = 0;
         const s2 = s << 1, s_1 = s - 1;
         const nn = n - s2, s2_1 = s2 - 1;
@@ -44,7 +44,7 @@ namespace Aurora.Sort.Merge {
         }
     }
 
-    const _merge = <T>(SR: T[], TR: T[], i: int, m: int, n: int, compareFn: (a: T, b: T) => boolean) => {
+    function _merge<T>(SR: T[], TR: T[], i: int, m: int, n: int, compareFn: (a: T, b: T) => boolean): void {
         let j: int, k: int;
         for (j = m + 1, k = i; i <= m && j <= n; ++k) {
             //if (SR[i] < SR[j])
@@ -58,7 +58,7 @@ namespace Aurora.Sort.Merge {
         while (j <= n) TR[k++] = SR[j++];
     }
 
-    const _mergePassOffset = <T>(SR: T[], SROffset: int, TR: T[], TROffset: int, s: int, n: int, compareFn: (a: T, b: T) => boolean) => {
+    function _mergePassOffset<T>(SR: T[], SROffset: int, TR: T[], TROffset: int, s: int, n: int, compareFn: (a: T, b: T) => boolean): void {
         let i = 0;
         const s2 = s << 1, s_1 = s - 1;
         const nn = n - s2, s2_1 = s2 - 1;
@@ -73,7 +73,7 @@ namespace Aurora.Sort.Merge {
         }
     }
 
-    const _mergeOffset = <T>(SR: T[], SROffset: int, TR: T[], TROffset: int, i: int, m: int, n: int, compareFn: (a: T, b: T) => boolean) => {
+    function _mergeOffset<T>(SR: T[], SROffset: int, TR: T[], TROffset: int, i: int, m: int, n: int, compareFn: (a: T, b: T) => boolean): void {
         let j: int, k: int;
         for (j = m + 1, k = i; i <= m && j <= n; ++k) {
             //if (SR[i] < SR[j])

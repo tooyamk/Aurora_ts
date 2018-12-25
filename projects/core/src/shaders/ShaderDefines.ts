@@ -75,11 +75,9 @@ namespace Aurora {
                     v.type = ShaderDefines.VlaueType.BOOL;
                     v.value = false;
                 }
-            } else {
-                if (v.type !== ShaderDefines.VlaueType.INT || v.value !== value) {
-                    v.type = ShaderDefines.VlaueType.INT;
-                    v.value = value;
-                }
+            } else if (v.type !== ShaderDefines.VlaueType.INT || v.value !== value) {
+                v.type = ShaderDefines.VlaueType.INT;
+                v.value = value;
             }
         }
 

@@ -219,7 +219,7 @@ class SkeletonAnimation {
                 clip.wrap = Aurora.AnimationWrap.Loop;
             }
 
-            for (let i = 0; i < 150; ++i) {
+            for (let i = 0; i < 300; ++i) {
                 let ske = skeData.skeleton.clone();
 
                 //Helper.printNodeHierarchy([ske.bonesMap.find(ske.rootBoneNames[0])]);

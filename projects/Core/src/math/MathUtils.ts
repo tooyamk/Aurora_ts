@@ -19,21 +19,11 @@ namespace Aurora.MathUtils {
     }
 
     export function clamp(value: number, min: number, max: number): number {
-        if (value < min) {
-            return min;
-        } else if (value > max) {
-            return max;
-        }
-        return value;
+        return value < min ? min : (value > max ? max : value);
     }
 
     export function clamp01(value: number): number {
-        if (value < 0) {
-            return 0;
-        } else if (value > 1) {
-            return 1;
-        }
-        return value;
+        return value < 0 ? 0 : (value > 1 ? 1 : value);
     }
 
     export function isPowOfTow(n: uint): boolean {

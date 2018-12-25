@@ -1,8 +1,8 @@
 ///<reference path="../General.ts"/>
 
 namespace Aurora.BuiltinShader.PostProcess.Default {
-    export const VERTEX: string = `
-attribute vec2 ${ShaderPredefined.a_Position0};
+    export const VERTEX: string = 
+`attribute vec2 ${ShaderPredefined.a_Position0};
 attribute vec2 ${ShaderPredefined.a_UV0};
 varying vec2 ${General.v_UV0};
 

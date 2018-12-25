@@ -8,7 +8,7 @@ namespace Aurora.BuiltinShader.Lib.AlphaTest {
         name: `${NAME}_Header`,
         source: `
 #ifdef ${ShaderPredefined.ALPHA_TEST}
-    #include<${General.DECLARE_UNIFORM.name}>(float, ${ShaderPredefined.u_AlphaTestCompareValue})
+    #include<${General.DECLARE_UNIFORM_MACRO.name}>(float, ${ShaderPredefined.u_AlphaTestCompareValue})
 #endif
 `};
 

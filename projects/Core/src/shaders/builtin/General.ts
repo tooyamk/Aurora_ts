@@ -16,80 +16,76 @@ namespace Aurora.BuiltinShader.General {
     export const var_WorldNormal0 = "var_WorldNormal0";
     export const var_WorldViewDir0 = "var_WorldViewDir0";
 
-    export const PRECISION_HEAD: string = `
-#ifdef GL_FRAGMENT_PRECISION_HIGH
+    export const PRECISION_HEAD: string = 
+`#ifdef GL_FRAGMENT_PRECISION_HIGH
 precision highp float;
 #else
 precision mediump float;
-#endif
-`;
+#endif`;
 
-    export const NEED_WORLD_POS_DEFINE = "_NEED_WORLD_POS_DEFINE";
-    export const NEED_WORLD_NORMAL_DEFINE = "_NEED_WORLD_NORMAL_DEFINE";
-
-    export const DECLARE_DEFINE: ShaderLib = {
-        name: "_DECLARE_DEFINE",
-        source: `
-#ifndef \${0}
+    export const DECLARE_MACRO: ShaderLib = {
+        name: "_DECLARE_MACRO",
+        source: 
+`#ifndef \${0}
 #define \${0}
-#endif
-`};
+#endif`
+};
 
     /**
      * @param type
      * @param name
      */
-    export const DECLARE_ATTRIB_DEFINE_PREFIX: string = "_DECLARE_ATTRIB_";
+    export const DECLARE_ATTRIB_MACRO_PREFIX: string = "_DECLARE_ATTRIB_";
 
-    export const DECLARE_ATTRIB: ShaderLib = {
+    export const DECLARE_ATTRIB_MACRO: ShaderLib = {
         name: "_DECLARE_ATTRIB",
-        source: `
-#ifndef ${DECLARE_ATTRIB_DEFINE_PREFIX}\${1}
-#define ${DECLARE_ATTRIB_DEFINE_PREFIX}\${1}
+        source: 
+`#ifndef ${DECLARE_ATTRIB_MACRO_PREFIX}\${1}
+#define ${DECLARE_ATTRIB_MACRO_PREFIX}\${1}
 attribute \${0} \${1};
-#endif
-`};
+#endif`
+};
 
     /**
      * @param type
      * @param name
      */
-    export const DECLARE_UNIFORM_DEFINE_PREFIX: string = "_DECLARE_UNIFORM_";
+    export const DECLARE_UNIFORM_MACRO_PREFIX: string = "_DECLARE_UNIFORM_";
 
-    export const DECLARE_UNIFORM: ShaderLib = {
+    export const DECLARE_UNIFORM_MACRO: ShaderLib = {
         name: "_DECLARE_UNIFORM",
-        source: `
-#ifndef ${DECLARE_UNIFORM_DEFINE_PREFIX}\${1}
-#define ${DECLARE_UNIFORM_DEFINE_PREFIX}\${1}
+        source: 
+`#ifndef ${DECLARE_UNIFORM_MACRO_PREFIX}\${1}
+#define ${DECLARE_UNIFORM_MACRO_PREFIX}\${1}
 uniform \${0} \${1};
-#endif
-`};
+#endif`
+};
 
-    export const DECLARE_UNIFORM_ARRAY_DEFINE_PREFIX: string = "_DECLARE_UNIFORM_ARRAY_";
+    export const DECLARE_UNIFORM_ARRAY_MACRO_PREFIX: string = "_DECLARE_UNIFORM_ARRAY_";
 
-    export const DECLARE_UNIFORM_ARRAY: ShaderLib = {
+    export const DECLARE_UNIFORM_ARRAY_MACRO: ShaderLib = {
         name: "_DECLARE_UNIFORM_ARRAY",
-        source: `
-#ifndef ${DECLARE_UNIFORM_DEFINE_PREFIX}\${1}
-#define ${DECLARE_UNIFORM_DEFINE_PREFIX}\${1}
+        source: 
+`#ifndef ${DECLARE_UNIFORM_MACRO_PREFIX}\${1}
+#define ${DECLARE_UNIFORM_MACRO_PREFIX}\${1}
 uniform \${0} \${1}[\${2}];
-#endif
-`};
+#endif`
+};
 
-    export const DECLARE_VARYING_DEFINE_PREFIX: string = "_DECLARE_VARYING_";
+    export const DECLARE_VARYING_MACRO_PREFIX: string = "_DECLARE_VARYING_";
 
     /**
      * @param type
      * @param name
      */
-    export const DECLARE_VARYING: ShaderLib = {
+    export const DECLARE_VARYING_MACRO: ShaderLib = {
         name: "_DECLARE_VARYING",
-        source: `
-#ifndef ${DECLARE_VARYING_DEFINE_PREFIX}\${1}
-#define ${DECLARE_VARYING_DEFINE_PREFIX}\${1}
+        source: 
+`#ifndef ${DECLARE_VARYING_MACRO_PREFIX}\${1}
+#define ${DECLARE_VARYING_MACRO_PREFIX}\${1}
 varying \${0} \${1};
-#endif
-`};
+#endif`
+};
 
     export const DECLARE_TEMP_VAR_PREFIX: string = "_DECLARE_TMP_VAR_";
 
@@ -97,59 +93,60 @@ varying \${0} \${1};
      * @param type
      * @param name
      */
-    export const DECLARE_TEMP_VAR: ShaderLib = {
+    export const DECLARE_TEMP_VAR_MACRO: ShaderLib = {
         name: "_DECLARE_TMP_VAR",
-        source: `
-#ifndef ${DECLARE_TEMP_VAR_PREFIX}\${1}
+        source: 
+`#ifndef ${DECLARE_TEMP_VAR_PREFIX}\${1}
 #define ${DECLARE_TEMP_VAR_PREFIX}\${1}
 \${0} \${1};
-#endif
-`};
+#endif`
+};
 
-    export const ASSIGNMENT_PREFIX: string = "_ASSIGNMENT_";
+    export const ASSIGNMENT_MACRO_PREFIX: string = "_ASSIGNMENT_";
+    export const PRIVATE_MACRO_PREFIX: string = "_PVT_";
 
     export const VERT_FINISH: ShaderLib = {
-        name: `_General_Vert_Finish`,
-        source: `
-#if defined(${General.DECLARE_VARYING_DEFINE_PREFIX}${v_WorldPos0}) && defined(${General.DECLARE_UNIFORM_DEFINE_PREFIX}${ShaderPredefined.u_M44_L2W})
-    #ifndef ${General.ASSIGNMENT_PREFIX}${v_WorldPos0}
-        #define ${General.ASSIGNMENT_PREFIX}${v_WorldPos0}
+        name: "_General_Vert_Finish",
+        source: 
+`#if defined(${General.DECLARE_VARYING_MACRO_PREFIX}${v_WorldPos0}) && defined(${General.DECLARE_UNIFORM_MACRO_PREFIX}${ShaderPredefined.u_M44_L2W})
+    #ifndef ${General.ASSIGNMENT_MACRO_PREFIX}${v_WorldPos0}
+        #define ${General.ASSIGNMENT_MACRO_PREFIX}${v_WorldPos0}
         ${v_WorldPos0} = (${ShaderPredefined.u_M44_L2W} * vec4(${General.var_Pos0}, 1.0)).xyz;
     #endif
 #endif
 
-#ifdef ${General.DECLARE_UNIFORM_DEFINE_PREFIX}${ShaderPredefined.u_M44_L2W}
+#ifdef ${General.DECLARE_UNIFORM_MACRO_PREFIX}${ShaderPredefined.u_M44_L2W}
     mat3 m3 = mat3(${ShaderPredefined.u_M44_L2W});
-    #ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${v_WorldNormal0}
-        #ifndef ${General.ASSIGNMENT_PREFIX}${v_WorldNormal0}
-            #define ${General.ASSIGNMENT_PREFIX}${v_WorldNormal0}
+    #ifdef ${General.DECLARE_VARYING_MACRO_PREFIX}${v_WorldNormal0}
+        #ifndef ${General.ASSIGNMENT_MACRO_PREFIX}${v_WorldNormal0}
+            #define ${General.ASSIGNMENT_MACRO_PREFIX}${v_WorldNormal0}
             ${v_WorldNormal0} = m3 * ${General.var_Nrm0};
         #endif
     #endif
 
-    #ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${v_WorldTangent0}
-        #ifndef ${General.ASSIGNMENT_PREFIX}${v_WorldTangent0}
-            #define ${General.ASSIGNMENT_PREFIX}${v_WorldTangent0}
+    #ifdef ${General.DECLARE_VARYING_MACRO_PREFIX}${v_WorldTangent0}
+        #ifndef ${General.ASSIGNMENT_MACRO_PREFIX}${v_WorldTangent0}
+            #define ${General.ASSIGNMENT_MACRO_PREFIX}${v_WorldTangent0}
             ${v_WorldTangent0} = m3 * ${General.var_Tan0};
         #endif
     #endif
 
-    #ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${v_WorldBinormal0}
-        #ifndef ${General.ASSIGNMENT_PREFIX}${v_WorldBinormal0}
-            #define ${General.ASSIGNMENT_PREFIX}${v_WorldBinormal0}
+    #ifdef ${General.DECLARE_VARYING_MACRO_PREFIX}${v_WorldBinormal0}
+        #ifndef ${General.ASSIGNMENT_MACRO_PREFIX}${v_WorldBinormal0}
+            #define ${General.ASSIGNMENT_MACRO_PREFIX}${v_WorldBinormal0}
             ${v_WorldBinormal0} = m3 * ${General.var_Binrm0};
         #endif
     #endif
 #endif
 
-gl_Position = ${ShaderPredefined.u_M44_L2P} * vec4(${General.var_Pos0}, 1.0);
-`}
+gl_Position = ${ShaderPredefined.u_M44_L2P} * vec4(${General.var_Pos0}, 1.0);`
+}
 
     export const FRAG_BEGIN: ShaderLib = {
         name: "_General_Frag_Begin",
-        source: `
-#ifdef ${General.DECLARE_VARYING_DEFINE_PREFIX}${v_WorldNormal0}
-    #include<${General.DECLARE_TEMP_VAR.name}>(vec3, ${General.var_WorldNormal0})
+        source: 
+`#ifdef ${General.DECLARE_VARYING_MACRO_PREFIX}${v_WorldNormal0}
+    #include<${General.DECLARE_TEMP_VAR_MACRO.name}>(vec3, ${General.var_WorldNormal0})
 
     #if defined(${ShaderPredefined.NORMAL_TEX}) && defined(${ShaderPredefined.LIGHTING})
         vec3 N = normalize(${General.v_WorldNormal0});
@@ -158,16 +155,16 @@ gl_Position = ${ShaderPredefined.u_M44_L2P} * vec4(${General.var_Pos0}, 1.0);
     #else
         ${General.var_WorldNormal0} = normalize(${General.v_WorldNormal0});
     #endif
-#endif
-`};
+#endif`
+};
 
     /**
      * @param diffuseColor (vec4).
      */
     export const FINAL_COLOR: ShaderLib = {
         name: "_FINAL_COLOR",
-        source: `
-#ifdef ${ShaderPredefined.LIGHTING}
+        source: 
+`#ifdef ${ShaderPredefined.LIGHTING}
     \${0}.xyz = (\${0}.xyz * _lightingInfo.ambientColor) + (\${0}.xyz * _lightingInfo.diffuseColor + _lightingInfo.specularColor) * _lightingInfo.intensity;
     #ifdef ${ShaderPredefined.REFLECTION}
         \${0}.xyz += _reflectColor.xyz;
@@ -176,9 +173,9 @@ gl_Position = ${ShaderPredefined.u_M44_L2P} * vec4(${General.var_Pos0}, 1.0);
     #ifdef ${ShaderPredefined.REFLECTION}
         \${0}.xyz = _reflectColor.xyz;
     #endif
-#endif
-`};
+#endif`
+};
 
-    export const SOURCES: ShaderLib[] = [DECLARE_DEFINE, DECLARE_ATTRIB, DECLARE_UNIFORM, DECLARE_UNIFORM_ARRAY, DECLARE_VARYING, DECLARE_TEMP_VAR, 
+    export const SOURCES: ShaderLib[] = [DECLARE_MACRO, DECLARE_ATTRIB_MACRO, DECLARE_UNIFORM_MACRO, DECLARE_UNIFORM_ARRAY_MACRO, DECLARE_VARYING_MACRO, DECLARE_TEMP_VAR_MACRO, 
         VERT_FINISH, FRAG_BEGIN, FINAL_COLOR];
 }

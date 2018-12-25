@@ -5,7 +5,43 @@
 
 document.oncontextmenu = () => { return false; }
 
+class AA {
+    public _value: number = 0;
+    public get value(): number {
+        return this._value;
+    }
+}
+
 window.addEventListener("DOMContentLoaded", () => {
+    /*
+    let pp = new Aurora.StandardHTMLPlatform();
+
+    let aa = new Map<String, boolean>();
+    let cc = {};
+    let bb: boolean[] = [];
+    let name = "fuck";
+    let idx = 0;
+    let n = 10200;
+
+    let t0 = pp.duration();
+
+    for (let i = 0; i < n; ++i) {
+    }
+
+    let t1 = pp.duration();
+    console.log(t1 - t0);
+
+    t0 = pp.duration();
+
+    for (let i = 0; i < n; ++i) {
+        aa.get(name);
+        //bb[idx];
+        //cc[name];
+    }
+
+    t1 = pp.duration();
+    console.log(t1 - t0);
+    */
     /*
     let m0 = new Aurora.Matrix44();
     let m1 = new Aurora.Matrix44();

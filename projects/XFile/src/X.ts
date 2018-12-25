@@ -1,8 +1,8 @@
 namespace Aurora.XFile {
     export const Version = "0.2.0";
 
-    const tmpMat0 = new Matrix44();
-    const tmpMat1 = new Matrix44();
+    const _tmpMat0 = new Matrix44();
+    const _tmpMat1 = new Matrix44();
 
     const enum FormatType {
         TXT = "txt ",
@@ -1118,11 +1118,11 @@ namespace Aurora.XFile {
                 case 4: {//m
                     const scale = new Vector3();
 
-                    tmpMat0.set44FromArray(values);
-                    tmpMat0.decomposition(tmpMat1, scale);
+                    _tmpMat0.set44FromArray(values);
+                    _tmpMat0.decomposition(_tmpMat1, scale);
 
-                    f.translation = new Vector3(tmpMat0.m30, tmpMat0.m31, tmpMat0.m32);
-                    f.rotation = tmpMat1.toQuaternion();
+                    f.translation = new Vector3(_tmpMat0.m30, _tmpMat0.m31, _tmpMat0.m32);
+                    f.rotation = _tmpMat1.toQuaternion();
                     f.scale = scale;
 
                     break;

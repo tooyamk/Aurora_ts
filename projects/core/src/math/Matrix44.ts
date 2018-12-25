@@ -816,9 +816,9 @@ namespace Aurora {
                 const dst8 = tmp4 - tmp5;
                 const dst9 = tmp9 - tmp8;
                 const dst10 = tmp10 - tmp11;
-                const dst12 = tmp2 * this.m22 + tmp5 * this.m32 + tmp1 * this.m12 - (tmp4 * this.m32 + tmp0 * this.m12 + tmp3 * this.m22);
-                const dst13 = tmp8 * this.m32 + tmp0 * this.m02 + tmp7 * this.m22 - (tmp6 * this.m22 + tmp9 * this.m32 + tmp1 * this.m02);
-                const dst14 = tmp6 * this.m12 + tmp11 * this.m32 + tmp3 * this.m02 - (tmp10 * this.m32 + tmp2 * this.m02 + tmp7 * this.m12);
+                const dst12 = tmp2 * this.m22 + tmp5 * this.m32 + tmp1 * this.m12 - tmp4 * this.m32 - tmp0 * this.m12 - tmp3 * this.m22;
+                const dst13 = tmp8 * this.m32 + tmp0 * this.m02 + tmp7 * this.m22 - tmp6 * this.m22 - tmp9 * this.m32 - tmp1 * this.m02;
+                const dst14 = tmp6 * this.m12 + tmp11 * this.m32 + tmp3 * this.m02 - tmp10 * this.m32 - tmp2 * this.m02 - tmp7 * this.m12;
 
                 det = 1 / det;
 
@@ -860,17 +860,17 @@ namespace Aurora {
             let tmp10 = this.m02 * this.m13;
             let tmp11 = this.m12 * this.m03;
 
-            const dst0 = tmp0 * this.m11 + tmp3 * this.m21 + tmp4 * this.m31 - (tmp1 * this.m11 + tmp2 * this.m21 + tmp5 * this.m31);
-            const dst1 = tmp1 * this.m01 + tmp6 * this.m21 + tmp9 * this.m31 - (tmp0 * this.m01 + tmp7 * this.m21 + tmp8 * this.m31);
-            const dst2 = tmp2 * this.m01 + tmp7 * this.m11 + tmp10 * this.m31 - (tmp3 * this.m01 + tmp6 * this.m11 + tmp11 * this.m31);
-            const dst3 = tmp5 * this.m01 + tmp8 * this.m11 + tmp11 * this.m21 - (tmp4 * this.m01 + tmp9 * this.m11 + tmp10 * this.m21);
+            const dst0 = tmp0 * this.m11 + tmp3 * this.m21 + tmp4 * this.m31 - tmp1 * this.m11 - tmp2 * this.m21 - tmp5 * this.m31;
+            const dst1 = tmp1 * this.m01 + tmp6 * this.m21 + tmp9 * this.m31 - tmp0 * this.m01 - tmp7 * this.m21 - tmp8 * this.m31;
+            const dst2 = tmp2 * this.m01 + tmp7 * this.m11 + tmp10 * this.m31 - tmp3 * this.m01 - tmp6 * this.m11 - tmp11 * this.m31;
+            const dst3 = tmp5 * this.m01 + tmp8 * this.m11 + tmp11 * this.m21 - tmp4 * this.m01 - tmp9 * this.m11 - tmp10 * this.m21;
 
             let det = this.m00 * dst0 + this.m10 * dst1 + this.m20 * dst2 + this.m30 * dst3;
             if (det > MathUtils.ZERO_TOLERANCE || det < -MathUtils.ZERO_TOLERANCE) {
-                const dst4 = tmp1 * this.m10 + tmp2 * this.m20 + tmp5 * this.m30 - (tmp0 * this.m10 + tmp3 * this.m20 + tmp4 * this.m30);
-                const dst5 = tmp0 * this.m00 + tmp7 * this.m20 + tmp8 * this.m30 - (tmp1 * this.m00 + tmp6 * this.m20 + tmp9 * this.m30);
-                const dst6 = tmp3 * this.m00 + tmp6 * this.m10 + tmp11 * this.m30 - (tmp2 * this.m00 + tmp7 * this.m10 + tmp10 * this.m30);
-                const dst7 = tmp4 * this.m00 + tmp9 * this.m10 + tmp10 * this.m20 - (tmp5 * this.m00 + tmp8 * this.m10 + tmp11 * this.m20);
+                const dst4 = tmp1 * this.m10 + tmp2 * this.m20 + tmp5 * this.m30 - tmp0 * this.m10 - tmp3 * this.m20 - tmp4 * this.m30;
+                const dst5 = tmp0 * this.m00 + tmp7 * this.m20 + tmp8 * this.m30 - tmp1 * this.m00 - tmp6 * this.m20 - tmp9 * this.m30;
+                const dst6 = tmp3 * this.m00 + tmp6 * this.m10 + tmp11 * this.m30 - tmp2 * this.m00 - tmp7 * this.m10 - tmp10 * this.m30;
+                const dst7 = tmp4 * this.m00 + tmp9 * this.m10 + tmp10 * this.m20 - tmp5 * this.m00 - tmp8 * this.m10 - tmp11 * this.m20;
 
                 tmp0 = this.m20 * this.m31;
                 tmp1 = this.m30 * this.m21;
@@ -885,14 +885,14 @@ namespace Aurora {
                 tmp10 = this.m00 * this.m11;
                 tmp11 = this.m10 * this.m01;
 
-                const dst8 = tmp0 * this.m13 + tmp3 * this.m23 + tmp4 * this.m33 - (tmp1 * this.m13 + tmp2 * this.m23 + tmp5 * this.m33);
-                const dst9 = tmp1 * this.m03 + tmp6 * this.m23 + tmp9 * this.m33 - (tmp0 * this.m03 + tmp7 * this.m23 + tmp8 * this.m33);
-                const dst10 = tmp2 * this.m03 + tmp7 * this.m13 + tmp10 * this.m33 - (tmp3 * this.m03 + tmp6 * this.m13 + tmp11 * this.m33);
-                const dst11 = tmp5 * this.m03 + tmp8 * this.m13 + tmp11 * this.m23 - (tmp4 * this.m03 + tmp9 * this.m13 + tmp10 * this.m23);
-                const dst12 = tmp2 * this.m22 + tmp5 * this.m32 + tmp1 * this.m12 - (tmp4 * this.m32 + tmp0 * this.m12 + tmp3 * this.m22);
-                const dst13 = tmp8 * this.m32 + tmp0 * this.m02 + tmp7 * this.m22 - (tmp6 * this.m22 + tmp9 * this.m32 + tmp1 * this.m02);
-                const dst14 = tmp6 * this.m12 + tmp11 * this.m32 + tmp3 * this.m02 - (tmp10 * this.m32 + tmp2 * this.m02 + tmp7 * this.m12);
-                const dst15 = tmp10 * this.m22 + tmp4 * this.m02 + tmp9 * this.m12 - (tmp8 * this.m12 + tmp11 * this.m22 + tmp5 * this.m02);
+                const dst8 = tmp0 * this.m13 + tmp3 * this.m23 + tmp4 * this.m33 - tmp1 * this.m13 - tmp2 * this.m23 - tmp5 * this.m33;
+                const dst9 = tmp1 * this.m03 + tmp6 * this.m23 + tmp9 * this.m33 - tmp0 * this.m03 - tmp7 * this.m23 - tmp8 * this.m33;
+                const dst10 = tmp2 * this.m03 + tmp7 * this.m13 + tmp10 * this.m33 - tmp3 * this.m03 - tmp6 * this.m13 - tmp11 * this.m33;
+                const dst11 = tmp5 * this.m03 + tmp8 * this.m13 + tmp11 * this.m23 - tmp4 * this.m03 - tmp9 * this.m13 - tmp10 * this.m23;
+                const dst12 = tmp2 * this.m22 + tmp5 * this.m32 + tmp1 * this.m12 - tmp4 * this.m32 - tmp0 * this.m12 - tmp3 * this.m22;
+                const dst13 = tmp8 * this.m32 + tmp0 * this.m02 + tmp7 * this.m22 - tmp6 * this.m22 - tmp9 * this.m32 - tmp1 * this.m02;
+                const dst14 = tmp6 * this.m12 + tmp11 * this.m32 + tmp3 * this.m02 - tmp10 * this.m32 - tmp2 * this.m02 - tmp7 * this.m12;
+                const dst15 = tmp10 * this.m22 + tmp4 * this.m02 + tmp9 * this.m12 - tmp8 * this.m12 - tmp11 * this.m22 - tmp5 * this.m02;
 
                 det = 1 / det;
 
@@ -924,224 +924,67 @@ namespace Aurora {
             }
         }
 
-        /*
-        public elements = new Float32Array(16);
-
-        public append34a(m: Matrix44, rst: Matrix44 = null): Matrix44 {
-            const self = this.elements;
-            const target = m.elements;
-
-            const b00 = target[0];
-            const b01 = target[1];
-            const b02 = target[2];
-
-            const b10 = target[4];
-            const b11 = target[5];
-            const b12 = target[6];
-
-            const b20 = target[8];
-            const b21 = target[9];
-            const b22 = target[10];
-
-            let a0 = self[0];
-            let a1 = self[1];
-            let a2 = self[2];
-
-            const m00 = a0 * b00 + a1 * b10 + a2 * b20;
-            const m01 = a0 * b01 + a1 * b11 + a2 * b21;
-            const m02 = a0 * b02 + a1 * b12 + a2 * b22;
-
-            a0 = self[4];
-            a1 = self[5];
-            a2 = self[6];
-
-            const m10 = a0 * b00 + a1 * b10 + a2 * b20;
-            const m11 = a0 * b01 + a1 * b11 + a2 * b21;
-            const m12 = a0 * b02 + a1 * b12 + a2 * b22;
-
-            a0 = self[8];
-            a1 = self[9];
-            a2 = self[10];
-
-            const m20 = a0 * b00 + a1 * b10 + a2 * b20;
-            const m21 = a0 * b01 + a1 * b11 + a2 * b21;
-            const m22 = a0 * b02 + a1 * b12 + a2 * b22;
-
-            a0 = self[12];
-            a1 = self[13];
-            a2 = self[14];
-
-            const m30 = a0 * b00 + a1 * b10 + a2 * b20 + target[12];
-            const m31 = a0 * b01 + a1 * b11 + a2 * b21 + target[13];
-            const m32 = a0 * b02 + a1 * b12 + a2 * b22 + target[14];
-
-            rst = rst || this;
-            const to = rst.elements;
-            to[0] = m00;
-            to[1] = m01;
-            to[2] = m02;
-
-            to[4] = m10;
-            to[5] = m11;
-            to[6] = m12;
-
-            to[8] = m20;
-            to[9] = m21;
-            to[10] = m22;
-
-            to[12] = m30;
-            to[13] = m31;
-            to[14] = m32;
-
-            return rst;
-        }
-        */
-
-        public append34b(m: Matrix44, rst: Matrix44 = null): Matrix44 {
-            const self = this;
-
-            const b00 = m.m00;
-            const b01 = m.m01;
-            const b02 = m.m02;
-
-            const b10 = m.m10;
-            const b11 = m.m11;
-            const b12 = m.m12;
-
-            const b20 = m.m20;
-            const b21 = m.m21;
-            const b22 = m.m22;
-
-            let a0 = self.m00;
-            let a1 = self.m01;
-            let a2 = self.m02;
-
-            const m00 = a0 * b00 + a1 * b10 + a2 * b20;
-            const m01 = a0 * b01 + a1 * b11 + a2 * b21;
-            const m02 = a0 * b02 + a1 * b12 + a2 * b22;
-
-            a0 = self.m10;
-            a1 = self.m11;
-            a2 = self.m12;
-
-            const m10 = a0 * b00 + a1 * b10 + a2 * b20;
-            const m11 = a0 * b01 + a1 * b11 + a2 * b21;
-            const m12 = a0 * b02 + a1 * b12 + a2 * b22;
-
-            a0 = self.m20;
-            a1 = self.m21;
-            a2 = self.m22;
-
-            const m20 = a0 * b00 + a1 * b10 + a2 * b20;
-            const m21 = a0 * b01 + a1 * b11 + a2 * b21;
-            const m22 = a0 * b02 + a1 * b12 + a2 * b22;
-
-            a0 = self.m30;
-            a1 = self.m31;
-            a2 = self.m32;
-
-            const m30 = a0 * b00 + a1 * b10 + a2 * b20 + m.m30;
-            const m31 = a0 * b01 + a1 * b11 + a2 * b21 + m.m31;
-            const m32 = a0 * b02 + a1 * b12 + a2 * b22 + m.m32;
-
-            rst = rst || self;
-            rst.m00 = m00;
-            rst.m01 = m01;
-            rst.m02 = m02;
-
-            rst.m10 = m10;
-            rst.m11 = m11;
-            rst.m12 = m12;
-
-            rst.m20 = m20;
-            rst.m21 = m21;
-            rst.m22 = m22;
-
-            rst.m30 = m30;
-            rst.m31 = m31;
-            rst.m32 = m32;
-
-            return rst;
-        }
-
         public append34(m: Matrix44, rst: Matrix44 = null): Matrix44 {
-            const m00 = this.m00 * m.m00 + this.m01 * m.m10 + this.m02 * m.m20;
-            const m01 = this.m00 * m.m01 + this.m01 * m.m11 + this.m02 * m.m21;
-            const m02 = this.m00 * m.m02 + this.m01 * m.m12 + this.m02 * m.m22;
-
-            const m10 = this.m10 * m.m00 + this.m11 * m.m10 + this.m12 * m.m20;
-            const m11 = this.m10 * m.m01 + this.m11 * m.m11 + this.m12 * m.m21;
-            const m12 = this.m10 * m.m02 + this.m11 * m.m12 + this.m12 * m.m22;
-
-            const m20 = this.m20 * m.m00 + this.m21 * m.m10 + this.m22 * m.m20;
-            const m21 = this.m20 * m.m01 + this.m21 * m.m11 + this.m22 * m.m21;
-            const m22 = this.m20 * m.m02 + this.m21 * m.m12 + this.m22 * m.m22;
-
-            const m30 = this.m30 * m.m00 + this.m31 * m.m10 + this.m32 * m.m20 + m.m30;
-            const m31 = this.m30 * m.m01 + this.m31 * m.m11 + this.m32 * m.m21 + m.m31;
-            const m32 = this.m30 * m.m02 + this.m31 * m.m12 + this.m32 * m.m22 + m.m32;
-
             rst = rst || this;
-            rst.m00 = m00;
-            rst.m01 = m01;
-            rst.m02 = m02;
 
-            rst.m10 = m10;
-            rst.m11 = m11;
-            rst.m12 = m12;
+            const b00 = m.m00, b01 = m.m01, b02 = m.m02;
+            const b10 = m.m10, b11 = m.m11, b12 = m.m12;
+            const b20 = m.m20, b21 = m.m21, b22 = m.m22;
 
-            rst.m20 = m20;
-            rst.m21 = m21;
-            rst.m22 = m22;
+            let a0 = this.m00, a1 = this.m01, a2 = this.m02;
+            rst.m00 = a0 * b00 + a1 * b10 + a2 * b20;
+            rst.m01 = a0 * b01 + a1 * b11 + a2 * b21;
+            rst.m02 = a0 * b02 + a1 * b12 + a2 * b22;
 
-            rst.m30 = m30;
-            rst.m31 = m31;
-            rst.m32 = m32;
+            a0 = this.m10; a1 = this.m11; a2 = this.m12; 
+            rst.m10 = a0 * b00 + a1 * b10 + a2 * b20;
+            rst.m11 = a0 * b01 + a1 * b11 + a2 * b21;
+            rst.m12 = a0 * b02 + a1 * b12 + a2 * b22;
+
+            a0 = this.m20; a1 = this.m21; a2 = this.m22;
+            rst.m20 = a0 * b00 + a1 * b10 + a2 * b20;
+            rst.m21 = a0 * b01 + a1 * b11 + a2 * b21;
+            rst.m22 = a0 * b02 + a1 * b12 + a2 * b22;
+
+            a0 = this.m30; a1 = this.m31; a2 = this.m32;
+            rst.m30 = a0 * b00 + a1 * b10 + a2 * b20 + m.m30;
+            rst.m31 = a0 * b01 + a1 * b11 + a2 * b21 + m.m31;
+            rst.m32 = a0 * b02 + a1 * b12 + a2 * b22 + m.m32;
 
             return rst;
         }
 
         public append44(m: Matrix44, rst: Matrix44 = null): Matrix44 {
-            const m00 = this.m00 * m.m00 + this.m01 * m.m10 + this.m02 * m.m20 + this.m03 * m.m30;
-            const m01 = this.m00 * m.m01 + this.m01 * m.m11 + this.m02 * m.m21 + this.m03 * m.m31;
-            const m02 = this.m00 * m.m02 + this.m01 * m.m12 + this.m02 * m.m22 + this.m03 * m.m32;
-            const m03 = this.m00 * m.m03 + this.m01 * m.m13 + this.m02 * m.m23 + this.m03 * m.m33;
-
-            const m10 = this.m10 * m.m00 + this.m11 * m.m10 + this.m12 * m.m20 + this.m13 * m.m30;
-            const m11 = this.m10 * m.m01 + this.m11 * m.m11 + this.m12 * m.m21 + this.m13 * m.m31;
-            const m12 = this.m10 * m.m02 + this.m11 * m.m12 + this.m12 * m.m22 + this.m13 * m.m32;
-            const m13 = this.m10 * m.m03 + this.m11 * m.m13 + this.m12 * m.m23 + this.m13 * m.m33;
-
-            const m20 = this.m20 * m.m00 + this.m21 * m.m10 + this.m22 * m.m20 + this.m23 * m.m30;
-            const m21 = this.m20 * m.m01 + this.m21 * m.m11 + this.m22 * m.m21 + this.m23 * m.m31;
-            const m22 = this.m20 * m.m02 + this.m21 * m.m12 + this.m22 * m.m22 + this.m23 * m.m32;
-            const m23 = this.m20 * m.m03 + this.m21 * m.m13 + this.m22 * m.m23 + this.m23 * m.m33;
-
-            const m30 = this.m30 * m.m00 + this.m31 * m.m10 + this.m32 * m.m20 + this.m33 * m.m30;
-            const m31 = this.m30 * m.m01 + this.m31 * m.m11 + this.m32 * m.m21 + this.m33 * m.m31;
-            const m32 = this.m30 * m.m02 + this.m31 * m.m12 + this.m32 * m.m22 + this.m33 * m.m32;
-            const m33 = this.m30 * m.m03 + this.m31 * m.m13 + this.m32 * m.m23 + this.m33 * m.m33;
-
             rst = rst || this;
-            rst.m00 = m00;
-            rst.m01 = m01;
-            rst.m02 = m02;
-            rst.m03 = m03;
 
-            rst.m10 = m10;
-            rst.m11 = m11;
-            rst.m12 = m12;
-            rst.m13 = m13;
+            const b00 = m.m00, b01 = m.m01, b02 = m.m02, b03 = m.m03;
+            const b10 = m.m10, b11 = m.m11, b12 = m.m12, b13 = m.m13;
+            const b20 = m.m20, b21 = m.m21, b22 = m.m22, b23 = m.m23;
+            const b30 = m.m30, b31 = m.m31, b32 = m.m32, b33 = m.m33;
 
-            rst.m20 = m20;
-            rst.m21 = m21;
-            rst.m22 = m22;
-            rst.m23 = m23;
+            let a0 = this.m00, a1 = this.m01, a2 = this.m02, a3 = this.m03;
+            rst.m00 = a0 * b00 + a1 * b10 + a2 * b20 + a3 * b30;
+            rst.m01 = a0 * b01 + a1 * b11 + a2 * b21 + a3 * b31;
+            rst.m02 = a0 * b02 + a1 * b12 + a2 * b22 + a3 * b32;
+            rst.m03 = a0 * b03 + a1 * b13 + a2 * b23 + a3 * b33;
 
-            rst.m30 = m30;
-            rst.m31 = m31;
-            rst.m32 = m32;
-            rst.m33 = m33;
+            a0 = this.m10; a1 = this.m11; a2 = this.m12; a3 = this.m13;
+            rst.m10 = a0 * b00 + a1 * b10 + a2 * b20 + a3 * b30;
+            rst.m11 = a0 * b01 + a1 * b11 + a2 * b21 + a3 * b31;
+            rst.m12 = a0 * b02 + a1 * b12 + a2 * b22 + a3 * b32;
+            rst.m13 = a0 * b03 + a1 * b13 + a2 * b23 + a3 * b33;
+
+            a0 = this.m20; a1 = this.m21; a2 = this.m22; a3 = this.m23;
+            rst.m20 = a0 * b00 + a1 * b10 + a2 * b20 + a3 * b30;
+            rst.m21 = a0 * b01 + a1 * b11 + a2 * b21 + a3 * b31;
+            rst.m22 = a0 * b02 + a1 * b12 + a2 * b22 + a3 * b32;
+            rst.m23 = a0 * b03 + a1 * b13 + a2 * b23 + a3 * b33;
+
+            a0 = this.m30; a1 = this.m31; a2 = this.m32; a3 = this.m33;
+            rst.m30 = a0 * b00 + a1 * b10 + a2 * b20 + a3 * b30;
+            rst.m31 = a0 * b01 + a1 * b11 + a2 * b21 + a3 * b31;
+            rst.m32 = a0 * b02 + a1 * b12 + a2 * b22 + a3 * b32;
+            rst.m33 = a0 * b03 + a1 * b13 + a2 * b23 + a3 * b33;
 
             return rst;
         }

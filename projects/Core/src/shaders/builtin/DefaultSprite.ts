@@ -1,8 +1,8 @@
 namespace Aurora.BuiltinShader.DefaultSprite {
     export const NAME = "_Built-in_DefaultSprite";
 
-    export const VERTEX = `
-attribute vec2 ${ShaderPredefined.a_Position0};
+    export const VERTEX = 
+`attribute vec2 ${ShaderPredefined.a_Position0};
 attribute vec2 ${ShaderPredefined.a_UV0};
 attribute vec4 ${ShaderPredefined.a_Color0};
 
@@ -15,8 +15,8 @@ void main(void) {
     ${General.v_Color0} = ${ShaderPredefined.a_Color0};
 }`;
     
-    export const FRAGMENT = `
-${General.PRECISION_HEAD}
+    export const FRAGMENT = 
+`${General.PRECISION_HEAD}
 
 uniform sampler2D ${ShaderPredefined.u_DiffuseSampler};
 
