@@ -351,13 +351,13 @@ namespace Aurora {
                             if (frame1.rotation) {
                                 if (cached) {
                                     const from = frame0.rotation, to = frame1.rotation, rst = trans.rotation;
-                                    const acos = frame1.acos;
                                     let k0: number, k1: number;
-                                    if (acos === acos) {
-                                        const sin = frame1.sin;
+                                    if (frame1.slerp) {
+                                        const acos = frame1.acos;
+                                        const recSin = frame1.recSin;
                                         const ta = t * acos;
-                                        k0 = Math.sin(acos - ta) / sin;
-                                        k1 = Math.sin(ta) / sin;
+                                        k0 = Math.sin(acos - ta) * recSin;
+                                        k1 = Math.sin(ta) * recSin;
                                     } else {
                                         k0 = 1 - t;
                                         k1 = t;

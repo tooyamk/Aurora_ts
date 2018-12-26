@@ -1,16 +1,21 @@
 namespace Aurora {
     export const enum NodeDirtyFlag {
-        LOCAL_MATRIX_DIRTY = 0b1,
-        WORLD_MATRIX_DIRTY = 0b10,
-        INVERSE_WORLD_MATRIX_DIRTY = 0b100,
-        WORLD_ROTATION_DIRTY = 0b1000,
-        WORLD_AND_INVERSE_MATRIX_DIRTY = WORLD_MATRIX_DIRTY | INVERSE_WORLD_MATRIX_DIRTY,
-        WORLD_ALL_DIRTY = WORLD_AND_INVERSE_MATRIX_DIRTY | WORLD_ROTATION_DIRTY,
-        LOCAL_AND_WORLD_ALL_DIRTY = LOCAL_MATRIX_DIRTY | WORLD_ALL_DIRTY,
-        LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY = LOCAL_AND_WORLD_ALL_DIRTY & (~WORLD_ROTATION_DIRTY),
-        ALL_MATRIX_DIRTY = LOCAL_MATRIX_DIRTY | WORLD_AND_INVERSE_MATRIX_DIRTY,
+        LOCAL_MAT = 0b1,
+        NOT_LOCAL_MAT = ~LOCAL_MAT,
+        WORLD_MAT = 0b10,
+        NOT_WORLD_MAT = ~WORLD_MAT,
+        INV_WORLD_MAT = 0b100,
+        NOT_INV_WORLD_MAT = ~INV_WORLD_MAT,
+        WORLD_ROT = 0b1000,
+        NOT_WORLD_ROT = ~WORLD_ROT,
+        WORLD_AND_INV_MAT = WORLD_MAT | INV_WORLD_MAT,
+        WORLD_ALL = WORLD_AND_INV_MAT | WORLD_ROT,
+        LOCAL_AND_WORLD_ALL = LOCAL_MAT | WORLD_ALL,
+        LOCAL_AND_WORLD_EXCEPT_WORLD_ROT = LOCAL_AND_WORLD_ALL & NOT_WORLD_ROT,
+        ALL_MAT = LOCAL_MAT | WORLD_AND_INV_MAT,
 
-        CASCADE_COLOR_DIRTY = 0b10000
+        CASCADE_COLOR = 0b10000,
+        NOT_CASCADE_COLOR = ~CASCADE_COLOR
     }
 
     export class Node extends Ref {
@@ -118,22 +123,22 @@ namespace Aurora {
         protected _parentChanged(root: Node): void {
             this._root = root;
 
-            let sendDirty = NodeDirtyFlag.WORLD_ALL_DIRTY;
+            let sendDirty = NodeDirtyFlag.WORLD_ALL;
 
             const p = this._parent;
             if (p) {
                 p.updateMCascadeColor();
                 if (p._cascadeColor) {
                     if (this._cascadeColor) {
-                        if (!this._cascadeColor.isEqualColor4(p._cascadeColor)) sendDirty |= NodeDirtyFlag.CASCADE_COLOR_DIRTY;
+                        if (!this._cascadeColor.isEqualColor4(p._cascadeColor)) sendDirty |= NodeDirtyFlag.CASCADE_COLOR;
                     } else {
-                        if (!p._cascadeColor.isWhite) sendDirty |= NodeDirtyFlag.CASCADE_COLOR_DIRTY;
+                        if (!p._cascadeColor.isWhite) sendDirty |= NodeDirtyFlag.CASCADE_COLOR;
                     }
                 } else {
-                    if (this._cascadeColor && !this._cascadeColor.isWhite) sendDirty |= NodeDirtyFlag.CASCADE_COLOR_DIRTY;
+                    if (this._cascadeColor && !this._cascadeColor.isWhite) sendDirty |= NodeDirtyFlag.CASCADE_COLOR;
                 }
             } else {
-                if (this._cascadeColor && !this._cascadeColor.isWhite) sendDirty |= NodeDirtyFlag.CASCADE_COLOR_DIRTY;
+                if (this._cascadeColor && !this._cascadeColor.isWhite) sendDirty |= NodeDirtyFlag.CASCADE_COLOR;
             }
 
             const now = this._dirty | sendDirty;
@@ -318,10 +323,10 @@ namespace Aurora {
         }
 
         protected _colorChanged(): void {
-            const now = this._dirty | NodeDirtyFlag.CASCADE_COLOR_DIRTY;
+            const now = this._dirty | NodeDirtyFlag.CASCADE_COLOR;
             if (now !== this._dirty) {
                 this._dirty = now;
-                this._noticeUpdate(NodeDirtyFlag.CASCADE_COLOR_DIRTY);
+                this._noticeUpdate(NodeDirtyFlag.CASCADE_COLOR);
             }
         }
 
@@ -335,8 +340,8 @@ namespace Aurora {
         }
 
         public updateMCascadeColor(): void {
-            if (this._dirty & NodeDirtyFlag.CASCADE_COLOR_DIRTY) {
-                this._dirty &= ~NodeDirtyFlag.CASCADE_COLOR_DIRTY;
+            if (this._dirty & NodeDirtyFlag.CASCADE_COLOR) {
+                this._dirty &= NodeDirtyFlag.NOT_CASCADE_COLOR;
 
                 if (this._parent) {
                     const c = this._parent.readonlyCascadeColor;
@@ -552,10 +557,10 @@ namespace Aurora {
             lm.m31 = y;
             lm.m32 = z;
 
-            const now = this._dirty | NodeDirtyFlag.WORLD_AND_INVERSE_MATRIX_DIRTY;
+            const now = this._dirty | NodeDirtyFlag.WORLD_AND_INV_MAT;
             if (now !== this._dirty) {
                 this._dirty = now;
-                this._noticeUpdate(NodeDirtyFlag.WORLD_AND_INVERSE_MATRIX_DIRTY);
+                this._noticeUpdate(NodeDirtyFlag.WORLD_AND_INV_MAT);
             }
         }
 
@@ -563,10 +568,10 @@ namespace Aurora {
             this.updateLocalMatrix();
             this._localMatrix.prependTranslate34XYZ(x, y, z);
 
-            const now = this._dirty | NodeDirtyFlag.WORLD_AND_INVERSE_MATRIX_DIRTY;
+            const now = this._dirty | NodeDirtyFlag.WORLD_AND_INV_MAT;
             if (now !== this._dirty) {
                 this._dirty = now;
-                this._noticeUpdate(NodeDirtyFlag.WORLD_AND_INVERSE_MATRIX_DIRTY);
+                this._noticeUpdate(NodeDirtyFlag.WORLD_AND_INV_MAT);
             }
         }
 
@@ -614,8 +619,8 @@ namespace Aurora {
                 lm.m32 = wm.m32;
             }
 
-            this._dirty |= NodeDirtyFlag.INVERSE_WORLD_MATRIX_DIRTY;
-            if (oldDirty !== this._dirty) this._noticeUpdate(NodeDirtyFlag.WORLD_AND_INVERSE_MATRIX_DIRTY);
+            this._dirty |= NodeDirtyFlag.INV_WORLD_MAT;
+            if (oldDirty !== this._dirty) this._noticeUpdate(NodeDirtyFlag.WORLD_AND_INV_MAT);
         }
 
         public getLocalRotation(rst: Quaternion = null): Quaternion {
@@ -625,30 +630,30 @@ namespace Aurora {
         public setLocalRotation(q: Quaternion): void {
             this._localRot.set(q);
 
-            const now = this._dirty | NodeDirtyFlag.LOCAL_AND_WORLD_ALL_DIRTY;
+            const now = this._dirty | NodeDirtyFlag.LOCAL_AND_WORLD_ALL;
             if (now !== this._dirty) {
                 this._dirty = now;
-                this._noticeUpdate(NodeDirtyFlag.WORLD_ALL_DIRTY);
+                this._noticeUpdate(NodeDirtyFlag.WORLD_ALL);
             }
         }
 
         public localRotate(q: Quaternion): void {
             this._localRot.append(q);
 
-            const now = this._dirty | NodeDirtyFlag.LOCAL_AND_WORLD_ALL_DIRTY;
+            const now = this._dirty | NodeDirtyFlag.LOCAL_AND_WORLD_ALL;
             if (now !== this._dirty) {
                 this._dirty = now;
-                this._noticeUpdate(NodeDirtyFlag.WORLD_ALL_DIRTY);
+                this._noticeUpdate(NodeDirtyFlag.WORLD_ALL);
             }
         }
 
         public parentRotate(q: Quaternion): void {
             this._localRot.prepend(q);
 
-            const now = this._dirty | NodeDirtyFlag.LOCAL_AND_WORLD_ALL_DIRTY;
+            const now = this._dirty | NodeDirtyFlag.LOCAL_AND_WORLD_ALL;
             if (now !== this._dirty) {
                 this._dirty = now;
-                this._noticeUpdate(NodeDirtyFlag.WORLD_ALL_DIRTY);
+                this._noticeUpdate(NodeDirtyFlag.WORLD_ALL);
             }
         }
 
@@ -682,9 +687,9 @@ namespace Aurora {
                 this._localRot.set(this._worldRot);
             }
 
-            this._dirty &= ~NodeDirtyFlag.WORLD_ROTATION_DIRTY;
-            this._dirty |= NodeDirtyFlag.LOCAL_AND_WORLD_EXCEPT_WORLD_ROTATION_DIRTY;
-            if (oldDirty !== this._dirty) this._noticeUpdate(NodeDirtyFlag.WORLD_ALL_DIRTY);
+            this._dirty &= NodeDirtyFlag.NOT_WORLD_ROT;
+            this._dirty |= NodeDirtyFlag.LOCAL_AND_WORLD_EXCEPT_WORLD_ROT;
+            if (oldDirty !== this._dirty) this._noticeUpdate(NodeDirtyFlag.WORLD_ALL);
         }
 
         /**
@@ -714,10 +719,10 @@ namespace Aurora {
         public setLocalScale(x: number, y: number, z: number): void {
             this._localScale.setFromNumbers(x, y, z);
 
-            const now = this._dirty | NodeDirtyFlag.ALL_MATRIX_DIRTY;
+            const now = this._dirty | NodeDirtyFlag.ALL_MAT;
             if (now !== this._dirty) {
                 this._dirty = now;
-                this._noticeUpdate(NodeDirtyFlag.WORLD_AND_INVERSE_MATRIX_DIRTY);
+                this._noticeUpdate(NodeDirtyFlag.WORLD_AND_INV_MAT);
             }
         }
 
@@ -732,10 +737,10 @@ namespace Aurora {
             this._localMatrix.decomposition(Node._tmpMat, this._localScale);
             Node._tmpMat.toQuaternion(this._localRot);
 
-            const now = this._dirty & (~NodeDirtyFlag.LOCAL_MATRIX_DIRTY) | NodeDirtyFlag.WORLD_ALL_DIRTY;
+            const now = this._dirty & NodeDirtyFlag.NOT_LOCAL_MAT | NodeDirtyFlag.WORLD_ALL;
             if (now !== this._dirty) {
                 this._dirty = now;
-                this._noticeUpdate(NodeDirtyFlag.WORLD_ALL_DIRTY);
+                this._noticeUpdate(NodeDirtyFlag.WORLD_ALL);
             }
         }
 
@@ -748,10 +753,10 @@ namespace Aurora {
             this._localRot.set(rot);
             this._localScale.set(scale);
 
-            const now = this._dirty | NodeDirtyFlag.LOCAL_AND_WORLD_ALL_DIRTY;
+            const now = this._dirty | NodeDirtyFlag.LOCAL_AND_WORLD_ALL;
             if (now !== this._dirty) {
                 this._dirty = now;
-                this._noticeUpdate(NodeDirtyFlag.WORLD_ALL_DIRTY);
+                this._noticeUpdate(NodeDirtyFlag.WORLD_ALL);
             }
         }
 
@@ -763,7 +768,7 @@ namespace Aurora {
         public setWorldMatrix(m: Matrix44): void {
             this._worldMatrix.set34(m);
 
-            let now = this._dirty & (~NodeDirtyFlag.WORLD_MATRIX_DIRTY) | NodeDirtyFlag.INVERSE_WORLD_MATRIX_DIRTY;
+            let now = this._dirty & NodeDirtyFlag.NOT_WORLD_MAT | NodeDirtyFlag.INV_WORLD_MAT;
 
             if (this._parent) {
                 this._worldMatrix.append34(this.readonlyInverseWorldMatrix, this._localMatrix);
@@ -774,10 +779,10 @@ namespace Aurora {
             this._localMatrix.decomposition(Node._tmpMat, this._localScale);
             Node._tmpMat.toQuaternion(this._localRot);
 
-            now = now & (~NodeDirtyFlag.LOCAL_MATRIX_DIRTY) | NodeDirtyFlag.WORLD_ROTATION_DIRTY;
+            now = now & NodeDirtyFlag.NOT_LOCAL_MAT | NodeDirtyFlag.WORLD_ROT;
             if (now !== this._dirty) {
                 this._dirty = now;
-                this._noticeUpdate(NodeDirtyFlag.WORLD_ALL_DIRTY);
+                this._noticeUpdate(NodeDirtyFlag.WORLD_ALL);
             }
         }
 
@@ -792,17 +797,17 @@ namespace Aurora {
                 this._localRot.identity();
                 this._localScale.set(Vector3.CONST_ONE);
 
-                const now = this._dirty | NodeDirtyFlag.LOCAL_AND_WORLD_ALL_DIRTY;
+                const now = this._dirty | NodeDirtyFlag.LOCAL_AND_WORLD_ALL;
                 if (now !== this._dirty) {
                     this._dirty = now;
-                    this._noticeUpdate(NodeDirtyFlag.WORLD_ALL_DIRTY);
+                    this._noticeUpdate(NodeDirtyFlag.WORLD_ALL);
                 }
             }
         }
 
         public updateWorldRotation(): void {
-            if (this._dirty & NodeDirtyFlag.WORLD_ROTATION_DIRTY) {
-                this._dirty &= ~NodeDirtyFlag.WORLD_ROTATION_DIRTY;
+            if (this._dirty & NodeDirtyFlag.WORLD_ROT) {
+                this._dirty &= NodeDirtyFlag.NOT_WORLD_ROT;
 
                 const p = this._parent;
                 if (p) {
@@ -815,8 +820,8 @@ namespace Aurora {
         }
 
         public updateLocalMatrix(): void {
-            if (this._dirty & NodeDirtyFlag.LOCAL_MATRIX_DIRTY) {
-                this._dirty &= ~NodeDirtyFlag.LOCAL_MATRIX_DIRTY;
+            if (this._dirty & NodeDirtyFlag.LOCAL_MAT) {
+                this._dirty &= NodeDirtyFlag.NOT_LOCAL_MAT;
 
                 const r = this._localRot;
                 const s = this._localScale;
@@ -856,8 +861,8 @@ namespace Aurora {
         }
 
         public updateWorldMatrix(): void {
-            if (this._dirty & NodeDirtyFlag.WORLD_MATRIX_DIRTY) {
-                this._dirty &= ~NodeDirtyFlag.WORLD_MATRIX_DIRTY;
+            if (this._dirty & NodeDirtyFlag.WORLD_MAT) {
+                this._dirty &= NodeDirtyFlag.NOT_WORLD_MAT;
 
                 this.updateLocalMatrix();
                 const p = this._parent;
@@ -871,8 +876,8 @@ namespace Aurora {
         }
 
         public updateInverseWorldMatrix(): void {
-            if (this._dirty & NodeDirtyFlag.INVERSE_WORLD_MATRIX_DIRTY) {
-                this._dirty &= ~NodeDirtyFlag.INVERSE_WORLD_MATRIX_DIRTY;
+            if (this._dirty & NodeDirtyFlag.INV_WORLD_MAT) {
+                this._dirty &= NodeDirtyFlag.NOT_INV_WORLD_MAT;
 
                 this.updateWorldMatrix();
                 this._worldMatrix.invert34(this._inverseWorldMatrix);

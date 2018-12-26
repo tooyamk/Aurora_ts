@@ -931,8 +931,8 @@ namespace Aurora {
 
             const err = this.linkByInternalShander(vert, frag);
 
-            //gl.deleteShader(vert);
-            //gl.deleteShader(frag);
+            gl.deleteShader(vert);
+            gl.deleteShader(frag);
 
             return err;
         }

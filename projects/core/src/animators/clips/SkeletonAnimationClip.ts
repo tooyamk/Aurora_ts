@@ -139,8 +139,9 @@ namespace Aurora {
             public rotation: Quaternion = null;
             public scale: Vector3 = null;
 
+            public slerp: boolean;
             public acos: number;
-            public sin: number;
+            public recSin: number;
             public neg: boolean;
 
             public cache(prev: Frame): void {
@@ -155,10 +156,11 @@ namespace Aurora {
                     this.neg = false;
                 }
                 if (cos > 0.9999) {
-                    this.acos = NaN;
+                    this.slerp = false;
                 } else {
+                    this.slerp = true;
                     this.acos = Math.acos(cos);
-                    this.sin = Math.sin(this.acos);
+                    this.recSin = 1 / Math.sin(this.acos);
                 }
             }
         }

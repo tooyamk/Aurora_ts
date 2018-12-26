@@ -31,7 +31,7 @@ namespace Aurora {
             return this;
         }
 
-        public setFromArray(numbers: number[], offset: int = 0): Quaternion {
+        public setFromArray(numbers: number[], offset: uint = 0): Quaternion {
             this.x = numbers[offset];
             this.y = numbers[offset + 1];
             this.z = numbers[offset + 2];
@@ -77,11 +77,11 @@ namespace Aurora {
         }
 
         public normalize(): Quaternion {
-            const len = 1 / this.length;
-            this.x *= len;
-            this.y *= len;
-            this.z *= len;
-            this.w *= len;
+            const len = this.length;
+            this.x /= len;
+            this.y /= len;
+            this.z /= len;
+            this.w /= len;
 
             return this;
         }
