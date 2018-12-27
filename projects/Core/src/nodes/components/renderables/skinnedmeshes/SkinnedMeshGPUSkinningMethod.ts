@@ -6,6 +6,7 @@ namespace Aurora {
         protected _matrices: Float32Array;
         protected _defines: ShaderDefines;
         protected _uniforms: ShaderUniforms;
+        protected _uniformState: GLUniformState;
 
         constructor() {
             super();
@@ -18,7 +19,7 @@ namespace Aurora {
             this._uniforms = new ShaderUniforms();
             this._uniforms.retain();
 
-            this._uniforms.setNumberArray(ShaderPredefined.u_SkinningMatrices, this._matrices);
+            this._uniformState = this._uniforms.setNumberArray(ShaderPredefined.u_SkinningMatrices, this._matrices);
         }
 
         public render(renderingData: RenderingData, asset: MeshAsset, matrices: Matrix44[]): void {
@@ -58,6 +59,7 @@ namespace Aurora {
                         data[idx++] = m.m32;
                     }
 
+                    ++this._uniformState.dataUpdateCount;
                     const out = renderingData.out;
                     this._defines.set(ShaderPredefined.NUM_BONES_PER_VERTEX, numBonesPerElement);
                     out.definesList.pushBack(this._defines);
@@ -81,6 +83,7 @@ namespace Aurora {
                 this._uniforms.delete(ShaderPredefined.u_SkinningMatrices);
                 this._uniforms.release();
                 this._uniforms = null;
+                this._uniformState = null;
             }
         }
     }

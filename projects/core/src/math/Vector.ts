@@ -298,9 +298,10 @@ namespace Aurora {
          * @param t [0.0 - 1.0]
          */
         public static lerp(from: Vector3, to: Vector3, t: number, rst: Vector3 = null): Vector3 {
-            const x = from.x + (to.x - from.x) * t;
-            const y = from.y + (to.y - from.y) * t;
-            const z = from.z + (to.z - from.z) * t;
+            let x = from.x, y = from.y, z = from.z;
+            x += (to.x - x) * t;
+            y += (to.y - y) * t;
+            z += (to.z - z) * t;
 
             return rst ? rst.setFromNumbers(x, y, z) : new Vector3(x, y, z);
         }

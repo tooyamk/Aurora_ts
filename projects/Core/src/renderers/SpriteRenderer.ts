@@ -186,7 +186,7 @@ namespace Aurora {
                         } else {
                             let canCombine = true;
                             if (Material.isEqual(this._curMaterial, mat)) {
-                                let b: boolean = true;
+                                let b = true;
                                 if (this._curShaderNumDefines > 0) {
                                     this._definesList.pushBackByList(definesList).pushBack(mat.defines).pushBack(this._renderingMgr.shaderDefines);
                                     b = this._curMaterial.shader.isEqual(this._definesList);

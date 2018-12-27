@@ -869,6 +869,12 @@ namespace Aurora {
         COMPILE_FAILED
     }
 
+    export class GLUniformState {
+        public index: int;
+        public programUpdateCount: int = 0;
+        public dataUpdateCount: int = 0;
+    }
+
     export class GLProgram extends AbstractGLObject {
         private _program: WebGLProgram;
         private _attributes: GLProgramAttribInfo[] = null;
@@ -1754,6 +1760,10 @@ namespace Aurora {
 
         private _usedVertexAttribs: UsedVertexAttribInfo[] = [];
 
+        private _programUpdateCount: int = 0;
+        private _usedUniformsUpdateCount: int[] = [];
+        private _numUsedUniformsUpdateCount = 0;
+
         constructor(canvasOrContext: HTMLCanvasElement | WebGLRenderingContext, options: GLOptions = null) {
             this._acquireGL(canvasOrContext, options);
 
@@ -2270,6 +2280,8 @@ namespace Aurora {
             if (this._usedProgram !== program.internalProgram) {
                 this._usedProgram = program.internalProgram;
                 this._gl.useProgram(this._usedProgram);
+                ++this._programUpdateCount;
+                this._numUsedUniformsUpdateCount = 0;
             }
         }
 
@@ -2277,6 +2289,22 @@ namespace Aurora {
             if (this._usedProgram === program.internalProgram) {
                 this._usedProgram = null;
                 this._gl.useProgram(null);
+            }
+        }
+
+        public checkUpdateUniform(state: GLUniformState): boolean {
+            if (state.programUpdateCount === this._programUpdateCount) {
+                if (state.dataUpdateCount === this._usedUniformsUpdateCount[state.index]) {
+                    return false;
+                } else {
+                    this._usedUniformsUpdateCount[state.index] = state.dataUpdateCount;
+                    return true;
+                }
+            } else {
+                state.programUpdateCount = this._programUpdateCount;
+                state.index = this._numUsedUniformsUpdateCount;
+                this._usedUniformsUpdateCount[this._numUsedUniformsUpdateCount++] = state.dataUpdateCount;
+                return true;
             }
         }
 

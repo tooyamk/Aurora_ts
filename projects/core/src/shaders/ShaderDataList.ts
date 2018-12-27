@@ -2,7 +2,8 @@
 
 namespace Aurora {
     class StackNode {
-        private static _tail: StackNode = null;
+        private static _pool: StackNode[] = [];
+        private static _num: uint = 0;
 
         public prev: StackNode = null;
         public next: StackNode = null;
@@ -10,22 +11,15 @@ namespace Aurora {
         public value: any = null;
 
         public release(): void {
+            this.prev = null;
             this.next = null;
             this.value = null;
 
-            this.prev = StackNode._tail ? StackNode._tail : null;
-            StackNode._tail = this;
+            StackNode._pool[StackNode._num++] = this;
         }
 
         public static create(): StackNode {
-            if (StackNode._tail) {
-                const node = StackNode._tail;
-                StackNode._tail = node.prev;
-                node.prev = null;
-                return node;
-            } else {
-                return new StackNode();
-            }
+            return StackNode._num === 0 ? new StackNode() : StackNode._pool[--StackNode._num];
         }
     }
 

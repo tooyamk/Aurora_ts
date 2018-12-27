@@ -9,6 +9,22 @@ namespace Aurora.MathUtils {
     export const RAD_2_DEG: number = 180 / Math.PI;
     export const DEG_2_RAD: number = Math.PI / 180;
 
+    export function fastSin(x: number): number {
+        if (x < -3.14159265) {
+            x += 6.28318531;
+        } else if (x > 3.14159265) {
+            x -= 6.28318531;
+        }
+
+        if (x < 0) {
+            x = (1.27323954 + 0.405284735 * x) * x;
+            return x < 0 ? 0.225 * (x * -x - x) + x : 0.225 * (x * x - x) + x;
+        } else {
+            x = (1.27323954 - 0.405284735 * x) * x;
+            return x < 0 ? 0.225 * (x * -x - x) + x : 0.225 * (x * x - x) + x;
+        }
+    }
+
     export function isEqual(value: number, to: number, tolerance: number = Number.EPSILON): boolean {
         if (tolerance < 0) tolerance = -tolerance;
         return value >= to - tolerance && value <= to + tolerance;

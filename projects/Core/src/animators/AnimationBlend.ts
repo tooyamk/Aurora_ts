@@ -1,6 +1,6 @@
 namespace Aurora {
-    export class AnimatorBlend implements IRef {
-        private static _pool: AnimatorBlend[] = [];
+    export class AnimationBlend implements IRef {
+        private static _pool: AnimationBlend[] = [];
         private static _num: uint = 0;
 
         private _clip: AbstractAnimationClip = null;
@@ -10,13 +10,13 @@ namespace Aurora {
         private _refCount: int = 0;
         private _idle = true;
 
-        public static create(clip: AbstractAnimationClip, startTime: number, blendTime: number): AnimatorBlend {
-            let ab: AnimatorBlend;
-            if (AnimatorBlend._num > 0) {
-                ab = AnimatorBlend._pool[--AnimatorBlend._num];
-                AnimatorBlend._pool[AnimatorBlend._num] = null;
+        public static create(clip: AbstractAnimationClip, startTime: number, blendTime: number): AnimationBlend {
+            let ab: AnimationBlend;
+            if (AnimationBlend._num > 0) {
+                ab = AnimationBlend._pool[--AnimationBlend._num];
+                AnimationBlend._pool[AnimationBlend._num] = null;
             } else {
-                ab = new AnimatorBlend();
+                ab = new AnimationBlend();
             }
             ab._idle = false;
             ab._clip = clip;
@@ -58,7 +58,7 @@ namespace Aurora {
                     this._clip.release();
                     this._clip = null;
                 }
-                AnimatorBlend._pool[AnimatorBlend._num++] = this;
+                AnimationBlend._pool[AnimationBlend._num++] = this;
             }
         }
     }

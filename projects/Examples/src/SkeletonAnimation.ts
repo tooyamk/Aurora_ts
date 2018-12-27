@@ -219,13 +219,13 @@ class SkeletonAnimation {
                 clip.wrap = Aurora.AnimationWrap.Loop;
             }
 
-            for (let i = 0; i < 300; ++i) {
+            for (let i = 0; i < 400; ++i) {
                 let ske = skeData.skeleton.clone();
 
                 //Helper.printNodeHierarchy([ske.bonesMap.find(ske.rootBoneNames[0])]);
 
                 let node = this._modelNode.addChild(new Aurora.Node());
-                const scale = 1.6;
+                const scale = 2;
                 node.setLocalScale(scale, scale, scale);
 
                 node.setLocalPosition(-60 + 120 * Math.random(), -60 + 120 * Math.random(), -60 + 120 * Math.random());

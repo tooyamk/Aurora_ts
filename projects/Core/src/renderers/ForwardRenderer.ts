@@ -123,12 +123,11 @@ namespace Aurora {
                     const mat = obj.material;
                     this._definesList.pushBackByList(out.definesList).pushBack(mat.defines).pushBack(this._shaderDefines);
                     this._uniformsList.pushBackByList(out.uniformsList).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(su);
-                    
-                    const shader = mat.shader;
-                    if (shader.hasUniform(ShaderPredefined.u_M44_L2P)) su.setNumberArray(ShaderPredefined.u_M44_L2P, obj.l2p.toArray44(false, this._l2pM44Array));
-                    if (shader.hasUniform(ShaderPredefined.u_M44_L2V)) su.setNumberArray(ShaderPredefined.u_M44_L2V, obj.l2v.toArray44(false, this._l2vM44Array));
-                    if (shader.hasUniform(ShaderPredefined.u_M44_L2W)) su.setNumberArray(ShaderPredefined.u_M44_L2W, obj.l2w.toArray44(false, this._l2wM44Array));
-                    
+
+                    su.setNumberArray(ShaderPredefined.u_M44_L2P, obj.l2p.toArray44(false, this._l2pM44Array));
+                    su.setNumberArray(ShaderPredefined.u_M44_L2V, obj.l2v.toArray44(false, this._l2vM44Array));
+                    su.setNumberArray(ShaderPredefined.u_M44_L2W, obj.l2w.toArray44(false, this._l2wM44Array));
+
                     this._renderingMgr.useAndDraw(as, mat, this._definesList, this._uniformsList);
                     this._definesList.clear();
                     this._uniformsList.clear();

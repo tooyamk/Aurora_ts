@@ -2,27 +2,31 @@ namespace Aurora.Sort.Merge {
     /**
      * @param compareFn : if return true, a is before to b.
      */
-    export function sort<T>(L: T[], compareFn: (a: T, b: T) => boolean, start: int = 0, end: int = -1): void {
+    export function sort<T>(L: T[], compareFn: (a: T, b: T) => boolean, start: int = 0, end: int = -1, tmpArr: T[] = null): void {
         if (end < 0 || end >= L.length) end = L.length - 1;
         if (start < 0) start = 0;
 
         if (start < end) {
             let k = 1, len = end - start + 1;
-            const TR: T[] = [];
-            TR.length = len;
+            if (tmpArr) {
+                if (tmpArr.length < len) tmpArr.length = len;
+            } else {
+                tmpArr = [];
+                tmpArr.length = len;
+            }
 
             if (start === 0) {
                 while (k < end) {
-                    _mergePass<T>(L, TR, k, len, compareFn);
+                    _mergePass<T>(L, tmpArr, k, len, compareFn);
                     k <<= 1;
-                    _mergePass<T>(TR, L, k, len, compareFn);
+                    _mergePass<T>(tmpArr, L, k, len, compareFn);
                     k <<= 1;
                 }
             } else {
                 while (k < end) {
-                    _mergePassOffset<T>(L, start, TR, 0, k, len, compareFn);
+                    _mergePassOffset<T>(L, start, tmpArr, 0, k, len, compareFn);
                     k <<= 1;
-                    _mergePassOffset<T>(TR, 0, L, start, k, len, compareFn);
+                    _mergePassOffset<T>(tmpArr, 0, L, start, k, len, compareFn);
                     k <<= 1;
                 }
             }

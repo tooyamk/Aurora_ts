@@ -532,7 +532,9 @@ namespace Aurora {
 
         public getLocalToLocalMatrix(to: Node, rst: Matrix44 = null): Matrix44 {
             if (to && this._root === to._root) {
-                return this.readonlyWorldMatrix.append34(to.readonlyInverseWorldMatrix, rst);
+                this.updateWorldMatrix();
+                to.updateInverseWorldMatrix();
+                return this._worldMatrix.append34(to._inverseWorldMatrix, rst);
             } else {
                 return rst ? rst.identity44() : new Matrix44();
             }

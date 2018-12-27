@@ -13,24 +13,31 @@ class AA {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-    let q0 = Aurora.Quaternion.createFromEulerX(30 * Aurora.MathUtils.DEG_2_RAD);
-    let q1 = Aurora.Quaternion.createFromEulerY(60 * Aurora.MathUtils.DEG_2_RAD);
-
-    let e0 = q0.append(q1, new Aurora.Quaternion()).toEuler().mulNumber(Aurora.MathUtils.RAD_2_DEG);
-
-    let e1 = q0.toMatrix33().append34(q1.toMatrix33()).toQuaternion().toEuler().mulNumber(Aurora.MathUtils.RAD_2_DEG);
-    let a = 1;
+    /*
+    try {
+        (function MyAsmModule() { "use asm" })();
+        console.log("asm.js OK");
+        // Now, hit F12 to open the browser console just to find a TypeError that states:
+        // "asm.js type error: expecting return statement"
+    }
+    catch (err) {
+        // will never show...
+        console.log("asm.js not supported.");
+    }
+    */
+    let a = Math.PI * 0.25;
+    let s0 = Math.sin(a) * Aurora.MathUtils.RAD_2_DEG;
+    let s1 = Aurora.MathUtils.fastSin(a) * Aurora.MathUtils.RAD_2_DEG;
+    let b = 1;
+    let func = Aurora.MathUtils.fastSin;
     /*
     let m0 = new Aurora.Matrix44();
     let m1 = new Aurora.Matrix44();
 
-    let a = 1;
-    let b = true;
-
     let t0 = Date.now();
 
     for (let i = 0; i < 9999999; ++i) {
-        if (b) ++a;
+        Math.sin(a);
     }
 
     let t1 = Date.now();
@@ -39,7 +46,7 @@ window.addEventListener("DOMContentLoaded", () => {
     t0 = Date.now();
 
     for (let i = 0; i < 9999999; ++i) {
-        b && ++a;
+        func(a);
     }
 
     t1 = Date.now();

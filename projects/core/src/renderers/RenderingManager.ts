@@ -6,6 +6,7 @@ namespace Aurora {
         protected _renderingQueue: RenderingObject[] = [];
         protected _renderingQueueLength: uint = 0;
         protected _renderingQueueCapacity: uint = 0;
+        protected _sortTmpRenderingQueue: RenderingObject[] = [];
 
         protected _renderables: AbstractRenderable[] = [];
 
@@ -61,6 +62,7 @@ namespace Aurora {
 
             this._renderingQueueCapacity = 100;
             for (let i = 0; i < this._renderingQueueCapacity; ++i) this._renderingQueue[i] = new RenderingObject();
+            this._sortTmpRenderingQueue.length = this._renderingQueueCapacity;
 
             this._appendRenderingObjectFn = this.appendRenderingObject.bind(this);
         }
@@ -162,7 +164,7 @@ namespace Aurora {
                 }
             }
 
-            if (this._renderingQueueLength > 0) Sort.Merge.sort(this._renderingQueue, this._sortFn, 0, this._renderingQueueLength - 1);
+            if (this._renderingQueueLength > 0) Sort.Merge.sort(this._renderingQueue, this._sortFn, 0, this._renderingQueueLength - 1, this._sortTmpRenderingQueue);
 
             this._renderByQueue(lights);
 
@@ -233,9 +235,11 @@ namespace Aurora {
                 queueNode.renderable = renderable;
                 queueNode.alternativeUniforms = alternativeUniforms;
                 queueNode.renderingPriorityLv2 = sortWeight;
-                renderable.node.getWorldMatrix(queueNode.l2w);
-                queueNode.l2w.append34(this._worldToViewMatrix, queueNode.l2v);
-                queueNode.l2w.append44(this._worldToProjMatrix, queueNode.l2p);
+
+                const l2w = queueNode.l2w;
+                l2w.set34(renderable.node.readonlyWorldMatrix);
+                l2w.append34(this._worldToViewMatrix, queueNode.l2v);
+                l2w.append44(this._worldToProjMatrix, queueNode.l2p);
             }
         }
 

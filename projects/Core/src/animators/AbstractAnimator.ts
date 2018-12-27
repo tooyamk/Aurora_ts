@@ -1,6 +1,6 @@
 namespace Aurora {
     export abstract class AbstractAnimator<T extends AbstractAnimationClip> extends Ref {
-        protected _blendClips: AnimatorBlend[] = null;
+        protected _blendClips: AnimationBlend[] = null;
         protected _curClip: T = null;
         protected _elapsed: number = 0;
         protected _time: number = 0;
@@ -40,7 +40,7 @@ namespace Aurora {
 
         public setClip(clip: T, startTime: number = 0, blendTime: number = 0): void {
             if (blendTime > 0 && this._curClip && clip) {
-                const ab = AnimatorBlend.create(this._curClip, this._startTime + this._elapsed, blendTime);;
+                const ab = AnimationBlend.create(this._curClip, this._startTime + this._elapsed, blendTime);;
                 ab.retain();
 
                 if (this._blendClips) {

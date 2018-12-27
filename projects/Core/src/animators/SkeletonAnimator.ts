@@ -244,7 +244,7 @@ namespace Aurora {
                                     start = this._findFrame(elapsed, 0, frames.length - 1, frames);
                                 }
                                 
-                                this._updateTransform(trs, elapsed, frames[start], frames[start + 1], cached);
+                                cached ? this._updateTransformWithCache(trs, elapsed, frames[start], frames[start + 1]) : this._updateTransform(trs, elapsed, frames[start], frames[start + 1]);
                                 trs.valid = true;
                             } else {
                                 trs.valid = false;
@@ -325,7 +325,7 @@ namespace Aurora {
             }
         }
 
-        protected _updateTransform(trans: TRS, elapsed: number, frame0: SkeletonAnimationClip.Frame, frame1: SkeletonAnimationClip.Frame, cached: boolean): void {
+        protected _updateTransform(trans: TRS, elapsed: number, frame0: SkeletonAnimationClip.Frame, frame1: SkeletonAnimationClip.Frame): void {
             if (frame1) {
                 if (frame0) {
                     const t = (elapsed - frame0.time) / (frame1.time - frame0.time);
@@ -346,27 +346,7 @@ namespace Aurora {
 
                         if (frame0.rotation) {
                             if (frame1.rotation) {
-                                if (cached) {
-                                    const from = frame0.rotation, to = frame1.rotation, rst = trans.rotation;
-                                    let k0: number, k1: number;
-                                    if (frame1.slerp) {
-                                        const acos = frame1.acos;
-                                        const recSin = frame1.recSin;
-                                        const ta = t * acos;
-                                        k0 = Math.sin(acos - ta) * recSin;
-                                        k1 = Math.sin(ta) * recSin;
-                                    } else {
-                                        k0 = 1 - t;
-                                        k1 = t;
-                                    }
-                                    if (frame1.neg) k1 = -k1;
-                                    rst.x = from.x * k0 + to.x * k1;
-                                    rst.y = from.y * k0 + to.y * k1;
-                                    rst.z = from.z * k0 + to.z * k1;
-                                    rst.w = from.w * k0 + to.w * k1;
-                                } else {
-                                    Quaternion.slerp(frame0.rotation, frame1.rotation, t, trans.rotation);
-                                }
+                                Quaternion.slerp(frame0.rotation, frame1.rotation, t, trans.rotation);
                             } else {
                                 trans.rotation.set(frame0.rotation);
                             }
@@ -377,6 +357,73 @@ namespace Aurora {
                         if (frame0.scale) {
                             if (frame1.scale) {
                                 Vector3.lerp(frame0.scale, frame1.scale, t, trans.scale);
+                            } else {
+                                trans.scale.set(frame0.scale);
+                            }
+                        } else {
+                            trans.scale.setOne();
+                        }
+                    }
+                }
+            } else {
+                if (frame0) this._setTransformByFrame(trans, frame0);
+            }
+        }
+
+        protected _updateTransformWithCache(trans: TRS, elapsed: number, frame0: SkeletonAnimationClip.Frame, frame1: SkeletonAnimationClip.Frame): void {
+            if (frame1) {
+                if (frame0) {
+                    const t = (elapsed - frame0.time) / (frame1.time - frame0.time);
+                    if (t <= 0) {
+                        this._setTransformByFrame(trans, frame0);
+                    } else if (t >= 1) {
+                        this._setTransformByFrame(trans, frame1);
+                    } else {
+                        if (frame0.translation) {
+                            if (frame1.translation) {
+                                const from = frame0.translation, to = frame1.translation, rst = trans.translation;
+                                rst.x = from.x + frame1.posX * t;
+                                rst.y = from.y + frame1.posY * t;
+                                rst.z = from.z + frame1.posZ * t;
+                            } else {
+                                trans.translation.set(frame0.translation);
+                            }
+                        } else {
+                            trans.translation.setZero();
+                        }
+
+                        if (frame0.rotation) {
+                            if (frame1.rotation) {
+                                const from = frame0.rotation, to = frame1.rotation, rst = trans.rotation;
+                                let k0: number, k1: number;
+                                if (frame1.rotIsSlerp) {
+                                    const acos = frame1.rotAcos;
+                                    const recSin = frame1.rotRecSin;
+                                    const ta = t * acos;
+                                    k0 = Math.sin(acos - ta) * recSin;
+                                    k1 = Math.sin(ta) * recSin;
+                                } else {
+                                    k0 = 1 - t;
+                                    k1 = t;
+                                }
+                                if (frame1.rotNeg) k1 = -k1;
+                                rst.x = from.x * k0 + to.x * k1;
+                                rst.y = from.y * k0 + to.y * k1;
+                                rst.z = from.z * k0 + to.z * k1;
+                                rst.w = from.w * k0 + to.w * k1;
+                            } else {
+                                trans.rotation.set(frame0.rotation);
+                            }
+                        } else {
+                            trans.rotation.identity();
+                        }
+
+                        if (frame0.scale) {
+                            if (frame1.scale) {
+                                const from = frame0.scale, to = frame1.scale, rst = trans.scale;
+                                rst.x = from.x + frame1.scaleX * t;
+                                rst.y = from.y + frame1.scaleY * t;
+                                rst.z = from.z + frame1.scaleZ * t;
                             } else {
                                 trans.scale.set(frame0.scale);
                             }

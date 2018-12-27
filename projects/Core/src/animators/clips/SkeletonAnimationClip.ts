@@ -139,28 +139,53 @@ namespace Aurora {
             public rotation: Quaternion = null;
             public scale: Vector3 = null;
 
-            public slerp: boolean;
-            public acos: number;
-            public recSin: number;
-            public neg: boolean;
+            public posX: number;
+            public posY: number;
+            public posZ: number;
+
+            public rotIsSlerp: boolean;
+            public rotAcos: number;
+            public rotRecSin: number;
+            public rotNeg: boolean;
+
+            public scaleX: number;
+            public scaleY: number;
+            public scaleZ: number;
 
             public cache(prev: Frame): void {
+                const pos0 = prev.translation;
+                const pos1 = this.translation;
+                if (pos0 && pos1) {
+                    this.posX = pos1.x - pos0.x;
+                    this.posY = pos1.y - pos0.y;
+                    this.posZ = pos1.z - pos0.z;
+                }
+
                 const rot0 = prev.rotation;
                 const rot1 = this.rotation;
-
-                let cos = rot0.x * rot1.x + rot0.y * rot1.y + rot0.z * rot1.z + rot0.w * rot1.w;
-                if (cos < 0) {
-                    cos = -cos;
-                    this.neg = true;
-                } else {
-                    this.neg = false;
+                if (rot0 && rot1) {
+                    let cos = rot0.x * rot1.x + rot0.y * rot1.y + rot0.z * rot1.z + rot0.w * rot1.w;
+                    if (cos < 0) {
+                        cos = -cos;
+                        this.rotNeg = true;
+                    } else {
+                        this.rotNeg = false;
+                    }
+                    if (cos > 0.9999) {
+                        this.rotIsSlerp = false;
+                    } else {
+                        this.rotIsSlerp = true;
+                        this.rotAcos = Math.acos(cos);
+                        this.rotRecSin = 1 / Math.sin(this.rotAcos);
+                    }
                 }
-                if (cos > 0.9999) {
-                    this.slerp = false;
-                } else {
-                    this.slerp = true;
-                    this.acos = Math.acos(cos);
-                    this.recSin = 1 / Math.sin(this.acos);
+
+                const scale0 = prev.scale;
+                const scale1 = this.scale;
+                if (scale0 && scale1) {
+                    this.scaleX = scale1.x - scale0.x;
+                    this.scaleY = scale1.y - scale0.y;
+                    this.scaleZ = scale1.z - scale0.z;
                 }
             }
         }

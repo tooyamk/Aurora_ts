@@ -47,34 +47,47 @@ namespace Aurora {
             return !v1;
         }
 
-        public setNumbers(name: string, x: number = 0, y: number = 0, z: number = 0, w: number = 0): void {
+        public setNumbers(name: string, x: number = 0, y: number = 0, z: number = 0, w: number = 0): GLUniformState {
             const v = this._getOrCreateUniform(name);
             v.type = ShaderUniforms.ValueType.NUMBER;
-            if (v.vec4) {
-                v.vec4[0] = x;
-                v.vec4[1] = y;
-                v.vec4[2] = z;
-                v.vec4[3] = w;
+            let vec4 = v.vec4;
+            if (vec4) {
+                if (vec4[0] !== x || vec4[1] !== y || vec4[2] !== z || vec4[3] !== w) {
+                    vec4[0] = x;
+                    vec4[1] = y;
+                    vec4[2] = z;
+                    vec4[3] = w;
+                    ++v.state.dataUpdateCount;
+                }
             } else {
-                v.vec4 = [x, y, z, w];
+                vec4 = [x, y, z, w];
+                v.vec4 = vec4;
+                ++v.state.dataUpdateCount;
             }
-            v.array = v.vec4;
+            v.array = vec4;
+            return v.state;
         }
 
-        public setNumberArray(name: string, array: number[] | Float32Array | Int32Array): void {
+        public setNumberArray(name: string, array: number[] | Float32Array | Int32Array): GLUniformState {
             if (array) {
                 const v = this._getOrCreateUniform(name);
                 v.type = ShaderUniforms.ValueType.NUMBER;
                 v.array = array;
+                ++v.state.dataUpdateCount;
+                return v.state;
             }
+            return null;
         }
 
-        public setTexture(name: string, tex: AbstractGLTexture): void {
+        public setTexture(name: string, tex: AbstractGLTexture): GLUniformState {
             if (tex) {
                 const v = this._getOrCreateUniform(name);
                 v.type = ShaderUniforms.ValueType.SAMPLER;
                 v.sampler = tex;
+                ++v.state.dataUpdateCount;
+                return v.state;
             }
+            return null;
         }
 
         public delete(name: string, clean: boolean = false): void {
@@ -125,10 +138,15 @@ namespace Aurora {
         }
 
         export class Value {
+            public readonly state: GLUniformState;
             public type: ValueType;
             public vec4: number[] = null;
             public array: number[] | Float32Array | Int32Array = null;
             private _sampler: AbstractGLTexture = null;
+
+            constructor() {
+                this.state = new GLUniformState();
+            }
 
             public get sampler(): AbstractGLTexture {
                 return this._sampler;

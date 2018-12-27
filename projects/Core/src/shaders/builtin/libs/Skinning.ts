@@ -7,7 +7,7 @@ namespace Aurora.BuiltinShader.Lib.Skinning {
     export const CALC_SKINNING_FUNC = `${NAME}_CalcSkinning`;
     export const CALC_SKINNING_ONLY_ROTATION_FUNC = `${NAME}_CalcSkinningOnlyRotation`;
 
-    export const NEED_SKINNING_MACRO = `${General.PRIVATE_MACRO_PREFIX}_NEED_SKINNING_DEFINE`;
+    export const NEED_SKINNING_MACRO = `${General.PRIVATE_MACRO_PREFIX}NEED_SKINNING_DEFINE`;
     export const SKINNED_MATRIX_STRUCT = `${NAME}_Mat`;
 
     export const VERT_HEADER: ShaderLib = {
