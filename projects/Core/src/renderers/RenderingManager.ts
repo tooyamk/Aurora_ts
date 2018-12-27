@@ -174,36 +174,36 @@ namespace Aurora {
         }
 
         protected _sortFn(a: RenderingObject, b: RenderingObject): boolean {
-            const sub = a.material.renderingPriority - b.material.renderingPriority;
+            const sub = a.material.renderingPriorityLv0 - b.material.renderingPriorityLv0;
             if (sub < 0) {
                 return true;
             } else if (sub === 0) {
-                const rs = a.material.renderingSort;
-                const value = rs - b.material.renderingSort;
+                const rs = a.material.renderingPriorityLv1;
+                const value = rs - b.material.renderingPriorityLv1;
                 if (value === 0) {
                     switch (rs) {
-                        case RenderingSort.FAR_TO_NEAR: {
+                        case RenderingSortLv1.FAR_TO_NEAR: {
                             const az = a.l2v.m32, bz = b.l2v.m32;
                             if (az > bz) {
                                 return true;
                             } else if (az < bz) {
                                 return false;
                             } else {
-                                return a.sortWeight <= b.sortWeight;
+                                return a.renderingPriorityLv2 <= b.renderingPriorityLv2;
                             }
                         }
-                        case RenderingSort.NEAR_TO_FAR: {
+                        case RenderingSortLv1.NEAR_TO_FAR: {
                             const az = a.l2v.m32, bz = b.l2v.m32;
                             if (az < bz) {
                                 return true;
                             } else if (az > bz) {
                                 return false;
                             } else {
-                                return a.sortWeight <= b.sortWeight;
+                                return a.renderingPriorityLv2 <= b.renderingPriorityLv2;
                             }
                         }
                         default:
-                            return a.sortWeight <= b.sortWeight;
+                            return a.renderingPriorityLv2 <= b.renderingPriorityLv2;
                     }
                 } else {
                     return value < 0;
@@ -232,7 +232,7 @@ namespace Aurora {
                 queueNode.material = material;
                 queueNode.renderable = renderable;
                 queueNode.alternativeUniforms = alternativeUniforms;
-                queueNode.sortWeight = sortWeight;
+                queueNode.renderingPriorityLv2 = sortWeight;
                 renderable.node.getWorldMatrix(queueNode.l2w);
                 queueNode.l2w.append34(this._worldToViewMatrix, queueNode.l2v);
                 queueNode.l2w.append44(this._worldToProjMatrix, queueNode.l2p);

@@ -301,7 +301,7 @@ class Other {
         mat.cullFace = Aurora.GLCullFace.FRONT;
         mat.depthWrite = false;
         mat.depthTest = Aurora.GLDepthTest.NONE;
-        mat.renderingPriority = -1;
+        mat.renderingPriorityLv0 = -1;
     
         mat.defines.set(Aurora.ShaderPredefined.DIFFUSE_TEX, true);
     

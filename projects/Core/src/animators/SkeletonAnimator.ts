@@ -336,10 +336,7 @@ namespace Aurora {
                     } else {
                         if (frame0.translation) {
                             if (frame1.translation) {
-                                const from = frame0.translation, to = frame1.translation, rst = trans.translation;
-                                rst.x = from.x + (to.x - from.x) * t;
-                                rst.y = from.y + (to.y - from.y) * t;
-                                rst.z = from.z + (to.z - from.z) * t;
+                                Vector3.lerp(frame0.translation, frame1.translation, t, trans.translation);
                             } else {
                                 trans.translation.set(frame0.translation);
                             }
@@ -379,10 +376,7 @@ namespace Aurora {
 
                         if (frame0.scale) {
                             if (frame1.scale) {
-                                const from = frame0.scale, to = frame1.scale, rst = trans.scale;
-                                rst.x = from.x + (to.x - from.x) * t;
-                                rst.y = from.y + (to.y - from.y) * t;
-                                rst.z = from.z + (to.z - from.z) * t;
+                                Vector3.lerp(frame0.scale, frame1.scale, t, trans.scale);
                             } else {
                                 trans.scale.set(frame0.scale);
                             }

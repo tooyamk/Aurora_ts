@@ -72,6 +72,7 @@ namespace Aurora {
 
         protected _keyMask0: uint;
         protected _keyMask1: uint;
+        protected _keyCarry: uint;
 
         constructor(gl: GL, vert: ShaderSource, frag: ShaderSource) {
             super();
@@ -99,6 +100,7 @@ namespace Aurora {
                 let n = 53 - idx;
                 this._keyMask1 = Math.pow(2, n > 31 ? 31 : n) - 1;
             }
+            this._keyCarry = this._keyMask0 + 1;
             
             this._usedDefines = [];
             this._usedDefines.length = idx;
@@ -219,7 +221,7 @@ namespace Aurora {
                     }
                 }
 
-                key = (valueFlag & this._keyMask1) * this._keyMask0 + (idxFlag & this._keyMask0);
+                key = (valueFlag & this._keyMask1) * this._keyCarry + (idxFlag & this._keyMask0);
 
                 this._numUsedDefines = num;
             }
@@ -423,18 +425,18 @@ namespace Aurora {
                                 }
                                 case GLUniformType.SAMPLER_2D: {
                                     if (v && v.sampler.textureType === GLTexType.TEXTURE_2D) {
-                                        if (v.sampler.use(samplerIndex, info.location))++samplerIndex;
+                                        if (v.sampler.use(samplerIndex, info.location)) ++samplerIndex;
                                     } else {
-                                        if (this._gl.activeNullTexture(GLTexType.TEXTURE_2D, samplerIndex))++samplerIndex;
+                                        if (this._gl.activeNullTexture(GLTexType.TEXTURE_2D, samplerIndex)) ++samplerIndex;
                                     }
 
                                     break;
                                 }
                                 case GLUniformType.SAMPLER_CUBE: {
                                     if (v && v.sampler.textureType === GLTexType.TEXTURE_CUBE_MAP) {
-                                        if (v.sampler.use(samplerIndex, info.location))++samplerIndex;
+                                        if (v.sampler.use(samplerIndex, info.location)) ++samplerIndex;
                                     } else {
-                                        if (this._gl.activeNullTexture(GLTexType.TEXTURE_CUBE_MAP, samplerIndex))++samplerIndex;
+                                        if (this._gl.activeNullTexture(GLTexType.TEXTURE_CUBE_MAP, samplerIndex)) ++samplerIndex;
                                     }
 
                                     break;

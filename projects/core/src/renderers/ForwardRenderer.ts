@@ -51,26 +51,26 @@ namespace Aurora {
                             for (let i = 0; i < len1; ++i) {
                                 const m = rawMats[i];
                                 const m2 = replaceMaterials[i];
-                                appendFn(renderable, m2, m ? m.uniforms : null, renderable.getSortWeight(m2));
+                                appendFn(renderable, m2, m ? m.uniforms : null, renderable.getRenderingPriorityLv2(m2));
                             }
                         } else if (len === 1) {
                             const m = rawMats[0];
                             const u = m ? m.uniforms : null;
                             for (let i = 0; i < len1; ++i) {
                                 const m2 = replaceMaterials[i];
-                                appendFn(renderable, m2, u, renderable.getSortWeight(m2));
+                                appendFn(renderable, m2, u, renderable.getRenderingPriorityLv2(m2));
                             }
                         } else {
                             for (let i = 0; i < len; ++i) {
                                 const m = rawMats[i];
                                 const m2 = replaceMaterials[i];
-                                appendFn(renderable, m2, m ? m.uniforms : null, renderable.getSortWeight(m2));
+                                appendFn(renderable, m2, m ? m.uniforms : null, renderable.getRenderingPriorityLv2(m2));
                             }
                         }
                     } else {
                         for (let i = 0; i < len; ++i) {
                             const m = rawMats[i];
-                            appendFn(renderable, m, null, renderable.getSortWeight(m));
+                            appendFn(renderable, m, null, renderable.getRenderingPriorityLv2(m));
                         }
                     }
                 }

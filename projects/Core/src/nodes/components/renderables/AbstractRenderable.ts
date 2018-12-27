@@ -39,7 +39,7 @@ namespace Aurora {
             }
         }
 
-        public abstract getSortWeight(material: Material): number;
+        public abstract getRenderingPriorityLv2(material: Material): number;
         public abstract checkRenderable(): boolean;
         public abstract render(renderingData: RenderingData): void;
         public abstract postRender(): void;

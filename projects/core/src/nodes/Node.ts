@@ -638,7 +638,7 @@ namespace Aurora {
         }
 
         public localRotate(q: Quaternion): void {
-            this._localRot.append(q);
+            q.append(this._localRot, this._localRot);
 
             const now = this._dirty | NodeDirtyFlag.LOCAL_AND_WORLD_ALL;
             if (now !== this._dirty) {
@@ -648,7 +648,7 @@ namespace Aurora {
         }
 
         public parentRotate(q: Quaternion): void {
-            this._localRot.prepend(q);
+            this._localRot.append(q);
 
             const now = this._dirty | NodeDirtyFlag.LOCAL_AND_WORLD_ALL;
             if (now !== this._dirty) {
@@ -671,7 +671,7 @@ namespace Aurora {
         public worldRotate(q: Quaternion): void {
             const old = this._dirty;
             this.updateWorldRotation();
-            this._worldRot.append(q);
+            q.append(this._worldRot, this._worldRot);
 
             this._worldRotationChanged(old);
         }
@@ -681,7 +681,7 @@ namespace Aurora {
             if (p) {
                 p.updateWorldRotation();
                 const lr = this._localRot;
-                this._worldRot.prepend(p._worldRot.invert(lr), lr);
+                this._worldRot.append(p._worldRot.invert(lr), lr);
                 //this._parent.readonlyWorldRotation.append(this._worldRot, this._localRot);
             } else {
                 this._localRot.set(this._worldRot);
@@ -704,7 +704,7 @@ namespace Aurora {
                 rst.y = -rst.y;
                 rst.z = -rst.z;
 
-                rst.append(q);
+                q.append(rst, rst);
             } else {
                 rst = rst ? rst.set(q) : q.clone();
             }
@@ -812,7 +812,7 @@ namespace Aurora {
                 const p = this._parent;
                 if (p) {
                     p.updateWorldRotation();
-                    this._localRot.prepend(p._worldRot, this._worldRot);
+                    this._localRot.append(p._worldRot, this._worldRot);
                 } else {
                     this._worldRot.set(this._localRot);
                 }
@@ -823,40 +823,10 @@ namespace Aurora {
             if (this._dirty & NodeDirtyFlag.LOCAL_MAT) {
                 this._dirty &= NodeDirtyFlag.NOT_LOCAL_MAT;
 
-                const r = this._localRot;
-                const s = this._localScale;
                 const lm = this._localMatrix;
 
-                let x = r.x, y = r.y, z = r.z, w = r.w;
-
-                const x2 = x * 2, y2 = y * 2, z2 = z * 2;
-                const xx = x * x2;
-                const xy = x * y2;
-                const xz = x * z2;
-                const yy = y * y2;
-                const yz = y * z2;
-                const zz = z * z2;
-                const wx = w * x2;
-                const wy = w * y2;
-                const wz = w * z2;
-
-                x = s.x;
-                lm.m00 = (1 - yy - zz) * x;
-                lm.m01 = (xy + wz) * x;
-                lm.m02 = (xz - wy) * x;
-
-                y = s.y;
-                lm.m10 = (xy - wz) * y;
-                lm.m11 = (1 - xx - zz) * y;
-                lm.m12 = (yz + wx) * y;
-
-                z = s.z;
-                lm.m20 = (xz + wy) * z;
-                lm.m21 = (yz - wx) * z;
-                lm.m22 = (1 - xx - yy) * z;
-
-                //this._localRot.toMatrix33(lm);
-                //lm.prependScale34Vector3(this._localScale);
+                this._localRot.toMatrix33(lm);
+                lm.prependScale34Vector3(this._localScale);
             }
         }
 

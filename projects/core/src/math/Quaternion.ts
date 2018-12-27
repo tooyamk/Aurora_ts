@@ -275,15 +275,7 @@ namespace Aurora {
             return new Quaternion(this.x, this.y, this.z, this.w);
         }
 
-        public prepend(q: Quaternion, rst: Quaternion = null): Quaternion {
-            const w = q.w * this.w - q.x * this.x - q.y * this.y - q.z * this.z;
-            const x = q.w * this.x + q.x * this.w + q.y * this.z - q.z * this.y;
-            const y = q.w * this.y + q.y * this.w + q.z * this.x - q.x * this.z;
-            const z = q.w * this.z + q.z * this.w + q.x * this.y - q.y * this.x;
-
-            return rst ? rst.setFromNumbers(x, y, z, w) : new Quaternion(x, y, z, w);
-        }
-
+        /*
         public append(q: Quaternion, rst: Quaternion = null): Quaternion {
             const w = this.w * q.w - this.x * q.x - this.y * q.y - this.z * q.z;
             const x = this.w * q.x + this.x * q.w + this.y * q.z - this.z * q.y;
@@ -292,8 +284,8 @@ namespace Aurora {
 
             return rst ? rst.setFromNumbers(x, y, z, w) : new Quaternion(x, y, z, w);
         }
+        */
 
-        /*
         public append(q: Quaternion, rst: Quaternion = null): Quaternion {
             const w1 = this.w * q.w - this.x * q.x - this.y * q.y - this.z * q.z;
             const x1 = this.x * q.w + this.w * q.x + this.z * q.y - this.y * q.z;
@@ -302,7 +294,6 @@ namespace Aurora {
 
             return rst ? rst.setFromNumbers(x1, y1, z1, w1) : new Quaternion(x1, y1, z1, w1);
         }
-        */
 
         public rotateXYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {
             //let m = this.toMatrix33();

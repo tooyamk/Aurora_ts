@@ -133,13 +133,13 @@ namespace Aurora {
             this._height = h === undefined ? null : h;
         }
 
-        public getSortWeight(material: Material): number {
-            let b = 0;
+        public getRenderingPriorityLv2(material: Material): number {
+            let high = 0;
             if (material) {
                 const s = material.shader;
-                if (s) b = s.id;
+                if (s) high = s.id;
             }
-            return b;
+            return high * 4294967296;
         }
 
         public checkRenderable(): boolean {

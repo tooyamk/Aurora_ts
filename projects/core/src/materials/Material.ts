@@ -1,5 +1,5 @@
 namespace Aurora {
-    export const enum RenderingSort {
+    export const enum RenderingSortLv1 {
         FOREMOST,
         NEAR_TO_FAR,
         MIDDLE,
@@ -8,8 +8,8 @@ namespace Aurora {
     }
 
     export class Material extends Ref {
-        public renderingPriority: int = 0;
-        public renderingSort = RenderingSort.MIDDLE;
+        public renderingPriorityLv0: int = 0;
+        public renderingPriorityLv1 = RenderingSortLv1.MIDDLE;
 
         public drawMode = GLDrawMode.TRIANGLES;
 
@@ -80,8 +80,8 @@ namespace Aurora {
         public clone(): Material {
             const m = new Material(this._shader);
 
-            m.renderingPriority = this.renderingPriority;
-            m.renderingSort = this.renderingSort;
+            m.renderingPriorityLv0 = this.renderingPriorityLv0;
+            m.renderingPriorityLv1 = this.renderingPriorityLv1;
             m.drawMode = this.drawMode;
             m.cullFace = this.cullFace;
             m.depthTest = this.depthTest;

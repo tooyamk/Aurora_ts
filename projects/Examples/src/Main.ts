@@ -13,6 +13,13 @@ class AA {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+    let q0 = Aurora.Quaternion.createFromEulerX(30 * Aurora.MathUtils.DEG_2_RAD);
+    let q1 = Aurora.Quaternion.createFromEulerY(60 * Aurora.MathUtils.DEG_2_RAD);
+
+    let e0 = q0.append(q1, new Aurora.Quaternion()).toEuler().mulNumber(Aurora.MathUtils.RAD_2_DEG);
+
+    let e1 = q0.toMatrix33().append34(q1.toMatrix33()).toQuaternion().toEuler().mulNumber(Aurora.MathUtils.RAD_2_DEG);
+    let a = 1;
     /*
     let m0 = new Aurora.Matrix44();
     let m1 = new Aurora.Matrix44();

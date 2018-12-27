@@ -20,14 +20,14 @@ namespace Aurora {
 
         protected _changedAsset(): void {}
 
-        public getSortWeight(material: Material): number {
-            const a = this._asset ? this._asset.id : 0;
-            let b = 0;
+        public getRenderingPriorityLv2(material: Material): number {
+            const low = this._asset ? this._asset.id : 0;
+            let high = 0;
             if (material) {
                 const s = material.shader;
-                if (s) b = s.id;
+                if (s) high = s.id;
             }
-            return a ^ b;
+            return high * 4294967296 + low;
         }
 
         public checkRenderable(): boolean {
