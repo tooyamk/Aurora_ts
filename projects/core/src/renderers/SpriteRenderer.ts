@@ -40,7 +40,7 @@ namespace Aurora {
             this._numAllicatedVertex = 256;
             this._numAllicatedIndex = 256;
 
-            this._asset.drawIndexSource = new DrawIndexSource([]);
+            this._asset.drawIndexSource = new DrawIndexSource(new Uint16Array(this._numAllicatedIndex));
             const ib = new GLIndexBuffer(gl);
             ib.allocate(this._numAllicatedIndex, GLIndexDataType.UNSIGNED_SHORT);
             this._asset.drawIndexBuffer = ib;
@@ -219,9 +219,7 @@ namespace Aurora {
                         this._combine(as.drawIndexSource, drawIdxLen);
                         this._renderQueueEnd = i;
                         this._numCombinedVertex += len;
-                        this._numCombinedIndex += drawIdxLen;
                         while (this._numCombinedVertex > this._numAllicatedVertex) this._numAllicatedVertex <<= 1;
-                        while (this._numCombinedIndex > this._numAllicatedIndex) this._numAllicatedIndex <<= 1;
                     }
                 }
                 renderingData.out.clear();
@@ -352,6 +350,19 @@ namespace Aurora {
         }
 
         private _combine(drawIndexSource: DrawIndexSource, drawIndexLen: uint): void {
+            const idx2 = this._numCombinedIndex;
+            let dst = this._asset.drawIndexSource.data;
+            this._numCombinedIndex += drawIndexLen;
+            if (this._numCombinedIndex > this._numAllicatedIndex) {
+                do {
+                    this._numAllicatedIndex <<= 1
+                } while (this._numCombinedIndex > this._numAllicatedIndex);
+                const now = new Uint16Array(this._numAllicatedIndex);
+                for (let i = 0, n = dst.length; i < n; ++i) now[i] = dst[i];
+                this._asset.drawIndexSource.data = now;
+                dst = now;
+            }
+
             const idx = this._numCombinedVertex;
             for (let i = 0; i < this._numVertexSources; ++i) {
                 const vs = this._vertexSources[i];
@@ -361,9 +372,7 @@ namespace Aurora {
                 for (let j = vs.getDataOffset(), n = vs.getDataLength(); j < n; ++j) dst[idx + j] = src[j];
             }
 
-            const idx2 = this._numCombinedIndex;
             const src = drawIndexSource.data;
-            const dst = this._asset.drawIndexSource.data;
             for (let i = drawIndexSource.getDataOffset(); i < drawIndexLen; ++i) dst[idx2 + i] = src[idx + i];
         }
     }

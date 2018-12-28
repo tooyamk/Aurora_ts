@@ -23,7 +23,7 @@ namespace Aurora {
         }
     }
 
-    export class ShaderDataList<S extends Ref, T> {
+    export class ShaderDataList<S extends IRef & { getValue(name: string): T }, T> {
         private _head: StackNode = null;
         private _tail: StackNode = null;
 
@@ -80,12 +80,12 @@ namespace Aurora {
         public clear(): void {
             if (this._head) {
                 let node = this._head;
-                while (node) {
+                do {
                     const next = node.next;
-                    if (node.value) node.value.release();
+                    if (node.value) (<S>node.value).release();
                     node.release();
                     node = next;
-                }
+                } while (node);
 
                 this._head = null;
                 this._tail = null;
@@ -99,7 +99,7 @@ namespace Aurora {
         public getValue(name: string): T {
             let node = this._head;
             while (node) {
-                const value = <T>node.value.getValue(name);
+                const value = (<S>node.value).getValue(name);
                 if (value) return value;
                 node = node.next;
             }
@@ -112,6 +112,8 @@ namespace Aurora {
                 node.prev.next = next;
                 if (next) {
                     next.prev = node.prev;
+                } else {
+                    this._tail = node.prev;
                 }
             } else {
                 if (next) {
@@ -123,7 +125,7 @@ namespace Aurora {
                 }
             }
 
-            if (node.value) node.value.release();
+            if (node.value) (<S>node.value).release();
             node.release();
         }
 

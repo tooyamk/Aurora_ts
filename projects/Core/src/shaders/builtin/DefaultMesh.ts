@@ -67,7 +67,7 @@ ${General.var_Pos0} = ${ShaderPredefined.a_Position0};
 
 #if defined(${General.DECLARE_TEMP_VAR_PREFIX}${General.var_Nrm0}) && defined(${General.DECLARE_TEMP_VAR_PREFIX}${General.var_Tan0})
     #include<${General.DECLARE_TEMP_VAR_MACRO.name}>(vec3, ${General.var_Binrm0})
-    ${General.var_Binrm0} = vec3(${General.var_Nrm0}.y * ${General.var_Tan0}.z - ${General.var_Nrm0}.z * ${General.var_Tan0}.y, ${General.var_Nrm0}.z * ${General.var_Tan0}.x - ${General.var_Nrm0}.x * ${General.var_Tan0}.z, ${General.var_Nrm0}.x * ${General.var_Tan0}.y - ${General.var_Nrm0}.y * ${General.var_Tan0}.x);
+    ${General.var_Binrm0} = cross(${General.var_Nrm0}, ${General.var_Tan0});
 #endif
 
 #ifdef ${General.DECLARE_VARYING_MACRO_PREFIX}${General.v_UV0}

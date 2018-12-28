@@ -68,7 +68,6 @@ namespace Aurora {
         protected _uniforms: GLProgramUniformInfo[] = null;
 
         protected _usedDefines: RWShaderDefineInfo[];
-        protected _numUsedDefines: uint = 0;
 
         protected _keyMask0: uint;
         protected _keyMask1: uint;
@@ -196,12 +195,11 @@ namespace Aurora {
 
         private _getOrCreateProgram(definesList: ShaderDefinesList): ShaderProgram {
             let key = 0;
-            this._numUsedDefines = 0;
+            let numUsedDefines = 0;
 
             if (definesList) {
                 const defines = this._defines;
                 const usedDefines = this._usedDefines;
-                let num = 0;
                 let idxFlag = 0;
                 let valueFlag = 0;
                 for (let i = 0, n = defines.length; i < n; ++i) {
@@ -211,19 +209,17 @@ namespace Aurora {
                         if (v.type === ShaderDefines.VlaueType.BOOL) {
                             if (v.value) {
                                 idxFlag |= 1 << i;
-                                usedDefines[num++].set(i, null);
+                                usedDefines[numUsedDefines++].set(i, null);
                             }
                         } else if (v.type === ShaderDefines.VlaueType.INT) {
                             const value = <int>v.value;
                             valueFlag ^= i ^ value;
-                            usedDefines[num++].set(i, value);
+                            usedDefines[numUsedDefines++].set(i, value);
                         }
                     }
                 }
 
                 key = (valueFlag & this._keyMask1) * this._keyCarry + (idxFlag & this._keyMask0);
-
-                this._numUsedDefines = num;
             }
 
             let p = key ? this._cachedPrograms.find(key) : this._cachedNoDefineProgram;
@@ -233,7 +229,7 @@ namespace Aurora {
                 const unusedDefines: string[] = [];
                 let unusedIdx: uint = 0;
                 let definesStr = "";
-                for (let i = 0, n = this._numUsedDefines; i < n; ++i) {
+                for (let i = 0, n = numUsedDefines; i < n; ++i) {
                     const info = this._usedDefines[i];
                     const idx = info.index;
 
@@ -245,7 +241,7 @@ namespace Aurora {
                     usedDefines[usedDefines.length] = new ShaderDefineInfo(info.index, info.value);
                     definesStr += "\n";
                 }
-                for (let j = unusedIdx, n = defines.length; j < n; ++j) unusedDefines[unusedDefines.length] = defines[j];
+                for (let i = unusedIdx, n = defines.length; i < n; ++i) unusedDefines[unusedDefines.length] = defines[i];
 
                 p = new ShaderProgram(this._gl, usedDefines, unusedDefines);
                 p.compileAndLink(definesStr + this._vert.source, definesStr + this._frag.source);

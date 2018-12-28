@@ -27,7 +27,11 @@ namespace Aurora {
         }
 
         public clear(): void {
-            this.asset = null;
+            if (this._asset) {
+                this._asset.release();
+                this._asset = null;
+            }
+
             this.definesList.clear();
             this.uniformsList.clear();
         }
