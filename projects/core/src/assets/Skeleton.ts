@@ -2,20 +2,40 @@
 
 namespace Aurora {
     export class Skeleton extends Ref {
+        private static _idGenerator = 0;
+        protected _id: int;
+
         protected _bones: RefVector<Node> = null;
         protected _bonesMap: RefMap<string, Node> = null;
         protected _mapping: Map<string, uint> = null;
         
         public rootBoneNames: string[] = [];
 
+        protected _updateHashBase: uint;
+        protected _updateHash: uint;
+        protected _updateCount: uint = 0;
+
         constructor() {
             super();
+
+            this._id = ++Skeleton._idGenerator;
 
             this._bones = new RefVector();
             this._bones.retain();
             this._bonesMap = new RefMap();
             this._bonesMap.retain();
             this._mapping = new Map();
+
+            this._updateHashBase = CRC32.calcUintStep(0xFFFFFFFF, this._id);
+            this._updateHash = CRC32.calcFinish(CRC32.calcUintStep(this._updateHashBase, this._updateCount));
+        }
+
+        public get id(): int {
+            return this._id;
+        }
+
+        public get updateHash(): uint {
+            return this._updateHash;
         }
 
         public get bones(): RefVector<Node> {
@@ -28,6 +48,10 @@ namespace Aurora {
 
         public get mapping(): Map<string, uint> {
             return this._mapping;
+        }
+
+        public updated(): void {
+            this._updateHash = CRC32.calcFinish(CRC32.calcUintStep(this._updateHashBase, ++this._updateCount));
         }
 
         public addBone(bone: Node): void {

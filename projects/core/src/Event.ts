@@ -72,11 +72,12 @@ namespace Aurora {
         public caller: any = null;
         public callback: HandlerType = null;
         public once: boolean;
+        public bindParams: any[] = null;
 
         private _refCount: int = 0;
         private _idle = true;
 
-        public static create(caller: any, callback: HandlerType, once: boolean = false): Handler {
+        public static create(caller: any, callback: HandlerType, once: boolean = false, ...bindParams: any[]): Handler {
             let h: Handler;
             if (Handler._num > 0) {
                 h = Handler._pool[--Handler._num];
@@ -88,6 +89,7 @@ namespace Aurora {
             h.caller = caller;
             h.callback = callback;
             h.once = once;
+            h.bindParams = bindParams;
             return h;
         }
 
@@ -106,9 +108,9 @@ namespace Aurora {
         public emit(...args: any[]): boolean {
             if (this.callback) {
                 if (this.caller) {
-                    this.callback.call(this.caller, ...args);
+                    this.callback.call(this.caller, ...args, ...this.bindParams);
                 } else {
-                    this.callback(...args);
+                    this.callback(...args, ...this.bindParams);
                 }
             }
             if (this.once) {
@@ -129,6 +131,7 @@ namespace Aurora {
                 this._idle = true;
                 this.caller = null;
                 this.callback = null;
+                this.bindParams = null;
                 Handler._pool[Handler._num++] = this;
             }
         }

@@ -13,6 +13,7 @@ namespace Aurora {
         private _asset: MeshAsset = null;
         public readonly definesList = new ShaderDataList<ShaderDefines, ShaderDefines.Value>();
         public readonly uniformsList = new ShaderDataList<ShaderUniforms, ShaderUniforms.Value>();
+        public continueCallback: Function = null;
 
         public get asset(): MeshAsset {
             return this._asset;
@@ -34,6 +35,8 @@ namespace Aurora {
 
             this.definesList.clear();
             this.uniformsList.clear();
+
+            this.continueCallback = null;
         }
     }
 
@@ -44,6 +47,25 @@ namespace Aurora {
         public clear(): void {
             this.in.clear();
             this.out.clear();
+        }
+
+        public render(callback: (renderingData: RenderingData) => void): void {
+            const out = this.out;
+
+            do {
+                callback(this);
+
+                const continueCallback = out.continueCallback;
+                
+                if (continueCallback) {
+                    out.continueCallback = null;
+                    continueCallback();
+                } else {
+                    break;
+                }
+            } while (true);
+
+            out.clear();
         }
     }
 }

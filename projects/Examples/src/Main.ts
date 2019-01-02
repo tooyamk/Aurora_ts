@@ -25,11 +25,10 @@ window.addEventListener("DOMContentLoaded", () => {
         console.log("asm.js not supported.");
     }
     */
-    let a = Math.PI * 0.25;
-    let s0 = Math.sin(a) * Aurora.MathUtils.RAD_2_DEG;
-    let s1 = Aurora.MathUtils.fastSin(a) * Aurora.MathUtils.RAD_2_DEG;
-    let b = 1;
-    let func = Aurora.MathUtils.fastSin;
+    let h = Aurora.Handler.create(null, (a: number, b: number, c: number, d: number) => {
+        let zz =1;
+    }, false, 1, 2);
+    h.emit(3, 4);
     /*
     let m0 = new Aurora.Matrix44();
     let m1 = new Aurora.Matrix44();

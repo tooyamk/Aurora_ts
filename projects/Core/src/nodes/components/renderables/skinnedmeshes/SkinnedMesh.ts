@@ -9,6 +9,9 @@ namespace Aurora {
         protected _finalMatrices: Matrix44[] = [];
         protected _isSkinningRender = false;
 
+        protected _lastSkeUpdateHash: uint = 0;
+        protected _lastMeshBonesUpdateHash: uint = 0;
+
         constructor() {
             super();
         }
@@ -42,52 +45,63 @@ namespace Aurora {
         }
 
         public render(renderingData: RenderingData): void {
-            if (this._skeleton && this._skeleton.bones && this._asset.boneNames && this._skinningMethod) {
+            const ske = this._skeleton;
+            const asset = this._asset;
+            if (ske && ske.bones && asset.boneNames && this._skinningMethod) {
                 this._isSkinningRender = true;
 
-                let preOffsetMatrices = this._asset.bonePreOffsetMatrices;
-                if (!preOffsetMatrices) preOffsetMatrices = SkinnedMesh.EMPTY_OFFSET_MATRICES;
-                const postOffsetMatrices = this._asset.bonePostOffsetMatrices;
-
-                const rawBones = this._skeleton.bonesMap.raw;
-
-                const boneNames = this._asset.boneNames;
-                const numBones = boneNames.length;
-                const finalMatrices = this._finalMatrices;
-                if (numBones > finalMatrices.length) {
-                    for (let i = this._finalMatrices.length; i < numBones; ++i) finalMatrices[i] = new Matrix44();
+                let needUpdate = false;
+                if (this._lastSkeUpdateHash !== ske.updateHash || this._lastMeshBonesUpdateHash !== asset.boneNamesUpdateHash) {
+                    this._lastSkeUpdateHash = ske.updateHash;
+                    this._lastMeshBonesUpdateHash = asset.boneNamesUpdateHash;
+                    needUpdate = true;
                 }
 
-                if (postOffsetMatrices) {
-                    for (let i = 0; i < numBones; ++i) {
-                        const bone = rawBones.get(boneNames[i]);
-                        if (!bone) continue;
+                const finalMatrices = this._finalMatrices;
+                if (needUpdate) {
+                    let preOffsetMatrices = this._asset.bonePreOffsetMatrices;
+                    if (!preOffsetMatrices) preOffsetMatrices = SkinnedMesh.EMPTY_OFFSET_MATRICES;
+                    const postOffsetMatrices = this._asset.bonePostOffsetMatrices;
 
-                        const mat = finalMatrices[i];
-                        const preMat = preOffsetMatrices[i];
-                        const postMat = postOffsetMatrices[i];
+                    const rawBones = this._skeleton.bonesMap.raw;
 
-                        if (preMat) {
-                            preMat.append34(bone.readonlyWorldMatrix, mat);
-                            if (postMat) mat.append34(postMat);
-                        } else {
-                            if (postMat) {
-                                bone.readonlyWorldMatrix.append34(postMat, mat);
+                    const boneNames = this._asset.boneNames;
+                    const numBones = boneNames.length;
+                    if (numBones > finalMatrices.length) {
+                        for (let i = this._finalMatrices.length; i < numBones; ++i) finalMatrices[i] = new Matrix44();
+                    }
+
+                    if (postOffsetMatrices) {
+                        for (let i = 0; i < numBones; ++i) {
+                            const bone = rawBones.get(boneNames[i]);
+                            if (!bone) continue;
+
+                            const mat = finalMatrices[i];
+                            const preMat = preOffsetMatrices[i];
+                            const postMat = postOffsetMatrices[i];
+
+                            if (preMat) {
+                                preMat.append34(bone.readonlyWorldMatrix, mat);
+                                if (postMat) mat.append34(postMat);
                             } else {
-                                mat.set34(bone.readonlyWorldMatrix);
+                                if (postMat) {
+                                    bone.readonlyWorldMatrix.append34(postMat, mat);
+                                } else {
+                                    mat.set34(bone.readonlyWorldMatrix);
+                                }
                             }
                         }
-                    }
-                } else {
-                    for (let i = 0; i < numBones; ++i) {
-                        const bone = rawBones.get(boneNames[i]);
-                        if (!bone) continue;
+                    } else {
+                        for (let i = 0; i < numBones; ++i) {
+                            const bone = rawBones.get(boneNames[i]);
+                            if (!bone) continue;
 
-                        const preMat = preOffsetMatrices[i];
-                        if (preMat) {
-                            preMat.append34(bone.readonlyWorldMatrix, finalMatrices[i]);
-                        } else {
-                            finalMatrices[i].set34(bone.readonlyWorldMatrix);
+                            const preMat = preOffsetMatrices[i];
+                            if (preMat) {
+                                preMat.append34(bone.readonlyWorldMatrix, finalMatrices[i]);
+                            } else {
+                                finalMatrices[i].set34(bone.readonlyWorldMatrix);
+                            }
                         }
                     }
                 }

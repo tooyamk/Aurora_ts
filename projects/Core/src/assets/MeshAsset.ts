@@ -9,6 +9,8 @@ namespace Aurora {
         public name = "";
 
         public boneNames: string[] = null;
+        protected _boneNamesUpdateHash: uint;
+        protected _boneNamesUpdateCount: uint = 0;
 
         public bonePreOffsetMatrices: Matrix44[] = null;
         public bonePostOffsetMatrices: Matrix44[] = null;
@@ -31,10 +33,15 @@ namespace Aurora {
 
         protected _link: MeshAsset = null;
 
+        protected _updateHashBase: uint;
+
         constructor() {
             super();
 
             this._id = ++MeshAsset._idGenerator;
+
+            this._updateHashBase = CRC32.calcUintStep(0xFFFFFFFF, this._id);
+            this._boneNamesUpdateHash = CRC32.calcFinish(CRC32.calcUintStep(this._updateHashBase, this._boneNamesUpdateCount));
         }
 
         public get id(): int {
@@ -77,8 +84,29 @@ namespace Aurora {
             }
         }
 
-        public getVertexSource(name: string): VertexSource {
-            return this.vertexSources ? this.vertexSources.get(name) : null;
+        public get boneNamesUpdateHash(): uint {
+            return this._boneNamesUpdateHash;
+        }
+
+        public boneNamesUpdated(): void {
+            this._boneNamesUpdateHash = CRC32.calcFinish(CRC32.calcUintStep(this._updateHashBase, ++this._boneNamesUpdateCount));
+        }
+
+        public getVertexSource(name: string, checkLink: boolean = true): VertexSource {
+            let vs: VertexSource = null;
+            if (this.vertexSources) vs = this.vertexSources.get(name);
+            if (!vs && checkLink && this._link) vs = this._link.getVertexSource(name);
+
+            return vs;
+        }
+
+        public addVertexSource(source: VertexSource): boolean {
+            if (source && source.name) {
+                if (!this.vertexSources) this.vertexSources = new Map();
+                this.vertexSources.set(source.name, source);
+                return true;
+            }
+            return false;
         }
 
         public setVertexDirty(name: string, dirty: boolean = true): void {
@@ -92,13 +120,10 @@ namespace Aurora {
             }
         }
 
-        public addVertexSource(source: VertexSource): boolean {
-            if (source && source.name) {
-                if (!this.vertexSources) this.vertexSources = new Map();
-                this.vertexSources.set(source.name, source);
-                return true;
-            }
-            return false;
+        public getDrawIndexSource(checkLink: boolean = true): DrawIndexSource {
+            let is = this.drawIndexSource;
+            if (!is && checkLink && this._link) is = this._link.getDrawIndexSource();
+            return is;
         }
 
         public getVertexBuffer(gl: GL, info: GLProgramAttribInfo): GLVertexBuffer {
@@ -161,7 +186,7 @@ namespace Aurora {
             return buffer;
         }
 
-        public setSkinningNunBonesPerVertex(n: uint): void {
+        public setSkinNunBonesPerVertex(n: uint): void {
             if (n >= 1 && n <= 4) {
                 const indices = this.getVertexSource(ShaderPredefined.a_BoneIndex0);
                 const weights = this.getVertexSource(ShaderPredefined.a_BoneWeight0);
@@ -171,7 +196,12 @@ namespace Aurora {
                         const indexData = indices.data;
                         const weightData = weights.data;
                         if (indexData && weightData) {
-                            
+                            const oldSize = indices.size;
+                            if (oldSize < n) {
+
+                            } else {
+
+                            }
                         }
                     }
                 }
@@ -191,14 +221,8 @@ namespace Aurora {
         public createNormals(): VertexSource {
             let vs: VertexSource = null;
 
-            let pos = this.vertexSources.get(ShaderPredefined.a_Position0);
-            let idx = this.drawIndexSource;
-
-            if (this._link) {
-                const linkVertSrcs = this._link.vertexSources;
-                if ((!pos || !pos.data) && linkVertSrcs) pos = linkVertSrcs.get(ShaderPredefined.a_Position0);
-                if (!idx || !idx.data) idx = this._link.drawIndexSource;
-            }
+            let pos = this.getVertexSource(ShaderPredefined.a_Position0);
+            let idx = this.getDrawIndexSource();
 
             if (pos && pos.data && idx && idx.data) {
                 vs = MeshAssetHelper.createNormals(idx.data, pos.data);
@@ -211,18 +235,9 @@ namespace Aurora {
         public createTangents(): VertexSource {
             let vs: VertexSource = null;
 
-            let pos = this.vertexSources.get(ShaderPredefined.a_Position0);
-            let uv = this.vertexSources.get(ShaderPredefined.a_UV0);
-            let idx = this.drawIndexSource;
-
-            if (this._link) {
-                const linkVertSrcs = this._link.vertexSources;
-                if (linkVertSrcs) {
-                    if (!pos || !pos.data) pos = linkVertSrcs.get(ShaderPredefined.a_Position0);
-                    if (!uv || !uv.data) uv = linkVertSrcs.get(ShaderPredefined.a_UV0);
-                }
-                if (!idx || !idx.data) idx = this._link.drawIndexSource;
-            }
+            let pos = this.getVertexSource(ShaderPredefined.a_Position0);
+            let uv = this.getVertexSource(ShaderPredefined.a_UV0);
+            let idx = this.getDrawIndexSource();
 
             if (pos && pos.data && uv && uv.data && idx && idx.data) {
                 vs = MeshAssetHelper.createTangents(idx.data, pos.data, uv.data);
@@ -235,18 +250,9 @@ namespace Aurora {
         public createBinormals(): VertexSource {
             let vs: VertexSource = null;
 
-            let nrm = this.vertexSources.get(ShaderPredefined.a_Normal0);
-            let tan = this.vertexSources.get(ShaderPredefined.a_Tangent0);
-            let idx = this.drawIndexSource;
-
-            if (this._link) {
-                const linkVertSrcs = this._link.vertexSources;
-                if (linkVertSrcs) {
-                    if (!nrm || !nrm.data) nrm = linkVertSrcs.get(ShaderPredefined.a_Position0);
-                    if (!tan || !tan.data) tan = linkVertSrcs.get(ShaderPredefined.a_UV0);
-                }
-                if (!idx || !idx.data) idx = this._link.drawIndexSource;
-            }
+            let nrm = this.getVertexSource(ShaderPredefined.a_Normal0);
+            let tan = this.getVertexSource(ShaderPredefined.a_Tangent0);
+            let idx = this.getDrawIndexSource();
 
             if (!nrm) nrm = this.createNormals();
             if (!tan) tan = this.createTangents();

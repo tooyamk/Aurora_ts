@@ -111,7 +111,7 @@ class SkeletonAnimation {
                 }
                 */
 
-                data.animator.update(delta * timeScale);
+                //data.animator.update(0);
             }
         }
     }
@@ -219,7 +219,7 @@ class SkeletonAnimation {
                 clip.wrap = Aurora.AnimationWrap.Loop;
             }
 
-            for (let i = 0; i < 400; ++i) {
+            for (let i = 0; i < 4; ++i) {
                 let ske = skeData.skeleton.clone();
 
                 //Helper.printNodeHierarchy([ske.bonesMap.find(ske.rootBoneNames[0])]);
@@ -257,7 +257,7 @@ class SkeletonAnimation {
                         let m = meshData.meshes[j];
                         let mesh = node.addChild(new Aurora.Node()).addComponent(new Aurora.SkinnedMesh());
                         mesh.renderer = this._env.forwardRenderer;
-                        mesh.skinningMethod = this._env.skinnedMeshGPUSkinningMethod.value;
+                        mesh.skinningMethod = this._env.skinnedMeshCPUSkinningMethod.value;
                         mesh.asset = m;
                         mesh.setMaterials(mat);
                         mesh.skeleton = ske;

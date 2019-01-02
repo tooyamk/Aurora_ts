@@ -7,6 +7,8 @@ namespace Aurora {
         protected _defines: ShaderDefines;
         protected _uniforms: ShaderUniforms;
         protected _uniformState: GLUniformState;
+        
+        protected _maxBones: uint = 60;
 
         constructor() {
             super();
@@ -15,11 +17,23 @@ namespace Aurora {
 
             this._defines = new ShaderDefines();
             this._defines.retain();
+            this._defines.set(ShaderPredefined.MAX_BONES, this._maxBones);
 
             this._uniforms = new ShaderUniforms();
             this._uniforms.retain();
 
             this._uniformState = this._uniforms.setNumberArray(ShaderPredefined.u_SkinningMatrices, this._matrices);
+        }
+
+        public get maxBones(): uint {
+            return this._maxBones;
+        }
+
+        public set maxBones(value: uint) {
+            if (this._maxBones !== value) {
+                this._maxBones = value;
+                this._defines.set(ShaderPredefined.MAX_BONES, value);
+            }
         }
 
         public render(renderingData: RenderingData, asset: MeshAsset, matrices: Matrix44[]): void {
@@ -32,7 +46,7 @@ namespace Aurora {
                     const numBonesPerElement = boneIndicesSource.size;
 
                     let data = this._matrices;
-                    const n = matrices.length;
+                    const n = Math.min(matrices.length, this._maxBones);
                     const maxData = n * 12;
                     if (data.length < maxData) {
                         data = new Float32Array(maxData);

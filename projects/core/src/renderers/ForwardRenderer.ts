@@ -17,6 +17,8 @@ namespace Aurora {
         protected _definesList = new ShaderDataList<ShaderDefines, ShaderDefines.Value>();
         protected _uniformsList = new ShaderDataList<ShaderUniforms, ShaderUniforms.Value>();
 
+        protected _renderFn: (renderingData: RenderingData) => void = null;
+
         constructor() {
             super();
 
@@ -25,6 +27,8 @@ namespace Aurora {
 
             this._shaderUniforms = new ShaderUniforms();
             this._shaderUniforms.retain();
+
+            this._renderFn = this._render.bind(this);
         }
 
         public get enabledLighting(): boolean {
@@ -112,24 +116,29 @@ namespace Aurora {
                 const obj = renderingObjects[i];
                 renderingData.in.renderingObject = obj;
                 obj.renderable.render(renderingData);
-                const out = renderingData.out;
-                const as = out.asset;
-                if (as) {
-                    const su = this._shaderUniforms;
-                    const mat = obj.material;
-                    this._definesList.pushBackByList(out.definesList).pushBack(mat.defines).pushBack(this._shaderDefines);
-                    this._uniformsList.pushBackByList(out.uniformsList).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(su);
 
-                    su.setNumberArray(ShaderPredefined.u_M44_L2P, obj.l2p.toArray44(false, this._l2pM44Array));
-                    su.setNumberArray(ShaderPredefined.u_M44_L2V, obj.l2v.toArray44(false, this._l2vM44Array));
-                    su.setNumberArray(ShaderPredefined.u_M44_L2W, obj.l2w.toArray44(false, this._l2wM44Array));
+                const su = this._shaderUniforms;
+                su.setNumberArray(ShaderPredefined.u_M44_L2P, obj.l2p.toArray44(false, this._l2pM44Array));
+                su.setNumberArray(ShaderPredefined.u_M44_L2V, obj.l2v.toArray44(false, this._l2vM44Array));
+                su.setNumberArray(ShaderPredefined.u_M44_L2W, obj.l2w.toArray44(false, this._l2wM44Array));
 
-                    this._renderingMgr.useAndDraw(as, mat, this._definesList, this._uniformsList);
-                    this._definesList.clear();
-                    this._uniformsList.clear();
-                }
+                renderingData.render(this._renderFn);
                 obj.renderable.postRender();
-                renderingData.out.clear();
+            }
+        }
+
+        private _render(renderingData: RenderingData): void {
+            const out = renderingData.out;
+            const as = out.asset;
+            if (as) {
+                const obj = renderingData.in.renderingObject;
+                const mat = obj.material;
+                this._definesList.pushBackByList(out.definesList).pushBack(mat.defines).pushBack(this._shaderDefines);
+                this._uniformsList.pushBackByList(out.uniformsList).pushBack(mat.uniforms).pushBack(obj.alternativeUniforms).pushBack(this._shaderUniforms);
+
+                this._renderingMgr.useAndDraw(as, mat, this._definesList, this._uniformsList);
+                this._definesList.clear();
+                this._uniformsList.clear();
             }
         }
 
@@ -143,6 +152,8 @@ namespace Aurora {
                 this._shaderUniforms.release();
                 this._shaderUniforms = null;
             }
+
+            this._renderFn = null;
 
             super.destroy();
         }

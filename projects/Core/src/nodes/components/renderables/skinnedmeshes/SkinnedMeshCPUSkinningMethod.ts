@@ -48,7 +48,7 @@ namespace Aurora {
 
                     const numVertices: uint = (srcLength / srcSize) | 0;
 
-                    let dstSource = this._convertedAsset.getVertexSource(name);
+                    let dstSource = this._convertedAsset.getVertexSource(name, false);
                     let dstData: VertexSourceData;
                     if (dstSource) {
                         dstData = dstSource.data;

@@ -29,6 +29,8 @@ namespace Aurora {
         protected _renderQueueStart: uint = 0;
         protected _renderQueueEnd: int = 0;
 
+        protected _renderFn: (renderingData: RenderingData) => void = null;
+
         constructor(gl: GL) {
             super();
             
@@ -53,6 +55,8 @@ namespace Aurora {
             this._defaultMaterial.cullFace = GLCullFace.NONE;
             this._defaultMaterial.depthWrite = false;
             this._defaultMaterial.depthTest = GLDepthTest.NONE;
+
+            this._renderFn = this._render.bind(this);
         }
 
         public get defaultMaterial(): Material {
@@ -133,18 +137,41 @@ namespace Aurora {
                 const obj = renderingObjects[i];
                 renderingData.in.renderingObject = obj;
                 obj.renderable.render(renderingData);
-                const out = renderingData.out;
-                const as = out.asset;
-                if (as && as.drawIndexSource) {
-                    const drawIdxLen = as.drawIndexSource.getDataLength();
-                    if (!drawIdxLen) continue;
+                renderingData.render(this._renderFn);
+                this._renderQueueEnd = i;
+            }
+
+            this.flush();
+
+            for (let i = 0, n = this._vertexSources.length; i < n; ++i) {
+                if (this._vertexSources[i]) {
+                    this._vertexSources[i] = null;
+                } else {
+                    break;
+                }
+            }
+            this._numVertexSources = 0;
+            this._curMaterial = null;
+            this._curProgramAtts = null;
+            this._curUniformInfos = null;
+            this._curShaderNumDefines = 0;
+            this._renderQueue = null;
+        }
+
+        private _render(renderingData: RenderingData): void {
+            const out = renderingData.out;
+            const as = out.asset;
+            if (as && as.drawIndexSource) {
+                const drawIdxLen = as.drawIndexSource.getDataLength();
+                if (drawIdxLen > 0) {
+                    const obj = renderingData.in.renderingObject;
 
                     const mat = obj.material;
                     const definesList = out.definesList;
                     const uniformsList = out.uniformsList;
 
                     if (!this._curProgramAtts) this._activeMaterial(mat, definesList, uniformsList, obj.alternativeUniforms);
-                    
+
                     let len = -1;
                     let needFlush = false;
                     if (this._curProgramAtts) {
@@ -217,29 +244,11 @@ namespace Aurora {
                         }
 
                         this._combine(as.drawIndexSource, drawIdxLen);
-                        this._renderQueueEnd = i;
                         this._numCombinedVertex += len;
                         while (this._numCombinedVertex > this._numAllicatedVertex) this._numAllicatedVertex <<= 1;
                     }
                 }
-                renderingData.out.clear();
             }
-
-            this.flush();
-
-            for (let i = 0, n = this._vertexSources.length; i < n; ++i) {
-                if (this._vertexSources[i]) {
-                    this._vertexSources[i] = null;
-                } else {
-                    break;
-                }
-            }
-            this._numVertexSources = 0;
-            this._curMaterial = null;
-            this._curProgramAtts = null;
-            this._curUniformInfos = null;
-            this._curShaderNumDefines = 0;
-            this._renderQueue = null;
         }
 
         public flush(): void {

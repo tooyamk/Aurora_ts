@@ -152,6 +152,7 @@ namespace Aurora {
                     }
                 }
                 SkeletonAnimator._pushTransformsToPool(transSelf);
+                this._skeleton.updated();
             }
         }
 
