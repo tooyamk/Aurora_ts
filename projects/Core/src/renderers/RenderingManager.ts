@@ -283,9 +283,9 @@ namespace Aurora {
         private _collectNode(node: Node, cullingMask: uint, replaceMaterials: Material[]): void {
             if (node.active) {
                 if (node.layer & cullingMask) {
-                    let num = node.getComponentsByType(AbstractRenderable, true, cullingMask, this._renderables);
+                    const num = node.getComponentsByType(AbstractRenderable, true, cullingMask, this._renderables);
                     for (let i = 0; i < num; ++i) {
-                        let renderable = this._renderables[i];
+                        const renderable = this._renderables[i];
                         if (renderable.renderer && renderable.checkRenderable()) {
                             renderable.renderer.collect(renderable, replaceMaterials, this._appendRenderingObjectFn);
                         }

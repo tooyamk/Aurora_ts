@@ -134,12 +134,7 @@ namespace Aurora {
         }
 
         public getRenderingPriorityLv2(material: Material): number {
-            let high = 0;
-            if (material) {
-                const s = material.shader;
-                if (s) high = s.id;
-            }
-            return high * 4294967296;
+            return 0;
         }
 
         public checkRenderable(): boolean {
