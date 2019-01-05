@@ -1781,7 +1781,7 @@ namespace Aurora {
             this._maxTextureSize = gl.getParameter(GLEnum.MAX_TEXTURE_SIZE);
             this._stencilBits = gl.getParameter(GLEnum.STENCIL_BITS);
 
-            this._supportUintIndexes = false || gl.getExtension('OES_element_index_uint') !== null;
+            this._supportUintIndexes = false || gl.getExtension("OES_element_index_uint") !== null;
 
             this._initViewport();
             this._initClear();

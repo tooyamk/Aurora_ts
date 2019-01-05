@@ -64,19 +64,6 @@ namespace Aurora {
             return !m1;
         }
 
-        public static canCombine(target: Material, compare: Material, compareDefinesList: ShaderDefinesList): boolean {
-            if (Material.isEqual(target, compare)) {
-                const s = target.shader;
-                if (s) {
-                    const p = s.currentProgram;
-                    if (p) {
-                        
-                    }
-                }
-            }
-            return false;
-        }
-
         public clone(): Material {
             const m = new Material(this._shader);
 
