@@ -492,7 +492,7 @@ namespace Aurora {
             return null;
         }
 
-        public getComponentsByType<T extends Node.AbstractComponent>(c: { prototype: T }, checkEnabled: boolean = true, layerMask: uint = 0x7FFFFFFF, rst: T[] = null, rstOffset: uint = 0): uint {
+        public getComponentsByType<T extends Node.AbstractComponent>(c: { prototype: T }, checkEnabled: boolean = true, layerMask: uint = 0x7FFFFFFF, rst: T[], rstOffset: uint = 0): uint {
             let num = 0;
 
             if (this._components) {

@@ -1,4 +1,5 @@
 ///<reference path="DrawIndexSource.ts"/>
+///<reference path="../utils/hash/CRC32.ts"/>
 
 namespace Aurora {
     export class MeshAsset extends Ref {

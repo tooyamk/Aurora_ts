@@ -286,9 +286,7 @@ namespace Aurora {
                     const num = node.getComponentsByType(AbstractRenderable, true, cullingMask, this._renderables);
                     for (let i = 0; i < num; ++i) {
                         const renderable = this._renderables[i];
-                        if (renderable.renderer && renderable.checkRenderable()) {
-                            renderable.renderer.collect(renderable, replaceMaterials, this._appendRenderingObjectFn);
-                        }
+                        if (renderable.renderer && renderable.checkRenderable()) renderable.renderer.collect(renderable, replaceMaterials, this._appendRenderingObjectFn);
                     }
                 }
 
