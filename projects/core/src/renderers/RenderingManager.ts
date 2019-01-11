@@ -148,14 +148,7 @@ namespace Aurora {
             this.begin(gl, camera);
 
             this._collectNode(node, camera.cullingMask, replaceMaterials);
-            for (let i = 0, n = this._renderables.length; i < n; ++i) {
-                const r = this._renderables[i];
-                if (r) {
-                    this._renderables[i] = null;
-                } else {
-                    break;
-                }
-            }
+            for (let i = 0; this._renderables[i];) this._renderables[i++] = null;
 
             if (this._renderingQueueLength > 0) Sort.Merge.sort(this._renderingQueue, this._sortFn, 0, this._renderingQueueLength - 1, this._sortTmpRenderingQueue);
 
@@ -208,8 +201,8 @@ namespace Aurora {
             }
         }
 
-        public appendRenderingObject(renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms, sortWeight: number): void {
-            if (material && material.shader) {
+        public appendRenderingObject(renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms, sortWeight: number, callback: (renderingData: RenderingData) => void): void {
+            if (material && material.shader && callback) {
                 if (!renderable.renderer.isRendering) {
                     renderable.renderer.isRendering = true;
                     this._renderers.push(renderable.renderer);
@@ -228,6 +221,7 @@ namespace Aurora {
                 queueNode.renderable = renderable;
                 queueNode.alternativeUniforms = alternativeUniforms;
                 queueNode.renderingPriorityLv2 = sortWeight;
+                queueNode.callback = callback;
 
                 const l2w = queueNode.l2w;
                 l2w.set34(renderable.node.readonlyWorldMatrix);

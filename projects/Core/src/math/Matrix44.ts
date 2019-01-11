@@ -122,19 +122,22 @@ namespace Aurora {
             return rst;
         }
 
-        public static createLookAtLH(eye: Vector3, at: Vector3, up: Vector3, rst: Matrix44 = null): Matrix44 {
+        /**
+         * 
+         * @param forward  at - eye, normalized.
+         */
+        public static createRotationLookAt(forward: Vector3, upward: Vector3, rst: Matrix44 = null): Matrix44 {
             rst = rst || new Matrix44();
 
-            const zaxis = at.clone().sub(eye).normalize();
-            const xaxis = Vector3.cross(up, zaxis).normalize();
+            const zaxis = forward;
+            const xaxis = Vector3.cross(upward, zaxis).normalize();
             const yaxis = Vector3.cross(zaxis, xaxis);
 
             rst.set44FromNumbers(
                 xaxis.x, xaxis.y, xaxis.z, 0,
                 yaxis.x, yaxis.y, yaxis.z, 0,
-                zaxis.x, zaxis.y, zaxis.z, 0,
-                eye.x, eye.y, eye.z, 1);
-                //-Vector3.dot(xaxis, eye), -Vector3.dot(yaxis, eye), -Vector3.dot(zaxis, eye), 1);
+                zaxis.x, zaxis.y, zaxis.z, 0);
+            //-Vector3.dot(xaxis, eye), -Vector3.dot(yaxis, eye), -Vector3.dot(zaxis, eye), 1);
 
             return rst;
         }

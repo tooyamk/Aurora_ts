@@ -44,7 +44,7 @@ namespace Aurora {
             return !!this._asset;
         }
 
-        public render(renderingData: RenderingData): void {
+        protected _renderHandler(renderingData: RenderingData): void {
             const ske = this._skeleton;
             const asset = this._asset;
             if (ske && ske.bones && asset.boneNames && this._skinningMethod) {
@@ -110,7 +110,7 @@ namespace Aurora {
             } else {
                 this._isSkinningRender = false;
 
-                super.render(renderingData);
+                super._renderHandler(renderingData);
             }
         }
 

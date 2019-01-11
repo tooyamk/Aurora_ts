@@ -78,6 +78,6 @@ window.addEventListener("DOMContentLoaded", () => {
     //new FileTest();
     //new Other();
     //new SimpleWorld();
-    //new SpriteAtlasTest();
-    new SkeletonAnimation();
+    new SpriteAtlasTest();
+    //new SkeletonAnimation();
 });

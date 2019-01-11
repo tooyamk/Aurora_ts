@@ -5,6 +5,7 @@ namespace Aurora {
         public material: Material = null;
         public alternativeUniforms: ShaderUniforms = null;
         public renderable: AbstractRenderable = null;
+        public callback: (renderingData: RenderingData) => void = null;
         public renderingPriorityLv2: number = 0;
         public l2w = new Matrix44();
         public l2v = new Matrix44();
@@ -14,6 +15,7 @@ namespace Aurora {
             this.material = null;
             this.alternativeUniforms = null;
             this.renderable = null;
+            this.callback = null;
         }
     }
 }

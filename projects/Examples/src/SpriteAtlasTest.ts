@@ -29,6 +29,7 @@ class SpriteAtlasTest {
             let img = new Image();
             img.onload = () => {
                 let tex = new Aurora.GLTexture2D(this._env.gl);
+                tex.setWraps(Aurora.GLTexWrapValue.CLAMP_TO_EDGE);
                 tex.upload(0, Aurora.GLTexInternalFormat.RGBA, Aurora.GLTexFormat.RGBA, Aurora.GLTexDataType.UNSIGNED_BYTE, img);
                 atlas.parse(JSON.parse(request.responseText), tex);
 

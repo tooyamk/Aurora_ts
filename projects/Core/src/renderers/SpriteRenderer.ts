@@ -47,7 +47,8 @@ namespace Aurora {
             ib.allocate(this._numAllicatedIndex, GLIndexDataType.UNSIGNED_SHORT);
             this._asset.drawIndexBuffer = ib;
 
-            this._defaultShader = new Shader(gl, new ShaderSource(BuiltinShader.DefaultSprite.VERTEX), new ShaderSource(BuiltinShader.DefaultSprite.FRAGMENT));
+            const spriteDefault = BuiltinShader.Sprite.Default;
+            this._defaultShader = new Shader(gl, new ShaderSource(spriteDefault.VERTEX), new ShaderSource(spriteDefault.FRAGMENT));
             this._defaultShader.retain();
             this._defaultMaterial = new Material(this._defaultShader);
             this._defaultMaterial.retain();
@@ -78,32 +79,27 @@ namespace Aurora {
                 if (len >= len1) {
                     for (let i = 0; i < len1; ++i) {
                         const m = rawMats ? rawMats[i] : null;
-                        const m2 = replaceMaterials[i];
-                        appendFn(renderable, m2, m ? m.uniforms : this._defaultMaterial.uniforms, renderable.getRenderingPriorityLv2(m2));
+                        renderable.collect(replaceMaterials[i], m ? m : this._defaultMaterial, appendFn);
                     }
                 } else if (len === 1) {
-                    let u: ShaderUniforms;
+                    let m: Material;
                     if (rawMats) {
-                        const m = rawMats[0];
-                        u = m ? m.uniforms : this._defaultMaterial.uniforms;
+                        m = rawMats[0];
+                        if (!m) m = this._defaultMaterial;
                     } else {
-                        u = this._defaultMaterial.uniforms;
+                        m = this._defaultMaterial;
                     }
-                    for (let i = 0; i < len1; ++i) {
-                        const m2 = replaceMaterials[i];
-                        appendFn(renderable, m2, u, renderable.getRenderingPriorityLv2(m2));
-                    }
+                    for (let i = 0; i < len1; ++i) renderable.collect(replaceMaterials[i], m, appendFn);
                 } else {
                     for (let i = 0; i < len; ++i) {
                         const m = rawMats ? rawMats[i] : null;
-                        const m2 = replaceMaterials[i];
-                        appendFn(renderable, m2, m ? m.uniforms : this._defaultMaterial.uniforms, renderable.getRenderingPriorityLv2(m2));
+                        renderable.collect(replaceMaterials[i], m ? m : this._defaultMaterial, appendFn);
                     }
                 }
             } else {
                 for (let i = 0; i < len; ++i) {
                     const m = rawMats ? rawMats[i] : null;
-                    appendFn(renderable, m ? m : this._defaultMaterial, this._defaultMaterial.uniforms, renderable.getRenderingPriorityLv2(m));
+                    renderable.collect(m ? m : this._defaultMaterial, this._defaultMaterial, appendFn);
                 }
             }
         }
@@ -131,12 +127,12 @@ namespace Aurora {
 
             this._renderQueue = renderingObjects;
             this._renderQueueStart = start;
-            this._renderQueueEnd = start;
+            this._renderQueueEnd = start - 1;
 
             for (let i = start; i <= end; ++i) {
                 const obj = renderingObjects[i];
                 renderingData.in.renderingObject = obj;
-                obj.renderable.render(renderingData);
+                obj.callback(renderingData);
                 renderingData.render(this._renderFn);
                 this._renderQueueEnd = i;
             }

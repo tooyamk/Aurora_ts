@@ -1,5 +1,5 @@
-namespace Aurora.BuiltinShader.DefaultSprite {
-    export const NAME = "_Built-in_DefaultSprite";
+namespace Aurora.BuiltinShader.Sprite.Default {
+    export const NAME = "_Built-in_Sprite_Default";
 
     export const VERTEX = 
 `attribute vec2 ${ShaderPredefined.a_Position0};

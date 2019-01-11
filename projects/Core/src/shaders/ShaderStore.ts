@@ -44,22 +44,32 @@ namespace Aurora {
         }
 
         public addBuiltinLibraries(): void {
+            const lib = BuiltinShader.Lib;
+
             this.addLibrary(BuiltinShader.General.SOURCES);
-            this.addLibrary(BuiltinShader.Lib.AlphaTest.SOURCES);
-            this.addLibrary(BuiltinShader.Lib.Lighting.SOURCES);
-            this.addLibrary(BuiltinShader.Lib.Reflection.SOURCES);
-            this.addLibrary(BuiltinShader.Lib.Skinning.SOURCES);
+            this.addLibrary(lib.AlphaTest.SOURCES);
+            this.addLibrary(lib.Lighting.SOURCES);
+            this.addLibrary(lib.Reflection.SOURCES);
+            this.addLibrary(lib.Skinning.SOURCES);
         }
 
         public addBuiltinSources(): void {
-            this.addSource(BuiltinShader.DefaultMesh.NAME, BuiltinShader.DefaultMesh.VERTEX, GLShaderType.VERTEX_SHADER);
-            this.addSource(BuiltinShader.DefaultMesh.NAME, BuiltinShader.DefaultMesh.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
+            const mesh = BuiltinShader.DefaultMesh;
+            this.addSource(mesh.NAME, mesh.VERTEX, GLShaderType.VERTEX_SHADER);
+            this.addSource(mesh.NAME, mesh.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
 
-            this.addSource(BuiltinShader.DefaultSprite.NAME, BuiltinShader.DefaultSprite.VERTEX, GLShaderType.VERTEX_SHADER);
-            this.addSource(BuiltinShader.DefaultSprite.NAME, BuiltinShader.DefaultSprite.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
+            const sprite = BuiltinShader.Sprite;
+            const defaultSprite = sprite.Default;
+            this.addSource(defaultSprite.NAME, defaultSprite.VERTEX, GLShaderType.VERTEX_SHADER);
+            this.addSource(defaultSprite.NAME, defaultSprite.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
 
-            this.addSource(BuiltinShader.DefaultSkyBox.NAME, BuiltinShader.DefaultSkyBox.VERTEX, GLShaderType.VERTEX_SHADER);
-            this.addSource(BuiltinShader.DefaultSkyBox.NAME, BuiltinShader.DefaultSkyBox.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
+            const solidColorSprite = sprite.SolidColor;
+            this.addSource(solidColorSprite.NAME, solidColorSprite.VERTEX, GLShaderType.VERTEX_SHADER);
+            this.addSource(solidColorSprite.NAME, solidColorSprite.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
+
+            const skeBox = BuiltinShader.DefaultSkyBox;
+            this.addSource(skeBox.NAME, skeBox.VERTEX, GLShaderType.VERTEX_SHADER);
+            this.addSource(skeBox.NAME, skeBox.FRAGMENT, GLShaderType.FRAGMENT_SHADER);
         }
 
         private _addLibrary(name: string, source: string): void {

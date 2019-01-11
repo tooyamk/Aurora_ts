@@ -22,6 +22,8 @@ namespace Aurora {
         protected _height: number = null;
         protected _meshMaker: Sprite.AbstractMeshMaker = null;
 
+        protected _renderFn: (renderingData: RenderingData) => void;
+
         constructor(frame: SpriteFrame = null) {
             super();
 
@@ -31,6 +33,8 @@ namespace Aurora {
             this._uniforms.retain();
 
             this.frame = frame;
+
+            this._renderFn = this._renderHandler.bind(this);
         }
 
         public get meshMaker(): Sprite.AbstractMeshMaker {
@@ -133,8 +137,8 @@ namespace Aurora {
             this._height = h === undefined ? null : h;
         }
 
-        public getRenderingPriorityLv2(material: Material): number {
-            return 0;
+        public collect(material: Material, alternativeMaterials: Material, appendFn: AppendRenderingObjectFn): void {
+            appendFn(this, material, alternativeMaterials ? alternativeMaterials.uniforms : null, 0, this._renderFn);
         }
 
         public checkRenderable(): boolean {
@@ -142,7 +146,7 @@ namespace Aurora {
             return tex && tex.width > 0 && tex.height > 0 && this._color.a > 0 && this._node.readonlyCascadeColor.a > 0;
         }
 
-        public render(renderingData: RenderingData): void {
+        protected _renderHandler(renderingData: RenderingData): void {
             let f: SpriteFrame;
             if (this._frame) {
                 f = this._frame;
@@ -249,6 +253,7 @@ namespace Aurora {
             this.texture = null;
             this.frame = null;
             this.meshMaker = null;
+            this._renderFn = null;
 
             if (this._uniforms) {
                 this._uniforms.release();

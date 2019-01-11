@@ -29,19 +29,16 @@ namespace Aurora {
                     this._materials.retain();
                     if (old) old.release();
                 }
-            } else {
-                if (this._materials !== mats) {
-                    if (mats) mats.retain();
-                    if (this._materials) this._materials.release();
-                    this._materials = mats;
-                    this._isInternalMaterialsVector = false;
-                }
+            } else if (this._materials !== mats) {
+                if (mats) mats.retain();
+                if (this._materials) this._materials.release();
+                this._materials = mats;
+                this._isInternalMaterialsVector = false;
             }
         }
 
-        public abstract getRenderingPriorityLv2(material: Material): number;
+        public abstract collect(material: Material, alternativeMaterials: Material, appendFn: AppendRenderingObjectFn): void;
         public abstract checkRenderable(): boolean;
-        public abstract render(renderingData: RenderingData): void;
         public abstract postRender(): void;
 
         public destroy(): void {

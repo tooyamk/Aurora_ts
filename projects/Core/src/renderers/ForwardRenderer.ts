@@ -48,30 +48,15 @@ namespace Aurora {
                     if (replaceMaterials) {
                         const len1 = replaceMaterials.length;
                         if (len >= len1) {
-                            for (let i = 0; i < len1; ++i) {
-                                const m = rawMats[i];
-                                const m2 = replaceMaterials[i];
-                                appendFn(renderable, m2, m ? m.uniforms : null, renderable.getRenderingPriorityLv2(m2));
-                            }
+                            for (let i = 0; i < len1; ++i) renderable.collect(replaceMaterials[i], rawMats[i], appendFn);
                         } else if (len === 1) {
                             const m = rawMats[0];
-                            const u = m ? m.uniforms : null;
-                            for (let i = 0; i < len1; ++i) {
-                                const m2 = replaceMaterials[i];
-                                appendFn(renderable, m2, u, renderable.getRenderingPriorityLv2(m2));
-                            }
+                            for (let i = 0; i < len1; ++i) renderable.collect(replaceMaterials[i], m, appendFn);
                         } else {
-                            for (let i = 0; i < len; ++i) {
-                                const m = rawMats[i];
-                                const m2 = replaceMaterials[i];
-                                appendFn(renderable, m2, m ? m.uniforms : null, renderable.getRenderingPriorityLv2(m2));
-                            }
+                            for (let i = 0; i < len1; ++i) renderable.collect(replaceMaterials[i], rawMats[i], appendFn);
                         }
                     } else {
-                        for (let i = 0; i < len; ++i) {
-                            const m = rawMats[i];
-                            appendFn(renderable, m, null, renderable.getRenderingPriorityLv2(m));
-                        }
+                        for (let i = 0; i < len; ++i) renderable.collect(rawMats[i], null, appendFn);
                     }
                 }
             }
@@ -115,7 +100,7 @@ namespace Aurora {
             for (let i = start; i <= end; ++i) {
                 const obj = renderingObjects[i];
                 renderingData.in.renderingObject = obj;
-                obj.renderable.render(renderingData);
+                obj.callback(renderingData);
 
                 const su = this._shaderUniforms;
                 su.setNumberArray(ShaderPredefined.u_M44_L2P, obj.l2p.toArray44(false, this._l2pM44Array));

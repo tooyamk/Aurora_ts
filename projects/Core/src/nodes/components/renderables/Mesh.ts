@@ -3,6 +3,13 @@
 namespace Aurora {
     export class Mesh extends AbstractRenderable {
         protected _asset: MeshAsset = null;
+        protected _renderFn: (renderingData: RenderingData) => void;
+
+        constructor() {
+            super();
+
+            this._renderFn = this._renderHandler.bind(this);
+        }
 
         public get asset(): MeshAsset {
             return this._asset;
@@ -20,7 +27,11 @@ namespace Aurora {
 
         protected _changedAsset(): void {}
 
-        public getRenderingPriorityLv2(material: Material): number {
+        public collect(material: Material, alternativeMaterials: Material, appendFn: AppendRenderingObjectFn): void {
+            appendFn(this, material, alternativeMaterials ? alternativeMaterials.uniforms : null, this._getRenderingPriorityLv2(material), this._renderFn);
+        }
+
+        protected _getRenderingPriorityLv2(material: Material): number {
             const low = this._asset ? this._asset.id : 0;
             let high = 0;
             if (material) {
@@ -34,7 +45,7 @@ namespace Aurora {
             return !!this._asset;
         }
 
-        public render(renderingData: RenderingData): void {
+        protected _renderHandler(renderingData: RenderingData): void {
             renderingData.out.asset = this._asset;
         }
 
@@ -43,6 +54,7 @@ namespace Aurora {
 
         public destroy(): void {
             this.asset = null;
+            this._renderFn = null;
             
             super.destroy();
         }

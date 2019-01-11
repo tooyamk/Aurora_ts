@@ -19,7 +19,7 @@ namespace Aurora {
     export type GLIndexBufferData = IndexSourceData | ArrayBuffer;
     
     export type AnimationWrapMethod = (elapsed:number, duration:number) => number;
-    export type AppendRenderingObjectFn = (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms, sortWeight: number) => void;
+    export type AppendRenderingObjectFn = (renderable: AbstractRenderable, material: Material, alternativeUniforms: ShaderUniforms, sortWeight: number, callback: (renderingData: RenderingData) => void) => void;
 
     export type SkinnedMeshVertexUpdateMethod = () => void;
 

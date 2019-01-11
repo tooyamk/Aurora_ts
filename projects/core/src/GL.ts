@@ -995,14 +995,14 @@ namespace Aurora {
 
     export abstract class AbstractGLTexture extends AbstractGLObject {
         protected _tex: WebGLTexture;
-        protected _textureType: GLTexType;
+        protected _texType: GLTexType;
         protected _width: uint = 0;
         protected _height: uint = 0;
 
         constructor(gl: GL, type: GLTexType) {
             super(gl);
 
-            this._textureType = type;
+            this._texType = type;
             this._tex = this._gl.context.createTexture();
 
             this.setWraps(GLTexWrapValue.REPEAT);
@@ -1018,7 +1018,7 @@ namespace Aurora {
         }
 
         public get textureType(): GLTexType {
-            return this._textureType;
+            return this._texType;
         }
 
         public get internalTexture(): WebGLTexture {
@@ -1039,29 +1039,29 @@ namespace Aurora {
         public setFilters(value: GLTexFilterValue): void {
             if (this.bind()) {
                 const gl = this._gl.context;
-                gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MIN_FILTER, value);
-                gl.texParameteri(this._textureType, GLTexFilterType.TEXTURE_MAG_FILTER, value);
+                gl.texParameteri(this._texType, GLTexFilterType.TEXTURE_MIN_FILTER, value);
+                gl.texParameteri(this._texType, GLTexFilterType.TEXTURE_MAG_FILTER, value);
             }
         }
 
         public setFilter(type: GLTexFilterType, value: GLTexFilterValue): void {
-            if (this.bind()) this._gl.context.texParameteri(this._textureType, type, value);
+            if (this.bind()) this._gl.context.texParameteri(this._texType, type, value);
         }
 
         public setWraps(value: GLTexWrapValue): void {
             if (this.bind()) {
                 const gl = this._gl.context;
-                gl.texParameteri(this._textureType, GLTexWrapType.TEXTURE_WRAP_S, value);
-                gl.texParameteri(this._textureType, GLTexWrapType.TEXTURE_WRAP_T, value);
+                gl.texParameteri(this._texType, GLTexWrapType.TEXTURE_WRAP_S, value);
+                gl.texParameteri(this._texType, GLTexWrapType.TEXTURE_WRAP_T, value);
             }
         }
 
         public setWrap(type: GLTexWrapType, value: GLTexFilterValue): void {
-            if (this.bind()) this._gl.context.texParameteri(this._textureType, type, value);
+            if (this.bind()) this._gl.context.texParameteri(this._texType, type, value);
         }
 
         public generateMipmap(): void {
-            if (this.bind()) this._gl.context.generateMipmap(this._textureType);
+            if (this.bind()) this._gl.context.generateMipmap(this._texType);
         }
 
         public bind(force: boolean = false): boolean {
@@ -1228,7 +1228,7 @@ namespace Aurora {
         public upload(level: int, internalformat: GLTexInternalFormat, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, srcData: ArrayBufferView, srcOffset: int): void;
 
         public upload(level: int, internalformat: GLTexInternalFormat, ...args: any[]): void {
-            this._upload2D(this._textureType, level, internalformat, args);
+            this._upload2D(this._texType, level, internalformat, args);
         }
 
         /**
@@ -1258,7 +1258,7 @@ namespace Aurora {
         public uploadSub(level: int, xoffset: number, yoffset: number, width: uint, height: uint, format: GLTexFormat, type: GLTexDataType, srcData: ArrayBufferView, srcOffset: int): void;
 
         public uploadSub(level: int, xoffset: number, yoffset: number, ...args: any[]): void {
-            this._uploadSub2D(this._textureType, level, xoffset, yoffset, args);
+            this._uploadSub2D(this._texType, level, xoffset, yoffset, args);
         }
     }
 
@@ -2398,20 +2398,7 @@ namespace Aurora {
             const buf = buffer.internalBuffer;
 
             switch (target) {
-                case 0: {
-                    if (this._bindingFrameBuffer !== buf) {
-                        this._bindingFrameBuffer = buf;
-
-                        if (this._version >= 2) {
-                            this._bindingReadFrameBuffer = buf;
-                            this._bindingDrawFrameBuffer = buf;
-                        }
-
-                        this._gl.bindFramebuffer(target, buf);
-                    }
-
-                    break;
-                }
+                case 0:
                 case GLFrameBufferTarget.FRAMEBUFFER: {
                     if (this._bindingFrameBuffer !== buf) {
                         this._bindingFrameBuffer = buf;
@@ -2454,20 +2441,7 @@ namespace Aurora {
             const buf = buffer.internalBuffer;
 
             switch (target) {
-                case 0: {
-                    if (this._bindingFrameBuffer === buf) {
-                        this._bindingFrameBuffer = null;
-
-                        if (this._version >= 2) {
-                            this._bindingReadFrameBuffer = null;
-                            this._bindingDrawFrameBuffer = null;
-                        }
-
-                        this._gl.bindFramebuffer(target, null);
-                    }
-
-                    break;
-                }
+                case 0:
                 case GLFrameBufferTarget.FRAMEBUFFER: {
                     if (this._bindingFrameBuffer === buf) {
                         this._bindingFrameBuffer = null;
