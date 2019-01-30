@@ -63,7 +63,7 @@ namespace Aurora {
         }
 
         /**
-         * @param rst values are radian.
+         * @param rst values are radians.
          */
         public toEuler(rst: Vector3 = null): Vector3 {
             rst = rst || new Vector3();
@@ -87,32 +87,30 @@ namespace Aurora {
         }
 
         public static createFromEulerX(radian: number, rst: Quaternion = null): Quaternion {
-            rst = rst || new Quaternion();
-
             radian *= 0.5;
+            const x = Math.sin(radian);
+            const w = Math.cos(radian);
 
-            return rst.setFromNumbers(Math.sin(radian), 0, 0, Math.cos(radian));
+            return rst ? rst.setFromNumbers(x, 0, 0, w) : new Quaternion(x, 0, 0, w);
         }
 
         public static createFromEulerY(radian: number, rst: Quaternion = null): Quaternion {
-            rst = rst || new Quaternion();
-
             radian *= 0.5;
+            const y = Math.sin(radian);
+            const w = Math.cos(radian);
 
-            return rst.setFromNumbers(0, Math.sin(radian), 0, Math.cos(radian));
+            return rst ? rst.setFromNumbers(0, y, 0, w) : new Quaternion(0, y, 0, w);
         }
 
         public static createFromEulerZ(radian: number, rst: Quaternion = null): Quaternion {
-            rst = rst || new Quaternion();
-
             radian *= 0.5;
+            const z = Math.sin(radian);
+            const w = Math.cos(radian);
 
-            return rst.setFromNumbers(0, 0, Math.sin(radian), Math.cos(radian));
+            return rst ? rst.setFromNumbers(0, 0, z, w) : new Quaternion(0, 0, z, w);
         }
 
         public static createFromEulerXYZ(x: number = 0, y: number = 0, z: number = 0, rst: Quaternion = null): Quaternion {
-            rst = rst || new Quaternion();
-
             x *= 0.5;
             y *= 0.5;
             z *= 0.5;
@@ -129,16 +127,34 @@ namespace Aurora {
             const ccXY = cosX * cosY;
             const ssXY = sinX * sinY;
 
-            rst.x = scXY * cosZ - csXY * sinZ;
-            rst.y = csXY * cosZ + scXY * sinZ;
-            rst.z = ccXY * sinZ - ssXY * cosZ;
-            rst.w = ccXY * cosZ + ssXY * sinZ;
+            x = scXY * cosZ - csXY * sinZ;
+            y = csXY * cosZ + scXY * sinZ;
+            z = ccXY * sinZ - ssXY * cosZ;
+            const w = ccXY * cosZ + ssXY * sinZ;
 
-            return rst;
+            return rst ? rst.setFromNumbers(x, y, z, w) : new Quaternion(x, y, z, w);
         }
 
         public static createFromEulerVector3(angles: Vector3, rst: Quaternion = null): Quaternion {
             return Quaternion.createFromEulerXYZ(angles.x, angles.y, angles.z, rst);
+        }
+
+        /**
+         *
+         * @param forward  at - eye, normalized.
+         */
+        public static createLookAt(forward: Vector3, upward: Vector3, rst: Quaternion = null): Quaternion {
+            const zaxis = forward;
+            const xaxis = Vector3.cross(upward, zaxis).normalize();
+            const yaxis = Vector3.cross(zaxis, xaxis);
+
+            const w = Math.sqrt(1 + xaxis.x + yaxis.y + zaxis.z) * 0.5;
+            const recip = 0.25 / w;
+            const x = (yaxis.z - zaxis.y) * recip;
+            const y = (zaxis.x - xaxis.z) * recip;
+            const z = (xaxis.y - yaxis.x) * recip;
+
+            return rst ? rst.setFromNumbers(x, y, z, w) : new Quaternion(x, y, z, w);
         }
     
         /**
@@ -213,7 +229,13 @@ namespace Aurora {
 
         public mulNumber(s: number, rst: Quaternion = null): Quaternion {
             rst = rst || this;
-            return rst.setFromNumbers(this.x * s, this.y * s, this.z * s, this.w * s);
+
+            rst.x *= s;
+            rst.y *= s;
+            rst.z *= s;
+            rst.w *= s;
+
+            return rst;
         }
 
         public log(rst: Quaternion = null): Quaternion {
@@ -287,12 +309,12 @@ namespace Aurora {
         */
 
         public append(q: Quaternion, rst: Quaternion = null): Quaternion {
-            const w1 = this.w * q.w - this.x * q.x - this.y * q.y - this.z * q.z;
-            const x1 = this.x * q.w + this.w * q.x + this.z * q.y - this.y * q.z;
-            const y1 = this.y * q.w + this.w * q.y + this.x * q.z - this.z * q.x;
-            const z1 = this.z * q.w + this.w * q.z + this.y * q.x - this.x * q.y;
+            const w = this.w * q.w - this.x * q.x - this.y * q.y - this.z * q.z;
+            const x = this.x * q.w + this.w * q.x + this.z * q.y - this.y * q.z;
+            const y = this.y * q.w + this.w * q.y + this.x * q.z - this.z * q.x;
+            const z = this.z * q.w + this.w * q.z + this.y * q.x - this.x * q.y;
 
-            return rst ? rst.setFromNumbers(x1, y1, z1, w1) : new Quaternion(x1, y1, z1, w1);
+            return rst ? rst.setFromNumbers(x, y, z, w) : new Quaternion(x, y, z, w);
         }
 
         public rotateXYZ(x: number = 0, y: number = 0, z: number = 0, rst: Vector3 = null): Vector3 {

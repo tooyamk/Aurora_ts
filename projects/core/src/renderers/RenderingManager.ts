@@ -275,6 +275,42 @@ namespace Aurora {
         }
 
         private _collectNode(node: Node, cullingMask: uint, replaceMaterials: Material[]): void {
+            /*
+            let cur = node;
+            let pass = false;
+            while (cur) {
+                if (pass) {
+                    let c = cur._next;
+                    if (c) {
+                        cur = c;
+                        pass = false;
+                    } else {
+                        cur = cur.parent;
+                        if (cur === node) break;
+                        pass = true;
+                    }
+                } else {
+                    //todo
+
+                    let c = cur._childHead;
+                    if (c) {
+                        cur = c;
+                    } else if (cur === node) {
+                        break;
+                    } else {
+                        c = cur._next;
+                        if (c) {
+                            cur = c;
+                        } else {
+                            cur = cur.parent;
+                            if (cur === node) break;
+                            pass = true;
+                        }
+                    }
+                }
+            }
+            */
+
             if (node.active) {
                 if (node.layer & cullingMask) {
                     const num = node.getComponentsByType(AbstractRenderable, true, cullingMask, this._renderables);

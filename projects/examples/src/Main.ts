@@ -25,10 +25,6 @@ window.addEventListener("DOMContentLoaded", () => {
         console.log("asm.js not supported.");
     }
     */
-    let h = Aurora.Handler.create(null, (a: number, b: number, c: number, d: number) => {
-        let zz =1;
-    }, false, 1, 2);
-    h.emit(3, 4);
     /*
     let m0 = new Aurora.Matrix44();
     let m1 = new Aurora.Matrix44();

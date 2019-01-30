@@ -126,7 +126,7 @@ namespace Aurora {
          * 
          * @param forward  at - eye, normalized.
          */
-        public static createRotationLookAt(forward: Vector3, upward: Vector3, rst: Matrix44 = null): Matrix44 {
+        public static createLookAt(forward: Vector3, upward: Vector3, rst: Matrix44 = null): Matrix44 {
             rst = rst || new Matrix44();
 
             const zaxis = forward;
